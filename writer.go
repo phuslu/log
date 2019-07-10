@@ -219,26 +219,26 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 	}
 
 	if v, ok := m["level"]; ok {
+		var s string
+		var c color
+		switch s, _ = v.(string); ParseLevel(s) {
+		case DebugLevel:
+			c, s = colorYellow, "DBG"
+		case InfoLevel:
+			c, s = colorGreen, "INF"
+		case WarnLevel:
+			c, s = colorRed, "WRN"
+		case ErrorLevel:
+			c, s = colorRed, "ERR"
+		case FatalLevel:
+			c, s = colorRed, "FTL"
+		default:
+			c, s = colorRed, "???"
+		}
 		if w.ANSIColor {
-			var c color
-			var s string
-			switch s, _ = v.(string); ParseLevel(s) {
-			case DebugLevel:
-				c, s = colorYellow, "DBG"
-			case InfoLevel:
-				c, s = colorGreen, "INF"
-			case WarnLevel:
-				c, s = colorRed, "WRN"
-			case ErrorLevel:
-				c, s = colorRed, "ERR"
-			case FatalLevel:
-				c, s = colorRed, "FTL"
-			default:
-				c, s = colorRed, "???"
-			}
 			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", c, s, colorReset)
 		} else {
-			n, err = fmt.Fprintf(os.Stderr, "%s ", v)
+			n, err = fmt.Fprintf(os.Stderr, "%s ", s)
 		}
 		written += n
 	}
