@@ -266,7 +266,12 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 			continue
 		}
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, " %s%s=%s%v", colorCyan, k, colorReset, v)
+			switch k {
+			case "error":
+				n, err = fmt.Fprintf(os.Stderr, " %s%s=%v%s", colorCyan, k, v, colorReset)
+			default:
+				n, err = fmt.Fprintf(os.Stderr, " %s%s=%s%v", colorCyan, k, colorReset, v)
+			}
 		} else {
 			n, err = fmt.Fprintf(os.Stderr, " %s=%v", k, v)
 		}

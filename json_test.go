@@ -42,7 +42,7 @@ func TestJOSNLoggerTime(t *testing.T) {
 	log := JSONLogger{
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
-		TimeFormat: time.RFC850,
+		TimeFormat: time.RFC822,
 		Writer:     &Writer{},
 	}
 	log.Info().Timestamp().Time("now", timeNow()).Msg("this is time log event")

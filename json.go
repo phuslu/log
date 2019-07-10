@@ -13,7 +13,7 @@ import (
 	"unsafe"
 )
 
-var DefaultLogger = JSONLogger{InfoLevel, false, false, "", "", &Writer{}}
+var DefaultLogger = JSONLogger{DebugLevel, false, false, "", "", &Writer{}}
 
 type JSONLogger struct {
 	Level      Level
