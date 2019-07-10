@@ -100,7 +100,7 @@ func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
 		e.key('{', e.timeField)
 	}
 	if e.timeFormat == "" {
-		e.time(now.UTC())
+		e.time(now)
 	} else {
 		e.buf = append(e.buf, '"')
 		e.buf = now.AppendFormat(e.buf, e.timeFormat)
@@ -153,7 +153,7 @@ func (e *JSONEvent) Time(key string, t time.Time) *JSONEvent {
 		e.buf = t.AppendFormat(e.buf, e.timeFormat)
 		e.buf = append(e.buf, '"')
 	default:
-		e.time(t.UTC())
+		e.time(t)
 	}
 	return e
 }
@@ -396,7 +396,7 @@ func (e *JSONEvent) Interface(key string, i interface{}) *JSONEvent {
 	e.key(',', key)
 	marshaled, err := json.Marshal(i)
 	if err != nil {
-		e.string(fmt.Sprintf("marshaling error: %v", err), e.escapeHTML)
+		e.string("marshaling error: "+err.Error(), e.escapeHTML)
 	} else {
 		e.string(*(*string)(unsafe.Pointer(&marshaled)), e.escapeHTML)
 	}
@@ -409,8 +409,9 @@ func (e *JSONEvent) Send() {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	jepool.Put(e)
-	if e.level == FatalLevel {
+	if fatal {
 		panic("fatal")
 	}
 }
@@ -423,8 +424,9 @@ func (e *JSONEvent) Msg(msg string) {
 	e.string(msg, e.escapeHTML)
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	jepool.Put(e)
-	if e.level == FatalLevel {
+	if fatal {
 		panic(msg)
 	}
 }
@@ -440,6 +442,7 @@ func (e *JSONEvent) key(b byte, key string) {
 }
 
 func (e *JSONEvent) time(now time.Time) {
+	now = now.UTC()
 	n := len(e.buf)
 	e.buf = append(e.buf, "\"2006-01-02T15:04:05.999Z\""...)
 	var a, b int

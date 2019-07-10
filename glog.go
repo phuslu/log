@@ -151,8 +151,9 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	gepool.Put(e)
-	if e.level >= FatalLevel {
+	if fatal {
 		panic(msg)
 	}
 }
@@ -166,8 +167,9 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	gepool.Put(e)
-	if e.level >= FatalLevel {
+	if fatal {
 		panic(msg)
 	}
 }
@@ -181,8 +183,9 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	gepool.Put(e)
-	if e.level >= FatalLevel {
+	if fatal {
 		panic(msg)
 	}
 }
@@ -196,8 +199,9 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
+	var fatal bool = e.level == FatalLevel
 	gepool.Put(e)
-	if e.level >= FatalLevel {
+	if fatal {
 		panic(msg)
 	}
 }
