@@ -113,26 +113,26 @@ func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
 	// level
 	switch level {
 	case DebugLevel:
-		e.colorize('D', ColorGreen)
+		e.colorize('D', colorGreen)
 	case InfoLevel:
-		e.colorize('I', ColorCyan)
+		e.colorize('I', colorCyan)
 	case WarnLevel:
-		e.colorize('W', ColorYellow)
+		e.colorize('W', colorYellow)
 	case ErrorLevel:
-		e.colorize('E', ColorRed)
+		e.colorize('E', colorRed)
 	case FatalLevel:
-		e.colorize('F', ColorRed)
+		e.colorize('F', colorRed)
 	default:
-		e.colorize('?', ColorRed)
+		e.colorize('?', colorRed)
 	}
 	// time
 	now := timeNow()
 	if e.color {
-		e.buf = append(e.buf, ColorDarkGray...)
+		e.buf = append(e.buf, colorDarkGray...)
 	}
 	e.time(now)
 	if e.color {
-		e.buf = append(e.buf, ColorReset...)
+		e.buf = append(e.buf, colorReset...)
 	}
 	e.buf = append(e.buf, ' ')
 	// threadid
@@ -151,7 +151,7 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	gepool.Put(e)
 	if fatal {
 		panic(msg)
@@ -167,7 +167,7 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	gepool.Put(e)
 	if fatal {
 		panic(msg)
@@ -183,7 +183,7 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	gepool.Put(e)
 	if fatal {
 		panic(msg)
@@ -199,7 +199,7 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	gepool.Put(e)
 	if fatal {
 		panic(msg)
@@ -271,11 +271,11 @@ func (e *GlogEvent) caller(depth int) {
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.colorize(']', ColorCyan)
+	e.colorize(']', colorCyan)
 	e.buf = append(e.buf, ' ')
 }
 
-func (e *GlogEvent) colorize(b byte, c ANSIColor) {
+func (e *GlogEvent) colorize(b byte, c color) {
 	if e == nil {
 		return
 	}
@@ -287,5 +287,5 @@ func (e *GlogEvent) colorize(b byte, c ANSIColor) {
 
 	e.buf = append(e.buf, c...)
 	e.buf = append(e.buf, b)
-	e.buf = append(e.buf, ColorReset...)
+	e.buf = append(e.buf, colorReset...)
 }

@@ -26,13 +26,13 @@ func ParseLevel(s string) (level Level) {
 	return
 }
 
-type ANSIColor string
+type color string
 
 const (
-	ColorReset    ANSIColor = "\x1b[0m"
-	ColorRed      ANSIColor = "\x1b[31m"
-	ColorGreen    ANSIColor = "\x1b[32m"
-	ColorYellow   ANSIColor = "\x1b[33m"
-	ColorCyan     ANSIColor = "\x1b[36m"
-	ColorDarkGray ANSIColor = "\x1b[90m"
+	colorReset    color = "\x1b[0m"
+	colorRed      color = "\x1b[31m"
+	colorGreen    color = "\x1b[32m"
+	colorYellow   color = "\x1b[33m"
+	colorCyan     color = "\x1b[36m"
+	colorDarkGray color = "\x1b[90m"
 )

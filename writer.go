@@ -211,7 +211,7 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", ColorDarkGray, v, ColorReset)
+			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", colorDarkGray, v, colorReset)
 		} else {
 			n, err = fmt.Fprintf(os.Stderr, "%s ", v)
 		}
@@ -220,23 +220,23 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 
 	if v, ok := m["level"]; ok {
 		if w.ANSIColor {
-			var c ANSIColor
+			var c color
 			var s string
 			switch s, _ = v.(string); ParseLevel(s) {
 			case DebugLevel:
-				c, s = ColorYellow, "DBG"
+				c, s = colorYellow, "DBG"
 			case InfoLevel:
-				c, s = ColorGreen, "INF"
+				c, s = colorGreen, "INF"
 			case WarnLevel:
-				c, s = ColorRed, "WRN"
+				c, s = colorRed, "WRN"
 			case ErrorLevel:
-				c, s = ColorRed, "ERR"
+				c, s = colorRed, "ERR"
 			case FatalLevel:
-				c, s = ColorRed, "FTL"
+				c, s = colorRed, "FTL"
 			default:
-				c, s = ColorRed, "???"
+				c, s = colorRed, "???"
 			}
-			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", c, s, ColorReset)
+			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", c, s, colorReset)
 		} else {
 			n, err = fmt.Fprintf(os.Stderr, "%s ", v)
 		}
@@ -253,7 +253,7 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, "%s>%s %s", ColorCyan, ColorReset, v)
+			n, err = fmt.Fprintf(os.Stderr, "%s>%s %s", colorCyan, colorReset, v)
 		} else {
 			n, err = fmt.Fprintf(os.Stderr, "> %s", v)
 		}
@@ -266,7 +266,7 @@ func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
 			continue
 		}
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, " %s%s=%s%v", ColorCyan, k, ColorReset, v)
+			n, err = fmt.Fprintf(os.Stderr, " %s%s=%s%v", colorCyan, k, colorReset, v)
 		} else {
 			n, err = fmt.Fprintf(os.Stderr, " %s=%v", k, v)
 		}

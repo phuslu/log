@@ -409,7 +409,7 @@ func (e *JSONEvent) Send() {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	jepool.Put(e)
 	if fatal {
 		panic("fatal")
@@ -424,7 +424,7 @@ func (e *JSONEvent) Msg(msg string) {
 	e.string(msg, e.escapeHTML)
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
-	var fatal bool = e.level == FatalLevel
+	var fatal = e.level == FatalLevel
 	jepool.Put(e)
 	if fatal {
 		panic(msg)
