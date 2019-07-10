@@ -121,23 +121,7 @@ func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
 	}
 	// caller
 	if e.caller {
-		_, file, line, ok := runtime.Caller(2)
-		if !ok {
-			file = "???"
-			line = 1
-		} else {
-			if i := strings.LastIndex(file, "/"); i >= 0 {
-				file = file[i+1:]
-			}
-		}
-		if line < 0 {
-			line = 0
-		}
-		e.buf = append(e.buf, ",\"caller\":\""...)
-		e.buf = append(e.buf, file...)
-		e.buf = append(e.buf, ':')
-		e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-		e.buf = append(e.buf, '"')
+		e.callers(1)
 	}
 	return
 }
@@ -403,6 +387,16 @@ func (e *JSONEvent) Interface(key string, i interface{}) *JSONEvent {
 	return e
 }
 
+func (e *JSONEvent) Caller() *JSONEvent {
+	if e == nil {
+		return nil
+	}
+	if !e.caller {
+		e.callers(0)
+	}
+	return e
+}
+
 func (e *JSONEvent) Send() {
 	if e == nil {
 		return
@@ -490,6 +484,26 @@ func (e *JSONEvent) time(now time.Time) {
 	b = a / 10
 	e.buf[n+22] = byte('0' + a - 10*b)
 	e.buf[n+21] = byte('0' + b)
+}
+
+func (e *JSONEvent) callers(skip int) {
+	_, file, line, ok := runtime.Caller(2 + skip)
+	if !ok {
+		file = "???"
+		line = 1
+	} else {
+		if i := strings.LastIndex(file, "/"); i >= 0 {
+			file = file[i+1:]
+		}
+	}
+	if line < 0 {
+		line = 0
+	}
+	e.buf = append(e.buf, ",\"caller\":\""...)
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, '"')
 }
 
 var hex = "0123456789abcdef"

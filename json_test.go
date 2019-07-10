@@ -30,12 +30,18 @@ func TestJOSNLogger(t *testing.T) {
 }
 
 func TestJOSNLoggerCaller(t *testing.T) {
-	log := JSONLogger{
+	log1 := JSONLogger{
 		Level:  ParseLevel("debug"),
 		Caller: true,
 		Writer: &Writer{},
 	}
-	log.Info().Msg("this is caller log event")
+	log1.Info().Msg("this is caller log event 1")
+
+	log2 := JSONLogger{
+		Level:  ParseLevel("debug"),
+		Writer: &Writer{},
+	}
+	log2.Info().Caller().Msg("this is caller log event 2")
 }
 
 func TestJOSNLoggerTime(t *testing.T) {
