@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var DefaultGlogLogger = GlogLogger{InfoLevel, false, &Writer{}}
-
 type GlogLogger struct {
 	Level     Level
 	ANSIColor bool
@@ -20,11 +18,10 @@ type GlogLogger struct {
 }
 
 type GlogEvent struct {
-	buf       []byte
-	level     Level
-	Level     Level
-	ANSIColor bool
-	Write     func(p []byte) (n int, err error)
+	buf   []byte
+	level Level
+	color bool
+	write func(p []byte) (n int, err error)
 }
 
 func (l GlogLogger) Info(args ...interface{}) {
@@ -110,10 +107,9 @@ func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
 	// [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
 	e = gepool.Get().(*GlogEvent)
 	e.buf = e.buf[:0]
-	e.level = level
-	e.Level = l.Level
-	e.ANSIColor = l.ANSIColor
-	e.Write = l.Writer.Write
+	e.level = l.Level
+	e.color = l.ANSIColor
+	e.write = l.Writer.Write
 	// level
 	switch level {
 	case DebugLevel:
@@ -131,11 +127,11 @@ func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
 	}
 	// time
 	now := timeNow()
-	if e.ANSIColor {
+	if e.color {
 		e.buf = append(e.buf, ColorDarkGray...)
 	}
 	e.time(now)
-	if e.ANSIColor {
+	if e.color {
 		e.buf = append(e.buf, ColorReset...)
 	}
 	e.buf = append(e.buf, ' ')
@@ -154,7 +150,7 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
-	e.Write(e.buf)
+	e.write(e.buf)
 	gepool.Put(e)
 	if e.level >= FatalLevel {
 		panic(msg)
@@ -169,7 +165,7 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	msg := fmt.Sprint(args...)
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
-	e.Write(e.buf)
+	e.write(e.buf)
 	gepool.Put(e)
 	if e.level >= FatalLevel {
 		panic(msg)
@@ -184,7 +180,7 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	msg := fmt.Sprintln(args...)
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
-	e.Write(e.buf)
+	e.write(e.buf)
 	gepool.Put(e)
 	if e.level >= FatalLevel {
 		panic(msg)
@@ -199,7 +195,7 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	msg := fmt.Sprint(args...)
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
-	e.Write(e.buf)
+	e.write(e.buf)
 	gepool.Put(e)
 	if e.level >= FatalLevel {
 		panic(msg)
@@ -280,7 +276,7 @@ func (e *GlogEvent) colorize(b byte, c ANSIColor) {
 		return
 	}
 
-	if !e.ANSIColor {
+	if !e.color {
 		e.buf = append(e.buf, b)
 		return
 	}

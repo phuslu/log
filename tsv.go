@@ -14,9 +14,10 @@ type TSVLogger struct {
 }
 
 type TSVEvent struct {
-	logger TSVLogger
-	sep    byte
 	buf    []byte
+	sep    byte
+	escape bool
+	write  func(p []byte) (n int, err error)
 }
 
 var tepool = sync.Pool{
@@ -27,10 +28,10 @@ var tepool = sync.Pool{
 
 func (l TSVLogger) New() (e *TSVEvent) {
 	e = tepool.Get().(*TSVEvent)
-	e.logger = l
-	if l.Separator != 0 {
-		e.sep = l.Separator
-	} else {
+	e.sep = l.Separator
+	e.escape = l.Escape
+	e.write = l.Writer.Write
+	if e.sep == 0 {
 		e.sep = '\t'
 	}
 	e.buf = e.buf[:0]
@@ -121,7 +122,7 @@ func (e *TSVEvent) Str(val string) *TSVEvent {
 	if e == nil {
 		return nil
 	}
-	if e.logger.Escape && strings.IndexByte(val, e.logger.Separator) >= 0 {
+	if e.escape && strings.IndexByte(val, e.sep) >= 0 {
 		e.buf = append(e.buf, '"')
 		e.buf = append(e.buf, val...)
 		e.buf = append(e.buf, '"', e.sep)
@@ -146,6 +147,6 @@ func (e *TSVEvent) Send() {
 		return
 	}
 	e.buf[len(e.buf)-1] = '\n'
-	e.logger.Writer.Write(e.buf)
+	e.write(e.buf)
 	tepool.Put(e)
 }
