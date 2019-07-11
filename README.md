@@ -37,10 +37,11 @@ To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 ```go
 log.DefaultLogger.Writer = &log.ConsoleWriter{ANSIColor: true}
 
-log.Info().Str("foo", "bar").Msg("hello world")
+log.Info().Caller().Str("foo", "bar").Msg("hello world")
 
-// Output: 2019-07-10T05:35:54.277Z INF test.go:42 > hello world foo=bar
+// Output: 2019-07-11T16:41:43.256Z INF pretty.go:10 > hello world foo=bar
 ```
+![](https://user-images.githubusercontent.com/195836/61068992-ec8af200-a43d-11e9-891f-c6987b402f21.png)
 
 ### Customize the configuration and formatting:
 
