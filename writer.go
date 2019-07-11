@@ -34,11 +34,11 @@ type Writer struct {
 
 func (w *Writer) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 
 	if w.file == nil {
 		err = w.rotate(false)
 		if err != nil {
+			w.mu.Unlock()
 			return
 		}
 	}
@@ -50,24 +50,26 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		w.rotate(true)
 	}
 
+	w.mu.Unlock()
 	return
 }
 
-func (w *Writer) Close() error {
+func (w *Writer) Close() (err error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 
-	err := w.file.Close()
+	err = w.file.Close()
 	w.file = nil
 	w.size = 0
-	return err
+
+	w.mu.Unlock()
+	return
 }
 
-func (w *Writer) Rotate() error {
+func (w *Writer) Rotate() (err error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	return w.rotate(true)
+	err = w.rotate(true)
+	w.mu.Unlock()
+	return
 }
 
 func (w *Writer) rotate(newFile bool) (err error) {
