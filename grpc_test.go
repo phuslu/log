@@ -8,8 +8,7 @@ import (
 
 func TestGrpcLogger(t *testing.T) {
 	log := Logger{
-		Level:      ParseLevel("debug"),
-		EscapeHTML: false,
+		Level: ParseLevel("debug"),
 		Writer: &Writer{
 			LocalTime: true,
 		},

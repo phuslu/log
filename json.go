@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 	"unsafe"
 )
 
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
 	Caller:     false,
-	EscapeHTML: false,
 	TimeField:  "",
 	TimeFormat: "",
 	Writer:     &Writer{},
@@ -26,7 +25,6 @@ var DefaultLogger = Logger{
 type Logger struct {
 	Level      Level
 	Caller     bool
-	EscapeHTML bool
 	TimeField  string
 	TimeFormat string
 	Writer     io.Writer
@@ -35,7 +33,6 @@ type Logger struct {
 type Event struct {
 	buf        []byte
 	fatal      bool
-	escapeHTML bool
 	timeFormat string
 	write      func(p []byte) (n int, err error)
 }
@@ -93,7 +90,6 @@ func (l Logger) WithLevel(level Level) (e *Event) {
 	e = epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.fatal = level == FatalLevel
-	e.escapeHTML = l.EscapeHTML
 	e.timeFormat = l.TimeFormat
 	e.write = l.Writer.Write
 	// time
@@ -217,7 +213,7 @@ func (e *Event) Err(err error) *Event {
 		e.buf = append(e.buf, ",\"error\":null"...)
 	} else {
 		e.buf = append(e.buf, ",\"error\":"...)
-		e.string(err.Error(), e.escapeHTML)
+		e.string(err.Error())
 	}
 	return e
 }
@@ -236,7 +232,7 @@ func (e *Event) Errs(key string, errs []error) *Event {
 		if err == nil {
 			e.buf = append(e.buf, "null"...)
 		} else {
-			e.string(err.Error(), e.escapeHTML)
+			e.string(err.Error())
 		}
 	}
 	e.buf = append(e.buf, ']')
@@ -348,7 +344,7 @@ func (e *Event) Str(key string, val string) *Event {
 		return nil
 	}
 	e.key(',', key)
-	e.string(val, e.escapeHTML)
+	e.string(val)
 	return e
 }
 
@@ -362,7 +358,7 @@ func (e *Event) Strs(key string, vals []string) *Event {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.string(val, e.escapeHTML)
+		e.string(val)
 	}
 	e.buf = append(e.buf, ']')
 	return e
@@ -373,7 +369,7 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 		return nil
 	}
 	e.key(',', key)
-	e.string(*(*string)(unsafe.Pointer(&val)), e.escapeHTML)
+	e.string(*(*string)(unsafe.Pointer(&val)))
 	return e
 }
 
@@ -384,9 +380,9 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	e.key(',', key)
 	marshaled, err := json.Marshal(i)
 	if err != nil {
-		e.string("marshaling error: "+err.Error(), e.escapeHTML)
+		e.string("marshaling error: " + err.Error())
 	} else {
-		e.string(*(*string)(unsafe.Pointer(&marshaled)), e.escapeHTML)
+		e.string(*(*string)(unsafe.Pointer(&marshaled)))
 	}
 	return e
 }
@@ -418,7 +414,7 @@ func (e *Event) Msg(msg string) {
 		return
 	}
 	e.buf = append(e.buf, ",\"message\":"...)
-	e.string(msg, e.escapeHTML)
+	e.string(msg)
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
 	if e.fatal {
@@ -512,283 +508,82 @@ func (e *Event) caller(skip int) {
 
 var hex = "0123456789abcdef"
 
-// https://golang.org/src/encoding/json/encode.go
-func (e *Event) string(value string, escapeHTML bool) {
+// refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
+func (e *Event) string(s string) {
 	e.buf = append(e.buf, '"')
-	start := 0
-	for i := 0; i < len(value); {
-		if b := value[i]; b < utf8.RuneSelf {
-			if htmlSafeSet[b] || (!escapeHTML && safeSet[b]) {
-				i++
-				continue
-			}
-			if start < i {
-				e.buf = append(e.buf, value[start:i]...)
-			}
-			switch b {
-			case '\\', '"':
-				e.buf = append(e.buf, '\\', b)
-			case '\n':
-				e.buf = append(e.buf, '\\', 'n')
-			case '\r':
-				e.buf = append(e.buf, '\\', 'r')
-			case '\t':
-				e.buf = append(e.buf, '\\', 't')
-			default:
-				// This encodes bytes < 0x20 except for \t, \n and \r.
-				// If escapeHTML is set, it also escapes <, >, and &
-				// because they can lead to security holes when
-				// user-controlled strings are rendered into JSON
-				// and served to some browsers.
-				e.buf = append(e.buf, '\\', 'u', '0', '0', hex[b>>4], hex[b&0xF])
-			}
-			i++
-			start = i
-			continue
-		}
-		c, size := utf8.DecodeRuneInString(value[i:])
-		if c == utf8.RuneError && size == 1 {
-			if start < i {
-				e.buf = append(e.buf, value[start:i]...)
-			}
-			e.buf = append(e.buf, '\\', 'u', 'f', 'f', 'f', 'd')
-			i += size
-			start = i
-			continue
-		}
-		// U+2028 is LINE SEPARATOR.
-		// U+2029 is PARAGRAPH SEPARATOR.
-		// They are both technically valid characters in JSON strings,
-		// but don't work in JSONP, which has to be evaluated as JavaScript,
-		// and can lead to security holes there. It is valid JSON to
-		// escape them, so we do so unconditionally.
-		// See http://timelessrepo.com/json-isnt-a-javascript-subset for discussion.
-		if c == '\u2028' || c == '\u2029' {
-			if start < i {
-				e.buf = append(e.buf, value[start:i]...)
-			}
-			e.buf = append(e.buf, '\\', 'u', '2', '0', '2', hex[c&0xF])
-			i += size
-			start = i
-			continue
-		}
-		i += size
+	if len(s) > 24 &&
+		strings.IndexByte(s, '"') < 0 &&
+		strings.IndexByte(s, '\\') < 0 &&
+		strings.IndexByte(s, '\n') < 0 &&
+		strings.IndexByte(s, '\r') < 0 &&
+		strings.IndexByte(s, '\t') < 0 &&
+		strings.IndexByte(s, '\f') < 0 &&
+		strings.IndexByte(s, '\b') < 0 &&
+		strings.IndexByte(s, '<') < 0 &&
+		strings.IndexByte(s, '\'') < 0 &&
+		strings.IndexByte(s, 0) < 0 {
+
+		// fast path - nothing to escape
+		e.buf = append(e.buf, s...)
+		return
 	}
-	if start < len(value) {
-		e.buf = append(e.buf, value[start:]...)
+
+	// slow path
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh := reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}
+	b := *(*[]byte)(unsafe.Pointer(&bh))
+	j := 0
+	n := len(b)
+	if n > 0 {
+		// Hint the compiler to remove bounds checks in the loop below.
+		_ = b[n-1]
 	}
+	for i := 0; i < n; i++ {
+		switch b[i] {
+		case '"':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', '"')
+			j = i + 1
+		case '\\':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', '\\')
+			j = i + 1
+		case '\n':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'n')
+			j = i + 1
+		case '\r':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'r')
+			j = i + 1
+		case '\t':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 't')
+			j = i + 1
+		case '\f':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', 'c')
+			j = i + 1
+		case '\b':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '8')
+			j = i + 1
+		case '<':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '3', 'c')
+			j = i + 1
+		case '\'':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '2', '7')
+			j = i + 1
+		case 0:
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '0')
+			j = i + 1
+		}
+	}
+	e.buf = append(e.buf, b[j:]...)
 	e.buf = append(e.buf, '"')
-}
-
-// safeSet holds the value true if the ASCII character with the given array
-// position can be represented inside a JSON string without any further
-// escaping.
-//
-// All values are true except for the ASCII control characters (0-31), the
-// double quote ("), and the backslash character ("\").
-var safeSet = [utf8.RuneSelf]bool{
-	' ':      true,
-	'!':      true,
-	'"':      false,
-	'#':      true,
-	'$':      true,
-	'%':      true,
-	'&':      true,
-	'\'':     true,
-	'(':      true,
-	')':      true,
-	'*':      true,
-	'+':      true,
-	',':      true,
-	'-':      true,
-	'.':      true,
-	'/':      true,
-	'0':      true,
-	'1':      true,
-	'2':      true,
-	'3':      true,
-	'4':      true,
-	'5':      true,
-	'6':      true,
-	'7':      true,
-	'8':      true,
-	'9':      true,
-	':':      true,
-	';':      true,
-	'<':      true,
-	'=':      true,
-	'>':      true,
-	'?':      true,
-	'@':      true,
-	'A':      true,
-	'B':      true,
-	'C':      true,
-	'D':      true,
-	'E':      true,
-	'F':      true,
-	'G':      true,
-	'H':      true,
-	'I':      true,
-	'J':      true,
-	'K':      true,
-	'L':      true,
-	'M':      true,
-	'N':      true,
-	'O':      true,
-	'P':      true,
-	'Q':      true,
-	'R':      true,
-	'S':      true,
-	'T':      true,
-	'U':      true,
-	'V':      true,
-	'W':      true,
-	'X':      true,
-	'Y':      true,
-	'Z':      true,
-	'[':      true,
-	'\\':     false,
-	']':      true,
-	'^':      true,
-	'_':      true,
-	'`':      true,
-	'a':      true,
-	'b':      true,
-	'c':      true,
-	'd':      true,
-	'e':      true,
-	'f':      true,
-	'g':      true,
-	'h':      true,
-	'i':      true,
-	'j':      true,
-	'k':      true,
-	'l':      true,
-	'm':      true,
-	'n':      true,
-	'o':      true,
-	'p':      true,
-	'q':      true,
-	'r':      true,
-	's':      true,
-	't':      true,
-	'u':      true,
-	'v':      true,
-	'w':      true,
-	'x':      true,
-	'y':      true,
-	'z':      true,
-	'{':      true,
-	'|':      true,
-	'}':      true,
-	'~':      true,
-	'\u007f': true,
-}
-
-// htmlSafeSet holds the value true if the ASCII character with the given
-// array position can be safely represented inside a JSON string, embedded
-// inside of HTML <script> tags, without any additional escaping.
-//
-// All values are true except for the ASCII control characters (0-31), the
-// double quote ("), the backslash character ("\"), HTML opening and closing
-// tags ("<" and ">"), and the ampersand ("&").
-var htmlSafeSet = [utf8.RuneSelf]bool{
-	' ':      true,
-	'!':      true,
-	'"':      false,
-	'#':      true,
-	'$':      true,
-	'%':      true,
-	'&':      false,
-	'\'':     true,
-	'(':      true,
-	')':      true,
-	'*':      true,
-	'+':      true,
-	',':      true,
-	'-':      true,
-	'.':      true,
-	'/':      true,
-	'0':      true,
-	'1':      true,
-	'2':      true,
-	'3':      true,
-	'4':      true,
-	'5':      true,
-	'6':      true,
-	'7':      true,
-	'8':      true,
-	'9':      true,
-	':':      true,
-	';':      true,
-	'<':      false,
-	'=':      true,
-	'>':      false,
-	'?':      true,
-	'@':      true,
-	'A':      true,
-	'B':      true,
-	'C':      true,
-	'D':      true,
-	'E':      true,
-	'F':      true,
-	'G':      true,
-	'H':      true,
-	'I':      true,
-	'J':      true,
-	'K':      true,
-	'L':      true,
-	'M':      true,
-	'N':      true,
-	'O':      true,
-	'P':      true,
-	'Q':      true,
-	'R':      true,
-	'S':      true,
-	'T':      true,
-	'U':      true,
-	'V':      true,
-	'W':      true,
-	'X':      true,
-	'Y':      true,
-	'Z':      true,
-	'[':      true,
-	'\\':     false,
-	']':      true,
-	'^':      true,
-	'_':      true,
-	'`':      true,
-	'a':      true,
-	'b':      true,
-	'c':      true,
-	'd':      true,
-	'e':      true,
-	'f':      true,
-	'g':      true,
-	'h':      true,
-	'i':      true,
-	'j':      true,
-	'k':      true,
-	'l':      true,
-	'm':      true,
-	'n':      true,
-	'o':      true,
-	'p':      true,
-	'q':      true,
-	'r':      true,
-	's':      true,
-	't':      true,
-	'u':      true,
-	'v':      true,
-	'w':      true,
-	'x':      true,
-	'y':      true,
-	'z':      true,
-	'{':      true,
-	'|':      true,
-	'}':      true,
-	'~':      true,
-	'\u007f': true,
 }
 
 // stacks is a wrapper for runtime.Stack that attempts to recover the data for all goroutines.

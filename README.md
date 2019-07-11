@@ -49,7 +49,6 @@ log.Info().Caller().Str("foo", "bar").Msg("hello world")
 logger := log.Logger{
 	Level:      log.DebugLevel,
 	Caller:     true,
-	EscapeHTML: true,
 	TimeField:  "_time",
 	TimeFormat: time.RFC850,
 	Writer:     &log.Writer{},
