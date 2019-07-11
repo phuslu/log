@@ -27,9 +27,7 @@ type JSONLogger struct {
 type JSONEvent struct {
 	buf        []byte
 	level      Level
-	caller     bool
 	escapeHTML bool
-	timeField  string
 	timeFormat string
 	write      func(p []byte) (n int, err error)
 }
@@ -86,18 +84,16 @@ func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
 	}
 	e = jepool.Get().(*JSONEvent)
 	e.buf = e.buf[:0]
-	e.level = level
-	e.caller = l.Caller
+	e.level = l.Level
 	e.escapeHTML = l.EscapeHTML
-	e.timeField = l.TimeField
 	e.timeFormat = l.TimeFormat
 	e.write = l.Writer.Write
 	// time
 	now := timeNow()
-	if e.timeField == "" {
+	if l.TimeField == "" {
 		e.buf = append(e.buf, "{\"time\":"...)
 	} else {
-		e.key('{', e.timeField)
+		e.key('{', l.TimeField)
 	}
 	if e.timeFormat == "" {
 		e.time(now)
@@ -120,8 +116,8 @@ func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
 	}
 	// caller
-	if e.caller {
-		e.callers(1)
+	if l.Caller {
+		e.caller(1)
 	}
 	return
 }
@@ -391,9 +387,7 @@ func (e *JSONEvent) Caller() *JSONEvent {
 	if e == nil {
 		return nil
 	}
-	if !e.caller {
-		e.callers(0)
-	}
+	e.caller(0)
 	return e
 }
 
@@ -486,7 +480,7 @@ func (e *JSONEvent) time(now time.Time) {
 	e.buf[n+21] = byte('0' + b)
 }
 
-func (e *JSONEvent) callers(skip int) {
+func (e *JSONEvent) caller(skip int) {
 	_, file, line, ok := runtime.Caller(2 + skip)
 	if !ok {
 		file = "???"
