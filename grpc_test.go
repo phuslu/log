@@ -7,7 +7,7 @@ import (
 )
 
 func TestGrpcLogger(t *testing.T) {
-	log := JSONLogger{
+	log := Logger{
 		Level:      ParseLevel("debug"),
 		EscapeHTML: false,
 		Writer: &Writer{

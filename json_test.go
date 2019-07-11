@@ -7,7 +7,7 @@ import (
 )
 
 func TestJOSNLogger(t *testing.T) {
-	log := JSONLogger{
+	log := Logger{
 		Level:      ParseLevel("debug"),
 		EscapeHTML: false,
 		Writer: &Writer{
@@ -30,14 +30,14 @@ func TestJOSNLogger(t *testing.T) {
 }
 
 func TestJOSNLoggerCaller(t *testing.T) {
-	log1 := JSONLogger{
+	log1 := Logger{
 		Level:  ParseLevel("debug"),
 		Caller: true,
 		Writer: &Writer{},
 	}
 	log1.Info().Msg("this is caller log event 1")
 
-	log2 := JSONLogger{
+	log2 := Logger{
 		Level:  ParseLevel("debug"),
 		Writer: &Writer{},
 	}
@@ -45,7 +45,7 @@ func TestJOSNLoggerCaller(t *testing.T) {
 }
 
 func TestJOSNLoggerTime(t *testing.T) {
-	log := JSONLogger{
+	log := Logger{
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
 		TimeFormat: time.RFC822,

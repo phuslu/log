@@ -45,7 +45,7 @@ log.Info().Str("foo", "bar").Msg("hello world")
 ### Customize the configuration and formatting:
 
 ```go
-logger := log.JSONLogger{
+logger := log.Logger{
 	Level:      log.DebugLevel,
 	Caller:     true,
 	EscapeHTML: true,
@@ -71,7 +71,7 @@ import (
 func main() {
 	var localtime bool = true
 
-	logger := log.JSONLogger{
+	logger := log.Logger{
 		Level:      ParseLevel("info"),
 		Writer:     &log.Writer{
 			Filename:   "main.log",

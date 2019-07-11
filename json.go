@@ -14,9 +14,16 @@ import (
 	"unsafe"
 )
 
-var DefaultLogger = JSONLogger{DebugLevel, false, false, "", "", &Writer{}}
+var DefaultLogger = Logger{
+	Level:      DebugLevel,
+	Caller:     false,
+	EscapeHTML: false,
+	TimeField:  "",
+	TimeFormat: "",
+	Writer:     &Writer{},
+}
 
-type JSONLogger struct {
+type Logger struct {
 	Level      Level
 	Caller     bool
 	EscapeHTML bool
@@ -25,7 +32,7 @@ type JSONLogger struct {
 	Writer     io.Writer
 }
 
-type JSONEvent struct {
+type Event struct {
 	buf        []byte
 	fatal      bool
 	escapeHTML bool
@@ -33,57 +40,57 @@ type JSONEvent struct {
 	write      func(p []byte) (n int, err error)
 }
 
-func Debug() *JSONEvent {
+func Debug() *Event {
 	return DefaultLogger.WithLevel(DebugLevel)
 }
 
-func Info() *JSONEvent {
+func Info() *Event {
 	return DefaultLogger.WithLevel(InfoLevel)
 }
 
-func Warn() *JSONEvent {
+func Warn() *Event {
 	return DefaultLogger.WithLevel(WarnLevel)
 }
 
-func Error() *JSONEvent {
+func Error() *Event {
 	return DefaultLogger.WithLevel(ErrorLevel)
 }
 
-func Fatal() *JSONEvent {
+func Fatal() *Event {
 	return DefaultLogger.WithLevel(FatalLevel)
 }
 
-func (l JSONLogger) Debug() *JSONEvent {
+func (l Logger) Debug() *Event {
 	return l.WithLevel(DebugLevel)
 }
 
-func (l JSONLogger) Info() *JSONEvent {
+func (l Logger) Info() *Event {
 	return l.WithLevel(InfoLevel)
 }
 
-func (l JSONLogger) Warn() *JSONEvent {
+func (l Logger) Warn() *Event {
 	return l.WithLevel(WarnLevel)
 }
 
-func (l JSONLogger) Error() *JSONEvent {
+func (l Logger) Error() *Event {
 	return l.WithLevel(ErrorLevel)
 }
 
-func (l JSONLogger) Fatal() *JSONEvent {
+func (l Logger) Fatal() *Event {
 	return l.WithLevel(FatalLevel)
 }
 
-var jepool = sync.Pool{
+var epool = sync.Pool{
 	New: func() interface{} {
-		return new(JSONEvent)
+		return new(Event)
 	},
 }
 
-func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
+func (l Logger) WithLevel(level Level) (e *Event) {
 	if level < l.Level {
 		return
 	}
-	e = jepool.Get().(*JSONEvent)
+	e = epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.fatal = level == FatalLevel
 	e.escapeHTML = l.EscapeHTML
@@ -123,7 +130,7 @@ func (l JSONLogger) WithLevel(level Level) (e *JSONEvent) {
 	return
 }
 
-func (e *JSONEvent) Time(key string, t time.Time) *JSONEvent {
+func (e *Event) Time(key string, t time.Time) *Event {
 	if e == nil {
 		return nil
 	}
@@ -139,7 +146,7 @@ func (e *JSONEvent) Time(key string, t time.Time) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Timestamp() *JSONEvent {
+func (e *Event) Timestamp() *Event {
 	if e == nil {
 		return nil
 	}
@@ -148,7 +155,7 @@ func (e *JSONEvent) Timestamp() *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Bool(key string, b bool) *JSONEvent {
+func (e *Event) Bool(key string, b bool) *Event {
 	if e == nil {
 		return nil
 	}
@@ -157,7 +164,7 @@ func (e *JSONEvent) Bool(key string, b bool) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Bools(key string, b []bool) *JSONEvent {
+func (e *Event) Bools(key string, b []bool) *Event {
 	if e == nil {
 		return nil
 	}
@@ -173,7 +180,7 @@ func (e *JSONEvent) Bools(key string, b []bool) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Dur(key string, d time.Duration) *JSONEvent {
+func (e *Event) Dur(key string, d time.Duration) *Event {
 	if e == nil {
 		return nil
 	}
@@ -184,7 +191,7 @@ func (e *JSONEvent) Dur(key string, d time.Duration) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Durs(key string, d []time.Duration) *JSONEvent {
+func (e *Event) Durs(key string, d []time.Duration) *Event {
 	if e == nil {
 		return nil
 	}
@@ -202,7 +209,7 @@ func (e *JSONEvent) Durs(key string, d []time.Duration) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Err(err error) *JSONEvent {
+func (e *Event) Err(err error) *Event {
 	if e == nil {
 		return nil
 	}
@@ -215,7 +222,7 @@ func (e *JSONEvent) Err(err error) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Errs(key string, errs []error) *JSONEvent {
+func (e *Event) Errs(key string, errs []error) *Event {
 	if e == nil {
 		return nil
 	}
@@ -236,7 +243,7 @@ func (e *JSONEvent) Errs(key string, errs []error) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Float64(key string, f float64) *JSONEvent {
+func (e *Event) Float64(key string, f float64) *Event {
 	if e == nil {
 		return nil
 	}
@@ -245,7 +252,7 @@ func (e *JSONEvent) Float64(key string, f float64) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Floats64(key string, f []float64) *JSONEvent {
+func (e *Event) Floats64(key string, f []float64) *Event {
 	if e == nil {
 		return nil
 	}
@@ -261,7 +268,7 @@ func (e *JSONEvent) Floats64(key string, f []float64) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Floats32(key string, f []float32) *JSONEvent {
+func (e *Event) Floats32(key string, f []float32) *Event {
 	if e == nil {
 		return nil
 	}
@@ -277,7 +284,7 @@ func (e *JSONEvent) Floats32(key string, f []float32) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Int64(key string, i int64) *JSONEvent {
+func (e *Event) Int64(key string, i int64) *Event {
 	if e == nil {
 		return nil
 	}
@@ -286,7 +293,7 @@ func (e *JSONEvent) Int64(key string, i int64) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Uint64(key string, i uint64) *JSONEvent {
+func (e *Event) Uint64(key string, i uint64) *Event {
 	if e == nil {
 		return nil
 	}
@@ -295,39 +302,39 @@ func (e *JSONEvent) Uint64(key string, i uint64) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Float32(key string, f float32) *JSONEvent {
+func (e *Event) Float32(key string, f float32) *Event {
 	return e.Float64(key, float64(f))
 }
 
-func (e *JSONEvent) Int(key string, i int) *JSONEvent {
+func (e *Event) Int(key string, i int) *Event {
 	return e.Int64(key, int64(i))
 }
 
-func (e *JSONEvent) Int32(key string, i int32) *JSONEvent {
+func (e *Event) Int32(key string, i int32) *Event {
 	return e.Int64(key, int64(i))
 }
 
-func (e *JSONEvent) Int16(key string, i int16) *JSONEvent {
+func (e *Event) Int16(key string, i int16) *Event {
 	return e.Int64(key, int64(i))
 }
 
-func (e *JSONEvent) Int8(key string, i int8) *JSONEvent {
+func (e *Event) Int8(key string, i int8) *Event {
 	return e.Int64(key, int64(i))
 }
 
-func (e *JSONEvent) Uint32(key string, i uint32) *JSONEvent {
+func (e *Event) Uint32(key string, i uint32) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
-func (e *JSONEvent) Uint16(key string, i uint16) *JSONEvent {
+func (e *Event) Uint16(key string, i uint16) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
-func (e *JSONEvent) Uint8(key string, i uint8) *JSONEvent {
+func (e *Event) Uint8(key string, i uint8) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
-func (e *JSONEvent) RawJSON(key string, b []byte) *JSONEvent {
+func (e *Event) RawJSON(key string, b []byte) *Event {
 	if e == nil {
 		return nil
 	}
@@ -336,7 +343,7 @@ func (e *JSONEvent) RawJSON(key string, b []byte) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Str(key string, val string) *JSONEvent {
+func (e *Event) Str(key string, val string) *Event {
 	if e == nil {
 		return nil
 	}
@@ -345,7 +352,7 @@ func (e *JSONEvent) Str(key string, val string) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Strs(key string, vals []string) *JSONEvent {
+func (e *Event) Strs(key string, vals []string) *Event {
 	if e == nil {
 		return nil
 	}
@@ -361,7 +368,7 @@ func (e *JSONEvent) Strs(key string, vals []string) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Bytes(key string, val []byte) *JSONEvent {
+func (e *Event) Bytes(key string, val []byte) *Event {
 	if e == nil {
 		return nil
 	}
@@ -370,7 +377,7 @@ func (e *JSONEvent) Bytes(key string, val []byte) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Interface(key string, i interface{}) *JSONEvent {
+func (e *Event) Interface(key string, i interface{}) *Event {
 	if e == nil {
 		return nil
 	}
@@ -384,7 +391,7 @@ func (e *JSONEvent) Interface(key string, i interface{}) *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Caller() *JSONEvent {
+func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
 	}
@@ -392,7 +399,7 @@ func (e *JSONEvent) Caller() *JSONEvent {
 	return e
 }
 
-func (e *JSONEvent) Send() {
+func (e *Event) Send() {
 	if e == nil {
 		return
 	}
@@ -403,10 +410,10 @@ func (e *JSONEvent) Send() {
 		e.write(stacks(true))
 		os.Exit(255)
 	}
-	jepool.Put(e)
+	epool.Put(e)
 }
 
-func (e *JSONEvent) Msg(msg string) {
+func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
 	}
@@ -419,20 +426,20 @@ func (e *JSONEvent) Msg(msg string) {
 		e.write(stacks(true))
 		os.Exit(255)
 	}
-	jepool.Put(e)
+	epool.Put(e)
 }
 
-func (e *JSONEvent) Msgf(format string, v ...interface{}) {
+func (e *Event) Msgf(format string, v ...interface{}) {
 	e.Msg(fmt.Sprintf(format, v...))
 }
 
-func (e *JSONEvent) key(b byte, key string) {
+func (e *Event) key(b byte, key string) {
 	e.buf = append(e.buf, b, '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
 }
 
-func (e *JSONEvent) time(now time.Time) {
+func (e *Event) time(now time.Time) {
 	now = now.UTC()
 	n := len(e.buf)
 	e.buf = append(e.buf, "\"2006-01-02T15:04:05.999Z\""...)
@@ -483,7 +490,7 @@ func (e *JSONEvent) time(now time.Time) {
 	e.buf[n+21] = byte('0' + b)
 }
 
-func (e *JSONEvent) caller(skip int) {
+func (e *Event) caller(skip int) {
 	_, file, line, ok := runtime.Caller(2 + skip)
 	if !ok {
 		file = "???"
@@ -506,7 +513,7 @@ func (e *JSONEvent) caller(skip int) {
 var hex = "0123456789abcdef"
 
 // https://golang.org/src/encoding/json/encode.go
-func (e *JSONEvent) string(value string, escapeHTML bool) {
+func (e *Event) string(value string, escapeHTML bool) {
 	e.buf = append(e.buf, '"')
 	start := 0
 	for i := 0; i < len(value); {
