@@ -32,10 +32,10 @@ func main() {
 
 ### Pretty logging
 
-To log a human-friendly, colorized output, use `log.JSONConsoleWriter`:
+To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 
 ```go
-log.DefaultLogger.Writer = &log.JSONConsoleWriter{ANSIColor: true}
+log.DefaultLogger.Writer = &log.ConsoleWriter{ANSIColor: true}
 
 log.Info().Str("foo", "bar").Msg("hello world")
 

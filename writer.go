@@ -199,11 +199,11 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	return w.bw.Write(p)
 }
 
-type JSONConsoleWriter struct {
+type ConsoleWriter struct {
 	ANSIColor bool
 }
 
-func (w *JSONConsoleWriter) Write(p []byte) (written int, err error) {
+func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 	var m map[string]interface{}
 
 	err = json.Unmarshal(p, &m)
