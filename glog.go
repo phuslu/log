@@ -19,7 +19,7 @@ type GlogLogger struct {
 
 type GlogEvent struct {
 	buf   []byte
-	level Level
+	fatal bool
 	color bool
 	write func(p []byte) (n int, err error)
 }
@@ -107,7 +107,7 @@ func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
 	// [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
 	e = gepool.Get().(*GlogEvent)
 	e.buf = e.buf[:0]
-	e.level = l.Level
+	e.fatal = level == FatalLevel
 	e.color = l.ANSIColor
 	e.write = l.Writer.Write
 	// level
@@ -151,11 +151,12 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal = e.level == FatalLevel
-	gepool.Put(e)
-	if fatal {
-		panic(msg)
+	if e.fatal {
+		e.write(stacks(false))
+		e.write(stacks(true))
+		os.Exit(255)
 	}
+	gepool.Put(e)
 }
 
 func (e *GlogEvent) Print(args ...interface{}) {
@@ -167,11 +168,12 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal = e.level == FatalLevel
-	gepool.Put(e)
-	if fatal {
-		panic(msg)
+	if e.fatal {
+		e.write(stacks(false))
+		e.write(stacks(true))
+		os.Exit(255)
 	}
+	gepool.Put(e)
 }
 
 func (e *GlogEvent) Println(args ...interface{}) {
@@ -183,11 +185,12 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal = e.level == FatalLevel
-	gepool.Put(e)
-	if fatal {
-		panic(msg)
+	if e.fatal {
+		e.write(stacks(false))
+		e.write(stacks(true))
+		os.Exit(255)
 	}
+	gepool.Put(e)
 }
 
 func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
@@ -199,11 +202,12 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	var fatal = e.level == FatalLevel
-	gepool.Put(e)
-	if fatal {
-		panic(msg)
+	if e.fatal {
+		e.write(stacks(false))
+		e.write(stacks(true))
+		os.Exit(255)
 	}
+	gepool.Put(e)
 }
 
 func (e *GlogEvent) time(now time.Time) {
