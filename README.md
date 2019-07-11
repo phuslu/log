@@ -4,7 +4,7 @@
 
 ## Features
 
-* Effective
+* Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
 * Level Logging
 * File Rotating/Buffering
 * JSON and TSV Formats
@@ -46,14 +46,14 @@ log.Info().Caller().Str("foo", "bar").Msg("hello world")
 ### Customize the configuration and formatting:
 
 ```go
-logger := log.Logger{
+log.DefaultLogger := log.Logger{
 	Level:      log.DebugLevel,
 	Caller:     true,
 	TimeField:  "_time",
 	TimeFormat: time.RFC850,
 	Writer:     &log.Writer{},
 }
-logger.Info().Msg("hello world")
+log.Info().Msg("hello world")
 
 // Output: {"_time":"11 Jul 19 01:00 CST","level":"info","caller":"test.go:42","message":"hello world"}
 ```
@@ -72,7 +72,7 @@ func main() {
 	var localtime bool = true
 
 	logger := log.Logger{
-		Level:      ParseLevel("info"),
+		Level:      log.ParseLevel("info"),
 		Writer:     &log.Writer{
 			Filename:   "main.log",
 			MaxSize:    50*1024*1024,
