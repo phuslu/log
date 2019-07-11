@@ -115,6 +115,10 @@ func (w *Writer) rotate(newFile bool) (err error) {
 	go func(filename string) {
 		os.Remove(w.Filename)
 		err := os.Symlink(filename, w.Filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "symlink %+v to %+v error: %+v", filename, w.Filename, err)
+			return
+		}
 
 		switch runtime.GOOS {
 		case "linux":
