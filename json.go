@@ -511,27 +511,25 @@ var hex = "0123456789abcdef"
 // refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
 func (e *Event) string(s string) {
 	e.buf = append(e.buf, '"')
-	if len(s) > 24 &&
-		strings.IndexByte(s, '"') < 0 &&
-		strings.IndexByte(s, '\\') < 0 &&
-		strings.IndexByte(s, '\n') < 0 &&
-		strings.IndexByte(s, '\r') < 0 &&
-		strings.IndexByte(s, '\t') < 0 &&
-		strings.IndexByte(s, '\f') < 0 &&
-		strings.IndexByte(s, '\b') < 0 &&
-		strings.IndexByte(s, '<') < 0 &&
-		strings.IndexByte(s, '\'') < 0 &&
-		strings.IndexByte(s, 0) < 0 {
-
+	if n := len(s); n > 24 {
+		var needEscape bool
+		for i := 0; i < n; i++ {
+			switch s[i] {
+			case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+				needEscape = true
+				break
+			}
+		}
 		// fast path - nothing to escape
-		e.buf = append(e.buf, s...)
-		return
+		if !needEscape {
+			e.buf = append(e.buf, s...)
+			return
+		}
 	}
 
 	// slow path
 	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh := reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}
-	b := *(*[]byte)(unsafe.Pointer(&bh))
+	b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}))
 	j := 0
 	n := len(b)
 	if n > 0 {
