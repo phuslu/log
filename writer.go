@@ -2,6 +2,7 @@ package log
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -205,7 +206,7 @@ type ConsoleWriter struct {
 	ANSIColor bool
 }
 
-func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
+func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	var m map[string]interface{}
 
 	err = json.Unmarshal(p, &m)
@@ -213,15 +214,14 @@ func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 		return
 	}
 
-	var n int
+	var b bytes.Buffer
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", colorDarkGray, v, colorReset)
+			fmt.Fprintf(&b, "%s%s%s ", colorDarkGray, v, colorReset)
 		} else {
-			n, err = fmt.Fprintf(os.Stderr, "%s ", v)
+			fmt.Fprintf(&b, "%s ", v)
 		}
-		written += n
 	}
 
 	if v, ok := m["level"]; ok {
@@ -244,16 +244,14 @@ func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 			c, s = colorRed, "???"
 		}
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, "%s%s%s ", c, s, colorReset)
+			fmt.Fprintf(&b, "%s%s%s ", c, s, colorReset)
 		} else {
-			n, err = fmt.Fprintf(os.Stderr, "%s ", s)
+			fmt.Fprintf(&b, "%s ", s)
 		}
-		written += n
 	}
 
 	if v, ok := m["caller"]; ok {
-		n, err = fmt.Fprintf(os.Stderr, "%s ", v)
-		written += n
+		fmt.Fprintf(&b, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -261,11 +259,10 @@ func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			n, err = fmt.Fprintf(os.Stderr, "%s>%s %s", colorCyan, colorReset, v)
+			fmt.Fprintf(&b, "%s>%s %s", colorCyan, colorReset, v)
 		} else {
-			n, err = fmt.Fprintf(os.Stderr, "> %s", v)
+			fmt.Fprintf(&b, "> %s", v)
 		}
-		written += n
 	}
 
 	for k, v := range m {
@@ -276,18 +273,16 @@ func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 		if w.ANSIColor {
 			switch k {
 			case "error":
-				n, err = fmt.Fprintf(os.Stderr, " %s%s=%v%s", colorRed, k, v, colorReset)
+				fmt.Fprintf(&b, " %s%s=%v%s", colorRed, k, v, colorReset)
 			default:
-				n, err = fmt.Fprintf(os.Stderr, " %s%s=%s%v", colorCyan, k, colorReset, v)
+				fmt.Fprintf(&b, " %s%s=%s%v", colorCyan, k, colorReset, v)
 			}
 		} else {
-			n, err = fmt.Fprintf(os.Stderr, " %s=%v", k, v)
+			fmt.Fprintf(&b, " %s=%v", k, v)
 		}
-		written += n
 	}
 
-	n, err = os.Stderr.Write([]byte{'\n'})
-	written += n
+	b.WriteByte('\n')
 
-	return
+	return os.Stderr.Write(b.Bytes())
 }

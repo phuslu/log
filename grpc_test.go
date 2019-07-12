@@ -27,5 +27,23 @@ func TestGrpcLogger2(t *testing.T) {
 
 	grpclog.SetLoggerV2(log)
 
-	grpclog.Print("hello grpclog from glog")
+	grpclog.Print("hello grpclog Print")
+	grpclog.Println("hello grpclog Println")
+	grpclog.Printf("hello grpclog %s", "Printf")
+	grpclog.Info("hello grpclog Info")
+	grpclog.Infoln("hello grpclog Infoln")
+	grpclog.Infof("hello grpclog %s", "Infof")
+	grpclog.Warning("hello grpclog Warning")
+	grpclog.Warningln("hello grpclog Warningln")
+	grpclog.Warningf("hello grpclog %s", "Warningf")
+	grpclog.Error("hello grpclog Error")
+	grpclog.Errorln("hello grpclog Errorln")
+	grpclog.Errorf("hello grpclog %s", "Errorf")
+	// grpclog.Fatal("hello grpclog Fatal")
+	// grpclog.Fatalln("hello grpclog Fatalln")
+	// grpclog.Fatalf("hello grpclog %s", "Fatalf")
+
+	if grpclog.V(0) {
+		grpclog.Printf("hello grpclog V")
+	}
 }

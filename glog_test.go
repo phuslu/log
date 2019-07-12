@@ -30,7 +30,7 @@ func TestGlogColorLogger(t *testing.T) {
 		ANSIColor: runtime.GOOS != "windows",
 		Writer:    &Writer{},
 	}
-	log.InfoDepth(0, "i am info")
-	log.Warningf("i am warning")
-	log.Errorf("i am error")
+	log.InfoDepth(0, "hello glog color info")
+	log.Warningf("hello glog color warning")
+	log.Errorf("hello glog color error")
 }
