@@ -4,11 +4,11 @@
 
 ## Features
 
+* Simple, Minimalist interface
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* Level Logging
-* File Rotating/Buffering
-* JSON and TSV Formats
-* Pretty Logging for Console
+* Leveled Logger
+* JSON and TSV/CSV Formats
+* Rotating/Buffering/Pretty Writers
 * Adaptation for glog/grpc
 
 ## Getting Started
