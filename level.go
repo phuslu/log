@@ -34,7 +34,7 @@ func ParseLevel(s string) (level Level) {
 	case "fatal", "Fatal", "FATAL", "F", "FTL":
 		level = FatalLevel
 	case "panic", "Panic", "PANIC", "P", "PNC":
-		level = FatalLevel
+		level = PanicLevel
 	default:
 		level = NoLevel
 	}

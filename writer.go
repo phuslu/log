@@ -238,6 +238,8 @@ func (w *ConsoleWriter) Write(p []byte) (written int, err error) {
 			c, s = colorRed, "ERR"
 		case FatalLevel:
 			c, s = colorRed, "FTL"
+		case PanicLevel:
+			c, s = colorRed, "PNC"
 		default:
 			c, s = colorRed, "???"
 		}
