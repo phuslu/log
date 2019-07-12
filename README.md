@@ -6,8 +6,7 @@
 
 * Simple, Minimalist interface
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* Leveled Logger
-* JSON and TSV/CSV Formats
+* JSON and TSV/CSV Loggers
 * Rotating/Buffering/Pretty Writers
 * Adaptation for glog/grpc
 
