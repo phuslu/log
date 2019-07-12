@@ -1,13 +1,24 @@
 package log
 
-type Level int
+type Level uint8
 
 const (
+	// DebugLevel defines debug log level.
 	DebugLevel Level = iota
+	// InfoLevel defines info log level.
 	InfoLevel
+	// WarnLevel defines warn log level.
 	WarnLevel
+	// ErrorLevel defines error log level.
 	ErrorLevel
+	// FatalLevel defines fatal log level.
 	FatalLevel
+	// PanicLevel defines panic log level.
+	PanicLevel
+	// NoLevel defines an absent log level.
+	NoLevel
+	// Disabled disables the logger.
+	Disabled
 )
 
 func ParseLevel(s string) (level Level) {
@@ -22,6 +33,10 @@ func ParseLevel(s string) (level Level) {
 		level = ErrorLevel
 	case "fatal", "Fatal", "FATAL", "F", "FTL":
 		level = FatalLevel
+	case "panic", "Panic", "PANIC", "P", "PNC":
+		level = FatalLevel
+	default:
+		level = NoLevel
 	}
 	return
 }
