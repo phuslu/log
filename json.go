@@ -57,6 +57,14 @@ func Fatal() *Event {
 	return DefaultLogger.WithLevel(FatalLevel)
 }
 
+func Print(v ...interface{}) {
+	DefaultLogger.Print(v...)
+}
+
+func Printf(format string, v ...interface{}) {
+	DefaultLogger.Printf(format, v...)
+}
+
 func (l Logger) Debug() *Event {
 	return l.WithLevel(DebugLevel)
 }
@@ -75,6 +83,14 @@ func (l Logger) Error() *Event {
 
 func (l Logger) Fatal() *Event {
 	return l.WithLevel(FatalLevel)
+}
+
+func (l Logger) Print(v ...interface{}) {
+	l.WithLevel(l.Level).Msg(fmt.Sprint(v...))
+}
+
+func (l Logger) Printf(format string, v ...interface{}) {
+	l.WithLevel(l.Level).Msgf(format, v...)
 }
 
 var epool = sync.Pool{
