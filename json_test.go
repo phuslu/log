@@ -6,7 +6,17 @@ import (
 	"time"
 )
 
-func TestJOSNLogger(t *testing.T) {
+func TestDefaultLogger(t *testing.T) {
+	Debug().Str("foo", "bar").Msg("hello from Debug")
+	Info().Str("foo", "bar").Msg("hello from Info")
+	Warn().Str("foo", "bar").Msg("hello from Warn")
+	Error().Str("foo", "bar").Msg("hello from Error")
+	// Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Print("hello from Print")
+	Printf("hell from %s", "Printf")
+}
+
+func TestLogger(t *testing.T) {
 	log := Logger{
 		Level: ParseLevel("debug"),
 		Writer: &Writer{
@@ -28,7 +38,7 @@ func TestJOSNLogger(t *testing.T) {
 		Msgf("this is a \"%s\"", "test")
 }
 
-func TestJOSNLoggerCaller(t *testing.T) {
+func TestLoggerCaller(t *testing.T) {
 	log1 := Logger{
 		Level:  ParseLevel("debug"),
 		Caller: true,
@@ -43,7 +53,7 @@ func TestJOSNLoggerCaller(t *testing.T) {
 	log2.Info().Caller().Msg("this is caller log event 2")
 }
 
-func TestJOSNLoggerTime(t *testing.T) {
+func TestLoggerTime(t *testing.T) {
 	log := Logger{
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
