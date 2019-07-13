@@ -412,25 +412,17 @@ func (e *Event) Caller() *Event {
 }
 
 func (e *Event) Send() {
-	if e == nil {
-		return
-	}
-	e.buf = append(e.buf, '}', '\n')
-	e.write(e.buf)
-	if e.fatal {
-		e.write(stacks(false))
-		e.write(stacks(true))
-		os.Exit(255)
-	}
-	epool.Put(e)
+	e.Msg("")
 }
 
 func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
 	}
-	e.buf = append(e.buf, ",\"message\":"...)
-	e.string(msg)
+	if msg != "" {
+		e.buf = append(e.buf, ",\"message\":"...)
+		e.string(msg)
+	}
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
 	if e.fatal {

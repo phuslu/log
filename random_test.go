@@ -10,7 +10,7 @@ func TestRandomLogger(t *testing.T) {
 		N:      10,
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 20; i++ {
 		logger.Info().Int("i", i).Msg("hello from random logger")
 	}
 }
