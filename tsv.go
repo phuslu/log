@@ -39,18 +39,12 @@ func (l TSVLogger) New() (e *TSVEvent) {
 }
 
 func (e *TSVEvent) Timestamp() *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	e.buf = strconv.AppendInt(e.buf, timeNow().Unix(), 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
 func (e *TSVEvent) Bool(b bool) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	if b {
 		e.buf = append(e.buf, '1', e.sep)
 	} else {
@@ -60,27 +54,18 @@ func (e *TSVEvent) Bool(b bool) *TSVEvent {
 }
 
 func (e *TSVEvent) Float64(f float64) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	e.buf = strconv.AppendFloat(e.buf, f, 'f', -1, 64)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
 func (e *TSVEvent) Int64(i int64) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	e.buf = strconv.AppendInt(e.buf, i, 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
 func (e *TSVEvent) Uint64(i uint64) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	e.buf = strconv.AppendUint(e.buf, i, 10)
 	e.buf = append(e.buf, e.sep)
 	return e
@@ -119,9 +104,6 @@ func (e *TSVEvent) Uint8(i uint8) *TSVEvent {
 }
 
 func (e *TSVEvent) Str(val string) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	if e.escape && strings.IndexByte(val, e.sep) >= 0 {
 		e.buf = append(e.buf, '"')
 		e.buf = append(e.buf, val...)
@@ -134,9 +116,6 @@ func (e *TSVEvent) Str(val string) *TSVEvent {
 }
 
 func (e *TSVEvent) Bytes(val []byte) *TSVEvent {
-	if e == nil {
-		return nil
-	}
 	e.buf = append(e.buf, val...)
 	e.buf = append(e.buf, e.sep)
 	return e
