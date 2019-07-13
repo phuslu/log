@@ -385,7 +385,7 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 		return nil
 	}
 	e.key(',', key)
-	e.string(*(*string)(unsafe.Pointer(&val)))
+	e.bytes(val)
 	return e
 }
 
@@ -526,7 +526,6 @@ var hex = "0123456789abcdef"
 
 // refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
 func (e *Event) string(s string) {
-	e.buf = append(e.buf, '"')
 	if n := len(s); n > 24 {
 		var needEscape bool
 		for i := 0; i < n; i++ {
@@ -538,16 +537,94 @@ func (e *Event) string(s string) {
 		}
 		// fast path - nothing to escape
 		if !needEscape {
+			e.buf = append(e.buf, '"')
 			e.buf = append(e.buf, s...)
+			e.buf = append(e.buf, '"')
 			return
 		}
 	}
 
 	// slow path
+	e.buf = append(e.buf, '"')
 	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}))
 	j := 0
 	n := len(b)
+	if n > 0 {
+		// Hint the compiler to remove bounds checks in the loop below.
+		_ = b[n-1]
+	}
+	for i := 0; i < n; i++ {
+		switch b[i] {
+		case '"':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', '"')
+			j = i + 1
+		case '\\':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', '\\')
+			j = i + 1
+		case '\n':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'n')
+			j = i + 1
+		case '\r':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'r')
+			j = i + 1
+		case '\t':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 't')
+			j = i + 1
+		case '\f':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', 'c')
+			j = i + 1
+		case '\b':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '8')
+			j = i + 1
+		case '<':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '3', 'c')
+			j = i + 1
+		case '\'':
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '2', '7')
+			j = i + 1
+		case 0:
+			e.buf = append(e.buf, b[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '0')
+			j = i + 1
+		}
+	}
+	e.buf = append(e.buf, b[j:]...)
+	e.buf = append(e.buf, '"')
+}
+
+func (e *Event) bytes(b []byte) {
+	n := len(b)
+	if n > 24 {
+		var needEscape bool
+		for i := 0; i < n; i++ {
+			switch b[i] {
+			case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+				needEscape = true
+				break
+			}
+		}
+		// fast path - nothing to escape
+		if !needEscape {
+			e.buf = append(e.buf, '"')
+			e.buf = append(e.buf, b...)
+			e.buf = append(e.buf, '"')
+			return
+		}
+	}
+
+	// slow path
+	e.buf = append(e.buf, '"')
+	j := 0
 	if n > 0 {
 		// Hint the compiler to remove bounds checks in the loop below.
 		_ = b[n-1]

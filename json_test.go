@@ -60,5 +60,5 @@ func TestLoggerTime(t *testing.T) {
 		TimeFormat: time.RFC822,
 		Writer:     &Writer{},
 	}
-	log.Info().Timestamp().Time("now", timeNow()).Msg("this is time log event")
+	log.Info().Timestamp().Time("now", timeNow()).Msg("this is test time log event")
 }
