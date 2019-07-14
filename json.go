@@ -389,6 +389,19 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
+func (e *Event) Hex(key string, val []byte) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(',', key)
+	e.buf = append(e.buf, '"')
+	for _, v := range val {
+		e.buf = append(e.buf, hex[v>>4], hex[v&0x0f])
+	}
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 func (e *Event) Interface(key string, i interface{}) *Event {
 	if e == nil {
 		return nil

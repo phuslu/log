@@ -204,6 +204,7 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 
 type ConsoleWriter struct {
 	ANSIColor bool
+	Writer    io.Writer
 }
 
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
@@ -284,5 +285,10 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 
 	b.WriteByte('\n')
 
-	return os.Stderr.Write(b.Bytes())
+	var writer = w.Writer
+	if writer == nil {
+		writer = os.Stderr
+	}
+
+	return writer.Write(b.Bytes())
 }
