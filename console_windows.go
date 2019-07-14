@@ -17,12 +17,14 @@ type ConsoleWriter struct {
 }
 
 const (
-	colorWhite    = 0x07
-	colorRed      = 0x04
-	colorGreen    = 0x02
-	colorYellow   = 0x06
-	colorCyan     = 0x03
-	colorDarkGray = 0x08
+	colorBlue   = 1
+	colorGreen  = 2
+	colorAqua   = 3
+	colorRed    = 4
+	colorPurple = 5
+	colorYellow = 6
+	colorWhite  = 7
+	colorGray   = 8
 )
 
 var (
@@ -40,23 +42,23 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	var cprintf = func(color uintptr, format string, args ...interface{}) {
-		if color != 0 {
+	var printf = func(color uintptr, format string, args ...interface{}) {
+		if color != colorWhite {
 			SetConsoleTextAttribute(uintptr(syscall.Stderr), color)
 		}
 		var i int
 		i, err = fmt.Fprintf(os.Stderr, format, args...)
 		n += i
-		if color != 0 {
+		if color != colorWhite {
 			SetConsoleTextAttribute(uintptr(syscall.Stderr), colorWhite)
 		}
 	}
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			cprintf(colorDarkGray, "%s ", v)
+			printf(colorGray, "%s ", v)
 		} else {
-			cprintf(0, "%s ", v)
+			printf(colorWhite, "%s ", v)
 		}
 	}
 
@@ -80,14 +82,14 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			c, s = colorRed, "???"
 		}
 		if w.ANSIColor {
-			cprintf(c, "%s ", v)
+			printf(c, "%s ", s)
 		} else {
-			cprintf(c, "%s ", v)
+			printf(c, "%s ", s)
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		cprintf(0, "%s ", v)
+		printf(colorWhite, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -95,11 +97,11 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			cprintf(colorCyan, ">")
+			printf(colorAqua, ">")
 		} else {
-			cprintf(0, ">")
+			printf(colorWhite, ">")
 		}
-		cprintf(0, " %s", v)
+		printf(colorWhite, " %s", v)
 	}
 
 	for k, v := range m {
@@ -110,17 +112,17 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		if w.ANSIColor {
 			switch k {
 			case "error":
-				cprintf(colorRed, " %s=%v", k, v)
+				printf(colorRed, " %s=%v", k, v)
 			default:
-				cprintf(colorCyan, " %s=", k)
-				cprintf(0, " %v", v)
+				printf(colorAqua, " %s=", k)
+				printf(colorWhite, " %v", v)
 			}
 		} else {
-			cprintf(0, " %s=%v", k, v)
+			printf(colorWhite, " %s=%v", k, v)
 		}
 	}
 
-	cprintf(0, " \n")
+	printf(colorWhite, " \n")
 
 	return n, err
 }
