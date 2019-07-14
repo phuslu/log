@@ -40,14 +40,3 @@ func ParseLevel(s string) (level Level) {
 	}
 	return
 }
-
-type color string
-
-const (
-	colorReset    color = "\x1b[0m"
-	colorRed      color = "\x1b[31m"
-	colorGreen    color = "\x1b[32m"
-	colorYellow   color = "\x1b[33m"
-	colorCyan     color = "\x1b[36m"
-	colorDarkGray color = "\x1b[90m"
-)

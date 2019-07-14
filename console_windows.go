@@ -1,28 +1,38 @@
-// +build !windows
+// +build windows
 
 package log
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
+	"syscall"
 )
 
 type ConsoleWriter struct {
 	ANSIColor bool
+
+	mu sync.Mutex
 }
 
 const (
-	colorReset    = "\x1b[0m"
-	colorRed      = "\x1b[31m"
-	colorGreen    = "\x1b[32m"
-	colorYellow   = "\x1b[33m"
-	colorCyan     = "\x1b[36m"
-	colorDarkGray = "\x1b[90m"
+	colorWhite    = 0x07
+	colorRed      = 0x04
+	colorGreen    = 0x02
+	colorYellow   = 0x06
+	colorCyan     = 0x03
+	colorDarkGray = 0x08
+)
+
+var (
+	SetConsoleTextAttribute = syscall.NewLazyDLL("kernel32.dll").NewProc("SetConsoleTextAttribute").Call
 )
 
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
 	var m map[string]interface{}
 
 	err = json.Unmarshal(p, &m)
@@ -30,19 +40,29 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	var b bytes.Buffer
+	var cprintf = func(color uintptr, format string, args ...interface{}) {
+		if color != 0 {
+			SetConsoleTextAttribute(uintptr(syscall.Stderr), color)
+		}
+		var i int
+		i, err = fmt.Fprintf(os.Stderr, format, args...)
+		n += i
+		if color != 0 {
+			SetConsoleTextAttribute(uintptr(syscall.Stderr), colorWhite)
+		}
+	}
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s%s%s ", colorDarkGray, v, colorReset)
+			cprintf(colorDarkGray, "%s ", v)
 		} else {
-			fmt.Fprintf(&b, "%s ", v)
+			cprintf(0, "%s ", v)
 		}
 	}
 
 	if v, ok := m["level"]; ok {
 		var s string
-		var c color
+		var c uintptr
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
 			c, s = colorYellow, "DBG"
@@ -60,14 +80,14 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			c, s = colorRed, "???"
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s%s%s ", c, s, colorReset)
+			cprintf(c, "%s ", v)
 		} else {
-			fmt.Fprintf(&b, "%s ", s)
+			cprintf(c, "%s ", v)
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		fmt.Fprintf(&b, "%s ", v)
+		cprintf(0, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -75,10 +95,11 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s>%s %s", colorCyan, colorReset, v)
+			cprintf(colorCyan, ">")
 		} else {
-			fmt.Fprintf(&b, "> %s", v)
+			cprintf(0, ">")
 		}
+		cprintf(0, " %s", v)
 	}
 
 	for k, v := range m {
@@ -89,16 +110,17 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		if w.ANSIColor {
 			switch k {
 			case "error":
-				fmt.Fprintf(&b, " %s%s=%v%s", colorRed, k, v, colorReset)
+				cprintf(colorRed, " %s=%v", k, v)
 			default:
-				fmt.Fprintf(&b, " %s%s=%s%v", colorCyan, k, colorReset, v)
+				cprintf(colorCyan, " %s=", k)
+				cprintf(0, " %v", v)
 			}
 		} else {
-			fmt.Fprintf(&b, " %s=%v", k, v)
+			cprintf(0, " %s=%v", k, v)
 		}
 	}
 
-	b.WriteByte('\n')
+	cprintf(0, " \n")
 
-	return os.Stderr.Write(b.Bytes())
+	return n, err
 }
