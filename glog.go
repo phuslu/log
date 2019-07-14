@@ -12,15 +12,13 @@ import (
 )
 
 type GlogLogger struct {
-	Level     Level
-	ANSIColor bool
-	Writer    io.Writer
+	Level  Level
+	Writer io.Writer
 }
 
 type GlogEvent struct {
 	buf   []byte
-	fatal bool
-	color bool
+	level Level
 	write func(p []byte) (n int, err error)
 }
 
@@ -107,33 +105,26 @@ func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
 	// [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
 	e = gepool.Get().(*GlogEvent)
 	e.buf = e.buf[:0]
-	e.fatal = level == FatalLevel
-	e.color = l.ANSIColor
+	e.level = level
 	e.write = l.Writer.Write
 	// level
 	switch level {
 	case DebugLevel:
-		e.colorize('D', colorGreen)
+		e.buf = append(e.buf, 'D')
 	case InfoLevel:
-		e.colorize('I', colorCyan)
+		e.buf = append(e.buf, 'I')
 	case WarnLevel:
-		e.colorize('W', colorYellow)
+		e.buf = append(e.buf, 'W')
 	case ErrorLevel:
-		e.colorize('E', colorRed)
+		e.buf = append(e.buf, 'E')
 	case FatalLevel:
-		e.colorize('F', colorRed)
+		e.buf = append(e.buf, 'F')
 	default:
-		e.colorize('?', colorRed)
+		e.buf = append(e.buf, '?')
 	}
 	// time
 	now := timeNow()
-	if e.color {
-		e.buf = append(e.buf, colorDarkGray...)
-	}
 	e.time(now)
-	if e.color {
-		e.buf = append(e.buf, colorReset...)
-	}
 	e.buf = append(e.buf, ' ')
 	// threadid
 	e.buf = strconv.AppendInt(e.buf, pid, 10)
@@ -151,7 +142,7 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	if e.fatal {
+	if e.level == FatalLevel {
 		e.write(stacks(false))
 		e.write(stacks(true))
 		os.Exit(255)
@@ -168,7 +159,7 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	if e.fatal {
+	if e.level == FatalLevel {
 		e.write(stacks(false))
 		e.write(stacks(true))
 		os.Exit(255)
@@ -185,7 +176,7 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	if e.fatal {
+	if e.level == FatalLevel {
 		e.write(stacks(false))
 		e.write(stacks(true))
 		os.Exit(255)
@@ -202,7 +193,7 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	e.buf = append(e.buf, msg...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
-	if e.fatal {
+	if e.level == FatalLevel {
 		e.write(stacks(false))
 		e.write(stacks(true))
 		os.Exit(255)
@@ -275,21 +266,5 @@ func (e *GlogEvent) caller(depth int) {
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.colorize(']', colorCyan)
 	e.buf = append(e.buf, ' ')
-}
-
-func (e *GlogEvent) colorize(b byte, c color) {
-	if e == nil {
-		return
-	}
-
-	if !e.color {
-		e.buf = append(e.buf, b)
-		return
-	}
-
-	e.buf = append(e.buf, c...)
-	e.buf = append(e.buf, b)
-	e.buf = append(e.buf, colorReset...)
 }

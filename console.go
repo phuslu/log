@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 )
 
 type ConsoleWriter struct {
 	ANSIColor bool
-	Writer    io.Writer
 }
 
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
@@ -91,10 +89,5 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 
 	b.WriteByte('\n')
 
-	var writer = w.Writer
-	if writer == nil {
-		writer = os.Stderr
-	}
-
-	return writer.Write(b.Bytes())
+	return os.Stderr.Write(b.Bytes())
 }
