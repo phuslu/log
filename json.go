@@ -32,7 +32,7 @@ type Logger struct {
 
 type Event struct {
 	buf        []byte
-	fatal      bool
+	level      Level
 	timeFormat string
 	write      func(p []byte) (n int, err error)
 }
@@ -105,7 +105,7 @@ func (l Logger) WithLevel(level Level) (e *Event) {
 	}
 	e = epool.Get().(*Event)
 	e.buf = e.buf[:0]
-	e.fatal = level == FatalLevel
+	e.level = level
 	e.timeFormat = l.TimeFormat
 	e.write = l.Writer.Write
 	// time
@@ -415,6 +415,18 @@ func (e *Event) Send() {
 	e.Msg("")
 }
 
+func (e *Event) Enabled() bool {
+	return e != nil
+}
+
+func (e *Event) Discard() *Event {
+	if e == nil {
+		return e
+	}
+	epool.Put(e)
+	return nil
+}
+
 func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
@@ -425,7 +437,7 @@ func (e *Event) Msg(msg string) {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.write(e.buf)
-	if e.fatal {
+	if e.level == FatalLevel {
 		e.write(stacks(false))
 		e.write(stacks(true))
 		os.Exit(255)
