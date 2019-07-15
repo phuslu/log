@@ -85,9 +85,9 @@ func main() {
 	if localtime {
 		runner = cron.New()
 	} else {
-		runner = cron.NewWithLocation(time.UTC)
+		runner = cron.New(cron.WithLocation(time.UTC))
 	}
-	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
+	runner.AddFunc("0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
 
 	logger.Info().Msg("hello world")
 }
