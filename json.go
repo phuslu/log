@@ -468,11 +468,28 @@ func (e *Event) key(b byte, key string) {
 	e.buf = append(e.buf, '"', ':')
 }
 
+var timebuf []byte = []byte("\"2006-01-02T15:04:05.999Z\"")
+
 func (e *Event) time(now time.Time) {
 	now = now.UTC()
 	n := len(e.buf)
-	e.buf = append(e.buf, "\"2006-01-02T15:04:05.999Z\""...)
+	if n+26 < cap(e.buf) {
+		e.buf = e.buf[:n+26]
+	} else {
+		e.buf = append(e.buf, timebuf...)
+	}
 	var a, b int
+	// milli second
+	e.buf[n+25] = '"'
+	e.buf[n+24] = 'Z'
+	a = now.Nanosecond() / 1000000
+	b = a / 10
+	e.buf[n+23] = byte('0' + a - 10*b)
+	a = b
+	b = a / 10
+	e.buf[n+22] = byte('0' + a - 10*b)
+	e.buf[n+21] = byte('0' + b)
+	e.buf[n+20] = '.'
 	// year
 	a = now.Year()
 	b = a / 10
@@ -484,39 +501,37 @@ func (e *Event) time(now time.Time) {
 	b = a / 10
 	e.buf[n+2] = byte('0' + a - 10*b)
 	e.buf[n+1] = byte('0' + b)
+	e.buf[n] = '"'
 	// month
 	a = int(now.Month())
 	b = a / 10
 	e.buf[n+7] = byte('0' + a - 10*b)
 	e.buf[n+6] = byte('0' + b)
+	e.buf[n+5] = '-'
 	// day
 	a = now.Day()
 	b = a / 10
 	e.buf[n+10] = byte('0' + a - 10*b)
 	e.buf[n+9] = byte('0' + b)
+	e.buf[n+8] = '-'
 	// hour
 	a = now.Hour()
 	b = a / 10
 	e.buf[n+13] = byte('0' + a - 10*b)
 	e.buf[n+12] = byte('0' + b)
+	e.buf[n+11] = 'T'
 	// minute
 	a = now.Minute()
 	b = a / 10
 	e.buf[n+16] = byte('0' + a - 10*b)
 	e.buf[n+15] = byte('0' + b)
+	e.buf[n+14] = ':'
 	// second
 	a = now.Second()
 	b = a / 10
 	e.buf[n+19] = byte('0' + a - 10*b)
 	e.buf[n+18] = byte('0' + b)
-	// milli second
-	a = now.Nanosecond() / 1000000
-	b = a / 10
-	e.buf[n+23] = byte('0' + a - 10*b)
-	a = b
-	b = a / 10
-	e.buf[n+22] = byte('0' + a - 10*b)
-	e.buf[n+21] = byte('0' + b)
+	e.buf[n+17] = ':'
 }
 
 func (e *Event) caller(skip int) {
