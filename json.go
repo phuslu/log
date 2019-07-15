@@ -411,7 +411,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	if err != nil {
 		e.string("marshaling error: " + err.Error())
 	} else {
-		e.string(*(*string)(unsafe.Pointer(&marshaled)))
+		e.bytes(marshaled)
 	}
 	return e
 }

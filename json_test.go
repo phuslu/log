@@ -35,6 +35,7 @@ func TestLogger(t *testing.T) {
 		Str("foobar", "\"<>?'").
 		Time("now", timeNow()).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
+		Interface("writer", ConsoleWriter{ANSIColor: true}).
 		Msgf("this is a \"%s\"", "test")
 }
 
