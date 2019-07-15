@@ -41,8 +41,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	}
 
 	if v, ok := m["level"]; ok {
-		var s string
-		var c color
+		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
 			c, s = colorYellow, "DBG"
