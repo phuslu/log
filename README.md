@@ -42,6 +42,7 @@ log.Info().Str("foo", "bar").Msg("hello world")
 // Output: 2019-07-11T16:41:43.256Z INF pretty.go:10 > hello world foo=bar
 ```
 ![](https://user-images.githubusercontent.com/195836/61068992-ec8af200-a43d-11e9-891f-c6987b402f21.png)
+> Note: pretty logging also works on windows console
 
 ### Customize the configuration and formatting:
 
@@ -50,12 +51,12 @@ log.DefaultLogger := log.Logger{
 	Level:      log.DebugLevel,
 	Caller:     true,
 	TimeField:  "_time",
-	TimeFormat: time.RFC850,
+	TimeFormat: "0102 15:04:05",
 	Writer:     &log.Writer{},
 }
 log.Info().Msg("hello world")
 
-// Output: {"_time":"11 Jul 19 01:00 CST","level":"info","caller":"test.go:42","message":"hello world"}
+// Output: {"_time":"0717 01:07:18","level":"info","caller":"test.go:42","message":"hello world"}
 ```
 
 ### Rotating log files hourly
@@ -64,6 +65,8 @@ log.Info().Msg("hello world")
 package main
 
 import (
+	"time"
+
 	"github.com/phuslu/log"
 	"github.com/robfig/cron"
 )
@@ -85,10 +88,15 @@ func main() {
 	if localtime {
 		runner = cron.New()
 	} else {
-		runner = cron.New(cron.WithLocation(time.UTC))
+		runner = cron.NewWithLocation(time.UTC)
 	}
-	runner.AddFunc("0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
+	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
+	runner.ErrorLog = log.DefaultLogger
+	go runner.Run()
 
-	logger.Info().Msg("hello world")
+	for {
+		time.Sleep(time.Second)
+		logger.Info().Msg("hello world")
+	}
 }
 ```
