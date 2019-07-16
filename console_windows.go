@@ -115,7 +115,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 				printf(colorRed, " %s=%v", k, v)
 			default:
 				printf(colorAqua, " %s=", k)
-				printf(colorWhite, " %v", v)
+				printf(colorGray, "%v", v)
 			}
 		} else {
 			printf(colorWhite, " %s=%v", k, v)
