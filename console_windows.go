@@ -84,7 +84,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		if w.ANSIColor {
 			printf(c, "%s ", s)
 		} else {
-			printf(c, "%s ", s)
+			printf(colorWhite, "%s ", s)
 		}
 	}
 

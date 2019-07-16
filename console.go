@@ -90,7 +90,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			case "error":
 				fmt.Fprintf(&b, " %s%s=%v%s", colorRed, k, v, colorReset)
 			default:
-				fmt.Fprintf(&b, " %s%s=%s%v", colorCyan, k, colorReset, v)
+				fmt.Fprintf(&b, " %s%s=%s%v%s", colorCyan, k, colorGray, v, colorReset)
 			}
 		} else {
 			fmt.Fprintf(&b, " %s=%v", k, v)
