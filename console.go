@@ -27,6 +27,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 
 	err = json.Unmarshal(p, &m)
 	if err != nil {
+		n, err = os.Stderr.Write(p)
 		return
 	}
 
