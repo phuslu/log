@@ -146,11 +146,6 @@ func (w *Writer) rotate(newFile bool) (err error) {
 	return
 }
 
-const (
-	DefaultBufferSize    = 32 * 1024
-	DefaultFlushDuration = 5 * time.Second
-)
-
 var _ io.WriteCloser = (*BufferWriter)(nil)
 
 type BufferWriter struct {
@@ -180,10 +175,10 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	if w.bw == nil {
 		w.Writer.mu.Lock()
 		if w.BufferSize == 0 {
-			w.BufferSize = DefaultBufferSize
+			w.BufferSize = 32 * 1024
 		}
 		if w.FlushDuration == 0 {
-			w.FlushDuration = DefaultFlushDuration
+			w.FlushDuration = 5 * time.Second
 		}
 		if w.bw == nil {
 			w.bw = bufio.NewWriterSize(w.Writer, w.BufferSize)
