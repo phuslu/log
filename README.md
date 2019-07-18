@@ -50,13 +50,13 @@ log.Info().Str("foo", "bar").Msg("hello world")
 log.DefaultLogger := log.Logger{
 	Level:      log.DebugLevel,
 	Caller:     true,
-	TimeField:  "_time",
-	TimeFormat: "0102 15:04:05",
+	TimeField:  "date",
+	TimeFormat: "2006-01-02",
 	Writer:     &log.Writer{},
 }
 log.Info().Msg("hello world")
 
-// Output: {"_time":"0717 01:07:18","level":"info","caller":"test.go:42","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
 ```
 
 ### Rotating log files hourly
