@@ -87,10 +87,9 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			continue
 		}
 		if w.ANSIColor {
-			switch k {
-			case "error":
+			if k == "error" && v != nil {
 				fmt.Fprintf(&b, " %s%s=%v%s", colorRed, k, v, colorReset)
-			default:
+			} else {
 				fmt.Fprintf(&b, " %s%s=%s%v%s", colorCyan, k, colorDarkGray, v, colorReset)
 			}
 		} else {

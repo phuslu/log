@@ -111,10 +111,9 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 			continue
 		}
 		if w.ANSIColor {
-			switch k {
-			case "error":
+			if k == "error" && v != nil {
 				printf(colorRed, " %s=%v", k, v)
-			default:
+			} else {
 				printf(colorAqua, " %s=", k)
 				printf(colorGray, "%v", v)
 			}
