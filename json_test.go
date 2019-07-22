@@ -42,7 +42,7 @@ func TestLogger(t *testing.T) {
 func TestLoggerCaller(t *testing.T) {
 	log1 := Logger{
 		Level:  ParseLevel("debug"),
-		Caller: true,
+		Caller: 1,
 		Writer: &Writer{},
 	}
 	log1.Info().Msg("this is caller log event 1")

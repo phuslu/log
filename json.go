@@ -16,7 +16,7 @@ import (
 
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
-	Caller:     false,
+	Caller:     1,
 	TimeField:  "",
 	TimeFormat: "",
 	Writer:     &Writer{},
@@ -24,7 +24,7 @@ var DefaultLogger = Logger{
 
 type Logger struct {
 	Level      Level
-	Caller     bool
+	Caller     int
 	TimeField  string
 	TimeFormat string
 	Writer     io.Writer
@@ -39,112 +39,112 @@ type Event struct {
 
 func Debug() (e *Event) {
 	e = DefaultLogger.withLevel(DebugLevel)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
 }
 
 func Info() (e *Event) {
 	e = DefaultLogger.withLevel(InfoLevel)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
 }
 
 func Warn() (e *Event) {
 	e = DefaultLogger.withLevel(WarnLevel)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
 }
 
 func Error() (e *Event) {
 	e = DefaultLogger.withLevel(ErrorLevel)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
 }
 
 func Fatal() (e *Event) {
 	e = DefaultLogger.withLevel(FatalLevel)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
 }
 
 func Print(v ...interface{}) {
 	e := DefaultLogger.withLevel(DefaultLogger.Level)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	e.Msg(fmt.Sprint(v...))
 }
 
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.withLevel(DefaultLogger.Level)
-	if e != nil && DefaultLogger.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	e.Msgf(format, v...)
 }
 
 func (l Logger) Debug() (e *Event) {
 	e = l.withLevel(DebugLevel)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	return
 }
 
 func (l Logger) Info() (e *Event) {
 	e = l.withLevel(InfoLevel)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	return
 }
 
 func (l Logger) Warn() (e *Event) {
 	e = l.withLevel(WarnLevel)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	return
 }
 
 func (l Logger) Error() (e *Event) {
 	e = l.withLevel(ErrorLevel)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	return
 }
 
 func (l Logger) Fatal() (e *Event) {
 	e = l.withLevel(FatalLevel)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	return
 }
 
 func (l Logger) Print(v ...interface{}) {
 	e := l.withLevel(l.Level)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	e.Msg(fmt.Sprint(v...))
 }
 
 func (l Logger) Printf(format string, v ...interface{}) {
 	e := l.withLevel(l.Level)
-	if e != nil && l.Caller {
-		e.caller(runtime.Caller(1))
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
 	}
 	e.Msgf(format, v...)
 }
@@ -472,7 +472,7 @@ func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
 	}
-	e.caller(runtime.Caller(1))
+	e.caller(runtime.Caller(DefaultLogger.Caller))
 	return e
 }
 

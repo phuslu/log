@@ -35,7 +35,7 @@ To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 
 ```go
 log.DefaultLogger.Writer = &log.ConsoleWriter{ANSIColor: true}
-log.DefaultLogger.Caller = true
+log.DefaultLogger.Caller = 1
 
 log.Info().Str("foo", "bar").Msg("hello world")
 
@@ -49,7 +49,7 @@ log.Info().Str("foo", "bar").Msg("hello world")
 ```go
 log.DefaultLogger := log.Logger{
 	Level:      log.DebugLevel,
-	Caller:     true,
+	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
 	Writer:     &log.Writer{},
