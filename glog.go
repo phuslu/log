@@ -23,67 +23,67 @@ type GlogEvent struct {
 }
 
 func (l GlogLogger) Info(args ...interface{}) {
-	l.WithLevel(InfoLevel).Print(args...)
+	l.withLevel(InfoLevel).Print(args...)
 }
 
 func (l GlogLogger) Infoln(args ...interface{}) {
-	l.WithLevel(InfoLevel).Println(args...)
+	l.withLevel(InfoLevel).Println(args...)
 }
 
 func (l GlogLogger) Infof(format string, args ...interface{}) {
-	l.WithLevel(InfoLevel).Printf(format, args...)
+	l.withLevel(InfoLevel).Printf(format, args...)
 }
 
 func (l GlogLogger) InfoDepth(depth int, args ...interface{}) {
-	l.WithLevel(InfoLevel).PrintDepth(depth, args...)
+	l.withLevel(InfoLevel).PrintDepth(depth, args...)
 }
 
 func (l GlogLogger) Warning(args ...interface{}) {
-	l.WithLevel(WarnLevel).Print(args...)
+	l.withLevel(WarnLevel).Print(args...)
 }
 
 func (l GlogLogger) Warningln(args ...interface{}) {
-	l.WithLevel(WarnLevel).Println(args...)
+	l.withLevel(WarnLevel).Println(args...)
 }
 
 func (l GlogLogger) Warningf(format string, args ...interface{}) {
-	l.WithLevel(WarnLevel).Printf(format, args...)
+	l.withLevel(WarnLevel).Printf(format, args...)
 }
 
 func (l GlogLogger) WarningDepth(depth int, args ...interface{}) {
-	l.WithLevel(WarnLevel).PrintDepth(depth, args...)
+	l.withLevel(WarnLevel).PrintDepth(depth, args...)
 }
 
 func (l GlogLogger) Error(args ...interface{}) {
-	l.WithLevel(ErrorLevel).Print(args...)
+	l.withLevel(ErrorLevel).Print(args...)
 }
 
 func (l GlogLogger) Errorln(args ...interface{}) {
-	l.WithLevel(ErrorLevel).Println(args...)
+	l.withLevel(ErrorLevel).Println(args...)
 }
 
 func (l GlogLogger) Errorf(format string, args ...interface{}) {
-	l.WithLevel(ErrorLevel).Printf(format, args...)
+	l.withLevel(ErrorLevel).Printf(format, args...)
 }
 
 func (l GlogLogger) ErrorDepth(depth int, args ...interface{}) {
-	l.WithLevel(ErrorLevel).PrintDepth(depth, args...)
+	l.withLevel(ErrorLevel).PrintDepth(depth, args...)
 }
 
 func (l GlogLogger) Fatal(args ...interface{}) {
-	l.WithLevel(FatalLevel).Print(args...)
+	l.withLevel(FatalLevel).Print(args...)
 }
 
 func (l GlogLogger) Fatalln(args ...interface{}) {
-	l.WithLevel(FatalLevel).Println(args...)
+	l.withLevel(FatalLevel).Println(args...)
 }
 
 func (l GlogLogger) Fatalf(format string, args ...interface{}) {
-	l.WithLevel(FatalLevel).Printf(format, args...)
+	l.withLevel(FatalLevel).Printf(format, args...)
 }
 
 func (l GlogLogger) FatalDepth(depth int, args ...interface{}) {
-	l.WithLevel(FatalLevel).PrintDepth(depth, args...)
+	l.withLevel(FatalLevel).PrintDepth(depth, args...)
 }
 
 func (l GlogLogger) V(level int) bool {
@@ -98,7 +98,7 @@ var gepool = sync.Pool{
 
 var pid = int64(os.Getpid())
 
-func (l GlogLogger) WithLevel(level Level) (e *GlogEvent) {
+func (l GlogLogger) withLevel(level Level) (e *GlogEvent) {
 	if level < l.Level {
 		return
 	}

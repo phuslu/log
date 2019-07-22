@@ -38,23 +38,23 @@ type Event struct {
 }
 
 func Debug() *Event {
-	return DefaultLogger.WithLevel(DebugLevel)
+	return DefaultLogger.withLevel(DebugLevel)
 }
 
 func Info() *Event {
-	return DefaultLogger.WithLevel(InfoLevel)
+	return DefaultLogger.withLevel(InfoLevel)
 }
 
 func Warn() *Event {
-	return DefaultLogger.WithLevel(WarnLevel)
+	return DefaultLogger.withLevel(WarnLevel)
 }
 
 func Error() *Event {
-	return DefaultLogger.WithLevel(ErrorLevel)
+	return DefaultLogger.withLevel(ErrorLevel)
 }
 
 func Fatal() *Event {
-	return DefaultLogger.WithLevel(FatalLevel)
+	return DefaultLogger.withLevel(FatalLevel)
 }
 
 func Print(v ...interface{}) {
@@ -66,31 +66,31 @@ func Printf(format string, v ...interface{}) {
 }
 
 func (l Logger) Debug() *Event {
-	return l.WithLevel(DebugLevel)
+	return l.withLevel(DebugLevel)
 }
 
 func (l Logger) Info() *Event {
-	return l.WithLevel(InfoLevel)
+	return l.withLevel(InfoLevel)
 }
 
 func (l Logger) Warn() *Event {
-	return l.WithLevel(WarnLevel)
+	return l.withLevel(WarnLevel)
 }
 
 func (l Logger) Error() *Event {
-	return l.WithLevel(ErrorLevel)
+	return l.withLevel(ErrorLevel)
 }
 
 func (l Logger) Fatal() *Event {
-	return l.WithLevel(FatalLevel)
+	return l.withLevel(FatalLevel)
 }
 
 func (l Logger) Print(v ...interface{}) {
-	l.WithLevel(l.Level).Msg(fmt.Sprint(v...))
+	l.withLevel(l.Level).Msg(fmt.Sprint(v...))
 }
 
 func (l Logger) Printf(format string, v ...interface{}) {
-	l.WithLevel(l.Level).Msgf(format, v...)
+	l.withLevel(l.Level).Msgf(format, v...)
 }
 
 var epool = sync.Pool{
@@ -99,7 +99,7 @@ var epool = sync.Pool{
 	},
 }
 
-func (l Logger) WithLevel(level Level) (e *Event) {
+func (l Logger) withLevel(level Level) (e *Event) {
 	if level < l.Level {
 		return
 	}
