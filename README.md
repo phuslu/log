@@ -4,7 +4,7 @@
 
 ## Features
 
-* Simple, Minimalist interface
+* Simple, Minimalist & Friendly interfaces
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
 * JSON and TSV/CSV Loggers
 * Rotating/Buffering/Pretty Writers
@@ -57,6 +57,13 @@ log.DefaultLogger := log.Logger{
 log.Info().Msg("hello world")
 
 // Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
+```
+
+### Multi Writers:
+
+```go
+log.DefaultLogger.Writer := io.MultiWriter(&log.ConsoleWriter{ANSIColor: true}, &log.Writer{Filename: "1.log"})
+log.Info().Msg("hello world")
 ```
 
 ### Rotating log files hourly
