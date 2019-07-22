@@ -78,11 +78,19 @@ func Fatal() (e *Event) {
 }
 
 func Print(v ...interface{}) {
-	DefaultLogger.Print(v...)
+	e := DefaultLogger.withLevel(DefaultLogger.Level)
+	if e != nil && DefaultLogger.Caller {
+		e.caller(runtime.Caller(1))
+	}
+	e.Msg(fmt.Sprint(v...))
 }
 
 func Printf(format string, v ...interface{}) {
-	DefaultLogger.Printf(format, v...)
+	e := DefaultLogger.withLevel(DefaultLogger.Level)
+	if e != nil && DefaultLogger.Caller {
+		e.caller(runtime.Caller(1))
+	}
+	e.Msgf(format, v...)
 }
 
 func (l Logger) Debug() (e *Event) {
@@ -129,7 +137,6 @@ func (l Logger) Print(v ...interface{}) {
 	e := l.withLevel(l.Level)
 	if e != nil && l.Caller {
 		e.caller(runtime.Caller(1))
-		e.Msg(fmt.Sprint(v...))
 	}
 	e.Msg(fmt.Sprint(v...))
 }
