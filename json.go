@@ -137,17 +137,9 @@ func (l Logger) withLevel(level Level) (e *Event) {
 	}
 	// caller
 	if l.Caller {
-		_, file, line, ok := runtime.Caller(2)
-		if !ok {
-			file = "???"
-			line = 1
-		} else {
-			if i := strings.LastIndex(file, "/"); i >= 0 {
-				file = file[i+1:]
-			}
-		}
-		if line < 0 {
-			line = 0
+		_, file, line, _ := runtime.Caller(2)
+		if i := strings.LastIndex(file, "/"); i >= 0 {
+			file = file[i+1:]
 		}
 		e.buf = append(e.buf, ",\"caller\":\""...)
 		e.buf = append(e.buf, file...)
@@ -436,17 +428,9 @@ func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
 	}
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = "???"
-		line = 1
-	} else {
-		if i := strings.LastIndex(file, "/"); i >= 0 {
-			file = file[i+1:]
-		}
-	}
-	if line < 0 {
-		line = 0
+	_, file, line, _ := runtime.Caller(1)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
 	}
 	e.buf = append(e.buf, ",\"caller\":\""...)
 	e.buf = append(e.buf, file...)

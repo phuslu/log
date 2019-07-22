@@ -137,9 +137,15 @@ func (e *GlogEvent) Printf(format string, args ...interface{}) {
 	if e == nil {
 		return
 	}
-	e.caller(3)
-	msg := fmt.Sprintf(format, args...)
-	e.buf = append(e.buf, msg...)
+	_, file, line, _ := runtime.Caller(2)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
+	}
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, ']', ' ')
+	e.buf = append(e.buf, fmt.Sprintf(format, args...)...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
 	if e.level == FatalLevel {
@@ -154,9 +160,15 @@ func (e *GlogEvent) Print(args ...interface{}) {
 	if e == nil {
 		return
 	}
-	e.caller(3)
-	msg := fmt.Sprint(args...)
-	e.buf = append(e.buf, msg...)
+	_, file, line, _ := runtime.Caller(2)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
+	}
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, ']', ' ')
+	e.buf = append(e.buf, fmt.Sprint(args...)...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
 	if e.level == FatalLevel {
@@ -171,9 +183,15 @@ func (e *GlogEvent) Println(args ...interface{}) {
 	if e == nil {
 		return
 	}
-	e.caller(3)
-	msg := fmt.Sprintln(args...)
-	e.buf = append(e.buf, msg...)
+	_, file, line, _ := runtime.Caller(2)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
+	}
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, ']', ' ')
+	e.buf = append(e.buf, fmt.Sprintln(args...)...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
 	if e.level == FatalLevel {
@@ -188,9 +206,15 @@ func (e *GlogEvent) PrintDepth(depth int, args ...interface{}) {
 	if e == nil {
 		return
 	}
-	e.caller(3 + depth)
-	msg := fmt.Sprint(args...)
-	e.buf = append(e.buf, msg...)
+	_, file, line, _ := runtime.Caller(2 + depth)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
+	}
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, ']', ' ')
+	e.buf = append(e.buf, fmt.Sprint(args...)...)
 	e.buf = append(e.buf, '\n')
 	e.write(e.buf)
 	if e.level == FatalLevel {
@@ -247,24 +271,4 @@ func (e *GlogEvent) time(now time.Time) {
 	b = a / 10
 	e.buf[n+15] = byte('0' + a - 10*b)
 	e.buf[n+14] = byte('0' + b)
-}
-
-func (e *GlogEvent) caller(depth int) {
-	_, file, line, ok := runtime.Caller(depth)
-	if !ok {
-		file = "???"
-		line = 1
-	} else {
-		slash := strings.LastIndex(file, "/")
-		if slash >= 0 {
-			file = file[slash+1:]
-		}
-	}
-	if line < 0 {
-		line = 0
-	}
-	e.buf = append(e.buf, file...)
-	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.buf = append(e.buf, ' ')
 }

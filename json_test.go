@@ -13,7 +13,7 @@ func TestDefaultLogger(t *testing.T) {
 	Error().Str("foo", "bar").Msg("hello from Error")
 	// Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Print("hello from Print")
-	Printf("hell from %s", "Printf")
+	Printf("hello from %s", "Printf")
 }
 
 func TestLogger(t *testing.T) {
