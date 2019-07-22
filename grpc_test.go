@@ -51,29 +51,3 @@ func TestGrpcLogger(t *testing.T) {
 
 	grpclog.Info("hello", "grpclog from json")
 }
-
-func TestGrpcLogger2(t *testing.T) {
-	logger := GlogLogger{
-		Level:  ParseLevel("debug"),
-		Writer: &Writer{},
-	}
-
-	var grpclog grpcLoggerV2 = logger
-
-	grpclog.Info("hello grpclog Info")
-	grpclog.Infoln("hello grpclog Infoln")
-	grpclog.Infof("hello grpclog %s", "Infof")
-	grpclog.Warning("hello grpclog Warning")
-	grpclog.Warningln("hello grpclog Warningln")
-	grpclog.Warningf("hello grpclog %s", "Warningf")
-	grpclog.Error("hello grpclog Error")
-	grpclog.Errorln("hello grpclog Errorln")
-	grpclog.Errorf("hello grpclog %s", "Errorf")
-	// grpclog.Fatal("hello grpclog Fatal")
-	// grpclog.Fatalln("hello grpclog Fatalln")
-	// grpclog.Fatalf("hello grpclog %s", "Fatalf")
-
-	if grpclog.V(0) {
-		grpclog.Info("hello grpclog V")
-	}
-}
