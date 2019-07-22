@@ -137,7 +137,23 @@ func (l Logger) WithLevel(level Level) (e *Event) {
 	}
 	// caller
 	if l.Caller {
-		e.caller(1)
+		_, file, line, ok := runtime.Caller(2)
+		if !ok {
+			file = "???"
+			line = 1
+		} else {
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+		}
+		if line < 0 {
+			line = 0
+		}
+		e.buf = append(e.buf, ",\"caller\":\""...)
+		e.buf = append(e.buf, file...)
+		e.buf = append(e.buf, ':')
+		e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+		e.buf = append(e.buf, '"')
 	}
 	return
 }
@@ -420,7 +436,23 @@ func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
 	}
-	e.caller(0)
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 1
+	} else {
+		if i := strings.LastIndex(file, "/"); i >= 0 {
+			file = file[i+1:]
+		}
+	}
+	if line < 0 {
+		line = 0
+	}
+	e.buf = append(e.buf, ",\"caller\":\""...)
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, '"')
 	return e
 }
 
@@ -532,26 +564,6 @@ func (e *Event) time(now time.Time) {
 	e.buf[n+19] = byte('0' + a - 10*b)
 	e.buf[n+18] = byte('0' + b)
 	e.buf[n+17] = ':'
-}
-
-func (e *Event) caller(skip int) {
-	_, file, line, ok := runtime.Caller(2 + skip)
-	if !ok {
-		file = "???"
-		line = 1
-	} else {
-		if i := strings.LastIndex(file, "/"); i >= 0 {
-			file = file[i+1:]
-		}
-	}
-	if line < 0 {
-		line = 0
-	}
-	e.buf = append(e.buf, ",\"caller\":\""...)
-	e.buf = append(e.buf, file...)
-	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.buf = append(e.buf, '"')
 }
 
 var hex = "0123456789abcdef"
