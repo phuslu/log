@@ -37,24 +37,104 @@ type Event struct {
 	write      func(p []byte) (n int, err error)
 }
 
-func Debug() *Event {
-	return DefaultLogger.withLevel(DebugLevel)
+func Debug() (e *Event) {
+	if !DefaultLogger.Caller {
+		e = DefaultLogger.withLevel(DebugLevel)
+	} else {
+		e = DefaultLogger.withLevel(DebugLevel)
+		if e != nil {
+			_, file, line, _ := runtime.Caller(1)
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+			e.buf = append(e.buf, ",\"caller\":\""...)
+			e.buf = append(e.buf, file...)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+			e.buf = append(e.buf, '"')
+		}
+	}
+	return
 }
 
-func Info() *Event {
-	return DefaultLogger.withLevel(InfoLevel)
+func Info() (e *Event) {
+	if !DefaultLogger.Caller {
+		e = DefaultLogger.withLevel(InfoLevel)
+	} else {
+		e = DefaultLogger.withLevel(InfoLevel)
+		if e != nil {
+			_, file, line, _ := runtime.Caller(1)
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+			e.buf = append(e.buf, ",\"caller\":\""...)
+			e.buf = append(e.buf, file...)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+			e.buf = append(e.buf, '"')
+		}
+	}
+	return
 }
 
-func Warn() *Event {
-	return DefaultLogger.withLevel(WarnLevel)
+func Warn() (e *Event) {
+	if !DefaultLogger.Caller {
+		e = DefaultLogger.withLevel(WarnLevel)
+	} else {
+		e = DefaultLogger.withLevel(WarnLevel)
+		if e != nil {
+			_, file, line, _ := runtime.Caller(1)
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+			e.buf = append(e.buf, ",\"caller\":\""...)
+			e.buf = append(e.buf, file...)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+			e.buf = append(e.buf, '"')
+		}
+	}
+	return
 }
 
-func Error() *Event {
-	return DefaultLogger.withLevel(ErrorLevel)
+func Error() (e *Event) {
+	if !DefaultLogger.Caller {
+		e = DefaultLogger.withLevel(ErrorLevel)
+	} else {
+		e = DefaultLogger.withLevel(ErrorLevel)
+		if e != nil {
+			_, file, line, _ := runtime.Caller(1)
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+			e.buf = append(e.buf, ",\"caller\":\""...)
+			e.buf = append(e.buf, file...)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+			e.buf = append(e.buf, '"')
+		}
+	}
+	return
 }
 
-func Fatal() *Event {
-	return DefaultLogger.withLevel(FatalLevel)
+func Fatal() (e *Event) {
+	if !DefaultLogger.Caller {
+		e = DefaultLogger.withLevel(FatalLevel)
+	} else {
+		e = DefaultLogger.withLevel(FatalLevel)
+		if e != nil {
+			_, file, line, _ := runtime.Caller(1)
+			if i := strings.LastIndex(file, "/"); i >= 0 {
+				file = file[i+1:]
+			}
+			e.buf = append(e.buf, ",\"caller\":\""...)
+			e.buf = append(e.buf, file...)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+			e.buf = append(e.buf, '"')
+		}
+	}
+	return
 }
 
 func Print(v ...interface{}) {
