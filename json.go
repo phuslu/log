@@ -24,7 +24,7 @@ var DefaultLogger = Logger{
 
 type Logger struct {
 	Level      Level
-	Random     uint32
+	Sample     uint32
 	Caller     int
 	TimeField  string
 	TimeFormat string
@@ -164,7 +164,7 @@ func (l Logger) withLevel(level Level) (e *Event) {
 	if level < l.Level {
 		return
 	}
-	if l.Random != 0 && fastrandn(l.Random) != 0 {
+	if l.Sample != 0 && fastrandn(l.Sample) != 0 {
 		return
 	}
 	e = epool.Get().(*Event)
