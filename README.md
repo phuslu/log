@@ -4,11 +4,10 @@
 
 ## Features
 
-* Simple, Minimalist & Friendly interfaces
+* Simple & Friendly interfaces
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* JSON and TSV/CSV Loggers
 * Rotating/Buffering/Pretty Writers
-* Adaptation for glog/grpc
+* Adaptation for grpclog
 
 ## Getting Started
 
