@@ -33,8 +33,10 @@ func main() {
 To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 
 ```go
-log.DefaultLogger.Writer = &log.ConsoleWriter{ANSIColor: true}
-log.DefaultLogger.Caller = 1
+log.DefaultLogger = log.Logger{
+	Caller: 1,
+	Writer: &log.ConsoleWriter{ANSIColor: true},
+}
 
 log.Info().Str("foo", "bar").Msg("hello world")
 
@@ -46,8 +48,8 @@ log.Info().Str("foo", "bar").Msg("hello world")
 ### Customize the configuration and formatting:
 
 ```go
-log.DefaultLogger := log.Logger{
-	Level:      log.DebugLevel,
+log.DefaultLogger = log.Logger{
+	Level:      log.InfoLevel,
 	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
