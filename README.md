@@ -38,7 +38,7 @@ log.DefaultLogger.Caller = 1
 
 log.Info().Str("foo", "bar").Msg("hello world")
 
-// Output: 2019-07-11T16:41:43.256Z INF pretty.go:10 > hello world foo=bar
+// Output: 2019-07-11T16:41:43.256Z INF 12 pretty.go:10 > hello world foo=bar
 ```
 ![](https://user-images.githubusercontent.com/195836/61068992-ec8af200-a43d-11e9-891f-c6987b402f21.png)
 > Note: pretty logging also works on windows console
@@ -55,7 +55,7 @@ log.DefaultLogger := log.Logger{
 }
 log.Info().Msg("hello world")
 
-// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","goid":12, "caller":"test.go:42","message":"hello world"}
 ```
 
 ### Multi Writers:

@@ -531,6 +531,9 @@ func (e *Event) key(key string) {
 }
 
 func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
+	// goid
+	e.buf = append(e.buf, ",\"goid\":"...)
+	e.buf = strconv.AppendInt(e.buf, goid(), 10)
 	// file:line
 	if i := strings.LastIndex(file, "/"); i >= 0 {
 		file = file[i+1:]
@@ -540,9 +543,6 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
 	e.buf = append(e.buf, '"')
-	// goid
-	e.buf = append(e.buf, ",\"goid\":"...)
-	e.buf = strconv.AppendInt(e.buf, goid(), 10)
 }
 
 var timebuf []byte = []byte("\"2006-01-02T15:04:05.999Z\"")
@@ -567,8 +567,11 @@ func (e *Event) time(now time.Time) {
 	e.buf[n+22] = byte('0' + a - 10*b)
 	e.buf[n+21] = byte('0' + b)
 	e.buf[n+20] = '.'
+	// date time
+	year, month, day := now.Date()
+	hour, minute, second := now.Clock()
 	// year
-	a = now.Year()
+	a = year
 	b = a / 10
 	e.buf[n+4] = byte('0' + a - 10*b)
 	a = b
@@ -580,31 +583,31 @@ func (e *Event) time(now time.Time) {
 	e.buf[n+1] = byte('0' + b)
 	e.buf[n] = '"'
 	// month
-	a = int(now.Month())
+	a = int(month)
 	b = a / 10
 	e.buf[n+7] = byte('0' + a - 10*b)
 	e.buf[n+6] = byte('0' + b)
 	e.buf[n+5] = '-'
 	// day
-	a = now.Day()
+	a = day
 	b = a / 10
 	e.buf[n+10] = byte('0' + a - 10*b)
 	e.buf[n+9] = byte('0' + b)
 	e.buf[n+8] = '-'
 	// hour
-	a = now.Hour()
+	a = hour
 	b = a / 10
 	e.buf[n+13] = byte('0' + a - 10*b)
 	e.buf[n+12] = byte('0' + b)
 	e.buf[n+11] = 'T'
 	// minute
-	a = now.Minute()
+	a = minute
 	b = a / 10
 	e.buf[n+16] = byte('0' + a - 10*b)
 	e.buf[n+15] = byte('0' + b)
 	e.buf[n+14] = ':'
 	// second
-	a = now.Second()
+	a = second
 	b = a / 10
 	e.buf[n+19] = byte('0' + a - 10*b)
 	e.buf[n+18] = byte('0' + b)

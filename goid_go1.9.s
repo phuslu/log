@@ -1,5 +1,5 @@
 // +build amd64 amd64p32
-// +build go1.5
+// +build go1.9
 
 #include "textflag.h"
 // func getg() uintptr
