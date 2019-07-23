@@ -189,7 +189,7 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 			w.FlushDuration = 5 * time.Second
 		}
 		if w.buf == nil {
-			w.buf = make([]byte, 0, w.BufferSize+1024)
+			w.buf = make([]byte, 0, w.BufferSize+os.Getpagesize())
 		}
 		go func() {
 			for {
