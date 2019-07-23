@@ -24,8 +24,8 @@ var DefaultLogger = Logger{
 
 type Logger struct {
 	Level      Level
-	Caller     int
 	Random     uint32
+	Caller     int
 	TimeField  string
 	TimeFormat string
 	Writer     io.Writer
