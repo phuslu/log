@@ -61,7 +61,7 @@ log.Info().Msg("hello world")
 ### Multi Writers:
 
 ```go
-log.DefaultLogger.Writer := io.MultiWriter(&log.ConsoleWriter{ANSIColor: true}, &log.Writer{Filename: "1.log"})
+log.DefaultLogger.Writer = io.MultiWriter(&log.Writer{Filename: "1.log"}, &log.ConsoleWriter{ANSIColor: true})
 log.Info().Msg("hello world")
 ```
 
