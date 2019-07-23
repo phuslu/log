@@ -25,6 +25,7 @@ var DefaultLogger = Logger{
 type Logger struct {
 	Level      Level
 	Caller     int
+	Random     uint32
 	TimeField  string
 	TimeFormat string
 	Writer     io.Writer
@@ -155,8 +156,15 @@ var epool = sync.Pool{
 	},
 }
 
+//go:noescape
+//go:linkname fastrandn runtime.fastrandn
+func fastrandn(x uint32) uint32
+
 func (l Logger) withLevel(level Level) (e *Event) {
 	if level < l.Level {
+		return
+	}
+	if l.Random != 0 && fastrandn(l.Random) != 0 {
 		return
 	}
 	e = epool.Get().(*Event)
