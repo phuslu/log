@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -19,36 +20,40 @@ var _ io.WriteCloser = (*Writer)(nil)
 var hostname, _ = os.Hostname()
 
 type Writer struct {
+	size int64
+
+	mu   sync.Mutex
+	file *os.File
+
 	Filename   string
 	MaxSize    int64
 	MaxBackups int
 	LocalTime  bool
 	HostName   bool
-
-	mu   sync.Mutex
-	size int64
-	file *os.File
 }
 
 func (w *Writer) Write(p []byte) (n int, err error) {
-	w.mu.Lock()
-
 	if w.file == nil {
-		err = w.rotate(false)
+		w.mu.Lock()
+		if w.file == nil {
+			err = w.rotate(false)
+		}
+		w.mu.Unlock()
 		if err != nil {
-			w.mu.Unlock()
 			return
 		}
 	}
 
 	n, err = w.file.Write(p)
 
-	w.size += int64(n)
-	if w.MaxSize > 0 && w.size > w.MaxSize {
-		w.rotate(true)
+	if w.MaxSize > 0 && atomic.AddInt64(&w.size, int64(n)) > w.MaxSize {
+		w.mu.Lock()
+		if atomic.LoadInt64(&w.size) > w.MaxSize {
+			w.rotate(true)
+		}
+		w.mu.Unlock()
 	}
 
-	w.mu.Unlock()
 	return
 }
 
@@ -57,7 +62,7 @@ func (w *Writer) Close() (err error) {
 
 	err = w.file.Close()
 	w.file = nil
-	w.size = 0
+	atomic.StoreInt64(&w.size, 0)
 
 	w.mu.Unlock()
 	return
@@ -96,13 +101,13 @@ func (w *Writer) rotate(newFile bool) (err error) {
 	} else {
 		filename += ext
 	}
-	w.size = 0
+	atomic.StoreInt64(&w.size, 0)
 
 	if !newFile {
 		if link, err := os.Readlink(w.Filename); err == nil {
 			if fi, err := os.Stat(link); err == nil {
 				filename = link
-				w.size = fi.Size()
+				atomic.StoreInt64(&w.size, fi.Size())
 			}
 		}
 	}
