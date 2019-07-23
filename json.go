@@ -531,6 +531,7 @@ func (e *Event) key(key string) {
 }
 
 func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
+	// file:line
 	if i := strings.LastIndex(file, "/"); i >= 0 {
 		file = file[i+1:]
 	}
@@ -539,6 +540,9 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
 	e.buf = append(e.buf, '"')
+	// goid
+	e.buf = append(e.buf, ",\"goid\":"...)
+	e.buf = strconv.AppendInt(e.buf, goid(), 10)
 }
 
 var timebuf []byte = []byte("\"2006-01-02T15:04:05.999Z\"")
