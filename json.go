@@ -177,7 +177,9 @@ func (l Logger) withLevel(level Level) (e *Event) {
 	if l.TimeField == "" {
 		e.buf = append(e.buf, "{\"time\":"...)
 	} else {
-		e.key('{', l.TimeField)
+		e.buf = append(e.buf, '{', '"')
+		e.buf = append(e.buf, l.TimeField...)
+		e.buf = append(e.buf, '"', ':')
 	}
 	if e.timeFormat == "" {
 		e.time(now)
@@ -206,7 +208,7 @@ func (e *Event) Time(key string, t time.Time) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	switch {
 	case e.timeFormat != "":
 		e.buf = append(e.buf, '"')
@@ -222,7 +224,7 @@ func (e *Event) Timestamp() *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', "timestamp")
+	e.key("timestamp")
 	e.buf = strconv.AppendInt(e.buf, timeNow().Unix(), 10)
 	return e
 }
@@ -231,7 +233,7 @@ func (e *Event) Bool(key string, b bool) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = strconv.AppendBool(e.buf, b)
 	return e
 }
@@ -240,7 +242,7 @@ func (e *Event) Bools(key string, b []bool) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, a := range b {
 		if i != 0 {
@@ -256,7 +258,7 @@ func (e *Event) Dur(key string, d time.Duration) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, d.String()...)
 	e.buf = append(e.buf, '"')
@@ -267,7 +269,7 @@ func (e *Event) Durs(key string, d []time.Duration) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, a := range d {
 		if i != 0 {
@@ -299,7 +301,7 @@ func (e *Event) Errs(key string, errs []error) *Event {
 		return nil
 	}
 
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, err := range errs {
 		if i != 0 {
@@ -319,7 +321,7 @@ func (e *Event) Float64(key string, f float64) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = strconv.AppendFloat(e.buf, f, 'f', -1, 64)
 	return e
 }
@@ -328,7 +330,7 @@ func (e *Event) Floats64(key string, f []float64) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, a := range f {
 		if i != 0 {
@@ -344,7 +346,7 @@ func (e *Event) Floats32(key string, f []float32) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, a := range f {
 		if i != 0 {
@@ -360,7 +362,7 @@ func (e *Event) Int64(key string, i int64) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = strconv.AppendInt(e.buf, i, 10)
 	return e
 }
@@ -369,7 +371,7 @@ func (e *Event) Uint64(key string, i uint64) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = strconv.AppendUint(e.buf, i, 10)
 	return e
 }
@@ -410,7 +412,7 @@ func (e *Event) RawJSON(key string, b []byte) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, b...)
 	return e
 }
@@ -419,7 +421,7 @@ func (e *Event) Str(key string, val string) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.string(val)
 	return e
 }
@@ -428,7 +430,7 @@ func (e *Event) Strs(key string, vals []string) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '[')
 	for i, val := range vals {
 		if i != 0 {
@@ -444,7 +446,7 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.bytes(val)
 	return e
 }
@@ -453,7 +455,7 @@ func (e *Event) Hex(key string, val []byte) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	e.buf = append(e.buf, '"')
 	for _, v := range val {
 		e.buf = append(e.buf, hex[v>>4], hex[v&0x0f])
@@ -466,7 +468,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(',', key)
+	e.key(key)
 	marshaled, err := json.Marshal(i)
 	if err != nil {
 		e.string("marshaling error: " + err.Error())
@@ -522,8 +524,8 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	e.Msg(fmt.Sprintf(format, v...))
 }
 
-func (e *Event) key(b byte, key string) {
-	e.buf = append(e.buf, b, '"')
+func (e *Event) key(key string) {
+	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
 }
