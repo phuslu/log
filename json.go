@@ -33,9 +33,9 @@ type Logger struct {
 
 type Event struct {
 	buf        []byte
-	level      Level
-	timeFormat string
 	write      func(p []byte) (n int, err error)
+	timeFormat string
+	level      Level
 }
 
 func Debug() (e *Event) {
