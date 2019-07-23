@@ -1,1 +1,0 @@
-// workaround for https://golang.org/issue/15006
