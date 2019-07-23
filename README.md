@@ -40,7 +40,7 @@ log.Info().Str("foo", "bar").Msg("hello world")
 
 // Output: 2019-07-11T16:41:43.256Z INF 12 pretty.go:10 > hello world foo=bar
 ```
-![](https://user-images.githubusercontent.com/195836/61068992-ec8af200-a43d-11e9-891f-c6987b402f21.png)
+![](https://user-images.githubusercontent.com/195836/61725177-dff18c80-ada1-11e9-8338-3374a21a625b.png)
 > Note: pretty logging also works on windows console
 
 ### Customize the configuration and formatting:

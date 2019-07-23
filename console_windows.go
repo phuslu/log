@@ -3,6 +3,7 @@
 package log
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -37,7 +38,9 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 
 	var m map[string]interface{}
 
-	err = json.Unmarshal(p, &m)
+	decoder := json.NewDecoder(bytes.NewReader(p))
+	decoder.UseNumber()
+	err = decoder.Decode(&m)
 	if err != nil {
 		n, err = os.Stderr.Write(p)
 		return
