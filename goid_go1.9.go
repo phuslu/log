@@ -1,5 +1,5 @@
 // +build arm amd64 amd64p32
-// +build gc,go1.9
+// +build go1.9
 
 package log
 

@@ -24,6 +24,7 @@ func TestLogger(t *testing.T) {
 		},
 	}
 	log.Info().
+		Caller().
 		Bool("bool", true).
 		Dur("1_hour", time.Hour).
 		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).

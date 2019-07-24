@@ -1,4 +1,4 @@
-// +build !go1.9,!amd64,!amd64p32
+// +build !go1.9,!amd64,!amd64p32,!arm
 
 package log
 
