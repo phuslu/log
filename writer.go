@@ -111,7 +111,7 @@ func (w *Writer) rotate(newFile bool) (err error) {
 		}
 
 		var matches []string
-		matches, err = filepath.Glob(prefix + ".20*" + ext)
+		matches, err = filepath.Glob(prefix + ".20[0-9][0-9]*" + ext)
 		if err != nil {
 			return
 		}
