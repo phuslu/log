@@ -545,7 +545,7 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, '"')
 }
 
-var timebuf []byte = []byte("\"2006-01-02T15:04:05.999Z\"")
+var timebuf = []byte("\"2006-01-02T15:04:05.999Z\"")
 
 func (e *Event) time(now time.Time) {
 	now = now.UTC()

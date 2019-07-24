@@ -5,30 +5,91 @@ package log
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 )
 
 var (
-	muConsole               sync.Mutex
-	onceConsole             sync.Once
-	vtEnabled               = false
-	kernel32                = syscall.NewLazyDLL("kernel32.dll")
-	setConsoleMode          = kernel32.NewProc("SetConsoleMode").Call
-	setConsoleTextAttribute = kernel32.NewProc("SetConsoleTextAttribute").Call
+	vtInited  uint32
+	vtEnabled bool
+	muConsole sync.Mutex
 )
 
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
-	onceConsole.Do(tryEnableVirtualTerminalProcessing)
+	// try init windows 10 virtual terminal
+	if atomic.LoadUint32(&vtInited) == 0 {
+		muConsole.Lock()
+		if atomic.LoadUint32(&vtInited) == 0 {
+			if tryEnableVirtualTerminalProcessing() == nil {
+				vtEnabled = true
+			}
+			atomic.StoreUint32(&vtInited, 1)
+		}
+		muConsole.Unlock()
+	}
+	// write
 	if vtEnabled {
 		n, err = w.ansiWrite(p)
 	} else {
 		n, err = w.leacyWrite(p)
 	}
 	return
+}
+
+var (
+	kernel32                = syscall.NewLazyDLL("kernel32.dll")
+	setConsoleMode          = kernel32.NewProc("SetConsoleMode").Call
+	setConsoleTextAttribute = kernel32.NewProc("SetConsoleTextAttribute").Call
+)
+
+func tryEnableVirtualTerminalProcessing() error {
+	var handle syscall.Handle
+
+	err := syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, syscall.StringToUTF16Ptr(`SOFTWARE\Microsoft\Windows NT\CurrentVersion`), 0, syscall.KEY_READ, &handle)
+	if err != nil {
+		return err
+	}
+	defer syscall.RegCloseKey(handle)
+
+	var t, n uint32
+	var b [64]uint16
+
+	n = uint32(len(b))
+	err = syscall.RegQueryValueEx(handle, syscall.StringToUTF16Ptr(`CurrentBuild`), nil, &t, (*byte)(unsafe.Pointer(&b[0])), &n)
+	if err != nil {
+		return err
+	}
+
+	var ver uint32
+	for i := 0; i < len(b); i++ {
+		if b[i] == 0 {
+			break
+		}
+		ver = ver*10 + uint32(b[i]-'0')
+	}
+
+	if ver < 16257 {
+		return errors.New("not implemented")
+	}
+
+	var mode uint32
+	err = syscall.GetConsoleMode(syscall.Stderr, &mode)
+	if err != nil {
+		return err
+	}
+
+	// SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+	ret, _, err := setConsoleMode(uintptr(syscall.Stderr), uintptr(mode|0x4))
+	if ret == 0 {
+		return err
+	}
+
+	return nil
 }
 
 func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
@@ -52,19 +113,19 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
 	if err != nil {
-		n, err = os.Stdout.Write(p)
+		n, err = os.Stderr.Write(p)
 		return
 	}
 
 	var printf = func(color uintptr, format string, args ...interface{}) {
 		if color != winColorWhite {
-			setConsoleTextAttribute(uintptr(syscall.Stdout), color)
+			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
 		}
 		var i int
-		i, err = fmt.Fprintf(os.Stdout, format, args...)
+		i, err = fmt.Fprintf(os.Stderr, format, args...)
 		n += i
 		if color != winColorWhite {
-			setConsoleTextAttribute(uintptr(syscall.Stdout), winColorWhite)
+			setConsoleTextAttribute(uintptr(syscall.Stderr), winColorWhite)
 		}
 	}
 
@@ -142,51 +203,4 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 	printf(winColorWhite, " \n")
 
 	return n, err
-}
-
-func tryEnableVirtualTerminalProcessing() {
-	var handle syscall.Handle
-
-	err := syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, syscall.StringToUTF16Ptr(`SOFTWARE\Microsoft\Windows NT\CurrentVersion`), 0, syscall.KEY_READ, &handle)
-	if err != nil {
-		return
-	}
-	defer syscall.RegCloseKey(handle)
-
-	var t, n uint32
-	var b [64]uint16
-
-	n = uint32(len(b))
-	err = syscall.RegQueryValueEx(handle, syscall.StringToUTF16Ptr(`CurrentBuild`), nil, &t, (*byte)(unsafe.Pointer(&b[0])), &n)
-	if err != nil {
-		return
-	}
-
-	var ver uint32
-	for i := 0; i < len(b); i++ {
-		if b[i] == 0 {
-			break
-		}
-		ver = ver*10 + uint32(b[i]-'0')
-	}
-
-	if ver < 16257 {
-		return
-	}
-
-	const ENABLE_VIRTUAL_TERMINAL_PROCESSING uint32 = 0x4
-
-	var mode uint32
-	err = syscall.GetConsoleMode(syscall.Stdout, &mode)
-	if err != nil {
-		return
-	}
-	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
-	ret, _, err := setConsoleMode(uintptr(syscall.Stdout), uintptr(mode))
-	if ret == 0 {
-		return
-	}
-
-	vtEnabled = true
-	return
 }
