@@ -20,7 +20,7 @@ const (
 	ansiColorDarkGray = "\x1b[90m"
 )
 
-func (w *ConsoleWriter) write(p []byte) (n int, err error) {
+func (w *ConsoleWriter) ansiWrite(p []byte) (n int, err error) {
 	var m map[string]interface{}
 
 	decoder := json.NewDecoder(bytes.NewReader(p))

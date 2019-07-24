@@ -9,20 +9,31 @@ import (
 	"os"
 	"sync"
 	"syscall"
+	"unsafe"
 )
 
 var (
-	muLeacy                 sync.Mutex
-	SetConsoleTextAttribute = syscall.NewLazyDLL("kernel32.dll").NewProc("SetConsoleTextAttribute").Call
+	muConsole               sync.Mutex
+	onceConsole             sync.Once
+	vtEnabled               = false
+	kernel32                = syscall.NewLazyDLL("kernel32.dll")
+	setConsoleMode          = kernel32.NewProc("SetConsoleMode").Call
+	setConsoleTextAttribute = kernel32.NewProc("SetConsoleTextAttribute").Call
 )
 
-func (w *ConsoleWriter) Write(p []byte) (int, error) {
-	return w.leacyWrite(p)
+func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
+	onceConsole.Do(tryEnableVirtualTerminalProcessing)
+	if vtEnabled {
+		n, err = w.ansiWrite(p)
+	} else {
+		n, err = w.leacyWrite(p)
+	}
+	return
 }
 
 func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
-	muLeacy.Lock()
-	defer muLeacy.Unlock()
+	muConsole.Lock()
+	defer muConsole.Unlock()
 
 	const (
 		winColorBlue   = 1
@@ -41,19 +52,19 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
 	if err != nil {
-		n, err = os.Stderr.Write(p)
+		n, err = os.Stdout.Write(p)
 		return
 	}
 
 	var printf = func(color uintptr, format string, args ...interface{}) {
 		if color != winColorWhite {
-			SetConsoleTextAttribute(uintptr(syscall.Stderr), color)
+			setConsoleTextAttribute(uintptr(syscall.Stdout), color)
 		}
 		var i int
-		i, err = fmt.Fprintf(os.Stderr, format, args...)
+		i, err = fmt.Fprintf(os.Stdout, format, args...)
 		n += i
 		if color != winColorWhite {
-			SetConsoleTextAttribute(uintptr(syscall.Stderr), winColorWhite)
+			setConsoleTextAttribute(uintptr(syscall.Stdout), winColorWhite)
 		}
 	}
 
@@ -131,4 +142,51 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 	printf(winColorWhite, " \n")
 
 	return n, err
+}
+
+func tryEnableVirtualTerminalProcessing() {
+	var handle syscall.Handle
+
+	err := syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, syscall.StringToUTF16Ptr(`SOFTWARE\Microsoft\Windows NT\CurrentVersion`), 0, syscall.KEY_READ, &handle)
+	if err != nil {
+		return
+	}
+	defer syscall.RegCloseKey(handle)
+
+	var t, n uint32
+	var b [64]uint16
+
+	n = uint32(len(b))
+	err = syscall.RegQueryValueEx(handle, syscall.StringToUTF16Ptr(`CurrentBuild`), nil, &t, (*byte)(unsafe.Pointer(&b[0])), &n)
+	if err != nil {
+		return
+	}
+
+	var ver uint32
+	for i := 0; i < len(b); i++ {
+		if b[i] == 0 {
+			break
+		}
+		ver = ver*10 + uint32(b[i]-'0')
+	}
+
+	if ver < 16257 {
+		return
+	}
+
+	const ENABLE_VIRTUAL_TERMINAL_PROCESSING uint32 = 0x4
+
+	var mode uint32
+	err = syscall.GetConsoleMode(syscall.Stdout, &mode)
+	if err != nil {
+		return
+	}
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	ret, _, err := setConsoleMode(uintptr(syscall.Stdout), uintptr(mode))
+	if ret == 0 {
+		return
+	}
+
+	vtEnabled = true
+	return
 }
