@@ -13,8 +13,12 @@ func goid() (n int64) {
 	if len(b) <= offset {
 		return
 	}
-	for i := offset; b[i] != ' '; i++ {
-		n = n*10 + int64(b[i]-'0')
+	for i := offset; i < len(b); i++ {
+		j := int64(b[i] - '0')
+		if j < 0 || j > 9 {
+			break
+		}
+		n = n*10 + j
 	}
 	return n
 }
