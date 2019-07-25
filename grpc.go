@@ -29,7 +29,7 @@ func (l GrpcLogger) Warningln(args ...interface{}) {
 }
 
 func (l GrpcLogger) Warningf(format string, args ...interface{}) {
-	l.Logger.Info().Msgf(format, args...)
+	l.Logger.Warn().Msgf(format, args...)
 }
 
 func (l GrpcLogger) Error(args ...interface{}) {
@@ -40,7 +40,7 @@ func (l GrpcLogger) Errorln(args ...interface{}) {
 }
 
 func (l GrpcLogger) Errorf(format string, args ...interface{}) {
-	l.Logger.Info().Msgf(format, args...)
+	l.Logger.Error().Msgf(format, args...)
 }
 
 func (l GrpcLogger) Fatal(args ...interface{}) {
@@ -51,7 +51,7 @@ func (l GrpcLogger) Fatalln(args ...interface{}) {
 }
 
 func (l GrpcLogger) Fatalf(format string, args ...interface{}) {
-	l.Logger.Info().Msgf(format, args...)
+	l.Logger.Fatal().Msgf(format, args...)
 }
 
 func (l GrpcLogger) V(level int) bool {
