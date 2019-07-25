@@ -34,7 +34,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	}
 	// write
 	if vtEnabled {
-		n, err = w.ansiWrite(p)
+		n, err = w.vtWrite(p)
 	} else {
 		n, err = w.leacyWrite(p)
 	}
