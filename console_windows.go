@@ -34,9 +34,9 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	}
 	// write
 	if vtEnabled {
-		n, err = w.vtWrite(p)
+		n, err = w.write(p)
 	} else {
-		n, err = w.leacyWrite(p)
+		n, err = w.writeWindows(p)
 	}
 	return
 }
@@ -92,19 +92,19 @@ func tryEnableVirtualTerminalProcessing() error {
 	return nil
 }
 
-func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
+func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	muConsole.Lock()
 	defer muConsole.Unlock()
 
 	const (
-		winColorBlue   = 1
-		winColorGreen  = 2
-		winColorAqua   = 3
-		winColorRed    = 4
-		winColorPurple = 5
-		winColorYellow = 6
-		winColorWhite  = 7
-		winColorGray   = 8
+		windowsColorBlue   = 1
+		windowsColorGreen  = 2
+		windowsColorAqua   = 3
+		windowsColorRed    = 4
+		windowsColorPurple = 5
+		windowsColorYellow = 6
+		windowsColorWhite  = 7
+		windowsColorGray   = 8
 	)
 
 	var m map[string]interface{}
@@ -118,22 +118,22 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 	}
 
 	var printf = func(color uintptr, format string, args ...interface{}) {
-		if color != winColorWhite {
+		if color != windowsColorWhite {
 			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
 		}
 		var i int
 		i, err = fmt.Fprintf(os.Stderr, format, args...)
 		n += i
-		if color != winColorWhite {
-			setConsoleTextAttribute(uintptr(syscall.Stderr), winColorWhite)
+		if color != windowsColorWhite {
+			setConsoleTextAttribute(uintptr(syscall.Stderr), windowsColorWhite)
 		}
 	}
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			printf(winColorGray, "%s ", v)
+			printf(windowsColorGray, "%s ", v)
 		} else {
-			printf(winColorWhite, "%s ", v)
+			printf(windowsColorWhite, "%s ", v)
 		}
 	}
 
@@ -142,33 +142,33 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 		var c uintptr
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
-			c, s = winColorYellow, "DBG"
+			c, s = windowsColorYellow, "DBG"
 		case InfoLevel:
-			c, s = winColorGreen, "INF"
+			c, s = windowsColorGreen, "INF"
 		case WarnLevel:
-			c, s = winColorRed, "WRN"
+			c, s = windowsColorRed, "WRN"
 		case ErrorLevel:
-			c, s = winColorRed, "ERR"
+			c, s = windowsColorRed, "ERR"
 		case FatalLevel:
-			c, s = winColorRed, "FTL"
+			c, s = windowsColorRed, "FTL"
 		case PanicLevel:
-			c, s = winColorRed, "PNC"
+			c, s = windowsColorRed, "PNC"
 		default:
-			c, s = winColorRed, "???"
+			c, s = windowsColorRed, "???"
 		}
 		if w.ANSIColor {
 			printf(c, "%s ", s)
 		} else {
-			printf(winColorWhite, "%s ", s)
+			printf(windowsColorWhite, "%s ", s)
 		}
 	}
 
 	if v, ok := m["goid"]; ok {
-		printf(winColorWhite, "%s ", v)
+		printf(windowsColorWhite, "%s ", v)
 	}
 
 	if v, ok := m["caller"]; ok {
-		printf(winColorWhite, "%s ", v)
+		printf(windowsColorWhite, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -176,11 +176,11 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			printf(winColorAqua, ">")
+			printf(windowsColorAqua, ">")
 		} else {
-			printf(winColorWhite, ">")
+			printf(windowsColorWhite, ">")
 		}
-		printf(winColorWhite, " %s", v)
+		printf(windowsColorWhite, " %s", v)
 	}
 
 	for k, v := range m {
@@ -190,17 +190,17 @@ func (w *ConsoleWriter) leacyWrite(p []byte) (n int, err error) {
 		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
-				printf(winColorRed, " %s=%v", k, v)
+				printf(windowsColorRed, " %s=%v", k, v)
 			} else {
-				printf(winColorAqua, " %s=", k)
-				printf(winColorGray, "%v", v)
+				printf(windowsColorAqua, " %s=", k)
+				printf(windowsColorGray, "%v", v)
 			}
 		} else {
-			printf(winColorWhite, " %s=%v", k, v)
+			printf(windowsColorWhite, " %s=%v", k, v)
 		}
 	}
 
-	printf(winColorWhite, " \n")
+	printf(windowsColorWhite, " \n")
 
 	return n, err
 }
