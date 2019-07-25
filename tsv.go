@@ -125,7 +125,7 @@ func (e *TSVEvent) Bytes(val []byte) *TSVEvent {
 	return e
 }
 
-func (e *TSVEvent) Send() {
+func (e *TSVEvent) Msg() {
 	if e == nil || len(e.buf) == 0 {
 		return
 	}

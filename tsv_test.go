@@ -26,7 +26,7 @@ func TestTSVLogger(t *testing.T) {
 		Uint8(42).
 		Bytes([]byte("\"<,\t>?'")).
 		Str("\"<,\t>?'").
-		Send()
+		Msg()
 }
 
 func TestCSVLogger(t *testing.T) {
@@ -36,7 +36,7 @@ func TestCSVLogger(t *testing.T) {
 		Writer:    &Writer{},
 	}
 
-	log.New().Send()
+	log.New().Msg()
 
 	log.New().
 		Timestamp().
@@ -55,5 +55,5 @@ func TestCSVLogger(t *testing.T) {
 		Uint8(42).
 		Bytes([]byte("\"<,\t>?'")).
 		Str("\"<,\t>?'").
-		Send()
+		Msg()
 }

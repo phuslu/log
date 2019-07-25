@@ -48,43 +48,43 @@ var (
 )
 
 func tryEnableVirtualTerminalProcessing() error {
-	var handle syscall.Handle
-
-	err := syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, syscall.StringToUTF16Ptr(`SOFTWARE\Microsoft\Windows NT\CurrentVersion`), 0, syscall.KEY_READ, &handle)
-	if err != nil {
-		return err
-	}
-	defer syscall.RegCloseKey(handle)
-
-	var t, n uint32
+	var h syscall.Handle
 	var b [64]uint16
+	var n uint32
 
-	n = uint32(len(b))
-	err = syscall.RegQueryValueEx(handle, syscall.StringToUTF16Ptr(`CurrentBuild`), nil, &t, (*byte)(unsafe.Pointer(&b[0])), &n)
+	// open registry
+	err := syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, syscall.StringToUTF16Ptr(`SOFTWARE\Microsoft\Windows NT\CurrentVersion`), 0, syscall.KEY_READ, &h)
 	if err != nil {
 		return err
 	}
+	defer syscall.RegCloseKey(h)
 
-	var ver uint32
+	// read windows build number
+	n = uint32(len(b))
+	err = syscall.RegQueryValueEx(h, syscall.StringToUTF16Ptr(`CurrentBuild`), nil, nil, (*byte)(unsafe.Pointer(&b[0])), &n)
+	if err != nil {
+		return err
+	}
 	for i := 0; i < len(b); i++ {
 		if b[i] == 0 {
 			break
 		}
-		ver = ver*10 + uint32(b[i]-'0')
+		n = n*10 + uint32(b[i]-'0')
 	}
 
-	if ver < 16257 {
+	// return if lower than windows 10 16257
+	if n < 16257 {
 		return errors.New("not implemented")
 	}
 
-	var mode uint32
-	err = syscall.GetConsoleMode(syscall.Stderr, &mode)
+	// get console mode
+	err = syscall.GetConsoleMode(syscall.Stderr, &n)
 	if err != nil {
 		return err
 	}
 
-	// SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-	ret, _, err := setConsoleMode(uintptr(syscall.Stderr), uintptr(mode|0x4))
+	// enable ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	ret, _, err := setConsoleMode(uintptr(syscall.Stderr), uintptr(n|0x4))
 	if ret == 0 {
 		return err
 	}

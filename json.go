@@ -486,10 +486,6 @@ func (e *Event) Caller() *Event {
 	return e
 }
 
-func (e *Event) Send() {
-	e.Msg("")
-}
-
 func (e *Event) Enabled() bool {
 	return e != nil
 }
