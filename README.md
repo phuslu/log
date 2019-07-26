@@ -4,10 +4,10 @@
 
 ## Features
 
-* Simple & Friendly interfaces
+* Simple & Straightforward interfaces
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* Rotating/Buffering/Pretty Writers
-* Adaptation for grpclog
+* Rotating/Pretty/Buffering Writers
+* No external dependences
 
 ## Getting Started
 
