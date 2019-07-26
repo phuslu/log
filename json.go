@@ -16,7 +16,7 @@ import (
 
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
-	Caller:     1,
+	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
 	Writer:     &Writer{},
