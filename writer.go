@@ -11,6 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
 var _ io.WriteCloser = (*Writer)(nil)
@@ -21,9 +22,9 @@ var hostname, _ = os.Hostname()
 
 type Writer struct {
 	size int64
+	file unsafe.Pointer // *os.File
 
-	mu   sync.Mutex
-	file *os.File
+	mu sync.Mutex
 
 	Filename   string
 	MaxSize    int64
@@ -32,10 +33,14 @@ type Writer struct {
 	HostName   bool
 }
 
+func (w *Writer) File() *os.File {
+	return (*os.File)(atomic.LoadPointer(&w.file))
+}
+
 func (w *Writer) Close() (err error) {
 	w.mu.Lock()
 
-	err = w.file.Close()
+	err = w.File().Close()
 	w.file = nil
 	atomic.StoreInt64(&w.size, 0)
 
@@ -52,12 +57,12 @@ func (w *Writer) Rotate() (err error) {
 
 func (w *Writer) rotate(newFile bool) (err error) {
 	if w.Filename == "" {
-		w.file = os.Stderr
+		atomic.StorePointer(&w.file, unsafe.Pointer(os.Stderr))
 		return nil
 	}
 
-	if w.file != nil {
-		err = w.file.Close()
+	if file := w.File(); file != nil {
+		err = file.Close()
 		if err != nil {
 			return
 		}
@@ -87,10 +92,12 @@ func (w *Writer) rotate(newFile bool) (err error) {
 		}
 	}
 
-	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil && w.file == nil {
+	var file *os.File
+	file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil && file == nil {
 		return
 	}
+	atomic.StorePointer(&w.file, unsafe.Pointer(file))
 
 	go func(filename string) {
 		os.Remove(w.Filename)

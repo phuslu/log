@@ -8,7 +8,9 @@ import (
 
 // rely to cl/174957 & cl/41674
 func (w *Writer) Write(p []byte) (n int, err error) {
-	if w.file == nil {
+	file := w.File()
+
+	if file == nil {
 		w.mu.Lock()
 		if w.file == nil {
 			err = w.rotate(false)
@@ -19,7 +21,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		}
 	}
 
-	n, err = w.file.Write(p)
+	n, err = file.Write(p)
 
 	if w.MaxSize > 0 && atomic.AddInt64(&w.size, int64(n)) > w.MaxSize {
 		w.mu.Lock()
