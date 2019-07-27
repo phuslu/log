@@ -3,36 +3,12 @@
 
 package log
 
-type g struct {
-	stack struct {
-		lo uintptr
-		hi uintptr
-	}
-	stackguard0 uintptr
-	stackguard1 uintptr
-	_panic      uintptr
-	_defer      uintptr
-	m           uintptr
-	sched       struct {
-		sp   uintptr
-		pc   uintptr
-		g    uintptr
-		ctxt uintptr
-		ret  uintptr
-		lr   uintptr
-		bp   uintptr
-	}
-	syscallsp    uintptr
-	syscallpc    uintptr
-	stktopsp     uintptr
-	param        uintptr
-	atomicstatus uint32
-	stackLock    uint32
-	goid         int64
-}
+import (
+	"unsafe"
+)
 
-func getg() *g
+func getg() uintptr
 
 func goid() int64 {
-	return getg().goid
+	return *(*int64)(unsafe.Pointer(getg() + 152))
 }
