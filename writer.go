@@ -9,9 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 var _ io.WriteCloser = (*Writer)(nil)
@@ -21,28 +19,45 @@ var timeNow = time.Now
 var hostname, _ = os.Hostname()
 
 type Writer struct {
-	size int64
-	file unsafe.Pointer // *os.File
-
-	mu sync.Mutex
-
 	Filename   string
 	MaxSize    int64
 	MaxBackups int
 	LocalTime  bool
 	HostName   bool
+
+	mu   sync.Mutex
+	file *os.File
+	size int64
 }
 
-func (w *Writer) File() *os.File {
-	return (*os.File)(atomic.LoadPointer(&w.file))
+func (w *Writer) Write(p []byte) (n int, err error) {
+	w.mu.Lock()
+
+	if w.file == nil {
+		err = w.rotate(false)
+		if err != nil {
+			w.mu.Unlock()
+			return
+		}
+	}
+
+	n, err = w.file.Write(p)
+
+	w.size += int64(n)
+	if w.MaxSize > 0 && w.size > w.MaxSize {
+		w.rotate(true)
+	}
+
+	w.mu.Unlock()
+	return
 }
 
 func (w *Writer) Close() (err error) {
 	w.mu.Lock()
 
-	err = w.File().Close()
+	err = w.file.Close()
 	w.file = nil
-	atomic.StoreInt64(&w.size, 0)
+	w.size = 0
 
 	w.mu.Unlock()
 	return
@@ -57,12 +72,12 @@ func (w *Writer) Rotate() (err error) {
 
 func (w *Writer) rotate(newFile bool) (err error) {
 	if w.Filename == "" {
-		atomic.StorePointer(&w.file, unsafe.Pointer(os.Stderr))
+		w.file = os.Stderr
 		return nil
 	}
 
-	if file := w.File(); file != nil {
-		err = file.Close()
+	if w.file != nil {
+		err = w.file.Close()
 		if err != nil {
 			return
 		}
@@ -81,23 +96,21 @@ func (w *Writer) rotate(newFile bool) (err error) {
 	} else {
 		filename += ext
 	}
-	atomic.StoreInt64(&w.size, 0)
+	w.size = 0
 
 	if !newFile {
 		if link, err := os.Readlink(w.Filename); err == nil {
 			if fi, err := os.Stat(link); err == nil {
 				filename = link
-				atomic.StoreInt64(&w.size, fi.Size())
+				w.size = fi.Size()
 			}
 		}
 	}
 
-	var file *os.File
-	file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil && file == nil {
+	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil && w.file == nil {
 		return
 	}
-	atomic.StorePointer(&w.file, unsafe.Pointer(file))
 
 	go func(filename string) {
 		os.Remove(w.Filename)
