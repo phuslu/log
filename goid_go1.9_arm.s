@@ -1,4 +1,4 @@
-// +build arm
+// +build arm,arm64
 // +build go1.9
 
 #include "textflag.h"
