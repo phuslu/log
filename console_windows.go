@@ -204,3 +204,13 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 
 	return n, err
 }
+
+func IsTerminal(file *os.File) bool {
+	var mode uint32
+	err := syscall.GetConsoleMode(syscall.Handle(file.Fd()), &mode)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
