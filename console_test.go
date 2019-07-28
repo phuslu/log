@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -13,6 +14,17 @@ func TestConsoleWriter(t *testing.T) {
 		if err != nil {
 			t.Errorf("test json console writer error: %+v", err)
 		}
+	}
+}
+
+func TestIsTerminal(t *testing.T) {
+	if IsTerminal(os.Stdout) {
+		t.Errorf("test is terminal mode for stdout failed")
+	}
+
+	file, _ := os.Open(os.DevNull)
+	if IsTerminal(file) {
+		t.Errorf("test is terminal mode for %s failed", os.DevNull)
 	}
 }
 
