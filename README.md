@@ -33,12 +33,23 @@ func main() {
 To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 
 ```go
-log.DefaultLogger = log.Logger{
-	Caller: 1,
-	Writer: &log.ConsoleWriter{ANSIColor: true},
-}
+package main
 
-log.Info().Str("foo", "bar").Msg("hello world")
+import (
+	"os"
+	"github.com/phuslu/log"
+)
+
+func main() {
+	if log.IsTerminal(os.Stderr) {
+		log.DefaultLogger = log.Logger{
+			Caller: 1,
+			Writer: &log.ConsoleWriter{ANSIColor: true},
+		}
+	}
+
+	log.Info().Str("foo", "bar").Msg("hello world")
+}
 
 // Output: 2019-07-11T16:41:43.256Z INF 12 pretty.go:10 > hello world foo=bar
 ```
