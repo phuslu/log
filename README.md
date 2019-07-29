@@ -41,7 +41,7 @@ import (
 )
 
 func main() {
-	if log.IsTerminal(os.Stderr) {
+	if log.IsTerminal(os.Stderr.Fd()) {
 		log.DefaultLogger = log.Logger{
 			Caller: 1,
 			Writer: &log.ConsoleWriter{ANSIColor: true},
