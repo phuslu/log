@@ -134,6 +134,14 @@ func (l Logger) Fatal() (e *Event) {
 	return
 }
 
+func (l Logger) WithLevel(level Level) (e *Event) {
+	e = l.withLevel(level)
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
+}
+
 func (l Logger) Print(v ...interface{}) {
 	e := l.withLevel(l.Level)
 	if e != nil && l.Caller > 0 {
