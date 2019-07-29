@@ -13,7 +13,7 @@ func (w *ConsoleWriter) Write(p []byte) (int, error) {
 	return w.write(p)
 }
 
-func IsTerminal(file *os.File) bool {
+func IsTerminal(fd uintptr) bool {
 	var req uintptr
 	switch runtime.GOOS {
 	case "linux":
@@ -37,6 +37,6 @@ func IsTerminal(file *os.File) bool {
 	}
 
 	var termios [256]byte
-	_, _, err := syscall.Syscall6(syscall.SYS_IOCTL, file.Fd(), req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
+	_, _, err := syscall.Syscall6(syscall.SYS_IOCTL, fd, req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
 	return err == 0
 }
