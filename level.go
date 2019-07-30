@@ -1,6 +1,6 @@
 package log
 
-type Level uint8
+type Level uint32
 
 const (
 	// DebugLevel defines debug log level.
