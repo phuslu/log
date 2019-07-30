@@ -3,7 +3,6 @@
 package log
 
 import (
-	"os"
 	"runtime"
 	"syscall"
 	"unsafe"
