@@ -126,10 +126,12 @@ func (e *TSVEvent) Bytes(val []byte) *TSVEvent {
 }
 
 func (e *TSVEvent) Msg() {
-	if e == nil || len(e.buf) == 0 {
+	if e == nil {
 		return
 	}
-	e.buf[len(e.buf)-1] = '\n'
+	if len(e.buf) != 0 {
+		e.buf[len(e.buf)-1] = '\n'
+	}
 	e.write(e.buf)
 	tepool.Put(e)
 }
