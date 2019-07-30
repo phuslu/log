@@ -172,7 +172,7 @@ func (l Logger) header(level Level) (e *Event) {
 	if level < l.Level {
 		return
 	}
-	if l.Sample != 0 && fastrandn(l.Sample) != 0 {
+	if l.Sample > 1 && fastrandn(l.Sample) != 0 {
 		return
 	}
 	e = epool.Get().(*Event)

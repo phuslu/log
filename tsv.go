@@ -28,7 +28,7 @@ var tepool = sync.Pool{
 }
 
 func (l TSVLogger) New() (e *TSVEvent) {
-	if l.Sample != 0 && fastrandn(l.Sample) != 0 {
+	if l.Sample > 1 && fastrandn(l.Sample) != 0 {
 		return
 	}
 	e = tepool.Get().(*TSVEvent)
