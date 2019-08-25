@@ -19,6 +19,7 @@ var DefaultLogger = Logger{
 	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
+	HostField:  "",
 	Writer:     &Writer{},
 }
 
@@ -28,6 +29,7 @@ type Logger struct {
 	Caller     int
 	TimeField  string
 	TimeFormat string
+	HostField  string
 	Writer     io.Writer
 }
 
@@ -208,6 +210,14 @@ func (l Logger) header(level Level) (e *Event) {
 		e.buf = append(e.buf, ",\"level\":\"error\""...)
 	case FatalLevel:
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
+	}
+	// hostname
+	if l.HostField != "" {
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, l.HostField...)
+		e.buf = append(e.buf, '"', ':', '"')
+		e.buf = append(e.buf, hostname...)
+		e.buf = append(e.buf, '"')
 	}
 	return
 }

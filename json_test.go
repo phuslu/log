@@ -64,3 +64,12 @@ func TestLoggerTime(t *testing.T) {
 	}
 	log.Info().Timestamp().Time("now", timeNow()).Msg("this is test time log event")
 }
+
+func TestLoggerHost(t *testing.T) {
+	log := Logger{
+		Level:     ParseLevel("debug"),
+		HostField: "host",
+		Writer:    &Writer{},
+	}
+	log.Info().Timestamp().Time("now", timeNow()).Msg("this is test host log event")
+}
