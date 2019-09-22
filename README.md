@@ -91,26 +91,18 @@ import (
 )
 
 func main() {
-	var localtime bool = true
-
 	logger := log.Logger{
 		Level:      log.ParseLevel("info"),
 		Writer:     &log.Writer{
 			Filename:   "main.log",
 			MaxSize:    50*1024*1024,
 			MaxBackups: 7,
-			LocalTime:  localtime,
+			LocalTime:  false,
 		},
 	}
 
-	var runner *cron.Cron
-	if localtime {
-		runner = cron.New()
-	} else {
-		runner = cron.NewWithLocation(time.UTC)
-	}
+	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC), cron.WithLogger(cron.PrintfLogger(log.DefaultLogger)))
 	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
-	runner.ErrorLog = log.DefaultLogger
 	go runner.Run()
 
 	for {
