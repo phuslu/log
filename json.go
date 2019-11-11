@@ -801,3 +801,19 @@ func stacks(all bool) []byte {
 	}
 	return trace
 }
+
+var _ io.Writer = (*LevelWriter)(nil)
+
+type LevelWriter struct {
+	Logger Logger
+	Level  Level
+}
+
+func (w LevelWriter) Write(p []byte) (int, error) {
+	e := w.Logger.header(w.Level)
+	if e != nil && w.Logger.Caller > 0 {
+		e.caller(runtime.Caller(w.Logger.Caller))
+	}
+	e.Msg(*(*string)(unsafe.Pointer(&p)))
+	return len(p), nil
+}
