@@ -227,14 +227,13 @@ func (e *Event) Time(key string, t time.Time) *Event {
 		return nil
 	}
 	e.key(key)
-	switch {
-	case e.timeFormat != "":
-		e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, '"')
+	if e.timeFormat != "" {
 		e.buf = t.AppendFormat(e.buf, e.timeFormat)
-		e.buf = append(e.buf, '"')
-	default:
-		e.time(t)
+	} else {
+		e.buf = t.AppendFormat(e.buf, time.RFC3339Nano)
 	}
+	e.buf = append(e.buf, '"')
 	return e
 }
 
