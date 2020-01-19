@@ -544,10 +544,6 @@ func (e *Event) key(key string) {
 }
 
 func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
-	// goid
-	e.buf = append(e.buf, ",\"goid\":"...)
-	e.buf = strconv.AppendInt(e.buf, goid(), 10)
-	// file:line
 	if i := strings.LastIndex(file, "/"); i >= 0 {
 		file = file[i+1:]
 	}
