@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,22 +18,22 @@ var timeNow = time.Now
 var hostname, _ = os.Hostname()
 
 type Writer struct {
+	size int64
+	file *os.File
+	mu   sync.Mutex
+
 	Filename   string
 	MaxSize    int64
 	MaxBackups int
 	LocalTime  bool
 	HostName   bool
-
-	mu   sync.Mutex
-	file *os.File
-	size int64
 }
 
 func (w *Writer) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 
 	if w.file == nil {
-		err = w.rotate(false)
+		err = w.create()
 		if err != nil {
 			w.mu.Unlock()
 			return
@@ -42,10 +41,13 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 	}
 
 	n, err = w.file.Write(p)
+	if err != nil {
+		return
+	}
 
 	w.size += int64(n)
 	if w.MaxSize > 0 && w.size > w.MaxSize {
-		w.rotate(true)
+		err = w.rotate()
 	}
 
 	w.mu.Unlock()
@@ -54,26 +56,27 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 
 func (w *Writer) Close() (err error) {
 	w.mu.Lock()
-
-	err = w.file.Close()
-	w.file = nil
-	w.size = 0
-
+	if w.file != nil {
+		err = w.file.Close()
+		w.file = nil
+		w.size = 0
+	}
 	w.mu.Unlock()
 	return
 }
 
 func (w *Writer) Rotate() (err error) {
 	w.mu.Lock()
-	err = w.rotate(true)
+	err = w.rotate()
 	w.mu.Unlock()
+
 	return
 }
 
-func (w *Writer) rotate(newFile bool) (err error) {
+func (w *Writer) rotate() (err error) {
 	if w.Filename == "" {
 		w.file = os.Stderr
-		return nil
+		return
 	}
 
 	if w.file != nil {
@@ -96,27 +99,14 @@ func (w *Writer) rotate(newFile bool) (err error) {
 	} else {
 		filename += ext
 	}
-	w.size = 0
-
-	if !newFile {
-		if link, err := os.Readlink(w.Filename); err == nil {
-			if fi, err := os.Stat(link); err == nil {
-				filename = link
-				w.size = fi.Size()
-			}
-		}
-	}
 
 	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil && w.file == nil {
-		return
-	}
+	w.size = 0
 
 	go func(filename string) {
 		os.Remove(w.Filename)
 		err := os.Symlink(filename, w.Filename)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "symlink %+v to %+v error: %+v", filename, w.Filename, err)
 			return
 		}
 
@@ -131,7 +121,7 @@ func (w *Writer) rotate(newFile bool) (err error) {
 		}
 
 		var matches []string
-		matches, err = filepath.Glob(prefix + ".20[0-9][0-9]*" + ext)
+		matches, err = filepath.Glob(prefix + ".2[0-9][0-9][0-9]T*" + ext)
 		if err != nil {
 			return
 		}
@@ -141,6 +131,40 @@ func (w *Writer) rotate(newFile bool) (err error) {
 			os.Remove(matches[i])
 		}
 	}(filename)
+
+	return
+}
+
+func (w *Writer) create() (err error) {
+	var filename string
+
+	if link, err := os.Readlink(w.Filename); err == nil {
+		if fi, err := os.Stat(link); err == nil {
+			filename = link
+			w.size = fi.Size()
+		}
+	}
+
+	if filename == "" {
+		now := timeNow()
+		if !w.LocalTime {
+			now = now.UTC()
+		}
+		ext := filepath.Ext(w.Filename)
+		filename = w.Filename[0 : len(w.Filename)-len(ext)]
+		filename += now.Format(".2006-01-02T15-04-05")
+		if w.HostName {
+			filename += "." + hostname + ext
+		} else {
+			filename += ext
+		}
+		w.size = 0
+	}
+
+	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
 
 	return
 }
