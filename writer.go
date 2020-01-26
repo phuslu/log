@@ -166,5 +166,8 @@ func (w *Writer) create() (err error) {
 		return err
 	}
 
+	os.Remove(w.Filename)
+	err = os.Symlink(filename, w.Filename)
+
 	return
 }
