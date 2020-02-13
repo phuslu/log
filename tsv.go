@@ -10,7 +10,6 @@ import (
 type TSVLogger struct {
 	Separator byte
 	Escape    bool
-	Sample    uint32
 	Writer    io.Writer
 }
 
@@ -28,9 +27,6 @@ var tepool = sync.Pool{
 }
 
 func (l TSVLogger) New() (e *TSVEvent) {
-	if l.Sample > 1 && fastrandn(l.Sample) != 0 {
-		return
-	}
 	e = tepool.Get().(*TSVEvent)
 	e.sep = l.Separator
 	e.escape = l.Escape
