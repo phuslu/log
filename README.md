@@ -68,7 +68,7 @@ log.DefaultLogger = log.Logger{
 }
 log.Info().Msg("hello world")
 
-// Output: {"date":"2019-07-04","level":"info","goid":12, "caller":"test.go:42","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
 ```
 
 ### Multi Writers:
