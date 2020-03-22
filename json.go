@@ -14,6 +14,7 @@ import (
 	"unsafe"
 )
 
+// DefaultLogger is the global logger.
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
 	Caller:     0,
@@ -23,6 +24,7 @@ var DefaultLogger = Logger{
 	Writer:     &Writer{},
 }
 
+// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
 	Level      Level
 	Caller     int
@@ -32,6 +34,7 @@ type Logger struct {
 	Writer     io.Writer
 }
 
+// Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
 	buf        []byte
 	write      func(p []byte) (n int, err error)
@@ -39,6 +42,7 @@ type Event struct {
 	level      Level
 }
 
+// Debug starts a new message with debug level.
 func Debug() (e *Event) {
 	e = DefaultLogger.header(DebugLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -47,6 +51,7 @@ func Debug() (e *Event) {
 	return
 }
 
+// Info starts a new message with info level.
 func Info() (e *Event) {
 	e = DefaultLogger.header(InfoLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -55,6 +60,7 @@ func Info() (e *Event) {
 	return
 }
 
+// Warn starts a new message with warning level.
 func Warn() (e *Event) {
 	e = DefaultLogger.header(WarnLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -63,6 +69,7 @@ func Warn() (e *Event) {
 	return
 }
 
+// Error starts a new message with error level.
 func Error() (e *Event) {
 	e = DefaultLogger.header(ErrorLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -71,6 +78,7 @@ func Error() (e *Event) {
 	return
 }
 
+// Fatal starts a new message with fatal level.
 func Fatal() (e *Event) {
 	e = DefaultLogger.header(FatalLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -79,6 +87,7 @@ func Fatal() (e *Event) {
 	return
 }
 
+// Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
 func Print(v ...interface{}) {
 	e := DefaultLogger.header(DefaultLogger.Level)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -87,6 +96,7 @@ func Print(v ...interface{}) {
 	e.Msg(fmt.Sprint(v...))
 }
 
+// Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(DefaultLogger.Level)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -95,6 +105,7 @@ func Printf(format string, v ...interface{}) {
 	e.Msgf(format, v...)
 }
 
+// Debug starts a new message with debug level.
 func (l Logger) Debug() (e *Event) {
 	e = l.header(DebugLevel)
 	if e != nil && l.Caller > 0 {
@@ -103,6 +114,7 @@ func (l Logger) Debug() (e *Event) {
 	return
 }
 
+// Info starts a new message with info level.
 func (l Logger) Info() (e *Event) {
 	e = l.header(InfoLevel)
 	if e != nil && l.Caller > 0 {
@@ -111,6 +123,7 @@ func (l Logger) Info() (e *Event) {
 	return
 }
 
+// Warn starts a new message with warning level.
 func (l Logger) Warn() (e *Event) {
 	e = l.header(WarnLevel)
 	if e != nil && l.Caller > 0 {
@@ -119,6 +132,7 @@ func (l Logger) Warn() (e *Event) {
 	return
 }
 
+// Error starts a new message with error level.
 func (l Logger) Error() (e *Event) {
 	e = l.header(ErrorLevel)
 	if e != nil && l.Caller > 0 {
@@ -127,6 +141,7 @@ func (l Logger) Error() (e *Event) {
 	return
 }
 
+// Fatal starts a new message with fatal level.
 func (l Logger) Fatal() (e *Event) {
 	e = l.header(FatalLevel)
 	if e != nil && l.Caller > 0 {
@@ -135,6 +150,7 @@ func (l Logger) Fatal() (e *Event) {
 	return
 }
 
+// WithLevel starts a new message with level.
 func (l Logger) WithLevel(level Level) (e *Event) {
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
@@ -143,6 +159,7 @@ func (l Logger) WithLevel(level Level) (e *Event) {
 	return
 }
 
+// Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
 func (l Logger) Print(v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {
@@ -151,6 +168,7 @@ func (l Logger) Print(v ...interface{}) {
 	e.Msg(fmt.Sprint(v...))
 }
 
+// Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
 func (l Logger) Printf(format string, v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {
@@ -214,6 +232,7 @@ func (l Logger) header(level Level) (e *Event) {
 	return
 }
 
+// Time append append t formated as string using logger.TimeFormat.
 func (e *Event) Time(key string, t time.Time) *Event {
 	if e == nil {
 		return nil
@@ -229,6 +248,7 @@ func (e *Event) Time(key string, t time.Time) *Event {
 	return e
 }
 
+// Timestamp adds the current time as UNIX timestamp
 func (e *Event) Timestamp() *Event {
 	if e == nil {
 		return nil
@@ -238,6 +258,7 @@ func (e *Event) Timestamp() *Event {
 	return e
 }
 
+// Bool append append the val as a bool to the event.
 func (e *Event) Bool(key string, b bool) *Event {
 	if e == nil {
 		return nil
@@ -247,6 +268,7 @@ func (e *Event) Bool(key string, b bool) *Event {
 	return e
 }
 
+// Bools adds the field key with val as a []bool to the event.
 func (e *Event) Bools(key string, b []bool) *Event {
 	if e == nil {
 		return nil
@@ -263,6 +285,7 @@ func (e *Event) Bools(key string, b []bool) *Event {
 	return e
 }
 
+// Dur adds the field key with duration d to the event.
 func (e *Event) Dur(key string, d time.Duration) *Event {
 	if e == nil {
 		return nil
@@ -274,6 +297,7 @@ func (e *Event) Dur(key string, d time.Duration) *Event {
 	return e
 }
 
+// Durs adds the field key with val as a []time.Duration to the event.
 func (e *Event) Durs(key string, d []time.Duration) *Event {
 	if e == nil {
 		return nil
@@ -292,6 +316,7 @@ func (e *Event) Durs(key string, d []time.Duration) *Event {
 	return e
 }
 
+// Err adds the field "error" with serialized err to the event.
 func (e *Event) Err(err error) *Event {
 	if e == nil {
 		return nil
@@ -305,6 +330,7 @@ func (e *Event) Err(err error) *Event {
 	return e
 }
 
+// Errs adds the field key with errs as an array of serialized errors to the event.
 func (e *Event) Errs(key string, errs []error) *Event {
 	if e == nil {
 		return nil
@@ -326,6 +352,7 @@ func (e *Event) Errs(key string, errs []error) *Event {
 	return e
 }
 
+// Float64 adds the field key with f as a float64 to the event.
 func (e *Event) Float64(key string, f float64) *Event {
 	if e == nil {
 		return nil
@@ -335,6 +362,7 @@ func (e *Event) Float64(key string, f float64) *Event {
 	return e
 }
 
+// Floats64 adds the field key with f as a []float64 to the event.
 func (e *Event) Floats64(key string, f []float64) *Event {
 	if e == nil {
 		return nil
@@ -351,6 +379,7 @@ func (e *Event) Floats64(key string, f []float64) *Event {
 	return e
 }
 
+// Floats32 adds the field key with f as a []float32 to the event.
 func (e *Event) Floats32(key string, f []float32) *Event {
 	if e == nil {
 		return nil
@@ -367,6 +396,7 @@ func (e *Event) Floats32(key string, f []float32) *Event {
 	return e
 }
 
+// Int64 adds the field key with i as a int64 to the event.
 func (e *Event) Int64(key string, i int64) *Event {
 	if e == nil {
 		return nil
@@ -376,6 +406,7 @@ func (e *Event) Int64(key string, i int64) *Event {
 	return e
 }
 
+// Uint64 adds the field key with i as a uint64 to the event.
 func (e *Event) Uint64(key string, i uint64) *Event {
 	if e == nil {
 		return nil
@@ -385,38 +416,47 @@ func (e *Event) Uint64(key string, i uint64) *Event {
 	return e
 }
 
+// Float32 adds the field key with f as a float32 to the event.
 func (e *Event) Float32(key string, f float32) *Event {
 	return e.Float64(key, float64(f))
 }
 
+// Int adds the field key with i as a int to the event.
 func (e *Event) Int(key string, i int) *Event {
 	return e.Int64(key, int64(i))
 }
 
+// Int32 adds the field key with i as a int32 to the event.
 func (e *Event) Int32(key string, i int32) *Event {
 	return e.Int64(key, int64(i))
 }
 
+// Int16 adds the field key with i as a int16 to the event.
 func (e *Event) Int16(key string, i int16) *Event {
 	return e.Int64(key, int64(i))
 }
 
+// Int8 adds the field key with i as a int8 to the event.
 func (e *Event) Int8(key string, i int8) *Event {
 	return e.Int64(key, int64(i))
 }
 
+// Uint32 adds the field key with i as a uint32 to the event.
 func (e *Event) Uint32(key string, i uint32) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
+// Uint16 adds the field key with i as a uint16 to the event.
 func (e *Event) Uint16(key string, i uint16) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
+// Uint8 adds the field key with i as a uint8 to the event.
 func (e *Event) Uint8(key string, i uint8) *Event {
 	return e.Uint64(key, uint64(i))
 }
 
+// RawJSON adds already encoded JSON to the log line under key.
 func (e *Event) RawJSON(key string, b []byte) *Event {
 	if e == nil {
 		return nil
@@ -426,6 +466,7 @@ func (e *Event) RawJSON(key string, b []byte) *Event {
 	return e
 }
 
+// Str adds the field key with val as a string to the event.
 func (e *Event) Str(key string, val string) *Event {
 	if e == nil {
 		return nil
@@ -435,6 +476,7 @@ func (e *Event) Str(key string, val string) *Event {
 	return e
 }
 
+// Strs adds the field key with vals as a []string to the event.
 func (e *Event) Strs(key string, vals []string) *Event {
 	if e == nil {
 		return nil
@@ -451,6 +493,7 @@ func (e *Event) Strs(key string, vals []string) *Event {
 	return e
 }
 
+// Bytes adds the field key with val as a string to the event.
 func (e *Event) Bytes(key string, val []byte) *Event {
 	if e == nil {
 		return nil
@@ -460,6 +503,7 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
+// Hex adds the field key with val as a hex string to the event.
 func (e *Event) Hex(key string, val []byte) *Event {
 	if e == nil {
 		return nil
@@ -473,6 +517,7 @@ func (e *Event) Hex(key string, val []byte) *Event {
 	return e
 }
 
+// Interface adds the field key with i marshaled using reflection.
 func (e *Event) Interface(key string, i interface{}) *Event {
 	if e == nil {
 		return nil
@@ -487,6 +532,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	return e
 }
 
+// Caller adds the file:line of the "caller" key.
 func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
@@ -495,10 +541,12 @@ func (e *Event) Caller() *Event {
 	return e
 }
 
+// Enabled return false if the event is going to be filtered out by log level.
 func (e *Event) Enabled() bool {
 	return e != nil
 }
 
+// Discard disables the event so Msg(f) won't print it.
 func (e *Event) Discard() *Event {
 	if e == nil {
 		return e
@@ -507,6 +555,7 @@ func (e *Event) Discard() *Event {
 	return nil
 }
 
+// Msg sends the event with msg added as the message field if not empty.
 func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
@@ -525,6 +574,7 @@ func (e *Event) Msg(msg string) {
 	epool.Put(e)
 }
 
+// Msgf sends the event with formatted msg added as the message field if not empty.
 func (e *Event) Msgf(format string, v ...interface{}) {
 	e.Msg(fmt.Sprintf(format, v...))
 }
@@ -791,6 +841,7 @@ func stacks(all bool) []byte {
 
 var _ io.Writer = (*LevelWriter)(nil)
 
+// LevelWriter defines as interface a writer may implement in order to receive level information with payload.
 type LevelWriter struct {
 	Logger Logger
 	Level  Level
@@ -805,6 +856,7 @@ func (w LevelWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+// Fastrandn returns a pseudorandom uint32 in [0,n).
 //go:noescape
 //go:linkname Fastrandn runtime.fastrandn
 func Fastrandn(x uint32) uint32

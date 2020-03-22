@@ -5,8 +5,10 @@
 ## Features
 
 * Simple & Straightforward interfaces
+* JSON/GRPC/CSV/TSV/Printf Loggers
+* Rotating File Writer
+* Pretty Console Writer(with windows 7/8/10 support)
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* Rotating/Pretty/Buffering Writers
 * No external dependences
 
 ## Getting Started
@@ -90,7 +92,7 @@ import (
 	"time"
 
 	"github.com/phuslu/log"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {

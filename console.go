@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+// ConsoleWriter parses the JSON input and writes it in an
+// (optionally) colorized, human-friendly format to Out.
 type ConsoleWriter struct {
 	ANSIColor bool
 }

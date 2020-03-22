@@ -12,6 +12,7 @@ func (w *ConsoleWriter) Write(p []byte) (int, error) {
 	return w.write(p)
 }
 
+// IsTerminal returns whether the given file descriptor is a terminal.
 func IsTerminal(fd uintptr) bool {
 	var req uintptr
 	switch runtime.GOOS {

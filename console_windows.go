@@ -201,6 +201,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	return n, err
 }
 
+// IsTerminal returns whether the given file descriptor is a terminal.
 func IsTerminal(fd uintptr) bool {
 	var mode uint32
 	err := syscall.GetConsoleMode(syscall.Handle(fd), &mode)

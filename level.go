@@ -1,5 +1,6 @@
 package log
 
+// Level defines log levels.
 type Level uint32
 
 const (
@@ -21,6 +22,8 @@ const (
 	Disabled
 )
 
+// ParseLevel converts a level string into a log Level value.
+// returns an error if the input string does not match known values.
 func ParseLevel(s string) (level Level) {
 	switch s {
 	case "debug", "Debug", "DEBUG", "D", "DBG":
