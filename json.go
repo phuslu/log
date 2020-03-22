@@ -546,13 +546,13 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, '"')
 }
 
-var timebuf = []byte("\"2006-01-02T15:04:05.999Z\"")
+const timebuf = "\"2006-01-02T15:04:05.999Z\""
 
 func (e *Event) time(now time.Time) {
 	now = now.UTC()
 	n := len(e.buf)
-	if n+26 < cap(e.buf) {
-		e.buf = e.buf[:n+26]
+	if n+len(timebuf) < cap(e.buf) {
+		e.buf = e.buf[:n+len(timebuf)]
 	} else {
 		e.buf = append(e.buf, timebuf...)
 	}

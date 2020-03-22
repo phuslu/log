@@ -21,10 +21,13 @@ import (
 )
 
 func main() {
-	log.Debug().Str("foo", "bar").Msg("hello world")
+	log.Printf("Hello, %s", "世界")
+	log.Info().Str("foo", "bar").Int("number", 42).Msg("a structured logger")
 }
 
-// Output: {"time":"2019-07-10T16:00:19.092Z","level":"debug","foo":"bar","message":"hello world"}
+// Output:
+//   {"time":"2020-03-22T09:58:41.828Z","level":"debug","message":"Hello, 世界"}
+//   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"a structure logger"}
 ```
 > Note: By default log writes to `os.Stderr`
 
@@ -36,6 +39,7 @@ To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 package main
 
 import (
+	"errors"
 	"os"
 	"github.com/phuslu/log"
 )
@@ -48,12 +52,11 @@ func main() {
 		}
 	}
 
-	log.Info().Str("foo", "bar").Msg("hello world")
+	log.Printf("a printf style line")
+	log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
 }
-
-// Output: 2019-07-11T16:41:43.256Z INF 12 pretty.go:10 > hello world foo=bar
 ```
-![](https://user-images.githubusercontent.com/195836/61725177-dff18c80-ada1-11e9-8338-3374a21a625b.png)
+![Pretty logging](https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png)
 > Note: pretty logging also works on windows console
 
 ### Customize the configuration and formatting:
