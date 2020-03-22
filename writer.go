@@ -136,6 +136,11 @@ func (w *Writer) rotate() (err error) {
 }
 
 func (w *Writer) create() (err error) {
+	if w.Filename == "" {
+		w.file = os.Stderr
+		return
+	}
+
 	var filename string
 
 	if link, err := os.Readlink(w.Filename); err == nil {
