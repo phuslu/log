@@ -3,23 +3,20 @@ package log
 import (
 	"io"
 	"strconv"
-	"strings"
 	"sync"
 )
 
 // TSVLogger represents an active logging object that generates lines of TSV output to an io.Writer.
 type TSVLogger struct {
 	Separator byte
-	Escape    bool
 	Writer    io.Writer
 }
 
 // TSVEvent represents a tsv log event. It is instanced by one of TSVLogger and finalized by the Msg method.
 type TSVEvent struct {
-	buf    []byte
-	sep    byte
-	escape bool
-	write  func(p []byte) (n int, err error)
+	buf   []byte
+	sep   byte
+	write func(p []byte) (n int, err error)
 }
 
 var tepool = sync.Pool{
@@ -32,7 +29,6 @@ var tepool = sync.Pool{
 func (l TSVLogger) New() (e *TSVEvent) {
 	e = tepool.Get().(*TSVEvent)
 	e.sep = l.Separator
-	e.escape = l.Escape
 	e.write = l.Writer.Write
 	if e.sep == 0 {
 		e.sep = '\t'
@@ -121,14 +117,8 @@ func (e *TSVEvent) Uint8(i uint8) *TSVEvent {
 
 // Str adds a string to the event.
 func (e *TSVEvent) Str(val string) *TSVEvent {
-	if e.escape && strings.IndexByte(val, e.sep) >= 0 {
-		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, val...)
-		e.buf = append(e.buf, '"', e.sep)
-	} else {
-		e.buf = append(e.buf, val...)
-		e.buf = append(e.buf, e.sep)
-	}
+	e.buf = append(e.buf, val...)
+	e.buf = append(e.buf, e.sep)
 	return e
 }
 

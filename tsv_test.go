@@ -31,8 +31,7 @@ func TestTSVLogger(t *testing.T) {
 
 func TestCSVLogger(t *testing.T) {
 	log := TSVLogger{
-		Separator: ',',
-		Escape:    true,
+		Separator: '¥',
 		Writer:    &Writer{},
 	}
 
