@@ -36,10 +36,9 @@ type Logger struct {
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf        []byte
-	write      func(p []byte) (n int, err error)
-	timeFormat string
-	level      Level
+	buf   []byte
+	write func(p []byte) (n int, err error)
+	level Level
 }
 
 // Debug starts a new message with debug level.
@@ -190,7 +189,6 @@ func (l Logger) header(level Level) (e *Event) {
 	e = epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.level = level
-	e.timeFormat = l.TimeFormat
 	e.write = l.Writer.Write
 	// time
 	now := timeNow()
@@ -201,11 +199,11 @@ func (l Logger) header(level Level) (e *Event) {
 		e.buf = append(e.buf, l.TimeField...)
 		e.buf = append(e.buf, '"', ':')
 	}
-	if e.timeFormat == "" {
+	if l.TimeFormat == "" {
 		e.time(now)
 	} else {
 		e.buf = append(e.buf, '"')
-		e.buf = now.AppendFormat(e.buf, e.timeFormat)
+		e.buf = now.AppendFormat(e.buf, l.TimeFormat)
 		e.buf = append(e.buf, '"')
 	}
 	// level
@@ -232,18 +230,26 @@ func (l Logger) header(level Level) (e *Event) {
 	return
 }
 
-// Time append append t formated as string using logger.TimeFormat.
+// Time append append t formated as string using time.RFC3339Nano.
 func (e *Event) Time(key string, t time.Time) *Event {
 	if e == nil {
 		return nil
 	}
 	e.key(key)
 	e.buf = append(e.buf, '"')
-	if e.timeFormat != "" {
-		e.buf = t.AppendFormat(e.buf, e.timeFormat)
-	} else {
-		e.buf = t.AppendFormat(e.buf, time.RFC3339Nano)
+	e.buf = t.AppendFormat(e.buf, time.RFC3339Nano)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// TimeFormat append append t formated as string using timefmt.
+func (e *Event) TimeFormat(key string, timefmt string, t time.Time) *Event {
+	if e == nil {
+		return nil
 	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	e.buf = t.AppendFormat(e.buf, timefmt)
 	e.buf = append(e.buf, '"')
 	return e
 }

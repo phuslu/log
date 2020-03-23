@@ -18,10 +18,6 @@ func TestConsoleWriter(t *testing.T) {
 }
 
 func TestIsTerminal(t *testing.T) {
-	if !IsTerminal(os.Stderr.Fd()) {
-		t.Errorf("test is terminal mode for stderr failed")
-	}
-
 	file, _ := os.Open(os.DevNull)
 	if IsTerminal(file.Fd()) {
 		t.Errorf("test is terminal mode for %s failed", os.DevNull)
