@@ -1,6 +1,6 @@
 # Structured Logging for Humans
 
-[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log)  [![gocover](http://gocover.io/_badge/github.com/phuslu/log)](http://gocover.io/github.com/phuslu/log)
+[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/phuslu/log) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE)
 
 ## Features
 
@@ -10,12 +10,13 @@
 * Rotating File Writer
 * Pretty Console Writer(with windows 7/8/10 support)
 * Dynamic log Level
-* Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
+* High Performance
 
 ## Getting Started
 
 ### Simple Logging Example
 
+A out of box example. [![playground](https://img.shields.io/badge/playground-600IpaPBF95-29BEB0?style=flat&logo=go)](https://play.golang.org/p/600IpaPBF95)
 ```go
 package main
 
@@ -36,7 +37,7 @@ func main() {
 
 ### Pretty logging
 
-To log a human-friendly, colorized output, use `log.ConsoleWriter`:
+To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playground](https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go)](https://play.golang.org/p/62bWGk67apR)
 
 ```go
 if log.IsTerminal(os.Stderr.Fd()) {
@@ -54,24 +55,27 @@ log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").M
 
 ### Dynamic log Level
 
+To change log level on the fly, use `log.DefaultLogger.SetLevel`. [![playground](https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go)](https://play.golang.org/p/0S-JT7h-QXI)
+
 ```go
 log.DefaultLogger.SetLevel(log.InfoLevel)
-log.Warn().Msg("1. i am a warn log")
-log.Info().Msg("2. i am a info log")
-log.Debug().Msg("3. i am a debug log")
+log.Debug().Msg("debug log")
+log.Info().Msg("info log")
+log.Warn().Msg("warn log")
 log.DefaultLogger.SetLevel(log.DebugLevel)
-log.Info().Msg("4. i am a info log")
-log.Debug().Msg("5. i am a debug log")
+log.Debug().Msg("debug log")
+log.Info().Msg("info log")
 
 // Output:
-//   {"time":"2020-03-24T05:06:54.674Z","level":"warn","message":"1. i am a warn log"}
-//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"2. i am a info log"}
-//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"4. i am a info log"}
-//   {"time":"2020-03-24T05:06:54.676Z","level":"debug","message":"5. i am a debug log"}
+//   {"time":"2020-03-24T05:06:54.674Z","level":"info","message":"info log"}
+//   {"time":"2020-03-24T05:06:54.674Z","level":"warn","message":"warn log"}
+//   {"time":"2020-03-24T05:06:54.675Z","level":"debug","message":"debug log"}
+//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"info log"}
 ```
 
 ### Customize the configuration and formatting:
 
+To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-wXPaGTjBJcX-29BEB0?style=flat&logo=go)](https://play.golang.org/p/wXPaGTjBJcX)
 ```go
 log.DefaultLogger = log.Logger{
 	Level:      log.InfoLevel,
@@ -83,6 +87,28 @@ log.DefaultLogger = log.Logger{
 log.Info().Msg("hello world")
 
 // Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
+```
+
+### Logging to syslog
+
+```go
+package main
+
+import (
+	"log/syslog"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	logger, err := syslog.NewLogger(syslog.LOG_INFO, 0)
+	if err != nil {
+		log.Fatal().Err(err).Msg("new syslog error")
+	}
+
+	log.DefaultLogger.Writer = logger.Writer()
+	log.Info().Str("foo", "bar").Msg("a syslog message")
+}
 ```
 
 ### Rotating log files hourly
