@@ -15,8 +15,8 @@ type TSVLogger struct {
 // TSVEvent represents a tsv log event. It is instanced by one of TSVLogger and finalized by the Msg method.
 type TSVEvent struct {
 	buf   []byte
-	sep   byte
 	write func(p []byte) (n int, err error)
+	sep   byte
 }
 
 var tepool = sync.Pool{

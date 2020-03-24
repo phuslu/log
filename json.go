@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 )
@@ -158,6 +159,12 @@ func (l Logger) WithLevel(level Level) (e *Event) {
 	return
 }
 
+// SetLevel changes logger default level.
+func (l Logger) SetLevel(level Level) {
+	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
+	return
+}
+
 // Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
 func (l Logger) Print(v ...interface{}) {
 	e := l.header(l.Level)
@@ -183,7 +190,7 @@ var epool = sync.Pool{
 }
 
 func (l Logger) header(level Level) (e *Event) {
-	if level < l.Level {
+	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
 		return
 	}
 	e = epool.Get().(*Event)
