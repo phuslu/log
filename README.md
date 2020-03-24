@@ -61,6 +61,34 @@ func main() {
 ![Pretty logging](https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png)
 > Note: pretty logging also works on windows console
 
+### Dynamic change log Level:
+
+```go
+package main
+
+import (
+	"errors"
+	"os"
+	"github.com/phuslu/log"
+)
+
+func main() {
+	log.DefaultLogger.SetLevel(log.InfoLevel)
+	log.Warn().Msg("1. i am a warn log")
+	log.Info().Msg("2. i am a info log")
+	log.Debug().Msg("3. i am a debug log")
+	log.DefaultLogger.SetLevel(log.DebugLevel)
+	log.Info().Msg("4. i am a info log")
+	log.Debug().Msg("5. i am a debug log")
+}
+
+// Output:
+//   {"time":"2020-03-24T05:06:54.674Z","level":"warn","message":"1. i am a warn log"}
+//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"2. i am a info log"}
+//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"4. i am a info log"}
+//   {"time":"2020-03-24T05:06:54.676Z","level":"debug","message":"5. i am a debug log"}
+```
+
 ### Customize the configuration and formatting:
 
 ```go
@@ -74,13 +102,6 @@ log.DefaultLogger = log.Logger{
 log.Info().Msg("hello world")
 
 // Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
-```
-
-### Multi Writers:
-
-```go
-log.DefaultLogger.Writer = io.MultiWriter(&log.Writer{Filename: "1.log"}, &log.ConsoleWriter{ANSIColor: true})
-log.Info().Msg("hello world")
 ```
 
 ### Rotating log files hourly

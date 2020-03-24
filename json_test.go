@@ -41,6 +41,16 @@ func TestLogger(t *testing.T) {
 		Msgf("this is a \"%s\"", "test")
 }
 
+func TestLoggerSetLevel(t *testing.T) {
+	DefaultLogger.SetLevel(InfoLevel)
+	Warn().Msg("1. i am a warn log")
+	Info().Msg("2. i am a info log")
+	Debug().Msg("3. i am a debug log")
+	DefaultLogger.SetLevel(DebugLevel)
+	Info().Msg("4. i am a info log")
+	Debug().Msg("5. i am a debug log")
+}
+
 func TestLoggerCaller(t *testing.T) {
 	log1 := Logger{
 		Level:  ParseLevel("debug"),
