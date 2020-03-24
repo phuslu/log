@@ -4,12 +4,13 @@
 
 ## Features
 
+* No external dependences
 * Simple & Straightforward interfaces
-* JSON/GRPC/CSV/TSV/Printf Loggers
+* JSON/TSV/GRPC/Printf Loggers
 * Rotating File Writer
 * Pretty Console Writer(with windows 7/8/10 support)
+* Dynamic log Level
 * Effective, Outperforms [zerolog](https://github.com/rs/zerolog) and [zap](https://github.com/uber-go/zap)
-* No external dependences
 
 ## Getting Started
 
@@ -38,49 +39,29 @@ func main() {
 To log a human-friendly, colorized output, use `log.ConsoleWriter`:
 
 ```go
-package main
-
-import (
-	"errors"
-	"os"
-	"github.com/phuslu/log"
-)
-
-func main() {
-	if log.IsTerminal(os.Stderr.Fd()) {
-		log.DefaultLogger = log.Logger{
-			Caller: 1,
-			Writer: &log.ConsoleWriter{ANSIColor: true},
-		}
+if log.IsTerminal(os.Stderr.Fd()) {
+	log.DefaultLogger = log.Logger{
+		Caller: 1,
+		Writer: &log.ConsoleWriter{ANSIColor: true},
 	}
-
-	log.Printf("a printf style line")
-	log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
 }
+
+log.Printf("a printf style line")
+log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
 ```
 ![Pretty logging](https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png)
 > Note: pretty logging also works on windows console
 
-### Dynamic change log Level:
+### Dynamic log Level
 
 ```go
-package main
-
-import (
-	"errors"
-	"os"
-	"github.com/phuslu/log"
-)
-
-func main() {
-	log.DefaultLogger.SetLevel(log.InfoLevel)
-	log.Warn().Msg("1. i am a warn log")
-	log.Info().Msg("2. i am a info log")
-	log.Debug().Msg("3. i am a debug log")
-	log.DefaultLogger.SetLevel(log.DebugLevel)
-	log.Info().Msg("4. i am a info log")
-	log.Debug().Msg("5. i am a debug log")
-}
+log.DefaultLogger.SetLevel(log.InfoLevel)
+log.Warn().Msg("1. i am a warn log")
+log.Info().Msg("2. i am a info log")
+log.Debug().Msg("3. i am a debug log")
+log.DefaultLogger.SetLevel(log.DebugLevel)
+log.Info().Msg("4. i am a info log")
+log.Debug().Msg("5. i am a debug log")
 
 // Output:
 //   {"time":"2020-03-24T05:06:54.674Z","level":"warn","message":"1. i am a warn log"}
@@ -127,7 +108,7 @@ func main() {
 		},
 	}
 
-	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC), cron.WithLogger(cron.PrintfLogger(log.DefaultLogger)))
+	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
 	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
 	go runner.Run()
 
