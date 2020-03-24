@@ -14,7 +14,26 @@ func (w *ConsoleWriter) Write(p []byte) (int, error) {
 
 // IsTerminal returns whether the given file descriptor is a terminal.
 func IsTerminal(fd uintptr) bool {
-	var req uintptr
+	var trap int32 // SYS_IOCTL
+	switch runtime.GOOS {
+	case "linux":
+		switch runtime.GOARCH {
+		case "amd64":
+			trap = 16
+		case "arm64":
+			trap = 29
+		case "mips", "mipsle":
+			trap = 4054
+		case "mips64", "mips64le":
+			trap = 5015
+		default:
+			trap = 54
+		}
+	default:
+		trap = 54
+	}
+
+	var req uintptr // TIOCGETA
 	switch runtime.GOOS {
 	case "linux":
 		switch runtime.GOARCH {
@@ -37,6 +56,6 @@ func IsTerminal(fd uintptr) bool {
 	}
 
 	var termios [256]byte
-	_, _, err := syscall.Syscall6(syscall.SYS_IOCTL, fd, req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
+	_, _, err := syscall.Syscall6(trap, fd, req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
 	return err == 0
 }
