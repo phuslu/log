@@ -73,7 +73,16 @@ func TestLoggerTime(t *testing.T) {
 		TimeFormat: time.RFC822,
 		Writer:     &Writer{},
 	}
-	log.Info().Timestamp().Time("now", timeNow()).Msg("this is test time log event")
+	log.Info().Time("now", timeNow()).Msg("this is test time log event")
+}
+
+func TestLoggerTimestamp(t *testing.T) {
+	log := Logger{
+		Level:     ParseLevel("debug"),
+		Timestamp: true,
+		Writer:    &Writer{},
+	}
+	log.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
 func TestLoggerHost(t *testing.T) {
@@ -82,7 +91,7 @@ func TestLoggerHost(t *testing.T) {
 		HostField: "host",
 		Writer:    &Writer{},
 	}
-	log.Info().Timestamp().Time("now", timeNow()).Msg("this is test host log event")
+	log.Info().Time("now", timeNow()).Msg("this is test host log event")
 }
 
 func TestStdLogger(t *testing.T) {

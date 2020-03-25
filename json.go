@@ -19,6 +19,7 @@ import (
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
 	Caller:     0,
+	Timestamp:  false,
 	TimeField:  "",
 	TimeFormat: "",
 	HostField:  "",
@@ -29,6 +30,7 @@ var DefaultLogger = Logger{
 type Logger struct {
 	Level      Level
 	Caller     int
+	Timestamp  bool
 	TimeField  string
 	TimeFormat string
 	HostField  string
@@ -198,20 +200,36 @@ func (l Logger) header(level Level) (e *Event) {
 	e.level = level
 	e.write = l.Writer.Write
 	// time
-	now := timeNow()
-	if l.TimeField == "" {
-		e.buf = append(e.buf, "{\"time\":"...)
+	if l.Timestamp {
+		e.buf = append(e.buf, "{\"ts\":"...)
+		sec, nsec := walltime()
+		ms := int64(nsec / 1000000)
+		e.buf = strconv.AppendInt(e.buf, sec, 10)
+		switch {
+		case ms < 10:
+			e.buf = append(e.buf, '0', '0')
+			e.buf = strconv.AppendInt(e.buf, ms, 10)
+		case ms < 100:
+			e.buf = append(e.buf, '0')
+			e.buf = strconv.AppendInt(e.buf, ms, 10)
+		default:
+			e.buf = strconv.AppendInt(e.buf, ms, 10)
+		}
 	} else {
-		e.buf = append(e.buf, '{', '"')
-		e.buf = append(e.buf, l.TimeField...)
-		e.buf = append(e.buf, '"', ':')
-	}
-	if l.TimeFormat == "" {
-		e.time(now)
-	} else {
-		e.buf = append(e.buf, '"')
-		e.buf = now.AppendFormat(e.buf, l.TimeFormat)
-		e.buf = append(e.buf, '"')
+		if l.TimeField == "" {
+			e.buf = append(e.buf, "{\"time\":"...)
+		} else {
+			e.buf = append(e.buf, '{', '"')
+			e.buf = append(e.buf, l.TimeField...)
+			e.buf = append(e.buf, '"', ':')
+		}
+		if l.TimeFormat == "" {
+			e.time(walltime())
+		} else {
+			e.buf = append(e.buf, '"')
+			e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
+			e.buf = append(e.buf, '"')
+		}
 	}
 	// level
 	switch level {
@@ -258,16 +276,6 @@ func (e *Event) TimeFormat(key string, timefmt string, t time.Time) *Event {
 	e.buf = append(e.buf, '"')
 	e.buf = t.AppendFormat(e.buf, timefmt)
 	e.buf = append(e.buf, '"')
-	return e
-}
-
-// Timestamp adds the current time as UNIX timestamp
-func (e *Event) Timestamp() *Event {
-	if e == nil {
-		return nil
-	}
-	e.key("timestamp")
-	e.buf = strconv.AppendInt(e.buf, timeNow().Unix(), 10)
 	return e
 }
 
@@ -611,8 +619,7 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 
 const timebuf = "\"2006-01-02T15:04:05.999Z\""
 
-func (e *Event) time(now time.Time) {
-	now = now.UTC()
+func (e *Event) time(sec int64, nsec int32) {
 	n := len(e.buf)
 	if n+len(timebuf) < cap(e.buf) {
 		e.buf = e.buf[:n+len(timebuf)]
@@ -623,7 +630,7 @@ func (e *Event) time(now time.Time) {
 	// milli second
 	e.buf[n+25] = '"'
 	e.buf[n+24] = 'Z'
-	a = now.Nanosecond() / 1000000
+	a = int(nsec) / 1000000
 	b = a / 10
 	e.buf[n+23] = byte('0' + a - 10*b)
 	a = b
@@ -632,8 +639,9 @@ func (e *Event) time(now time.Time) {
 	e.buf[n+21] = byte('0' + b)
 	e.buf[n+20] = '.'
 	// date time
-	year, month, day := now.Date()
-	hour, minute, second := now.Clock()
+	sec += 9223372028715321600 // unixToInternal + internalToAbsolute
+	year, month, day, _ := absDate(uint64(sec), true)
+	hour, minute, second := absClock(uint64(sec))
 	// year
 	a = year
 	b = a / 10
@@ -868,6 +876,14 @@ func (w LevelWriter) Write(p []byte) (int, error) {
 	e.Msg(*(*string)(unsafe.Pointer(&p)))
 	return len(p), nil
 }
+
+//go:noescape
+//go:linkname absDate time.absDate
+func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday int)
+
+//go:noescape
+//go:linkname absClock time.absClock
+func absClock(abs uint64) (hour, min, sec int)
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //go:noescape

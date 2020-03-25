@@ -10,7 +10,7 @@ func TestTSVLogger(t *testing.T) {
 	}
 
 	log.New().
-		Timestamp().
+		TimestampMS().
 		Bool(true).
 		Bool(false).
 		Float64(0.618).
@@ -38,7 +38,7 @@ func TestCSVLogger(t *testing.T) {
 	log.New().Msg()
 
 	log.New().
-		Timestamp().
+		TimestampMS().
 		Bool(true).
 		Bool(false).
 		Float64(0.618).

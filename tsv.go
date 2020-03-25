@@ -39,7 +39,27 @@ func (l TSVLogger) New() (e *TSVEvent) {
 
 // Timestamp adds the current time as UNIX timestamp
 func (e *TSVEvent) Timestamp() *TSVEvent {
-	e.buf = strconv.AppendInt(e.buf, timeNow().Unix(), 10)
+	sec, _ := walltime()
+	e.buf = strconv.AppendInt(e.buf, sec, 10)
+	e.buf = append(e.buf, e.sep)
+	return e
+}
+
+// TimestampMS adds the current time with milliseconds as UNIX timestamp
+func (e *TSVEvent) TimestampMS() *TSVEvent {
+	sec, nsec := walltime()
+	ms := int64(nsec / 1000000)
+	e.buf = strconv.AppendInt(e.buf, sec, 10)
+	switch {
+	case ms < 10:
+		e.buf = append(e.buf, '0', '0')
+		e.buf = strconv.AppendInt(e.buf, ms, 10)
+	case ms < 100:
+		e.buf = append(e.buf, '0')
+		e.buf = strconv.AppendInt(e.buf, ms, 10)
+	default:
+		e.buf = strconv.AppendInt(e.buf, ms, 10)
+	}
 	e.buf = append(e.buf, e.sep)
 	return e
 }
