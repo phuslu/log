@@ -35,6 +35,14 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	var b bytes.Buffer
 
+	if v, ok := m["ts"]; ok {
+		if w.ANSIColor {
+			fmt.Fprintf(&b, "%s%d%s ", ansiColorDarkGray, v, ansiColorReset)
+		} else {
+			fmt.Fprintf(&b, "%d ", v)
+		}
+	}
+
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
 			fmt.Fprintf(&b, "%s%s%s ", ansiColorDarkGray, v, ansiColorReset)

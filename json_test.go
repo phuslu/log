@@ -2,7 +2,6 @@ package log
 
 import (
 	"errors"
-	stdLog "log"
 	"testing"
 	"time"
 )
@@ -92,9 +91,4 @@ func TestLoggerHost(t *testing.T) {
 		Writer:    &Writer{},
 	}
 	log.Info().Time("now", timeNow()).Msg("this is test host log event")
-}
-
-func TestStdLogger(t *testing.T) {
-	logger := stdLog.New(LevelWriter{DefaultLogger, InfoLevel}, "", stdLog.Lshortfile)
-	logger.Print("hello world")
 }

@@ -48,15 +48,29 @@ var hostname, _ = os.Hostname()
 // MaxBackups.  Note that the time encoded in the timestamp is the rotation
 // time, which may differ from the last time that file was written to.
 type Writer struct {
+	// Filename is the file to write logs to.  Backup log files will be retained
+	// in the same directory.  It uses os.Stderr in if filename is empty.
+	Filename string
+
+	// MaxSize is the maximum size in megabytes of the log file before it gets
+	// rotated.
+	MaxSize int64
+
+	// MaxBackups is the maximum number of old log files to retain.  The default
+	// is to retain all old log files
+	MaxBackups int
+
+	// LocalTime determines if the time used for formatting the timestamps in
+	// backup files is the computer's local time.  The default is to use UTC
+	// time.
+	LocalTime bool
+
+	// HostName determines if the hostname used for formatting in backup files.
+	HostName bool
+
+	mu   sync.Mutex
 	size int64
 	file *os.File
-	mu   sync.Mutex
-
-	Filename   string
-	MaxSize    int64
-	MaxBackups int
-	LocalTime  bool
-	HostName   bool
 }
 
 // Write implements io.Writer.  If a write would cause the log file to be larger

@@ -19,22 +19,36 @@ import (
 var DefaultLogger = Logger{
 	Level:      DebugLevel,
 	Caller:     0,
-	Timestamp:  false,
 	TimeField:  "",
 	TimeFormat: "",
+	Timestamp:  false,
 	HostField:  "",
 	Writer:     &Writer{},
 }
 
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
-	Level      Level
-	Caller     int
-	Timestamp  bool
-	TimeField  string
+	// Level defines log levels.
+	Level Level
+
+	// Caller determines if adds the file:line of the "caller" key.
+	Caller int
+
+	// TimeField defines the time format of the Time field type.
+	TimeField string
+
+	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
-	HostField  string
-	Writer     io.Writer
+
+	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
+	// If set, the value of TimeField and TimeFormat will be ignored.
+	Timestamp bool
+
+	// HostField specifies the key for hostname in output if not empty
+	HostField string
+
+	// TimeField specifies the writer of output. It uses os.Stderr in if empty.
+	Writer io.Writer
 }
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
@@ -858,23 +872,6 @@ func stacks(all bool) []byte {
 		n *= 2
 	}
 	return trace
-}
-
-var _ io.Writer = (*LevelWriter)(nil)
-
-// LevelWriter defines as interface a writer may implement in order to receive level information with payload.
-type LevelWriter struct {
-	Logger Logger
-	Level  Level
-}
-
-func (w LevelWriter) Write(p []byte) (int, error) {
-	e := w.Logger.header(w.Level)
-	if e != nil && w.Logger.Caller > 0 {
-		e.caller(runtime.Caller(w.Logger.Caller))
-	}
-	e.Msg(*(*string)(unsafe.Pointer(&p)))
-	return len(p), nil
 }
 
 //go:noescape

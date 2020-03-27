@@ -129,6 +129,14 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		}
 	}
 
+	if v, ok := m["ts"]; ok {
+		if w.ANSIColor {
+			printf(windowsColorGray, "%d ", v)
+		} else {
+			printf(windowsColorWhite, "%d ", v)
+		}
+	}
+
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
 			printf(windowsColorGray, "%s ", v)
