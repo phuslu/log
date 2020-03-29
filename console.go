@@ -93,7 +93,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	for k, v := range m {
 		switch k {
-		case "time", "level", "caller", "message":
+		case "ts", "time", "level", "caller", "message":
 			continue
 		}
 		if w.ANSIColor {

@@ -23,7 +23,7 @@ var DefaultLogger = Logger{
 	TimeFormat: "",
 	Timestamp:  false,
 	HostField:  "",
-	Writer:     &Writer{},
+	Writer:     os.Stderr,
 }
 
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
