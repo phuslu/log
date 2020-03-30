@@ -24,9 +24,6 @@ func TestGrpcLogger(t *testing.T) {
 	logger := Logger{
 		Level:  ParseLevel("debug"),
 		Caller: 2,
-		Writer: &Writer{
-			LocalTime: true,
-		},
 	}
 
 	var grpclog grpcLoggerV2 = GrpcLogger{logger}

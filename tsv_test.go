@@ -5,11 +5,9 @@ import (
 )
 
 func TestTSVLogger(t *testing.T) {
-	log := TSVLogger{
-		Writer: &Writer{},
-	}
+	logger := TSVLogger{}
 
-	log.New().
+	logger.New().
 		TimestampMS().
 		Bool(true).
 		Bool(false).
@@ -27,17 +25,17 @@ func TestTSVLogger(t *testing.T) {
 		Bytes([]byte("\"<,\t>?'")).
 		Str("\"<,\t>?'").
 		Msg()
+
 }
 
-func TestCSVLogger(t *testing.T) {
-	log := TSVLogger{
+func TestTSVSeparator(t *testing.T) {
+	logger := TSVLogger{
 		Separator: '¥',
-		Writer:    &Writer{},
 	}
 
-	log.New().Msg()
+	logger.New().Msg()
 
-	log.New().
+	logger.New().
 		TimestampMS().
 		Bool(true).
 		Bool(false).

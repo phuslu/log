@@ -82,7 +82,7 @@ log.DefaultLogger = log.Logger{
 	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
-	Writer:     &log.Writer{},
+	Writer:     os.Stderr,
 }
 log.Info().Msg("hello world")
 
@@ -126,7 +126,7 @@ import (
 func main() {
 	logger := log.Logger{
 		Level:      log.ParseLevel("info"),
-		Writer:     &log.Writer{
+		Writer:     &log.FileWriter{
 			Filename:   "main.log",
 			MaxSize:    50*1024*1024,
 			MaxBackups: 7,
@@ -135,7 +135,7 @@ func main() {
 	}
 
 	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
-	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.Writer).Rotate() })
+	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
 	go runner.Run()
 
 	for {

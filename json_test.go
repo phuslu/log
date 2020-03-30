@@ -19,9 +19,6 @@ func TestDefaultLogger(t *testing.T) {
 func TestLogger(t *testing.T) {
 	log := Logger{
 		Level: ParseLevel("debug"),
-		Writer: &Writer{
-			LocalTime: true,
-		},
 	}
 	log.Info().
 		Caller().
@@ -54,13 +51,11 @@ func TestLoggerCaller(t *testing.T) {
 	log1 := Logger{
 		Level:  ParseLevel("debug"),
 		Caller: 1,
-		Writer: &Writer{},
 	}
 	log1.Info().Msg("this is caller log event 1")
 
 	log2 := Logger{
-		Level:  ParseLevel("debug"),
-		Writer: &Writer{},
+		Level: ParseLevel("debug"),
 	}
 	log2.Info().Caller().Msg("this is caller log event 2")
 }
@@ -70,7 +65,6 @@ func TestLoggerTime(t *testing.T) {
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
 		TimeFormat: time.RFC822,
-		Writer:     &Writer{},
 	}
 	log.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
@@ -79,7 +73,6 @@ func TestLoggerTimestamp(t *testing.T) {
 	log := Logger{
 		Level:     ParseLevel("debug"),
 		Timestamp: true,
-		Writer:    &Writer{},
 	}
 	log.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
@@ -88,7 +81,6 @@ func TestLoggerHost(t *testing.T) {
 	log := Logger{
 		Level:     ParseLevel("debug"),
 		HostField: "host",
-		Writer:    &Writer{},
 	}
 	log.Info().Time("now", timeNow()).Msg("this is test host log event")
 }

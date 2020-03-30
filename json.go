@@ -212,7 +212,11 @@ func (l Logger) header(level Level) (e *Event) {
 	e = epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.level = level
-	e.write = l.Writer.Write
+	if l.Writer != nil {
+		e.write = l.Writer.Write
+	} else {
+		e.write = os.Stderr.Write
+	}
 	// time
 	if l.Timestamp {
 		e.buf = append(e.buf, "{\"ts\":"...)

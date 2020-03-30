@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"os"
 	"strconv"
 	"sync"
 )
@@ -29,7 +30,11 @@ var tepool = sync.Pool{
 func (l TSVLogger) New() (e *TSVEvent) {
 	e = tepool.Get().(*TSVEvent)
 	e.sep = l.Separator
-	e.write = l.Writer.Write
+	if l.Writer != nil {
+		e.write = l.Writer.Write
+	} else {
+		e.write = os.Stderr.Write
+	}
 	if e.sep == 0 {
 		e.sep = '\t'
 	}
