@@ -15,9 +15,9 @@ type TSVLogger struct {
 
 // TSVEvent represents a tsv log event. It is instanced by one of TSVLogger and finalized by the Msg method.
 type TSVEvent struct {
-	buf   []byte
-	write func(p []byte) (n int, err error)
-	sep   byte
+	buf []byte
+	w   io.Writer
+	sep byte
 }
 
 var tepool = sync.Pool{
@@ -27,13 +27,13 @@ var tepool = sync.Pool{
 }
 
 // New starts a new tsv message.
-func (l TSVLogger) New() (e *TSVEvent) {
+func (l *TSVLogger) New() (e *TSVEvent) {
 	e = tepool.Get().(*TSVEvent)
 	e.sep = l.Separator
 	if l.Writer != nil {
-		e.write = l.Writer.Write
+		e.w = l.Writer
 	} else {
-		e.write = os.Stderr.Write
+		e.w = os.Stderr
 	}
 	if e.sep == 0 {
 		e.sep = '\t'
@@ -162,6 +162,9 @@ func (e *TSVEvent) Msg() {
 	if len(e.buf) != 0 {
 		e.buf[len(e.buf)-1] = '\n'
 	}
-	e.write(e.buf)
-	tepool.Put(e)
+	e.w.Write(e.buf)
+	// see https://golang.org/issue/23199
+	if cap(e.buf) <= 1<<16 {
+		tepool.Put(e)
+	}
 }

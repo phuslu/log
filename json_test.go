@@ -2,6 +2,7 @@ package log
 
 import (
 	"errors"
+	"io/ioutil"
 	"testing"
 	"time"
 )
@@ -83,4 +84,18 @@ func TestLoggerHost(t *testing.T) {
 		HostField: "host",
 	}
 	log.Info().Time("now", timeNow()).Msg("this is test host log event")
+}
+
+func BenchmarkDefaultLogger(b *testing.B) {
+	log := Logger{
+		Timestamp: true,
+		Level:     DebugLevel,
+		Writer:    ioutil.Discard,
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		log.Info().Msg("a info message")
+	}
 }

@@ -35,7 +35,57 @@ func main() {
 ```
 > Note: By default log writes to `os.Stderr`
 
-### Pretty logging
+### Customize the configuration and formatting:
+
+To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-wXPaGTjBJcX-29BEB0?style=flat&logo=go)](https://play.golang.org/p/wXPaGTjBJcX)
+```go
+log.DefaultLogger = log.Logger{
+	Level:      log.InfoLevel,
+	Caller:     1,
+	TimeField:  "date",
+	TimeFormat: "2006-01-02",
+	Writer:     os.Stderr,
+}
+log.Info().Str("foo", "bar").Msg("hello world")
+
+// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","foo":"bar","message":"hello world"}
+```
+
+### Rotating File Writer
+
+```go
+package main
+
+import (
+	"time"
+
+	"github.com/phuslu/log"
+	"github.com/robfig/cron/v3"
+)
+
+func main() {
+	logger := log.Logger{
+		Level:      log.ParseLevel("info"),
+		Writer:     &log.FileWriter{
+			Filename:   "main.log",
+			MaxSize:    50*1024*1024,
+			MaxBackups: 7,
+			LocalTime:  false,
+		},
+	}
+
+	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
+	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	go runner.Run()
+
+	for {
+		time.Sleep(time.Second)
+		logger.Info().Msg("hello world")
+	}
+}
+```
+
+### Pretty Console Writer
 
 To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playground](https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go)](https://play.golang.org/p/62bWGk67apR)
 
@@ -73,22 +123,6 @@ log.Info().Msg("info log")
 //   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"info log"}
 ```
 
-### Customize the configuration and formatting:
-
-To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-wXPaGTjBJcX-29BEB0?style=flat&logo=go)](https://play.golang.org/p/wXPaGTjBJcX)
-```go
-log.DefaultLogger = log.Logger{
-	Level:      log.InfoLevel,
-	Caller:     1,
-	TimeField:  "date",
-	TimeFormat: "2006-01-02",
-	Writer:     os.Stderr,
-}
-log.Info().Msg("hello world")
-
-// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","message":"hello world"}
-```
-
 ### Logging to syslog
 
 ```go
@@ -108,39 +142,5 @@ func main() {
 
 	log.DefaultLogger.Writer = logger.Writer()
 	log.Info().Str("foo", "bar").Msg("a syslog message")
-}
-```
-
-### Rotating log files hourly
-
-```go
-package main
-
-import (
-	"time"
-
-	"github.com/phuslu/log"
-	"github.com/robfig/cron/v3"
-)
-
-func main() {
-	logger := log.Logger{
-		Level:      log.ParseLevel("info"),
-		Writer:     &log.FileWriter{
-			Filename:   "main.log",
-			MaxSize:    50*1024*1024,
-			MaxBackups: 7,
-			LocalTime:  false,
-		},
-	}
-
-	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
-	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
-	go runner.Run()
-
-	for {
-		time.Sleep(time.Second)
-		logger.Info().Msg("hello world")
-	}
 }
 ```

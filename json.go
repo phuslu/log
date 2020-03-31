@@ -54,7 +54,7 @@ type Logger struct {
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
 	buf   []byte
-	write func(p []byte) (n int, err error)
+	w     io.Writer
 	level Level
 }
 
@@ -122,7 +122,7 @@ func Printf(format string, v ...interface{}) {
 }
 
 // Debug starts a new message with debug level.
-func (l Logger) Debug() (e *Event) {
+func (l *Logger) Debug() (e *Event) {
 	e = l.header(DebugLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -131,7 +131,7 @@ func (l Logger) Debug() (e *Event) {
 }
 
 // Info starts a new message with info level.
-func (l Logger) Info() (e *Event) {
+func (l *Logger) Info() (e *Event) {
 	e = l.header(InfoLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -140,7 +140,7 @@ func (l Logger) Info() (e *Event) {
 }
 
 // Warn starts a new message with warning level.
-func (l Logger) Warn() (e *Event) {
+func (l *Logger) Warn() (e *Event) {
 	e = l.header(WarnLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -149,7 +149,7 @@ func (l Logger) Warn() (e *Event) {
 }
 
 // Error starts a new message with error level.
-func (l Logger) Error() (e *Event) {
+func (l *Logger) Error() (e *Event) {
 	e = l.header(ErrorLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -158,7 +158,7 @@ func (l Logger) Error() (e *Event) {
 }
 
 // Fatal starts a new message with fatal level.
-func (l Logger) Fatal() (e *Event) {
+func (l *Logger) Fatal() (e *Event) {
 	e = l.header(FatalLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -167,7 +167,7 @@ func (l Logger) Fatal() (e *Event) {
 }
 
 // WithLevel starts a new message with level.
-func (l Logger) WithLevel(level Level) (e *Event) {
+func (l *Logger) WithLevel(level Level) (e *Event) {
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -182,7 +182,7 @@ func (l *Logger) SetLevel(level Level) {
 }
 
 // Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
-func (l Logger) Print(v ...interface{}) {
+func (l *Logger) Print(v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -191,7 +191,7 @@ func (l Logger) Print(v ...interface{}) {
 }
 
 // Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
-func (l Logger) Printf(format string, v ...interface{}) {
+func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -201,21 +201,23 @@ func (l Logger) Printf(format string, v ...interface{}) {
 
 var epool = sync.Pool{
 	New: func() interface{} {
-		return new(Event)
+		return &Event{
+			buf: make([]byte, 0, 500),
+		}
 	},
 }
 
-func (l Logger) header(level Level) (e *Event) {
+func (l *Logger) header(level Level) *Event {
 	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
-		return
+		return nil
 	}
-	e = epool.Get().(*Event)
+	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	e.level = level
 	if l.Writer != nil {
-		e.write = l.Writer.Write
+		e.w = l.Writer
 	} else {
-		e.write = os.Stderr.Write
+		e.w = os.Stderr
 	}
 	// time
 	if l.Timestamp {
@@ -270,7 +272,7 @@ func (l Logger) header(level Level) (e *Event) {
 		e.buf = append(e.buf, hostname...)
 		e.buf = append(e.buf, '"')
 	}
-	return
+	return e
 }
 
 // Time append append t formated as string using time.RFC3339Nano.
@@ -590,7 +592,10 @@ func (e *Event) Discard() *Event {
 	if e == nil {
 		return e
 	}
-	epool.Put(e)
+	// see https://golang.org/issue/23199
+	if cap(e.buf) <= 1<<16 {
+		epool.Put(e)
+	}
 	return nil
 }
 
@@ -604,13 +609,16 @@ func (e *Event) Msg(msg string) {
 		e.string(msg)
 	}
 	e.buf = append(e.buf, '}', '\n')
-	e.write(e.buf)
+	e.w.Write(e.buf)
 	if e.level == FatalLevel {
-		e.write(stacks(false))
-		e.write(stacks(true))
+		e.w.Write(stacks(false))
+		e.w.Write(stacks(true))
 		os.Exit(255)
 	}
-	epool.Put(e)
+	// see https://golang.org/issue/23199
+	if cap(e.buf) <= 1<<16 {
+		epool.Put(e)
+	}
 }
 
 // Msgf sends the event with formatted msg added as the message field if not empty.

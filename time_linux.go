@@ -3,7 +3,7 @@
 package log
 
 import (
-	_ "unsafe"
+	_ "unsafe" // for runtime.walltime
 )
 
 //go:noescape
