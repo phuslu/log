@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Writer is an io.WriteCloser that writes to the specified filename.
 type Writer = FileWriter
 
 var timeNow = time.Now
