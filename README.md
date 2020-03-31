@@ -144,3 +144,45 @@ func main() {
 	log.Info().Str("foo", "bar").Msg("a syslog message")
 }
 ```
+
+### High Performance
+
+```go
+package main
+
+import (
+	"io/ioutil"
+	"testing"
+
+	"github.com/phuslu/log"
+	"github.com/rs/zerolog"
+)
+
+func BenchmarkPhuslog(b *testing.B) {
+	logger := log.Logger{
+		Timestamp: true,
+		Writer:    ioutil.Discard,
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("foo", "bar").Msg("hello world")
+	}
+}
+
+func BenchmarkZerolog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("foo", "bar").Msg("hello world")
+	}
+}
+```
+Performance results on my laptop
+```
+BenchmarkPhuslog-8   	 7592316	       146 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZerolog-8   	 2666443	       475 ns/op	       0 B/op	       0 allocs/op
+```

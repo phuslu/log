@@ -221,7 +221,7 @@ func (l *Logger) header(level Level) *Event {
 	}
 	// time
 	if l.Timestamp {
-		e.buf = append(e.buf, "{\"ts\":"...)
+		e.buf = append(e.buf, "{\"time\":"...)
 		sec, nsec := walltime()
 		ms := int64(nsec / 1000000)
 		e.buf = strconv.AppendInt(e.buf, sec, 10)
@@ -716,22 +716,22 @@ var hex = "0123456789abcdef"
 
 // refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
 func (e *Event) string(s string) {
-	if n := len(s); n > 24 {
-		var needEscape bool
-		for i := 0; i < n; i++ {
-			switch s[i] {
-			case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
-				needEscape = true
-				break
-			}
+	var needEscape bool
+
+	for _, c := range []byte(s) {
+		switch c {
+		case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+			needEscape = true
+			break
 		}
-		// fast path - nothing to escape
-		if !needEscape {
-			e.buf = append(e.buf, '"')
-			e.buf = append(e.buf, s...)
-			e.buf = append(e.buf, '"')
-			return
-		}
+	}
+
+	// fast path - nothing to escape
+	if !needEscape {
+		e.buf = append(e.buf, '"')
+		e.buf = append(e.buf, s...)
+		e.buf = append(e.buf, '"')
+		return
 	}
 
 	// slow path
@@ -793,27 +793,27 @@ func (e *Event) string(s string) {
 }
 
 func (e *Event) bytes(b []byte) {
-	n := len(b)
-	if n > 24 {
-		var needEscape bool
-		for i := 0; i < n; i++ {
-			switch b[i] {
-			case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
-				needEscape = true
-				break
-			}
+	var needEscape bool
+
+	for _, c := range b {
+		switch c {
+		case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+			needEscape = true
+			break
 		}
-		// fast path - nothing to escape
-		if !needEscape {
-			e.buf = append(e.buf, '"')
-			e.buf = append(e.buf, b...)
-			e.buf = append(e.buf, '"')
-			return
-		}
+	}
+
+	// fast path - nothing to escape
+	if !needEscape {
+		e.buf = append(e.buf, '"')
+		e.buf = append(e.buf, b...)
+		e.buf = append(e.buf, '"')
+		return
 	}
 
 	// slow path
 	e.buf = append(e.buf, '"')
+	n := len(b)
 	j := 0
 	if n > 0 {
 		// Hint the compiler to remove bounds checks in the loop below.
