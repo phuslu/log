@@ -18,10 +18,10 @@ func TestDefaultLogger(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	log := Logger{
+	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
-	log.Info().
+	logger.Info().
 		Caller().
 		Bool("bool", true).
 		Dur("1_hour", time.Hour).
@@ -62,32 +62,32 @@ func TestLoggerCaller(t *testing.T) {
 }
 
 func TestLoggerTime(t *testing.T) {
-	log := Logger{
+	logger := Logger{
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
 		TimeFormat: time.RFC822,
 	}
-	log.Info().Time("now", timeNow()).Msg("this is test time log event")
+	logger.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
 func TestLoggerTimestamp(t *testing.T) {
-	log := Logger{
+	logger := Logger{
 		Level:     ParseLevel("debug"),
 		Timestamp: true,
 	}
-	log.Info().Time("now", timeNow()).Msg("this is test time log event")
+	logger.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
 func TestLoggerHost(t *testing.T) {
-	log := Logger{
+	logger := Logger{
 		Level:     ParseLevel("debug"),
 		HostField: "host",
 	}
-	log.Info().Time("now", timeNow()).Msg("this is test host log event")
+	logger.Info().Time("now", timeNow()).Msg("this is test host log event")
 }
 
-func BenchmarkDefaultLogger(b *testing.B) {
-	log := Logger{
+func BenchmarkLogger(b *testing.B) {
+	logger := Logger{
 		Timestamp: true,
 		Level:     DebugLevel,
 		Writer:    ioutil.Discard,
@@ -96,6 +96,6 @@ func BenchmarkDefaultLogger(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		log.Info().Msg("a info message")
+		logger.Info().Msg("a info message")
 	}
 }

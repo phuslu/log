@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io/ioutil"
 	"testing"
 )
 
@@ -53,4 +54,16 @@ func TestTSVSeparator(t *testing.T) {
 		Bytes([]byte("\"<,\t>?'")).
 		Str("\"<,\t>?'").
 		Msg()
+}
+
+func BenchmarkTSVLogger(b *testing.B) {
+	logger := TSVLogger{
+		Writer: ioutil.Discard,
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.New().TimestampMS().Str("a tsv message").Msg()
+	}
 }
