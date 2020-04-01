@@ -31,6 +31,10 @@ type Logger struct {
 	// Level defines log levels.
 	Level Level
 
+	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
+	// If set, the value of TimeField and TimeFormat will be ignored.
+	Timestamp bool
+
 	// Caller determines if adds the file:line of the "caller" key.
 	Caller int
 
@@ -39,10 +43,6 @@ type Logger struct {
 
 	// TimeFormat specifies the format for timestamp in output.
 	TimeFormat string
-
-	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
-	// If set, the value of TimeField and TimeFormat will be ignored.
-	Timestamp bool
 
 	// HostField specifies the key for hostname in output if not empty
 	HostField string
