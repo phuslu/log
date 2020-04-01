@@ -148,6 +148,7 @@ func main() {
 ### High Performance
 
 ```go
+// go test -v -run=none -bench=. log_test.go
 package main
 
 import (
@@ -156,33 +157,51 @@ import (
 
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-func BenchmarkPhuslog(b *testing.B) {
+func BenchmarkZapSugar(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.DebugLevel,
+	)).Sugar()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Infow("hello world","foo", "bar")
+	}
+}
+
+func BenchmarkZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
+	}
+}
+
+func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{
 		Timestamp: true,
+		Level:     log.DebugLevel,
 		Writer:    ioutil.Discard,
 	}
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Msg("hello world")
-	}
-}
-
-func BenchmarkZerolog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Msg("hello world")
+		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
 	}
 }
 ```
 Performance results on my laptop
 ```
-BenchmarkPhuslog-8   	 7592316	       146 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZerolog-8   	 2666443	       475 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSugar-16    	 1850250	       690 ns/op	      32 B/op	       1 allocs/op
+BenchmarkZeroLog-16     	 2570610	       471 ns/op	      16 B/op	       1 allocs/op
+BenchmarkPhusLog-16     	 5508972	       218 ns/op	       0 B/op	       0 allocs/op
 ```

@@ -96,6 +96,6 @@ func BenchmarkLogger(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Msg("a info message")
+		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
 	}
 }

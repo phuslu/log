@@ -558,21 +558,6 @@ func (e *Event) Hex(key string, val []byte) *Event {
 	return e
 }
 
-// Interface adds the field key with i marshaled using reflection.
-func (e *Event) Interface(key string, i interface{}) *Event {
-	if e == nil {
-		return nil
-	}
-	e.key(key)
-	marshaled, err := json.Marshal(i)
-	if err != nil {
-		e.string("marshaling error: " + err.Error())
-	} else {
-		e.bytes(marshaled)
-	}
-	return e
-}
-
 // Caller adds the file:line of the "caller" key.
 func (e *Event) Caller() *Event {
 	if e == nil {
@@ -619,11 +604,6 @@ func (e *Event) Msg(msg string) {
 	if cap(e.buf) <= 1<<16 {
 		epool.Put(e)
 	}
-}
-
-// Msgf sends the event with formatted msg added as the message field if not empty.
-func (e *Event) Msgf(format string, v ...interface{}) {
-	e.Msg(fmt.Sprintf(format, v...))
 }
 
 func (e *Event) key(key string) {
@@ -865,6 +845,71 @@ func (e *Event) bytes(b []byte) {
 	}
 	e.buf = append(e.buf, b[j:]...)
 	e.buf = append(e.buf, '"')
+}
+
+type bb struct {
+	B []byte
+}
+
+func (b *bb) Write(p []byte) (int, error) {
+	b.B = append(b.B, p...)
+	return len(p), nil
+}
+
+func (b *bb) Reset() {
+	b.B = b.B[:0]
+}
+
+var bbpool = sync.Pool{
+	New: func() interface{} {
+		return new(bb)
+	},
+}
+
+// Interface adds the field key with i marshaled using reflection.
+func (e *Event) Interface(key string, i interface{}) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+
+	b := bbpool.Get().(*bb)
+	b.Reset()
+
+	enc := json.NewEncoder(b)
+	enc.SetEscapeHTML(false)
+
+	err := enc.Encode(i)
+	if err != nil {
+		e.string("marshaling error: " + err.Error())
+	} else {
+		e.bytes(b.B)
+	}
+
+	// see https://golang.org/issue/23199
+	if cap(b.B) <= 1<<16 {
+		bbpool.Put(b)
+	}
+
+	return e
+}
+
+// Msgf sends the event with formatted msg added as the message field if not empty.
+func (e *Event) Msgf(format string, v ...interface{}) {
+	if e == nil {
+		return
+	}
+
+	b := bbpool.Get().(*bb)
+	b.Reset()
+
+	fmt.Fprintf(b, format, v...)
+	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
+
+	// see https://golang.org/issue/23199
+	if cap(b.B) <= 1<<16 {
+		bbpool.Put(b)
+	}
 }
 
 // stacks is a wrapper for runtime.Stack that attempts to recover the data for all goroutines.
