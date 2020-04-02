@@ -3,6 +3,7 @@ package log
 import (
 	"errors"
 	"io/ioutil"
+	"net"
 	"testing"
 	"time"
 )
@@ -33,6 +34,8 @@ func TestLogger(t *testing.T) {
 		Int32("int32", 123).
 		Str("foobar", "\"<>?'").
 		Time("now", timeNow()).
+		IPAddr("ip4", net.IP{1, 11, 111, 200}).
+		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("writer", ConsoleWriter{ANSIColor: true}).
 		Msgf("this is a \"%s\"", "test")
@@ -46,6 +49,10 @@ func TestLoggerSetLevel(t *testing.T) {
 	DefaultLogger.SetLevel(DebugLevel)
 	Info().Msg("4. i am a info log")
 	Debug().Msg("5. i am a debug log")
+}
+
+func TestLoggerStack(t *testing.T) {
+	Info().Stack().Msg("this is test host log event")
 }
 
 func TestLoggerCaller(t *testing.T) {

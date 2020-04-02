@@ -2,6 +2,7 @@ package log
 
 import (
 	"io/ioutil"
+	"net"
 	"testing"
 )
 
@@ -25,6 +26,8 @@ func TestTSVLogger(t *testing.T) {
 		Uint8(42).
 		Bytes([]byte("\"<,\t>?'")).
 		Str("\"<,\t>?'").
+		IPAddr(net.IP{1, 11, 111, 200}).
+		IPAddr(net.ParseIP("2001:4860:4860::8888")).
 		Msg()
 
 }

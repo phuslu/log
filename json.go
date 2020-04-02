@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"reflect"
 	"runtime"
@@ -55,7 +56,8 @@ type Logger struct {
 type Event struct {
 	buf   []byte
 	w     io.Writer
-	level Level
+	stack bool
+	exit  bool
 }
 
 // Debug starts a new message with debug level.
@@ -213,7 +215,8 @@ func (l *Logger) header(level Level) *Event {
 	}
 	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
-	e.level = level
+	e.stack = level == FatalLevel
+	e.exit = level == FatalLevel
 	if l.Writer != nil {
 		e.w = l.Writer
 	} else {
@@ -558,12 +561,85 @@ func (e *Event) Hex(key string, val []byte) *Event {
 	return e
 }
 
+// IPAddr adds IPv4 or IPv6 Address to the event
+func (e *Event) IPAddr(key string, ip net.IP) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	if ip4 := ip.To4(); ip4 != nil {
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[0]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[1]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[2]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[3]), 10)
+	} else {
+		e.buf = append(e.buf, ip.String()...)
+	}
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// IPPrefix adds IPv4 or IPv6 Prefix (address and mask) to the event
+func (e *Event) IPPrefix(key string, pfx net.IPNet) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, pfx.String()...)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// MACAddr adds MAC address to the event
+func (e *Event) MACAddr(key string, ha net.HardwareAddr) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, ha.String()...)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// TimeDiff adds the field key with positive duration between time t and start.
+// If time t is not greater than start, duration will be 0.
+// Duration format follows the same principle as Dur().
+func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
+	if e == nil {
+		return e
+	}
+	var d time.Duration
+	if t.After(start) {
+		d = t.Sub(start)
+	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, d.String()...)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // Caller adds the file:line of the "caller" key.
 func (e *Event) Caller() *Event {
 	if e == nil {
 		return nil
 	}
 	e.caller(runtime.Caller(DefaultLogger.Caller))
+	return e
+}
+
+// Stack enables stack trace printing for the error passed to Err().
+func (e *Event) Stack() *Event {
+	if e == nil {
+		return nil
+	}
+	e.stack = true
 	return e
 }
 
@@ -595,9 +671,11 @@ func (e *Event) Msg(msg string) {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.Write(e.buf)
-	if e.level == FatalLevel {
+	if e.stack {
 		e.w.Write(stacks(false))
 		e.w.Write(stacks(true))
+	}
+	if e.exit {
 		os.Exit(255)
 	}
 	// see https://golang.org/issue/23199

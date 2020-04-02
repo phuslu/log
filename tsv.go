@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"net"
 	"os"
 	"strconv"
 	"sync"
@@ -150,6 +151,23 @@ func (e *TSVEvent) Str(val string) *TSVEvent {
 // Bytes adds a bytes as string to the event.
 func (e *TSVEvent) Bytes(val []byte) *TSVEvent {
 	e.buf = append(e.buf, val...)
+	e.buf = append(e.buf, e.sep)
+	return e
+}
+
+// IPAddr adds IPv4 or IPv6 Address to the event
+func (e *TSVEvent) IPAddr(ip net.IP) *TSVEvent {
+	if ip4 := ip.To4(); ip4 != nil {
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[0]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[1]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[2]), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, int64(ip4[3]), 10)
+	} else {
+		e.buf = append(e.buf, ip.String()...)
+	}
 	e.buf = append(e.buf, e.sep)
 	return e
 }
