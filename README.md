@@ -1,16 +1,93 @@
 # Structured Logging for Humans
 
-[![godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/phuslu/log) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE)
+[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE)
 
 ## Features
 
-* No external dependences
-* Simple & Straightforward interfaces
-* JSON/TSV/GRPC/Printf Loggers
+* No External Dependences
+* Intuitive Interfaces
+* JSON/TSV/Printf Loggers
 * Rotating File Writer
-* Pretty Console Writer(with windows 7/8/10 support)
-* Dynamic log Level
+* Pretty Console Writer
+* Dynamic Log Level
 * High Performance
+
+## Interfaces
+
+### Logger
+```go
+// DefaultLogger is the global logger.
+var DefaultLogger = Logger{
+	Level:      DebugLevel,
+	Caller:     0,
+	TimeField:  "",
+	TimeFormat: "",
+	Timestamp:  false,
+	HostField:  "",
+	Writer:     os.Stderr,
+}
+
+// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
+type Logger struct {
+	// Level defines log levels.
+	Level Level
+
+	// Caller determines if adds the file:line of the "caller" key.
+	Caller int
+
+	// TimeField defines the time filed name in output.  It uses "time" in if empty.
+	TimeField string
+
+	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
+	TimeFormat string
+
+	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
+	// If set, the value of TimeField and TimeFormat will be ignored.
+	Timestamp bool
+
+	// HostField specifies the key for hostname in output if not empty
+	HostField string
+
+	// Writer specifies the writer of output. It uses os.Stderr in if empty.
+	Writer io.Writer
+}
+```
+
+### FileWriter & ConsoleWriter
+```go
+// FileWriter is an io.WriteCloser that writes to the specified filename.
+type FileWriter struct {
+	// Filename is the file to write logs to.  Backup log files will be retained
+	// in the same directory.
+	Filename string
+
+	// FileMode represents the file's mode and permission bits.  The default
+	// mode is 0644
+	FileMode os.FileMode
+
+	// MaxSize is the maximum size in megabytes of the log file before it gets
+	// rotated.
+	MaxSize int64
+
+	// MaxBackups is the maximum number of old log files to retain.  The default
+	// is to retain all old log files
+	MaxBackups int
+
+	// LocalTime determines if the time used for formatting the timestamps in
+	// backup files is the computer's local time.  The default is to use UTC
+	// time.
+	LocalTime bool
+
+	// HostName determines if the hostname used for formatting in backup files.
+	HostName bool
+}
+
+// ConsoleWriter parses the JSON input and writes it in an
+// (optionally) colorized, human-friendly format to Out.
+type ConsoleWriter struct {
+	ANSIColor bool
+}
+```
 
 ## Getting Started
 
@@ -37,18 +114,19 @@ func main() {
 
 ### Customize the configuration and formatting:
 
-To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-wXPaGTjBJcX-29BEB0?style=flat&logo=go)](https://play.golang.org/p/wXPaGTjBJcX)
+To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go)](https://play.golang.org/p/EaFFre1DUVJ)
 ```go
 log.DefaultLogger = log.Logger{
 	Level:      log.InfoLevel,
 	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
+	HostField:  "host",
 	Writer:     os.Stderr,
 }
 log.Info().Str("foo", "bar").Msg("hello world")
 
-// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","foo":"bar","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","host":"hk","caller":"test.go:42","foo":"bar","message":"hello world"}
 ```
 
 ### Rotating File Writer
@@ -68,6 +146,7 @@ func main() {
 		Level:      log.ParseLevel("info"),
 		Writer:     &log.FileWriter{
 			Filename:   "main.log",
+			FileMode:   0600,
 			MaxSize:    50*1024*1024,
 			MaxBackups: 7,
 			LocalTime:  false,
@@ -147,8 +226,10 @@ func main() {
 
 ### High Performance
 
+A quick and simple benchmark with zap/zerolog
+
 ```go
-// go test -v -run=none -bench=. log_test.go
+// go test -v -run=none -bench=. -benchmem log_test.go
 package main
 
 import (
@@ -161,47 +242,34 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func BenchmarkZapSugar(b *testing.B) {
+func BenchmarkZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(ioutil.Discard),
-		zapcore.DebugLevel,
-	)).Sugar()
-
-	b.ReportAllocs()
-	b.ResetTimer()
+		zapcore.InfoLevel,
+	))
 	for i := 0; i < b.N; i++ {
-		logger.Infow("hello world","foo", "bar")
+		logger.Info("hello world", zap.String("foo", "bar"), zap.Int("int", 123))
 	}
 }
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-
-	b.ReportAllocs()
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
+		logger.Info().Str("foo", "bar").Int("int", 123).Msgf("hello %s", "world")
 	}
 }
 
 func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{
-		Timestamp: true,
-		Level:     log.DebugLevel,
-		Writer:    ioutil.Discard,
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer()
+	logger := log.Logger{Writer: ioutil.Discard}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
+		logger.Info().Str("foo", "bar").Int("int", 123).Msgf("hello %s", "world")
 	}
 }
 ```
-Performance results on my laptop
+Performance results on my laptop:
 ```
-BenchmarkZapSugar-16    	 1850250	       690 ns/op	      32 B/op	       1 allocs/op
-BenchmarkZeroLog-16     	 2570610	       471 ns/op	      16 B/op	       1 allocs/op
-BenchmarkPhusLog-16     	 5508972	       218 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-16        	18183772	       654 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-16    	24096614	       502 ns/op	      16 B/op	       1 allocs/op
+BenchmarkPhusLog-16    	50810785	       235 ns/op	       0 B/op	       0 allocs/op
 ```

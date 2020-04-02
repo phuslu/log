@@ -60,6 +60,7 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
+	// make aligncheck happy
 	mu   sync.Mutex
 	size int64
 	file *os.File

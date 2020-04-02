@@ -39,16 +39,16 @@ type Logger struct {
 	// Caller determines if adds the file:line of the "caller" key.
 	Caller int
 
-	// TimeField defines the time format of the Time field type.
+	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the format for timestamp in output.
+	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
 	TimeFormat string
 
 	// HostField specifies the key for hostname in output if not empty
 	HostField string
 
-	// TimeField specifies the writer of output. It uses os.Stderr in if empty.
+	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
 }
 
