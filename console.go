@@ -33,21 +33,23 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		return
 	}
 
-	var b bytes.Buffer
+	b := bbpool.Get().(*bb)
+	b.Reset()
+	defer bbpool.Put(b)
 
 	if v, ok := m["ts"]; ok {
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s%d%s ", ansiColorDarkGray, v, ansiColorReset)
+			fmt.Fprintf(b, "%s%d%s ", ansiColorDarkGray, v, ansiColorReset)
 		} else {
-			fmt.Fprintf(&b, "%d ", v)
+			fmt.Fprintf(b, "%d ", v)
 		}
 	}
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s%s%s ", ansiColorDarkGray, v, ansiColorReset)
+			fmt.Fprintf(b, "%s%s%s ", ansiColorDarkGray, v, ansiColorReset)
 		} else {
-			fmt.Fprintf(&b, "%s ", v)
+			fmt.Fprintf(b, "%s ", v)
 		}
 	}
 
@@ -70,14 +72,14 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			c, s = ansiColorRed, "???"
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s%s%s ", c, s, ansiColorReset)
+			fmt.Fprintf(b, "%s%s%s ", c, s, ansiColorReset)
 		} else {
-			fmt.Fprintf(&b, "%s ", s)
+			fmt.Fprintf(b, "%s ", s)
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		fmt.Fprintf(&b, "%s ", v)
+		fmt.Fprintf(b, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -85,9 +87,9 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(&b, "%s>%s %s", ansiColorCyan, ansiColorReset, v)
+			fmt.Fprintf(b, "%s>%s %s", ansiColorCyan, ansiColorReset, v)
 		} else {
-			fmt.Fprintf(&b, "> %s", v)
+			fmt.Fprintf(b, "> %s", v)
 		}
 	}
 
@@ -98,16 +100,16 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
-				fmt.Fprintf(&b, " %s%s=%v%s", ansiColorRed, k, v, ansiColorReset)
+				fmt.Fprintf(b, " %s%s=%v%s", ansiColorRed, k, v, ansiColorReset)
 			} else {
-				fmt.Fprintf(&b, " %s%s=%s%v%s", ansiColorCyan, k, ansiColorDarkGray, v, ansiColorReset)
+				fmt.Fprintf(b, " %s%s=%s%v%s", ansiColorCyan, k, ansiColorDarkGray, v, ansiColorReset)
 			}
 		} else {
-			fmt.Fprintf(&b, " %s=%v", k, v)
+			fmt.Fprintf(b, " %s=%v", k, v)
 		}
 	}
 
-	b.WriteByte('\n')
+	b.B = append(b.B, '\n')
 
-	return os.Stderr.Write(b.Bytes())
+	return os.Stderr.Write(b.B)
 }
