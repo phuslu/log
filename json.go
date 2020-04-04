@@ -111,7 +111,7 @@ func Print(v ...interface{}) {
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
-	e.Msg(fmt.Sprint(v...))
+	e.Print(v...)
 }
 
 // Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
@@ -189,7 +189,7 @@ func (l *Logger) Print(v ...interface{}) {
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
-	e.Msg(fmt.Sprint(v...))
+	e.Print(v...)
 }
 
 // Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
@@ -970,6 +970,24 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	}
 
 	return e
+}
+
+// Print sends the event with msgs added as the message field if not empty.
+func (e *Event) Print(v ...interface{}) {
+	if e == nil {
+		return
+	}
+
+	b := bbpool.Get().(*bb)
+	b.Reset()
+
+	fmt.Fprint(b, v...)
+	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
+
+	// see https://golang.org/issue/23199
+	if cap(b.B) <= 1<<16 {
+		bbpool.Put(b)
+	}
 }
 
 // Msgf sends the event with formatted msg added as the message field if not empty.
