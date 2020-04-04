@@ -111,7 +111,7 @@ func Print(v ...interface{}) {
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
-	e.Print(v...)
+	e.print(v...)
 }
 
 // Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
@@ -189,7 +189,7 @@ func (l *Logger) Print(v ...interface{}) {
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
-	e.Print(v...)
+	e.print(v...)
 }
 
 // Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
@@ -772,13 +772,26 @@ func (e *Event) time(sec int64, nsec int32) {
 
 var hex = "0123456789abcdef"
 
+var escapes = func() (a [256]bool) {
+	a['"'] = true
+	a['<'] = true
+	a['\''] = true
+	a['\\'] = true
+	a['\b'] = true
+	a['\f'] = true
+	a['\n'] = true
+	a['\r'] = true
+	a['\t'] = true
+	a[0] = true
+	return
+}()
+
 // refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
 func (e *Event) string(s string) {
 	var needEscape bool
 
 	for _, c := range []byte(s) {
-		switch c {
-		case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+		if escapes[c] {
 			needEscape = true
 			break
 		}
@@ -792,10 +805,12 @@ func (e *Event) string(s string) {
 		return
 	}
 
-	// slow path
-	e.buf = append(e.buf, '"')
+	// type cast
 	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}))
+
+	// slow path
+	e.buf = append(e.buf, '"')
 	j := 0
 	n := len(b)
 	if n > 0 {
@@ -854,8 +869,7 @@ func (e *Event) bytes(b []byte) {
 	var needEscape bool
 
 	for _, c := range b {
-		switch c {
-		case '"', '\\', '\n', '\r', '\t', '\f', '\b', '<', '\'', 0:
+		if escapes[c] {
 			needEscape = true
 			break
 		}
@@ -972,8 +986,8 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	return e
 }
 
-// Print sends the event with msgs added as the message field if not empty.
-func (e *Event) Print(v ...interface{}) {
+// print sends the event with msgs added as the message field if not empty.
+func (e *Event) print(v ...interface{}) {
 	if e == nil {
 		return
 	}

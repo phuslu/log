@@ -129,14 +129,6 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		}
 	}
 
-	if v, ok := m["ts"]; ok {
-		if w.ANSIColor {
-			printf(windowsColorGray, "%d ", v)
-		} else {
-			printf(windowsColorWhite, "%d ", v)
-		}
-	}
-
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
 			printf(windowsColorGray, "%s ", v)
@@ -189,7 +181,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 
 	for k, v := range m {
 		switch k {
-		case "ts", "time", "level", "caller", "message":
+		case "time", "level", "caller", "message":
 			continue
 		}
 		if w.ANSIColor {

@@ -37,14 +37,6 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	b.Reset()
 	defer bbpool.Put(b)
 
-	if v, ok := m["ts"]; ok {
-		if w.ANSIColor {
-			fmt.Fprintf(b, "%s%d%s ", ansiColorDarkGray, v, ansiColorReset)
-		} else {
-			fmt.Fprintf(b, "%d ", v)
-		}
-	}
-
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
 			fmt.Fprintf(b, "%s%s%s ", ansiColorDarkGray, v, ansiColorReset)
@@ -95,7 +87,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	for k, v := range m {
 		switch k {
-		case "ts", "time", "level", "caller", "message":
+		case "time", "level", "caller", "message":
 			continue
 		}
 		if w.ANSIColor {

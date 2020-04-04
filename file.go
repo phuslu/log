@@ -52,6 +52,10 @@ type FileWriter struct {
 	// in the same directory.
 	Filename string
 
+	// FileMode represents the file's mode and permission bits.  The default
+	// mode is 0644
+	FileMode os.FileMode
+
 	// MaxSize is the maximum size in megabytes of the log file before it gets
 	// rotated.
 	MaxSize int64
@@ -155,7 +159,12 @@ func (w *FileWriter) rotate() (err error) {
 		filename += ext
 	}
 
-	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	var perm = w.FileMode
+	if perm == 0 {
+		perm = 0644
+	}
+
+	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
 	w.size = 0
 
 	go func(filename string) {
@@ -213,7 +222,12 @@ func (w *FileWriter) create() (err error) {
 		w.size = 0
 	}
 
-	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	var perm = w.FileMode
+	if perm == 0 {
+		perm = 0644
+	}
+
+	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
 	if err != nil {
 		return err
 	}
