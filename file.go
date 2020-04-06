@@ -52,10 +52,6 @@ type FileWriter struct {
 	// in the same directory.
 	Filename string
 
-	// FileMode represents the file's mode and permission bits.  The default
-	// mode is 0644
-	FileMode os.FileMode
-
 	// MaxSize is the maximum size in megabytes of the log file before it gets
 	// rotated.
 	MaxSize int64
@@ -64,6 +60,14 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
+	mu   sync.Mutex
+	size int64
+	file *os.File
+
+	// FileMode represents the file's mode and permission bits.  The default
+	// mode is 0644
+	FileMode os.FileMode
+
 	// LocalTime determines if the time used for formatting the timestamps in
 	// backup files is the computer's local time.  The default is to use UTC
 	// time.
@@ -71,10 +75,6 @@ type FileWriter struct {
 
 	// HostName determines if the hostname used for formatting in backup files.
 	HostName bool
-
-	mu   sync.Mutex
-	size int64
-	file *os.File
 }
 
 // Write implements io.FileWriter.  If a write would cause the log file to be larger
