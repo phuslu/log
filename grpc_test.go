@@ -26,7 +26,7 @@ func TestGrpcLogger(t *testing.T) {
 		Caller: 2,
 	}
 
-	var grpclog grpcLoggerV2 = GrpcLogger{logger}
+	var grpclog grpcLoggerV2 = &GrpcLogger{logger}
 
 	grpclog.Info("hello", "grpclog from json")
 }
