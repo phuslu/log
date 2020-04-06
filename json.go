@@ -547,6 +547,8 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
+var hex = "0123456789abcdef"
+
 // Hex adds the field key with val as a hex string to the event.
 func (e *Event) Hex(key string, val []byte) *Event {
 	if e == nil {
@@ -653,8 +655,7 @@ func (e *Event) Discard() *Event {
 	if e == nil {
 		return e
 	}
-	// see https://golang.org/issue/23199
-	if cap(e.buf) <= 1<<16 {
+	if cap(e.buf) <= bbcap {
 		epool.Put(e)
 	}
 	return nil
@@ -678,8 +679,7 @@ func (e *Event) Msg(msg string) {
 	if e.exit {
 		os.Exit(255)
 	}
-	// see https://golang.org/issue/23199
-	if cap(e.buf) <= 1<<16 {
+	if cap(e.buf) <= bbcap {
 		epool.Put(e)
 	}
 }
@@ -770,8 +770,6 @@ func (e *Event) time(sec int64, nsec int32) {
 	e.buf[n+17] = ':'
 }
 
-var hex = "0123456789abcdef"
-
 var escapes = func() (a [256]bool) {
 	a['"'] = true
 	a['<'] = true
@@ -786,33 +784,10 @@ var escapes = func() (a [256]bool) {
 	return
 }()
 
-// refer to https://github.com/valyala/quicktemplate/blob/master/jsonstring.go
-func (e *Event) string(s string) {
-	var needEscape bool
-
-	for _, c := range []byte(s) {
-		if escapes[c] {
-			needEscape = true
-			break
-		}
-	}
-
-	// fast path - nothing to escape
-	if !needEscape {
-		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, s...)
-		e.buf = append(e.buf, '"')
-		return
-	}
-
-	// type cast
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{Data: sh.Data, Len: sh.Len, Cap: sh.Len}))
-
-	// slow path
+func (e *Event) escape(b []byte) {
 	e.buf = append(e.buf, '"')
-	j := 0
 	n := len(b)
+	j := 0
 	if n > 0 {
 		// Hint the compiler to remove bounds checks in the loop below.
 		_ = b[n-1]
@@ -865,78 +840,38 @@ func (e *Event) string(s string) {
 	e.buf = append(e.buf, '"')
 }
 
-func (e *Event) bytes(b []byte) {
-	var needEscape bool
+func (e *Event) string(s string) {
+	for _, c := range []byte(s) {
+		if escapes[c] {
+			sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+			b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
+				Data: sh.Data, Len: sh.Len, Cap: sh.Len,
+			}))
+			e.escape(b)
+			return
+		}
+	}
 
+	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, s...)
+	e.buf = append(e.buf, '"')
+
+	return
+}
+
+func (e *Event) bytes(b []byte) {
 	for _, c := range b {
 		if escapes[c] {
-			needEscape = true
-			break
+			e.escape(b)
+			return
 		}
 	}
 
-	// fast path - nothing to escape
-	if !needEscape {
-		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, b...)
-		e.buf = append(e.buf, '"')
-		return
-	}
+	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, b...)
+	e.buf = append(e.buf, '"')
 
-	// slow path
-	e.buf = append(e.buf, '"')
-	n := len(b)
-	j := 0
-	if n > 0 {
-		// Hint the compiler to remove bounds checks in the loop below.
-		_ = b[n-1]
-	}
-	for i := 0; i < n; i++ {
-		switch b[i] {
-		case '"':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', '"')
-			j = i + 1
-		case '\\':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', '\\')
-			j = i + 1
-		case '\n':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'n')
-			j = i + 1
-		case '\r':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'r')
-			j = i + 1
-		case '\t':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 't')
-			j = i + 1
-		case '\f':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', 'c')
-			j = i + 1
-		case '\b':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '8')
-			j = i + 1
-		case '<':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'u', '0', '0', '3', 'c')
-			j = i + 1
-		case '\'':
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'u', '0', '0', '2', '7')
-			j = i + 1
-		case 0:
-			e.buf = append(e.buf, b[j:i]...)
-			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '0')
-			j = i + 1
-		}
-	}
-	e.buf = append(e.buf, b[j:]...)
-	e.buf = append(e.buf, '"')
+	return
 }
 
 type bb struct {
@@ -958,6 +893,8 @@ var bbpool = sync.Pool{
 	},
 }
 
+const bbcap = 1 << 16
+
 // Interface adds the field key with i marshaled using reflection.
 func (e *Event) Interface(key string, i interface{}) *Event {
 	if e == nil {
@@ -978,8 +915,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 		e.bytes(b.B)
 	}
 
-	// see https://golang.org/issue/23199
-	if cap(b.B) <= 1<<16 {
+	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
 	}
 
@@ -998,8 +934,7 @@ func (e *Event) print(v ...interface{}) {
 	fmt.Fprint(b, v...)
 	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
 
-	// see https://golang.org/issue/23199
-	if cap(b.B) <= 1<<16 {
+	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
 	}
 }
@@ -1016,8 +951,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	fmt.Fprintf(b, format, v...)
 	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
 
-	// see https://golang.org/issue/23199
-	if cap(b.B) <= 1<<16 {
+	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
 	}
 }
