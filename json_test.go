@@ -36,6 +36,7 @@ func TestLogger(t *testing.T) {
 		Time("now", timeNow()).
 		IPAddr("ip4", net.IP{1, 11, 111, 200}).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
+		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("writer", ConsoleWriter{ANSIColor: true}).
 		Msgf("this is a \"%s\"", "test")

@@ -604,7 +604,13 @@ func (e *Event) MACAddr(key string, ha net.HardwareAddr) *Event {
 	}
 	e.key(key)
 	e.buf = append(e.buf, '"')
-	e.buf = append(e.buf, ha.String()...)
+	for i, c := range ha {
+		if i > 0 {
+			e.buf = append(e.buf, ':')
+		}
+		e.buf = append(e.buf, hex[c>>4])
+		e.buf = append(e.buf, hex[c&0xF])
+	}
 	e.buf = append(e.buf, '"')
 	return e
 }
