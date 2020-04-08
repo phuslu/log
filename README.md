@@ -1,6 +1,7 @@
 # Structured Logging for Humans
 
-[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE)
+[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE) [![coverage](https://img.shields.io/badge/coverage-67.6%25-yellowgreen)](https://gocover.io/github.com/phuslu/log)
+
 
 ## Features
 
@@ -226,7 +227,7 @@ func main() {
 
 ### High Performance
 
-A quick and simple benchmark with zap/zerolog
+A quick and simple benchmark with zap/zerolog/onelog
 
 ```go
 // go test -v -run=none -bench=. -benchmem log_test.go
@@ -235,12 +236,16 @@ package main
 import (
 	"io/ioutil"
 	"testing"
+	"time"
 
+	"github.com/francoispqt/onelog"
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+var fakeMessage = "Test logging, but use a somewhat realistic message length. "
 
 func BenchmarkZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -249,27 +254,40 @@ func BenchmarkZap(b *testing.B) {
 		zapcore.InfoLevel,
 	))
 	for i := 0; i < b.N; i++ {
-		logger.Info("hello world", zap.String("foo", "bar"), zap.Int("int", 123))
+		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 123))
+	}
+}
+
+func BenchmarkOneLog(b *testing.B) {
+	logger := onelog.New(ioutil.Discard, onelog.INFO)
+	logger.Hook(func(e onelog.Entry) { e.Int64("time", time.Now().Unix()) })
+	for i := 0; i < b.N; i++ {
+		logger.InfoWith(fakeMessage).String("foo", "bar").Int("int", 123).Write()
 	}
 }
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMicro
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 123).Msgf("hello %s", "world")
+		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
 	}
 }
 
 func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: ioutil.Discard}
+	logger := log.Logger{
+		Timestamp: true,
+		Writer:    ioutil.Discard,
+	}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 123).Msgf("hello %s", "world")
+		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
 	}
 }
 ```
 Performance results on my laptop:
 ```
-BenchmarkZap-16        	18183772	       654 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-16    	24096614	       502 ns/op	      16 B/op	       1 allocs/op
-BenchmarkPhusLog-16    	50810785	       235 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-16        	14526082	       817 ns/op	     128 B/op	       1 allocs/op
+BenchmarkOneLog-16     	41694349	       290 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLog-16    	46287027	       260 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-16    	70444305	       179 ns/op	       0 B/op	       0 allocs/op
 ```
