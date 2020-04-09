@@ -174,9 +174,6 @@ func (e *TSVEvent) IPAddr(ip net.IP) *TSVEvent {
 
 // Msg sends the event.
 func (e *TSVEvent) Msg() {
-	if e == nil {
-		return
-	}
 	if len(e.buf) != 0 {
 		e.buf[len(e.buf)-1] = '\n'
 	}

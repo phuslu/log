@@ -667,6 +667,8 @@ func (e *Event) Discard() *Event {
 	return nil
 }
 
+var osExit = os.Exit
+
 // Msg sends the event with msg added as the message field if not empty.
 func (e *Event) Msg(msg string) {
 	if e == nil {
@@ -683,7 +685,7 @@ func (e *Event) Msg(msg string) {
 		e.w.Write(stacks(true))
 	}
 	if e.exit {
-		os.Exit(255)
+		osExit(255)
 	}
 	if cap(e.buf) <= bbcap {
 		epool.Put(e)

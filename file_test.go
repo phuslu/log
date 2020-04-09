@@ -49,6 +49,59 @@ func TestFileWriter(t *testing.T) {
 	os.Remove(filename)
 }
 
+func TestFileWriterStderr(t *testing.T) {
+	text1 := "hello file writer!\n"
+
+	w := &FileWriter{}
+
+	_, err := fmt.Fprintf(w, text1)
+	if err != nil {
+		t.Fatalf("file writer error: %+v", err)
+	}
+}
+
+func TestFileWriterCreate(t *testing.T) {
+	text1 := "hello file writer!\n"
+
+	w := &FileWriter{
+		Filename: "/nonexists/output.log",
+	}
+
+	_, err := fmt.Fprintf(w, text1)
+	if err == nil {
+		t.Fatalf("file writer should not write")
+	}
+
+	t.Logf("file writer return error: %+v", err)
+}
+
+func TestFileWriterHostname(t *testing.T) {
+	filename := "file-hostname.log"
+	text1 := "hello file writer!\n"
+
+	w := &FileWriter{
+		Filename: filename,
+		HostName: true,
+	}
+
+	_, err := fmt.Fprintf(w, text1)
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	w.Close()
+
+	matches, _ := filepath.Glob("file-hostname.*.log")
+	for i := range matches {
+		err = os.Remove(matches[i])
+		if err != nil {
+			t.Fatalf("os remove %s error: %+v", matches[i], err)
+		}
+	}
+
+	os.Remove(filename)
+}
+
 func TestFileWriterRotate(t *testing.T) {
 	filename := "file-rotate.log"
 	text1 := "hello file writer!\n"
@@ -101,6 +154,74 @@ func TestFileWriterRotate(t *testing.T) {
 	if string(data) != text2 {
 		t.Fatalf("ioutil read file content mismath: data=[%s], text2=[%s]", data, text2)
 	}
+
+	for i := range matches {
+		err = os.Remove(matches[i])
+		if err != nil {
+			t.Fatalf("os remove %s error: %+v", matches[i], err)
+		}
+	}
+
+	os.Remove(filename)
+}
+
+func TestFileWriterRotateBySize(t *testing.T) {
+	filename := "file-rotate-by-size.log"
+	text := "hello file writer!\n"
+
+	w := &FileWriter{
+		Filename:   filename,
+		MaxSize:    int64(len(text)) + 2,
+		MaxBackups: 2,
+	}
+
+	// text 1
+	_, err := fmt.Fprintf(w, text)
+	if err != nil {
+		t.Fatalf("file writer error: %+v", err)
+	}
+
+	matches, err := filepath.Glob("file-rotate-by-size.*.log")
+	if err != nil {
+		t.Fatalf("filepath glob error: %+v", err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("filepath glob return %+v number mismath", matches)
+	}
+
+	time.Sleep(time.Second)
+
+	// text 2
+	_, err = fmt.Fprintf(w, text)
+	if err != nil {
+		t.Fatalf("file writer error: %+v", err)
+	}
+
+	matches, err = filepath.Glob("file-rotate-by-size.*.log")
+	if err != nil {
+		t.Fatalf("filepath glob error: %+v", err)
+	}
+	if len(matches) != 2 {
+		t.Fatalf("filepath glob return %+v number mismath", matches)
+	}
+
+	// text 3 & 4 & 5
+	for i := 3; i <= 5; i++ {
+		_, err = fmt.Fprintf(w, text)
+		if err != nil {
+			t.Fatalf("file writer error: %+v", err)
+		}
+	}
+
+	matches, err = filepath.Glob("file-rotate-by-size.*.log")
+	if err != nil {
+		t.Fatalf("filepath glob error: %+v", err)
+	}
+	if len(matches) != w.MaxBackups {
+		t.Fatalf("filepath glob return %+v number mismath", matches)
+	}
+
+	w.Close()
 
 	for i := range matches {
 		err = os.Remove(matches[i])

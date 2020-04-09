@@ -1,6 +1,6 @@
 # Structured Logging for Humans
 
-[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE) [![coverage](https://img.shields.io/badge/coverage-67.6%25-yellowgreen)](https://gocover.io/github.com/phuslu/log)
+[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE) [![coverage](https://img.shields.io/badge/coverage-76.2%25-green)](https://gocover.io/github.com/phuslu/log)
 
 
 ## Features

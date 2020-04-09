@@ -9,36 +9,117 @@ import (
 )
 
 func TestDefaultLogger(t *testing.T) {
+	osExit = func(int) {}
+
 	Debug().Str("foo", "bar").Msg("hello from Debug")
 	Info().Str("foo", "bar").Msg("hello from Info")
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
-	// Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Print("hello from Print")
 	Printf("hello from %s", "Printf")
 }
 
 func TestLogger(t *testing.T) {
+	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
+	if err != nil {
+		t.Fatalf("net.ParseCIDR error: %+v", err)
+	}
+
 	logger := Logger{
 		Level: ParseLevel("debug"),
 	}
 	logger.Info().
 		Caller().
 		Bool("bool", true).
+		Bools("bools", []bool{false}).
+		Bools("bools", []bool{true, false}).
 		Dur("1_hour", time.Hour).
 		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).
 		Err(errors.New("test error")).
-		Float64("float32", 1.111).
+		Err(nil).
+		Float32("float32", 1.111).
+		Floats32("float32", []float32{1.111}).
+		Floats32("float32", []float32{1.111, 2.222}).
 		Float64("float64", 1.111).
+		Floats64("float64", []float64{1.111, 2.222}).
+		Uint64("int64", 1234567890).
+		Uint32("int32", 123).
+		Uint16("int16", 123).
+		Uint8("int16", 123).
 		Int64("int64", 1234567890).
 		Int32("int32", 123).
-		Str("foobar", "\"<>?'").
-		Time("now", timeNow()).
-		IPAddr("ip4", net.IP{1, 11, 111, 200}).
+		Int16("int16", 123).
+		Int8("int16", 123).
+		Int("int", 123).
+		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
+		Hex("hex", []byte("\"<>?'")).
+		Bytes("bytes1", []byte("bytes1")).
+		Bytes("bytes2", []byte("\"<>?'")).
+		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
+		Strs("strings", []string{"a", "b", "\"<>?'"}).
+		Time("now_1", timeNow()).
+		TimeFormat("now_2", time.RFC3339, timeNow()).
+		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
+		TimeDiff("time_diff_2", time.Time{}, timeNow()).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
+		IPAddr("ip4", ipv4Addr).
+		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
-		Interface("writer", ConsoleWriter{ANSIColor: true}).
+		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
+		Interface("time.Time", timeNow()).
+		Msgf("this is a \"%s\"", "test")
+}
+
+func TestLoggerNil(t *testing.T) {
+	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
+	if err != nil {
+		t.Fatalf("net.ParseCIDR error: %+v", err)
+	}
+
+	logger := Logger{
+		Level: ParseLevel("info"),
+	}
+	logger.Debug().
+		Caller().
+		Bool("bool", true).
+		Bools("bools", []bool{true, false}).
+		Dur("1_hour", time.Hour).
+		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).
+		Err(errors.New("test error")).
+		Err(nil).
+		Float32("float32", 1.111).
+		Floats32("float32", []float32{1.111}).
+		Float64("float64", 1.111).
+		Floats64("float64", []float64{1.111}).
+		Floats64("float64", []float64{1.111}).
+		Uint64("int64", 1234567890).
+		Uint32("int32", 123).
+		Uint16("int16", 123).
+		Uint8("int16", 123).
+		Int64("int64", 1234567890).
+		Int32("int32", 123).
+		Int16("int16", 123).
+		Int8("int16", 123).
+		Int("int", 123).
+		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
+		Hex("hex", []byte("\"<>?'")).
+		Bytes("bytes1", []byte("bytes1")).
+		Bytes("bytes2", []byte("\"<>?'")).
+		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
+		Strs("strings", []string{"a", "b", "\"<>?'"}).
+		Time("now_1", timeNow()).
+		TimeFormat("now_2", time.RFC3339, timeNow()).
+		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
+		TimeDiff("time_diff_2", time.Time{}, timeNow()).
+		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
+		IPAddr("ip4", ipv4Addr).
+		IPPrefix("ip_prefix", *ipv4Net).
+		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
+		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
+		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
+		Interface("time.Time", timeNow()).
 		Msgf("this is a \"%s\"", "test")
 }
 
@@ -53,20 +134,53 @@ func TestLoggerSetLevel(t *testing.T) {
 }
 
 func TestLoggerStack(t *testing.T) {
-	Info().Stack().Msg("this is test host log event")
+	Info().Stack().Msg("this is test stack log event")
+}
+
+func TestLoggerEnabled(t *testing.T) {
+	DefaultLogger.SetLevel(InfoLevel)
+	Debug().Stack().Msgf("hello %s", "world")
+	if Debug().Enabled() {
+		t.Fatal("debug level should enabled")
+	}
+}
+
+func TestLoggerDiscard(t *testing.T) {
+	Info().Stack().Str("foo", "bar").Discard()
+	DefaultLogger.SetLevel(InfoLevel)
+	Debug().Stack().Str("foo", "bar").Discard()
+}
+
+func TestLoggerWithLevel(t *testing.T) {
+	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level log event")
+	DefaultLogger.Caller = 1
+	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level caller log event")
 }
 
 func TestLoggerCaller(t *testing.T) {
-	log1 := Logger{
+	osExit = func(int) {}
+
+	DefaultLogger.Caller = 1
+	DefaultLogger.SetLevel(DebugLevel)
+	Debug().Str("foo", "bar").Msg("hello from Debug")
+	Info().Str("foo", "bar").Msg("hello from Info")
+	Warn().Str("foo", "bar").Msg("hello from Warn")
+	Error().Str("foo", "bar").Msg("hello from Error")
+	Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Print("hello from Print")
+	Printf("hello from %s", "Printf")
+
+	logger := Logger{
 		Level:  ParseLevel("debug"),
 		Caller: 1,
 	}
-	log1.Info().Msg("this is caller log event 1")
-
-	log2 := Logger{
-		Level: ParseLevel("debug"),
-	}
-	log2.Info().Caller().Msg("this is caller log event 2")
+	logger.Debug().Str("foo", "bar").Msg("hello from Debug")
+	logger.Info().Str("foo", "bar").Msg("hello from Info")
+	logger.Warn().Str("foo", "bar").Msg("hello from Warn")
+	logger.Error().Str("foo", "bar").Msg("hello from Error")
+	logger.Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	logger.Print("hello from Print")
+	logger.Printf("hello from %s", "Printf")
 }
 
 func TestLoggerTime(t *testing.T) {

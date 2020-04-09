@@ -28,5 +28,22 @@ func TestGrpcLogger(t *testing.T) {
 
 	var grpclog grpcLoggerV2 = &GrpcLogger{logger}
 
-	grpclog.Info("hello", "grpclog from json")
+	osExit = func(int) {}
+
+	grpclog.Info("hello", "grpclog Info message")
+	grpclog.Infoln("hello", "grpclog Infoln message")
+	grpclog.Infof("hello", "grpclog Infof message")
+	grpclog.Warning("hello", "grpclog Warning message")
+	grpclog.Warningln("hello", "grpclog Warningln message")
+	grpclog.Warningf("hello", "grpclog Warningf message")
+	grpclog.Error("hello", "grpclog Error message")
+	grpclog.Errorln("hello", "grpclog Errorln message")
+	grpclog.Errorf("hello", "grpclog Errorf message")
+	grpclog.Fatal("hello", "grpclog Fatal message")
+	grpclog.Fatalln("hello", "grpclog Fatalln message")
+	grpclog.Fatalf("hello", "grpclog Fatalf message")
+
+	if grpclog.V(0) {
+		grpclog.Fatalf("hello", "grpclog debug level json")
+	}
 }
