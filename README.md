@@ -1,11 +1,10 @@
 # Structured Logging for Humans
 
-[![gopkg](http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/phuslu/log?tab=doc) [![goreport](https://goreportcard.com/badge/github.com/phuslu/log)](https://goreportcard.com/report/github.com/phuslu/log) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/phuslu/log/master/LICENSE) [![coverage](https://img.shields.io/badge/coverage-76.2%25-green)](https://gocover.io/github.com/phuslu/log)
-
+[![gopkg][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov]
 
 ## Features
 
-* No External Dependences
+* No Dependencies
 * Intuitive Interfaces
 * JSON/TSV/Printf Loggers
 * Rotating File Writer
@@ -125,7 +124,7 @@ log.DefaultLogger = log.Logger{
 	HostField:  "host",
 	Writer:     os.Stderr,
 }
-log.Info().Str("foo", "bar").Msg("hello world")
+log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
 // Output: {"date":"2019-07-04","level":"info","host":"hk","caller":"test.go:42","foo":"bar","message":"hello world"}
 ```
@@ -230,7 +229,7 @@ func main() {
 A quick and simple benchmark with zap/zerolog/onelog
 
 ```go
-// go test -v -run=none -bench=. -benchmem log_test.go
+// go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
 package main
 
 import (
@@ -268,7 +267,7 @@ func BenchmarkOneLog(b *testing.B) {
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMicro
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
 	}
@@ -286,8 +285,15 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 Performance results on my laptop:
 ```
-BenchmarkZap-16        	14526082	       817 ns/op	     128 B/op	       1 allocs/op
-BenchmarkOneLog-16     	41694349	       290 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLog-16    	46287027	       260 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-16    	70444305	       179 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-16        	14383234	       828 ns/op	     128 B/op	       1 allocs/op
+BenchmarkOneLog-16     	42118165	       285 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLog-16    	46848562	       252 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/op
 ```
+
+[pkg-img]: http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat
+[pkg]: https://pkg.go.dev/github.com/phuslu/log?tab=doc
+[report-img]: https://goreportcard.com/badge/github.com/phuslu/log
+[report]: https://goreportcard.com/report/github.com/phuslu/log
+[cov-img]: http://gocover.io/_badge/github.com/phuslu/log
+[cov]: https://gocover.io/github.com/phuslu/log
