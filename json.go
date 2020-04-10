@@ -209,6 +209,21 @@ var epool = sync.Pool{
 	},
 }
 
+const smallsString = "00010203040506070809" +
+	"10111213141516171819" +
+	"20212223242526272829" +
+	"30313233343536373839" +
+	"40414243444546474849" +
+	"50515253545556575859" +
+	"60616263646566676869" +
+	"70717273747576777879" +
+	"80818283848586878889" +
+	"90919293949596979899"
+
+var timeNow = time.Now
+
+var hostname, _ = os.Hostname()
+
 func (l *Logger) header(level Level) *Event {
 	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
 		return nil
@@ -224,20 +239,34 @@ func (l *Logger) header(level Level) *Event {
 	}
 	// time
 	if l.Timestamp {
-		e.buf = append(e.buf, "{\"time\":"...)
+		e.buf = append(e.buf, "{\"time\":0465408000000"...)
 		sec, nsec := walltime()
-		ms := int64(nsec / 1000000)
-		e.buf = strconv.AppendInt(e.buf, sec, 10)
-		switch {
-		case ms < 10:
-			e.buf = append(e.buf, '0', '0')
-			e.buf = strconv.AppendInt(e.buf, ms, 10)
-		case ms < 100:
-			e.buf = append(e.buf, '0')
-			e.buf = strconv.AppendInt(e.buf, ms, 10)
-		default:
-			e.buf = strconv.AppendInt(e.buf, ms, 10)
-		}
+		// milli seconds
+		a := int64(nsec) / 1000000
+		is := a % 100 * 2
+		e.buf[20] = smallsString[is+1]
+		e.buf[19] = smallsString[is]
+		e.buf[18] = byte('0' + a/100)
+		// seconds
+		is = sec % 100 * 2
+		sec /= 100
+		e.buf[17] = smallsString[is+1]
+		e.buf[16] = smallsString[is]
+		is = sec % 100 * 2
+		sec /= 100
+		e.buf[15] = smallsString[is+1]
+		e.buf[14] = smallsString[is]
+		is = sec % 100 * 2
+		sec /= 100
+		e.buf[13] = smallsString[is+1]
+		e.buf[12] = smallsString[is]
+		is = sec % 100 * 2
+		sec /= 100
+		e.buf[11] = smallsString[is+1]
+		e.buf[10] = smallsString[is]
+		is = sec % 100 * 2
+		e.buf[9] = smallsString[is+1]
+		e.buf[8] = smallsString[is]
 	} else {
 		if l.TimeField == "" {
 			e.buf = append(e.buf, "{\"time\":"...)

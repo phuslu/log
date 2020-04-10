@@ -45,27 +45,66 @@ func (l *TSVLogger) New() (e *TSVEvent) {
 
 // Timestamp adds the current time as UNIX timestamp
 func (e *TSVEvent) Timestamp() *TSVEvent {
+	i := len(e.buf)
+	e.buf = append(e.buf, "0465408000"...)
 	sec, _ := walltime()
-	e.buf = strconv.AppendInt(e.buf, sec, 10)
+	// seconds
+	is := sec % 100 * 2
+	sec /= 100
+	e.buf[i+9] = smallsString[is+1]
+	e.buf[i+8] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+7] = smallsString[is+1]
+	e.buf[i+6] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+5] = smallsString[is+1]
+	e.buf[i+4] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+3] = smallsString[is+1]
+	e.buf[i+2] = smallsString[is]
+	is = sec % 100 * 2
+	e.buf[i+1] = smallsString[is+1]
+	e.buf[i] = smallsString[is]
+	// separator
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
 // TimestampMS adds the current time with milliseconds as UNIX timestamp
 func (e *TSVEvent) TimestampMS() *TSVEvent {
+	i := len(e.buf)
+	e.buf = append(e.buf, "0465408000000"...)
 	sec, nsec := walltime()
-	ms := int64(nsec / 1000000)
-	e.buf = strconv.AppendInt(e.buf, sec, 10)
-	switch {
-	case ms < 10:
-		e.buf = append(e.buf, '0', '0')
-		e.buf = strconv.AppendInt(e.buf, ms, 10)
-	case ms < 100:
-		e.buf = append(e.buf, '0')
-		e.buf = strconv.AppendInt(e.buf, ms, 10)
-	default:
-		e.buf = strconv.AppendInt(e.buf, ms, 10)
-	}
+	// milli seconds
+	a := int64(nsec) / 1000000
+	is := a % 100 * 2
+	e.buf[i+12] = smallsString[is+1]
+	e.buf[i+11] = smallsString[is]
+	e.buf[i+10] = byte('0' + a/100)
+	// seconds
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+9] = smallsString[is+1]
+	e.buf[i+8] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+7] = smallsString[is+1]
+	e.buf[i+6] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+5] = smallsString[is+1]
+	e.buf[i+4] = smallsString[is]
+	is = sec % 100 * 2
+	sec /= 100
+	e.buf[i+3] = smallsString[is+1]
+	e.buf[i+2] = smallsString[is]
+	is = sec % 100 * 2
+	e.buf[i+1] = smallsString[is+1]
+	e.buf[i] = smallsString[is]
+	// separator
 	e.buf = append(e.buf, e.sep)
 	return e
 }

@@ -7,15 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-	"time"
 )
-
-// Writer is an io.WriteCloser that writes to the specified filename.
-type Writer = FileWriter
-
-var timeNow = time.Now
-
-var hostname, _ = os.Hostname()
 
 // FileWriter is an io.WriteCloser that writes to the specified filename.
 //
@@ -238,3 +230,6 @@ func (w *FileWriter) create() (err error) {
 
 	return
 }
+
+// Writer is an alias for FileWriter
+type Writer = FileWriter
