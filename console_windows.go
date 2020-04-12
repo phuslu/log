@@ -151,8 +151,6 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			c, s = windowsColorRed, "ERR"
 		case FatalLevel:
 			c, s = windowsColorRed, "FTL"
-		case PanicLevel:
-			c, s = windowsColorRed, "PNC"
 		default:
 			c, s = windowsColorRed, "???"
 		}

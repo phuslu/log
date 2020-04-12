@@ -14,12 +14,6 @@ const (
 	ErrorLevel
 	// FatalLevel defines fatal log level.
 	FatalLevel
-	// PanicLevel defines panic log level.
-	PanicLevel
-	// NoLevel defines an absent log level.
-	NoLevel
-	// Disabled disables the logger.
-	Disabled
 )
 
 // ParseLevel converts a level string into a log Level value.
@@ -36,10 +30,6 @@ func ParseLevel(s string) (level Level) {
 		level = ErrorLevel
 	case "fatal", "Fatal", "FATAL", "F", "FTL":
 		level = FatalLevel
-	case "panic", "Panic", "PANIC", "P", "PNC":
-		level = PanicLevel
-	default:
-		level = NoLevel
 	}
 	return
 }

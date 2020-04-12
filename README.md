@@ -93,7 +93,7 @@ type ConsoleWriter struct {
 
 ### Simple Logging Example
 
-A out of box example. [![playground](https://img.shields.io/badge/playground-600IpaPBF95-29BEB0?style=flat&logo=go)](https://play.golang.org/p/600IpaPBF95)
+A out of box example. [![playground][play-simple-img]][play-simple]
 ```go
 package main
 
@@ -114,7 +114,7 @@ func main() {
 
 ### Customize the configuration and formatting:
 
-To customize logger filed name and format. [![playground](https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go)](https://play.golang.org/p/EaFFre1DUVJ)
+To customize logger filed name and format. [![playground][play-customize-img]][play-customize]
 ```go
 log.DefaultLogger = log.Logger{
 	Level:      log.InfoLevel,
@@ -166,7 +166,7 @@ func main() {
 
 ### Pretty Console Writer
 
-To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playground](https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go)](https://play.golang.org/p/62bWGk67apR)
+To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
 
 ```go
 if log.IsTerminal(os.Stderr.Fd()) {
@@ -179,12 +179,12 @@ if log.IsTerminal(os.Stderr.Fd()) {
 log.Printf("a printf style line")
 log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
 ```
-![Pretty logging](https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png)
+![Pretty logging][pretty-logging-img]
 > Note: pretty logging also works on windows console
 
 ### Dynamic log Level
 
-To change log level on the fly, use `log.DefaultLogger.SetLevel`. [![playground](https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go)](https://play.golang.org/p/0S-JT7h-QXI)
+To change log level on the fly, use `log.DefaultLogger.SetLevel`. [![playground][play-dynamic-img]][play-dynamic]
 
 ```go
 log.DefaultLogger.SetLevel(log.InfoLevel)
@@ -297,3 +297,12 @@ BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
+[pretty-logging-img]: https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png
+[play-simple-img]: https://img.shields.io/badge/playground-600IpaPBF95-29BEB0?style=flat&logo=go
+[play-simple]: https://play.golang.org/p/600IpaPBF95
+[play-customize-img]: https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go
+[play-customize]: https://play.golang.org/p/EaFFre1DUVJ
+[play-pretty-img]: https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go
+[play-pretty]: https://play.golang.org/p/62bWGk67apR
+[play-dynamic-img]: https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go
+[play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
