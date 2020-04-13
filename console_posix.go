@@ -16,6 +16,8 @@ func (w *ConsoleWriter) Write(p []byte) (int, error) {
 func IsTerminal(fd uintptr) bool {
 	var trap uintptr // SYS_IOCTL
 	switch runtime.GOOS {
+	case "plan9", "js", "nacl":
+		return false
 	case "linux":
 		switch runtime.GOARCH {
 		case "amd64":
