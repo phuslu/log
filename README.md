@@ -298,8 +298,8 @@ BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
 [pretty-logging-img]: https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png
-[play-simple-img]: https://img.shields.io/badge/playground-600IpaPBF95-29BEB0?style=flat&logo=go
-[play-simple]: https://play.golang.org/p/600IpaPBF95
+[play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
+[play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/EaFFre1DUVJ
 [play-pretty-img]: https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go

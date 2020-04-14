@@ -663,11 +663,11 @@ func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
 }
 
 // Caller adds the file:line of the "caller" key.
-func (e *Event) Caller() *Event {
+func (e *Event) Caller(depth int) *Event {
 	if e == nil {
 		return nil
 	}
-	e.caller(runtime.Caller(DefaultLogger.Caller))
+	e.caller(runtime.Caller(depth))
 	return e
 }
 

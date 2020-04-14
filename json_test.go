@@ -30,7 +30,7 @@ func TestLogger(t *testing.T) {
 		Level: ParseLevel("debug"),
 	}
 	logger.Info().
-		Caller().
+		Caller(1).
 		Bool("bool", true).
 		Bools("bools", []bool{false}).
 		Bools("bools", []bool{true, false}).
@@ -82,7 +82,7 @@ func TestLoggerNil(t *testing.T) {
 		Level: ParseLevel("info"),
 	}
 	logger.Debug().
-		Caller().
+		Caller(1).
 		Bool("bool", true).
 		Bools("bools", []bool{true, false}).
 		Dur("1_hour", time.Hour).
