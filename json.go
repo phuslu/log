@@ -239,7 +239,7 @@ func (l *Logger) header(level Level) *Event {
 	}
 	// time
 	if l.Timestamp {
-		e.buf = append(e.buf, "{\"time\":0465408000000"...)
+		e.buf = append(e.buf, "{\"time\":0123456789000"...)
 		sec, nsec := walltime()
 		// milli seconds
 		a := int64(nsec) / 1000000

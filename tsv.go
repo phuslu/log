@@ -46,8 +46,10 @@ func (l *TSVLogger) New() (e *TSVEvent) {
 // Timestamp adds the current time as UNIX timestamp
 func (e *TSVEvent) Timestamp() *TSVEvent {
 	i := len(e.buf)
-	e.buf = append(e.buf, "0465408000"...)
+	e.buf = append(e.buf, "0123456789\t"...)
 	sec, _ := walltime()
+	// separator
+	e.buf[i+10] = e.sep
 	// seconds
 	is := sec % 100 * 2
 	sec /= 100
@@ -68,16 +70,16 @@ func (e *TSVEvent) Timestamp() *TSVEvent {
 	is = sec % 100 * 2
 	e.buf[i+1] = smallsString[is+1]
 	e.buf[i] = smallsString[is]
-	// separator
-	e.buf = append(e.buf, e.sep)
 	return e
 }
 
 // TimestampMS adds the current time with milliseconds as UNIX timestamp
 func (e *TSVEvent) TimestampMS() *TSVEvent {
 	i := len(e.buf)
-	e.buf = append(e.buf, "0465408000000"...)
+	e.buf = append(e.buf, "0123456789000\t"...)
 	sec, nsec := walltime()
+	// separator
+	e.buf[i+13] = e.sep
 	// milli seconds
 	a := int64(nsec) / 1000000
 	is := a % 100 * 2
@@ -104,8 +106,6 @@ func (e *TSVEvent) TimestampMS() *TSVEvent {
 	is = sec % 100 * 2
 	e.buf[i+1] = smallsString[is+1]
 	e.buf[i] = smallsString[is]
-	// separator
-	e.buf = append(e.buf, e.sep)
 	return e
 }
 
