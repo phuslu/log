@@ -56,7 +56,7 @@ type Logger struct {
 type Event struct {
 	buf   []byte
 	w     io.Writer
-	stack bool
+	stack uint8
 	exit  bool
 }
 
@@ -230,8 +230,13 @@ func (l *Logger) header(level Level) *Event {
 	}
 	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
-	e.stack = level == FatalLevel
-	e.exit = level == FatalLevel
+	if level != FatalLevel {
+		e.stack = 0
+		e.exit = false
+	} else {
+		e.stack = 2
+		e.exit = true
+	}
 	if l.Writer != nil {
 		e.w = l.Writer
 	} else {
@@ -672,11 +677,15 @@ func (e *Event) Caller(depth int) *Event {
 }
 
 // Stack enables stack trace printing for the error passed to Err().
-func (e *Event) Stack() *Event {
+func (e *Event) Stack(all bool) *Event {
 	if e == nil {
 		return nil
 	}
-	e.stack = true
+	if all {
+		e.stack = 2
+	} else {
+		e.stack = 1
+	}
 	return e
 }
 
@@ -709,8 +718,10 @@ func (e *Event) Msg(msg string) {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.Write(e.buf)
-	if e.stack {
+	switch e.stack {
+	case 1:
 		e.w.Write(stacks(false))
+	case 2:
 		e.w.Write(stacks(true))
 	}
 	if e.exit {
