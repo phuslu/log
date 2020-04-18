@@ -83,8 +83,9 @@ type FileWriter struct {
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to Out.
+// (optionally) colorized, human-friendly format to os.Stderr
 type ConsoleWriter struct {
+	// ANSIColor determines if used colorized output.
 	ANSIColor bool
 }
 ```

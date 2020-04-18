@@ -8,21 +8,22 @@ import (
 )
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to Out.
+// (optionally) colorized, human-friendly format to os.Stderr
 type ConsoleWriter struct {
+	// ANSIColor determines if used colorized output.
 	ANSIColor bool
 }
 
-const (
-	ansiColorReset    = "\x1b[0m"
-	ansiColorRed      = "\x1b[31m"
-	ansiColorGreen    = "\x1b[32m"
-	ansiColorYellow   = "\x1b[33m"
-	ansiColorCyan     = "\x1b[36m"
-	ansiColorDarkGray = "\x1b[90m"
-)
-
 func (w *ConsoleWriter) write(p []byte) (n int, err error) {
+	const (
+		Reset    = "\x1b[0m"
+		Red      = "\x1b[31m"
+		Green    = "\x1b[32m"
+		Yellow   = "\x1b[33m"
+		Cyan     = "\x1b[36m"
+		DarkGray = "\x1b[90m"
+	)
+
 	var m map[string]interface{}
 
 	decoder := json.NewDecoder(bytes.NewReader(p))
@@ -39,7 +40,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", ansiColorDarkGray, v, ansiColorReset)
+			fmt.Fprintf(b, "%s%s%s ", DarkGray, v, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", v)
 		}
@@ -49,20 +50,20 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
-			c, s = ansiColorYellow, "DBG"
+			c, s = Yellow, "DBG"
 		case InfoLevel:
-			c, s = ansiColorGreen, "INF"
+			c, s = Green, "INF"
 		case WarnLevel:
-			c, s = ansiColorRed, "WRN"
+			c, s = Red, "WRN"
 		case ErrorLevel:
-			c, s = ansiColorRed, "ERR"
+			c, s = Red, "ERR"
 		case FatalLevel:
-			c, s = ansiColorRed, "FTL"
+			c, s = Red, "FTL"
 		default:
-			c, s = ansiColorRed, "???"
+			c, s = Red, "???"
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", c, s, ansiColorReset)
+			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", s)
 		}
@@ -77,7 +78,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s %s", ansiColorCyan, ansiColorReset, v)
+			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
 		} else {
 			fmt.Fprintf(b, "> %s", v)
 		}
@@ -90,9 +91,9 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
-				fmt.Fprintf(b, " %s%s=%v%s", ansiColorRed, k, v, ansiColorReset)
+				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
 			} else {
-				fmt.Fprintf(b, " %s%s=%s%v%s", ansiColorCyan, k, ansiColorDarkGray, v, ansiColorReset)
+				fmt.Fprintf(b, " %s%s=%s%v%s", Cyan, k, DarkGray, v, Reset)
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)

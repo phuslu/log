@@ -134,21 +134,21 @@ func TestLoggerSetLevel(t *testing.T) {
 }
 
 func TestLoggerStack(t *testing.T) {
-	Info().Stack().Msg("this is test stack log event")
+	Info().Stack(false).Msg("this is test stack log event")
 }
 
 func TestLoggerEnabled(t *testing.T) {
 	DefaultLogger.SetLevel(InfoLevel)
-	Debug().Stack().Msgf("hello %s", "world")
+	Debug().Stack(false).Msgf("hello %s", "world")
 	if Debug().Enabled() {
 		t.Fatal("debug level should enabled")
 	}
 }
 
 func TestLoggerDiscard(t *testing.T) {
-	Info().Stack().Str("foo", "bar").Discard()
+	Info().Stack(false).Str("foo", "bar").Discard()
 	DefaultLogger.SetLevel(InfoLevel)
-	Debug().Stack().Str("foo", "bar").Discard()
+	Debug().Stack(false).Str("foo", "bar").Discard()
 }
 
 func TestLoggerWithLevel(t *testing.T) {

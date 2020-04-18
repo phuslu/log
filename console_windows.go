@@ -97,14 +97,14 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	defer muConsole.Unlock()
 
 	const (
-		windowsColorBlue   = 1
-		windowsColorGreen  = 2
-		windowsColorAqua   = 3
-		windowsColorRed    = 4
-		windowsColorPurple = 5
-		windowsColorYellow = 6
-		windowsColorWhite  = 7
-		windowsColorGray   = 8
+		Blue   = 1
+		Green  = 2
+		Aqua   = 3
+		Red    = 4
+		Purple = 5
+		Yellow = 6
+		White  = 7
+		Gray   = 8
 	)
 
 	var m map[string]interface{}
@@ -118,22 +118,20 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	}
 
 	var printf = func(color uintptr, format string, args ...interface{}) {
-		if color != windowsColorWhite {
+		if color != White {
 			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
+			defer setConsoleTextAttribute(uintptr(syscall.Stderr), White)
 		}
 		var i int
 		i, err = fmt.Fprintf(os.Stderr, format, args...)
 		n += i
-		if color != windowsColorWhite {
-			setConsoleTextAttribute(uintptr(syscall.Stderr), windowsColorWhite)
-		}
 	}
 
 	if v, ok := m["time"]; ok {
 		if w.ANSIColor {
-			printf(windowsColorGray, "%s ", v)
+			printf(Gray, "%s ", v)
 		} else {
-			printf(windowsColorWhite, "%s ", v)
+			printf(White, "%s ", v)
 		}
 	}
 
@@ -142,27 +140,27 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		var c uintptr
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
-			c, s = windowsColorYellow, "DBG"
+			c, s = Yellow, "DBG"
 		case InfoLevel:
-			c, s = windowsColorGreen, "INF"
+			c, s = Green, "INF"
 		case WarnLevel:
-			c, s = windowsColorRed, "WRN"
+			c, s = Red, "WRN"
 		case ErrorLevel:
-			c, s = windowsColorRed, "ERR"
+			c, s = Red, "ERR"
 		case FatalLevel:
-			c, s = windowsColorRed, "FTL"
+			c, s = Red, "FTL"
 		default:
-			c, s = windowsColorRed, "???"
+			c, s = Red, "???"
 		}
 		if w.ANSIColor {
 			printf(c, "%s ", s)
 		} else {
-			printf(windowsColorWhite, "%s ", s)
+			printf(White, "%s ", s)
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		printf(windowsColorWhite, "%s ", v)
+		printf(White, "%s ", v)
 	}
 
 	if v, ok := m["message"]; ok {
@@ -170,11 +168,11 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ANSIColor {
-			printf(windowsColorAqua, ">")
+			printf(Aqua, ">")
 		} else {
-			printf(windowsColorWhite, ">")
+			printf(White, ">")
 		}
-		printf(windowsColorWhite, " %s", v)
+		printf(White, " %s", v)
 	}
 
 	for k, v := range m {
@@ -184,17 +182,17 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
-				printf(windowsColorRed, " %s=%v", k, v)
+				printf(Red, " %s=%v", k, v)
 			} else {
-				printf(windowsColorAqua, " %s=", k)
-				printf(windowsColorGray, "%v", v)
+				printf(Aqua, " %s=", k)
+				printf(Gray, "%v", v)
 			}
 		} else {
-			printf(windowsColorWhite, " %s=%v", k, v)
+			printf(White, " %s=%v", k, v)
 		}
 	}
 
-	printf(windowsColorWhite, " \n")
+	printf(White, " \n")
 
 	return n, err
 }
