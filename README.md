@@ -1,6 +1,6 @@
 # Structured Logging for Humans
 
-[![gopkg][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov]
+[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov]
 
 ## Features
 
@@ -292,7 +292,7 @@ BenchmarkZeroLog-16    	46848562	       252 ns/op	       0 B/op	       0 allocs/
 BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/op
 ```
 
-[pkg-img]: http://img.shields.io/badge/gopkg-reference-blue.svg?style=flat
+[pkg-img]: https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square
 [pkg]: https://pkg.go.dev/github.com/phuslu/log?tab=doc
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log

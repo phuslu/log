@@ -73,6 +73,10 @@ func TestLogger(t *testing.T) {
 }
 
 func TestLoggerNil(t *testing.T) {
+	e := Info()
+	e.buf = nil
+	e.Caller(1).Str("foo", "bar").Int("num", 42).Msgf("this is a nil event test")
+
 	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
 	if err != nil {
 		t.Fatalf("net.ParseCIDR error: %+v", err)
@@ -123,6 +127,23 @@ func TestLoggerNil(t *testing.T) {
 		Msgf("this is a \"%s\"", "test")
 }
 
+func TestLoggerInterface(t *testing.T) {
+	logger := Logger{
+		Level: ParseLevel("debug"),
+	}
+
+	var cyclicStruct struct {
+		Value interface{}
+	}
+
+	cyclicStruct.Value = &cyclicStruct
+
+	logger.Info().
+		Caller(1).
+		Interface("a_cyclic_struct", cyclicStruct).
+		Msgf("this is a cyclic struct test")
+}
+
 func TestLoggerSetLevel(t *testing.T) {
 	DefaultLogger.SetLevel(InfoLevel)
 	Warn().Msg("1. i am a warn log")
@@ -134,7 +155,16 @@ func TestLoggerSetLevel(t *testing.T) {
 }
 
 func TestLoggerStack(t *testing.T) {
-	Info().Stack(false).Msg("this is test stack log event")
+	Info().Stack(false).Msg("this is single stack log event")
+	Info().Stack(true).Msg("this is full stack log event")
+
+	logger := Logger{Writer: ioutil.Discard}
+	for i := 0; i < 500; i++ {
+		go func(i int) {
+			time.Sleep(time.Second)
+			logger.Info().Stack(true).Int("i", i).Msgf("groutine %d stack", i)
+		}(i)
+	}
 }
 
 func TestLoggerEnabled(t *testing.T) {
@@ -184,12 +214,17 @@ func TestLoggerCaller(t *testing.T) {
 }
 
 func TestLoggerTime(t *testing.T) {
-	logger := Logger{
+	logger1 := Logger{
+		Level:     ParseLevel("debug"),
+		TimeField: "_time",
+	}
+	logger1.Info().Time("now", timeNow()).Msg("this is test time log event")
+	logger2 := Logger{
 		Level:      ParseLevel("debug"),
 		TimeField:  "_time",
 		TimeFormat: time.RFC822,
 	}
-	logger.Info().Time("now", timeNow()).Msg("this is test time log event")
+	logger2.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
 func TestLoggerTimestamp(t *testing.T) {
@@ -197,7 +232,7 @@ func TestLoggerTimestamp(t *testing.T) {
 		Level:     ParseLevel("debug"),
 		Timestamp: true,
 	}
-	logger.Info().Time("now", timeNow()).Msg("this is test time log event")
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
 }
 
 func TestLoggerHost(t *testing.T) {

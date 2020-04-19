@@ -19,9 +19,41 @@ func TestConsoleWriter(t *testing.T) {
 
 func TestIsTerminal(t *testing.T) {
 	file, _ := os.Open(os.DevNull)
+
 	if IsTerminal(file.Fd()) {
 		t.Errorf("test is terminal mode for %s failed", os.DevNull)
 	}
+
+	cases := []struct {
+		GOOS   string
+		GOARCH string
+	}{
+		{"plan9", "amd64"},
+		{"js", "wasm"},
+		{"nacl", "amd64"},
+		{"linux", "amd64"},
+		{"linux", "arm64"},
+		{"linux", "mips"},
+		{"linux", "mipsle"},
+		{"linux", "mips64"},
+		{"linux", "mips64le"},
+		{"linux", "ppc64"},
+		{"linux", "ppc64le"},
+		{"linux", "386"},
+		{"darwin", "amd64"},
+		{"darwin", "386"},
+		{"darwin", "arm64"},
+		{"windows", "amd64"},
+		{"windows", "386"},
+		{"windows", "arm64"},
+	}
+
+	for _, c := range cases {
+		if isTerminal(file.Fd(), c.GOOS, c.GOARCH) {
+			t.Errorf("test is terminal mode for %s failed", os.DevNull)
+		}
+	}
+
 }
 
 func TestConsoleWriterColor(t *testing.T) {

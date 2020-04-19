@@ -47,3 +47,13 @@ func TestGrpcLogger(t *testing.T) {
 		grpclog.Fatalf("hello", "grpclog debug level json")
 	}
 }
+
+func TestGrpcLoggerLevel(t *testing.T) {
+	var grpclog grpcLoggerV2 = &GrpcLogger{
+		Logger: Logger{
+			Level:  ParseLevel("warn"),
+			Caller: 2,
+		},
+	}
+	grpclog.Info("hello", "grpclog Info message")
+}

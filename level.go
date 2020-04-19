@@ -4,8 +4,9 @@ package log
 type Level uint32
 
 const (
+	_ Level = iota
 	// DebugLevel defines debug log level.
-	DebugLevel Level = iota
+	DebugLevel
 	// InfoLevel defines info log level.
 	InfoLevel
 	// WarnLevel defines warn log level.

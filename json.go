@@ -248,30 +248,30 @@ func (l *Logger) header(level Level) *Event {
 		sec, nsec := walltime()
 		// milli seconds
 		a := int64(nsec) / 1000000
-		is := a % 100 * 2
-		e.buf[20] = smallsString[is+1]
-		e.buf[19] = smallsString[is]
+		b := a % 100 * 2
+		e.buf[20] = smallsString[b+1]
+		e.buf[19] = smallsString[b]
 		e.buf[18] = byte('0' + a/100)
 		// seconds
-		is = sec % 100 * 2
+		b = sec % 100 * 2
 		sec /= 100
-		e.buf[17] = smallsString[is+1]
-		e.buf[16] = smallsString[is]
-		is = sec % 100 * 2
+		e.buf[17] = smallsString[b+1]
+		e.buf[16] = smallsString[b]
+		b = sec % 100 * 2
 		sec /= 100
-		e.buf[15] = smallsString[is+1]
-		e.buf[14] = smallsString[is]
-		is = sec % 100 * 2
+		e.buf[15] = smallsString[b+1]
+		e.buf[14] = smallsString[b]
+		b = sec % 100 * 2
 		sec /= 100
-		e.buf[13] = smallsString[is+1]
-		e.buf[12] = smallsString[is]
-		is = sec % 100 * 2
+		e.buf[13] = smallsString[b+1]
+		e.buf[12] = smallsString[b]
+		b = sec % 100 * 2
 		sec /= 100
-		e.buf[11] = smallsString[is+1]
-		e.buf[10] = smallsString[is]
-		is = sec % 100 * 2
-		e.buf[9] = smallsString[is+1]
-		e.buf[8] = smallsString[is]
+		e.buf[11] = smallsString[b+1]
+		e.buf[10] = smallsString[b]
+		b = sec % 100 * 2
+		e.buf[9] = smallsString[b+1]
+		e.buf[8] = smallsString[b]
 	} else {
 		if l.TimeField == "" {
 			e.buf = append(e.buf, "{\"time\":"...)
@@ -281,7 +281,55 @@ func (l *Logger) header(level Level) *Event {
 			e.buf = append(e.buf, '"', ':')
 		}
 		if l.TimeFormat == "" {
-			e.time(walltime())
+			n := len(e.buf)
+			e.buf = e.buf[:n+26]
+			sec, nsec := walltime()
+			// date time
+			sec += 9223372028715321600 // unixToInternal + internalToAbsolute
+			year, month, day, _ := absDate(uint64(sec), true)
+			hour, minute, second := absClock(uint64(sec))
+			// year
+			a := year / 100 * 2
+			b := year % 100 * 2
+			e.buf[n] = '"'
+			e.buf[n+1] = smallsString[a]
+			e.buf[n+2] = smallsString[a+1]
+			e.buf[n+3] = smallsString[b]
+			e.buf[n+4] = smallsString[b+1]
+			// month
+			month *= 2
+			e.buf[n+5] = '-'
+			e.buf[n+6] = smallsString[month]
+			e.buf[n+7] = smallsString[month+1]
+			// day
+			day *= 2
+			e.buf[n+8] = '-'
+			e.buf[n+9] = smallsString[day]
+			e.buf[n+10] = smallsString[day+1]
+			// hour
+			hour *= 2
+			e.buf[n+11] = 'T'
+			e.buf[n+12] = smallsString[hour]
+			e.buf[n+13] = smallsString[hour+1]
+			// minute
+			minute *= 2
+			e.buf[n+14] = ':'
+			e.buf[n+15] = smallsString[minute]
+			e.buf[n+16] = smallsString[minute+1]
+			// second
+			second *= 2
+			e.buf[n+17] = ':'
+			e.buf[n+18] = smallsString[second]
+			e.buf[n+19] = smallsString[second+1]
+			// milli seconds
+			a = int(nsec) / 1000000
+			b = a % 100 * 2
+			e.buf[n+20] = '.'
+			e.buf[n+21] = byte('0' + a/100)
+			e.buf[n+22] = smallsString[b]
+			e.buf[n+23] = smallsString[b+1]
+			e.buf[n+24] = 'Z'
+			e.buf[n+25] = '"'
 		} else {
 			e.buf = append(e.buf, '"')
 			e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
@@ -749,75 +797,6 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, '"')
 }
 
-const timebuf = "\"2006-01-02T15:04:05.999Z\""
-
-func (e *Event) time(sec int64, nsec int32) {
-	n := len(e.buf)
-	if n+len(timebuf) < cap(e.buf) {
-		e.buf = e.buf[:n+len(timebuf)]
-	} else {
-		e.buf = append(e.buf, timebuf...)
-	}
-	var a, b int
-	// milli second
-	e.buf[n+25] = '"'
-	e.buf[n+24] = 'Z'
-	a = int(nsec) / 1000000
-	b = a / 10
-	e.buf[n+23] = byte('0' + a - 10*b)
-	a = b
-	b = a / 10
-	e.buf[n+22] = byte('0' + a - 10*b)
-	e.buf[n+21] = byte('0' + b)
-	e.buf[n+20] = '.'
-	// date time
-	sec += 9223372028715321600 // unixToInternal + internalToAbsolute
-	year, month, day, _ := absDate(uint64(sec), true)
-	hour, minute, second := absClock(uint64(sec))
-	// year
-	a = year
-	b = a / 10
-	e.buf[n+4] = byte('0' + a - 10*b)
-	a = b
-	b = a / 10
-	e.buf[n+3] = byte('0' + a - 10*b)
-	a = b
-	b = a / 10
-	e.buf[n+2] = byte('0' + a - 10*b)
-	e.buf[n+1] = byte('0' + b)
-	e.buf[n] = '"'
-	// month
-	a = int(month)
-	b = a / 10
-	e.buf[n+7] = byte('0' + a - 10*b)
-	e.buf[n+6] = byte('0' + b)
-	e.buf[n+5] = '-'
-	// day
-	a = day
-	b = a / 10
-	e.buf[n+10] = byte('0' + a - 10*b)
-	e.buf[n+9] = byte('0' + b)
-	e.buf[n+8] = '-'
-	// hour
-	a = hour
-	b = a / 10
-	e.buf[n+13] = byte('0' + a - 10*b)
-	e.buf[n+12] = byte('0' + b)
-	e.buf[n+11] = 'T'
-	// minute
-	a = minute
-	b = a / 10
-	e.buf[n+16] = byte('0' + a - 10*b)
-	e.buf[n+15] = byte('0' + b)
-	e.buf[n+14] = ':'
-	// second
-	a = second
-	b = a / 10
-	e.buf[n+19] = byte('0' + a - 10*b)
-	e.buf[n+18] = byte('0' + b)
-	e.buf[n+17] = ':'
-}
-
 var escapes = func() (a [256]bool) {
 	a['"'] = true
 	a['<'] = true
@@ -1005,22 +984,22 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 }
 
 // stacks is a wrapper for runtime.Stack that attempts to recover the data for all goroutines.
-func stacks(all bool) []byte {
+func stacks(all bool) (trace []byte) {
 	// We don't know how big the traces are, so grow a few times if they don't fit. Start large, though.
 	n := 10000
 	if all {
 		n = 100000
 	}
-	var trace []byte
 	for i := 0; i < 5; i++ {
 		trace = make([]byte, n)
 		nbytes := runtime.Stack(trace, all)
 		if nbytes < len(trace) {
-			return trace[:nbytes]
+			trace = trace[:nbytes]
+			break
 		}
 		n *= 2
 	}
-	return trace
+	return
 }
 
 //go:noescape

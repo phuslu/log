@@ -3,7 +3,6 @@
 package log
 
 import (
-	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -12,14 +11,13 @@ func (w *ConsoleWriter) Write(p []byte) (int, error) {
 	return w.write(p)
 }
 
-// IsTerminal returns whether the given file descriptor is a terminal.
-func IsTerminal(fd uintptr) bool {
+func isTerminal(fd uintptr, os, arch string) bool {
 	var trap uintptr // SYS_IOCTL
-	switch runtime.GOOS {
+	switch os {
 	case "plan9", "js", "nacl":
 		return false
 	case "linux":
-		switch runtime.GOARCH {
+		switch arch {
 		case "amd64":
 			trap = 16
 		case "arm64":
@@ -36,9 +34,9 @@ func IsTerminal(fd uintptr) bool {
 	}
 
 	var req uintptr // TIOCGETA
-	switch runtime.GOOS {
+	switch os {
 	case "linux":
-		switch runtime.GOARCH {
+		switch arch {
 		case "ppc64", "ppc64le":
 			req = 0x402c7413
 		case "mips", "mipsle", "mips64", "mips64le":
@@ -47,7 +45,7 @@ func IsTerminal(fd uintptr) bool {
 			req = 0x5401
 		}
 	case "darwin":
-		switch runtime.GOARCH {
+		switch arch {
 		case "amd64", "arm64":
 			req = 0x40487413
 		default:

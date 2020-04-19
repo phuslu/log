@@ -217,8 +217,7 @@ func (e *TSVEvent) Msg() {
 		e.buf[len(e.buf)-1] = '\n'
 	}
 	e.w.Write(e.buf)
-	// see https://golang.org/issue/23199
-	if cap(e.buf) <= 1<<16 {
+	if cap(e.buf) <= bbcap {
 		tepool.Put(e)
 	}
 }
