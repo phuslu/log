@@ -3,7 +3,6 @@ package log
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"sync"
@@ -124,20 +123,12 @@ func (w *FileWriter) Close() (err error) {
 // files according to the configuration.
 func (w *FileWriter) Rotate() (err error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
-
 	err = w.rotate()
+	w.mu.Unlock()
 	return
 }
 
 func (w *FileWriter) rotate() (err error) {
-	if w.file != nil {
-		err = w.file.Close()
-		if err != nil {
-			return
-		}
-	}
-
 	now := timeNow()
 	if !w.LocalTime {
 		now = now.UTC()
@@ -157,34 +148,32 @@ func (w *FileWriter) rotate() (err error) {
 		perm = 0644
 	}
 
+	file := w.file
 	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
 	w.size = 0
 
-	go func(filename string) {
-		os.Remove(w.Filename)
-		os.Symlink(filename, w.Filename)
+	go func(oldfile *os.File, newname, filename string, backups int) {
+		if oldfile != nil {
+			oldfile.Close()
+		}
 
-		switch runtime.GOOS {
-		case "linux":
-			uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
-			gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
-			if uid != 0 && gid != 0 && os.Geteuid() == 0 {
-				os.Lchown(w.Filename, uid, gid)
-				os.Chown(filename, uid, gid)
+		os.Remove(filename)
+		os.Symlink(newname, filename)
+
+		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
+		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
+		if uid != 0 && gid != 0 && os.Geteuid() == 0 {
+			os.Lchown(filename, uid, gid)
+			os.Chown(newname, uid, gid)
+		}
+
+		if names, _ := filepath.Glob(prefix + ".20*" + ext); len(names) > 0 {
+			sort.Strings(names)
+			for i := 0; i < len(names)-backups-1; i++ {
+				os.Remove(names[i])
 			}
 		}
-
-		var matches []string
-		matches, err = filepath.Glob(prefix + ".20*" + ext)
-		if err != nil {
-			return
-		}
-
-		sort.Strings(matches)
-		for i := 0; i < len(matches)-w.MaxBackups-1; i++ {
-			os.Remove(matches[i])
-		}
-	}(filename)
+	}(file, filename, w.Filename, w.MaxBackups)
 
 	return
 }
