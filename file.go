@@ -152,7 +152,7 @@ func (w *FileWriter) rotate() (err error) {
 		filename += ext
 	}
 
-	var perm = w.FileMode
+	perm := w.FileMode
 	if perm == 0 {
 		perm = 0644
 	}
@@ -190,32 +190,20 @@ func (w *FileWriter) rotate() (err error) {
 }
 
 func (w *FileWriter) create() (err error) {
-	var filename string
-
-	if link, err := os.Readlink(w.Filename); err == nil {
-		if fi, err := os.Stat(link); err == nil {
-			filename = link
-			w.size = fi.Size()
-		}
+	now := timeNow()
+	if !w.LocalTime {
+		now = now.UTC()
 	}
 
-	if filename == "" {
-		now := timeNow()
-		if !w.LocalTime {
-			now = now.UTC()
-		}
-		ext := filepath.Ext(w.Filename)
-		filename = w.Filename[0 : len(w.Filename)-len(ext)]
-		filename += now.Format(".2006-01-02T15-04-05")
-		if w.HostName {
-			filename += "." + hostname + ext
-		} else {
-			filename += ext
-		}
-		w.size = 0
+	ext := filepath.Ext(w.Filename)
+	filename := w.Filename[0:len(w.Filename)-len(ext)] + now.Format(".2006-01-02T15-04-05")
+	if w.HostName {
+		filename += "." + hostname + ext
+	} else {
+		filename += ext
 	}
 
-	var perm = w.FileMode
+	perm := w.FileMode
 	if perm == 0 {
 		perm = 0644
 	}
@@ -224,6 +212,7 @@ func (w *FileWriter) create() (err error) {
 	if err != nil {
 		return err
 	}
+	w.size = 0
 
 	os.Remove(w.Filename)
 	os.Symlink(filename, w.Filename)
