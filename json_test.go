@@ -157,14 +157,6 @@ func TestLoggerSetLevel(t *testing.T) {
 func TestLoggerStack(t *testing.T) {
 	Info().Stack(false).Msg("this is single stack log event")
 	Info().Stack(true).Msg("this is full stack log event")
-
-	logger := Logger{Writer: ioutil.Discard}
-	for i := 0; i < 500; i++ {
-		go func(i int) {
-			time.Sleep(time.Second)
-			logger.Info().Stack(true).Int("i", i).Msgf("groutine %d stack", i)
-		}(i)
-	}
 }
 
 func TestLoggerEnabled(t *testing.T) {

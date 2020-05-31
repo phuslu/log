@@ -87,7 +87,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	for k, v := range m {
 		switch k {
-		case "time", "level", "caller", "message":
+		case "time", "level", "caller", "stack", "message":
 			continue
 		}
 		if w.ANSIColor {
@@ -98,6 +98,15 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)
+		}
+	}
+
+	if v, ok := m["stack"]; ok {
+		b.B = append(b.B, '\n')
+		if s, ok := v.(string); ok {
+			b.B = append(b.B, s...)
+		} else {
+			fmt.Fprint(b, v)
 		}
 	}
 

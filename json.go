@@ -54,10 +54,11 @@ type Logger struct {
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf   []byte
-	w     io.Writer
-	stack uint8
-	exit  bool
+	buf      []byte
+	w        io.Writer
+	stack    bool
+	stackall bool
+	exit     bool
 }
 
 // Debug starts a new message with debug level.
@@ -231,10 +232,12 @@ func (l *Logger) header(level Level) *Event {
 	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
 	if level != FatalLevel {
-		e.stack = 0
+		e.stack = false
+		e.stackall = false
 		e.exit = false
 	} else {
-		e.stack = 2
+		e.stack = true
+		e.stackall = true
 		e.exit = true
 	}
 	if l.Writer != nil {
@@ -723,11 +726,8 @@ func (e *Event) Stack(all bool) *Event {
 	if e == nil {
 		return nil
 	}
-	if all {
-		e.stack = 2
-	} else {
-		e.stack = 1
-	}
+	e.stack = true
+	e.stackall = all
 	return e
 }
 
@@ -754,18 +754,16 @@ func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
 	}
+	if e.stack {
+		e.buf = append(e.buf, ",\"stack\":"...)
+		e.bytes(stacks(e.stackall))
+	}
 	if msg != "" {
 		e.buf = append(e.buf, ",\"message\":"...)
 		e.string(msg)
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.Write(e.buf)
-	switch e.stack {
-	case 1:
-		e.w.Write(stacks(false))
-	case 2:
-		e.w.Write(stacks(true))
-	}
 	if e.exit {
 		osExit(255)
 	}
