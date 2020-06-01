@@ -599,6 +599,20 @@ func (e *Event) Str(key string, val string) *Event {
 	return e
 }
 
+// Stringer adds the field key with val.String() to the event.
+func (e *Event) Stringer(key string, val fmt.Stringer) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	if val != nil {
+		e.string(val.String())
+	} else {
+		e.buf = append(e.buf, "null"...)
+	}
+	return e
+}
+
 // Strs adds the field key with vals as a []string to the event.
 func (e *Event) Strs(key string, vals []string) *Event {
 	if e == nil {
