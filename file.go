@@ -157,6 +157,12 @@ func (w *FileWriter) rotate() (err error) {
 			oldfile.Close()
 		}
 
+		// handle relative path, for example: `logs/main.log`, main.log --> main.2006-01-02T15-04-05.log
+		_, newfile := filepath.Split(newname)
+		if len(newfile) != 0 {
+			newname = newfile
+		}
+
 		os.Remove(filename)
 		os.Symlink(newname, filename)
 
