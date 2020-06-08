@@ -157,14 +157,8 @@ func (w *FileWriter) rotate() (err error) {
 			oldfile.Close()
 		}
 
-		// handle relative path, for example: `logs/main.log`, main.log --> main.2006-01-02T15-04-05.log
-		_, newfile := filepath.Split(newname)
-		if len(newfile) != 0 {
-			newname = newfile
-		}
-
 		os.Remove(filename)
-		os.Symlink(newname, filename)
+		os.Symlink(filepath.Base(newname), filename)
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
@@ -173,7 +167,9 @@ func (w *FileWriter) rotate() (err error) {
 			os.Chown(newname, uid, gid)
 		}
 
-		if names, _ := filepath.Glob(prefix + ".20*" + ext); len(names) > 0 {
+		ext := filepath.Ext(filename)
+		pattern := filename[0:len(filename)-len(ext)] + ".20*" + ext
+		if names, _ := filepath.Glob(pattern); len(names) > 0 {
 			sort.Strings(names)
 			for i := 0; i < len(names)-backups-1; i++ {
 				os.Remove(names[i])
@@ -210,7 +206,7 @@ func (w *FileWriter) create() (err error) {
 	w.size = 0
 
 	os.Remove(w.Filename)
-	os.Symlink(filename, w.Filename)
+	os.Symlink(filepath.Base(filename), w.Filename)
 
 	return
 }
