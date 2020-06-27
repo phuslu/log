@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/binary"
 	"errors"
 	"io/ioutil"
 	"net"
@@ -63,6 +64,7 @@ func TestLogger(t *testing.T) {
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
 		Stringer("ip_str", ipv4Addr).
+		GoStringer("big_edian", binary.BigEndian).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
