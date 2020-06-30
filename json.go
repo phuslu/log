@@ -817,19 +817,17 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, '"')
 }
 
-var escapes = func() (a [256]bool) {
-	a['"'] = true
-	a['<'] = true
-	a['\''] = true
-	a['\\'] = true
-	a['\b'] = true
-	a['\f'] = true
-	a['\n'] = true
-	a['\r'] = true
-	a['\t'] = true
-	a[0] = true
-	return
-}()
+var escapes = [256]bool{
+	'"':  true,
+	'<':  true,
+	'\'': true,
+	'\\': true,
+	'\b': true,
+	'\f': true,
+	'\n': true,
+	'\r': true,
+	'\t': true,
+}
 
 func (e *Event) escape(b []byte) {
 	e.buf = append(e.buf, '"')
