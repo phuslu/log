@@ -185,11 +185,12 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		printf(White, " %s", v)
 	}
 
-	for k, v := range m {
+	for _, k := range jsonKeys(p) {
 		switch k {
 		case "time", "level", "caller", "stack", "message":
 			continue
 		}
+		v := m[k]
 		if w.ANSIColor {
 			if k == "error" && v != nil {
 				printf(Red, " %s=%v", k, v)

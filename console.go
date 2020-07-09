@@ -90,11 +90,12 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		}
 	}
 
-	for k, v := range m {
+	for _, k := range jsonKeys(p) {
 		switch k {
 		case "time", "level", "caller", "stack", "message":
 			continue
 		}
+		v := m[k]
 		if w.ANSIColor {
 			if k == "error" && v != nil {
 				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
@@ -118,4 +119,34 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	b.B = append(b.B, '\n')
 
 	return os.Stderr.Write(b.B)
+}
+
+func jsonKeys(data []byte) (keys []string) {
+	var depth, count int
+
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			break
+		}
+		switch token.(type) {
+		case json.Delim:
+			switch token.(json.Delim) {
+			case '{':
+				depth++
+			case '}':
+				depth--
+			}
+		case string:
+			count++
+			if depth == 1 && count%2 == 1 {
+				keys = append(keys, token.(string))
+			}
+		default:
+			count++
+		}
+	}
+
+	return
 }
