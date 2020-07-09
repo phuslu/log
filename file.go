@@ -212,4 +212,6 @@ func (w *FileWriter) create() (err error) {
 }
 
 // Writer is an alias for FileWriter
+//
+// Deprecated: Use FileWriter instead.
 type Writer = FileWriter

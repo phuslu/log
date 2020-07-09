@@ -627,7 +627,7 @@ func (e *Event) Stringer(key string, val fmt.Stringer) *Event {
 	return e
 }
 
-// Stringer adds the field key with val.String() to the event.
+// GoStringer adds the field key with val.GoStringer() to the event.
 func (e *Event) GoStringer(key string, val fmt.GoStringer) *Event {
 	if e == nil {
 		return nil
@@ -1043,6 +1043,7 @@ func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday i
 func absClock(abs uint64) (hour, min, sec int)
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
+//
 //go:noescape
 //go:linkname Fastrandn runtime.fastrandn
 func Fastrandn(x uint32) uint32
