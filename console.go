@@ -8,6 +8,11 @@ import (
 	"runtime"
 )
 
+// IsTerminal returns whether the given file descriptor is a terminal.
+func IsTerminal(fd uintptr) bool {
+	return isTerminal(fd, runtime.GOOS, runtime.GOARCH)
+}
+
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to os.Stderr
 type ConsoleWriter struct {
@@ -113,9 +118,4 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	b.B = append(b.B, '\n')
 
 	return os.Stderr.Write(b.B)
-}
-
-// IsTerminal returns whether the given file descriptor is a terminal.
-func IsTerminal(fd uintptr) bool {
-	return isTerminal(fd, runtime.GOOS, runtime.GOARCH)
 }

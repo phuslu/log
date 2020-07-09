@@ -7,10 +7,6 @@ import (
 	"unsafe"
 )
 
-func (w *ConsoleWriter) Write(p []byte) (int, error) {
-	return w.write(p)
-}
-
 func isTerminal(fd uintptr, os, arch string) bool {
 	var trap uintptr // SYS_IOCTL
 	switch os {
@@ -58,4 +54,8 @@ func isTerminal(fd uintptr, os, arch string) bool {
 	var termios [256]byte
 	_, _, err := syscall.Syscall6(trap, fd, req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
 	return err == 0
+}
+
+func (w *ConsoleWriter) Write(p []byte) (int, error) {
+	return w.write(p)
 }

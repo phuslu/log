@@ -14,6 +14,16 @@ import (
 	"unsafe"
 )
 
+func isTerminal(fd uintptr, _, _ string) bool {
+	var mode uint32
+	err := syscall.GetConsoleMode(syscall.Handle(fd), &mode)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 var (
 	vtInited  uint32
 	vtEnabled bool
@@ -199,14 +209,4 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	printf(White, " \n")
 
 	return n, err
-}
-
-func isTerminal(fd uintptr, _, _ string) bool {
-	var mode uint32
-	err := syscall.GetConsoleMode(syscall.Handle(fd), &mode)
-	if err != nil {
-		return false
-	}
-
-	return true
 }
