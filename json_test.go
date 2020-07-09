@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"testing"
@@ -39,6 +40,8 @@ func TestLogger(t *testing.T) {
 		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).
 		Err(errors.New("test error")).
 		Err(nil).
+		AnErr("an_error", fmt.Errorf("an %w", errors.New("test error"))).
+		AnErr("an_error", nil).
 		Float32("float32", 1.111).
 		Floats32("float32", []float32{1.111}).
 		Floats32("float32", []float32{1.111, 2.222}).

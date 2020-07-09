@@ -453,6 +453,20 @@ func (e *Event) Err(err error) *Event {
 	return e
 }
 
+// AnErr adds the field key with serialized err to the logger context.
+func (e *Event) AnErr(key string, err error) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	if err == nil {
+		e.buf = append(e.buf, "null"...)
+	} else {
+		e.string(err.Error())
+	}
+	return e
+}
+
 // Errs adds the field key with errs as an array of serialized errors to the event.
 func (e *Event) Errs(key string, errs []error) *Event {
 	if e == nil {
