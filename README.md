@@ -87,6 +87,9 @@ type FileWriter struct {
 type ConsoleWriter struct {
 	// ANSIColor determines if used colorized output.
 	ANSIColor bool
+
+	// EndWithMessage determines if output message in the end.
+	EndWithMessage bool
 }
 ```
 

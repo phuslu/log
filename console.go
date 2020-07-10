@@ -18,6 +18,9 @@ func IsTerminal(fd uintptr) bool {
 type ConsoleWriter struct {
 	// ANSIColor determines if used colorized output.
 	ANSIColor bool
+
+	// EndWithMessage determines if output message in the end.
+	EndWithMessage bool
 }
 
 func (w *ConsoleWriter) write(p []byte) (n int, err error) {
@@ -79,14 +82,22 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		fmt.Fprintf(b, "%s ", v)
 	}
 
-	if v, ok := m["message"]; ok {
-		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-			v = s[:len(s)-1]
+	if !w.EndWithMessage {
+		if v, ok := m["message"]; ok {
+			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+				v = s[:len(s)-1]
+			}
+			if w.ANSIColor {
+				fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
+			} else {
+				fmt.Fprintf(b, "> %s", v)
+			}
 		}
+	} else {
 		if w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
+			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		} else {
-			fmt.Fprintf(b, "> %s", v)
+			fmt.Fprint(b, ">")
 		}
 	}
 
@@ -104,6 +115,19 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)
+		}
+	}
+
+	if w.EndWithMessage {
+		if v, ok := m["message"]; ok {
+			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+				v = s[:len(s)-1]
+			}
+			if w.ANSIColor {
+				fmt.Fprintf(b, "%s %s", Reset, v)
+			} else {
+				fmt.Fprintf(b, "> %s", v)
+			}
 		}
 	}
 
