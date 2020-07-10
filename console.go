@@ -157,18 +157,22 @@ func jsonKeys(data []byte) (keys []string) {
 		switch token.(type) {
 		case json.Delim:
 			switch token.(json.Delim) {
-			case '{':
+			case '{', '[':
 				depth++
-			case '}':
+			case '}', ']':
 				depth--
 			}
 		case string:
-			count++
-			if depth == 1 && count%2 == 1 {
-				keys = append(keys, token.(string))
+			if depth == 1 {
+				if count%2 == 0 {
+					keys = append(keys, token.(string))
+				}
+				count++
 			}
 		default:
-			count++
+			if depth == 1 {
+				count++
+			}
 		}
 	}
 
