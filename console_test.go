@@ -93,7 +93,7 @@ func TestConsoleWriterMessage(t *testing.T) {
 
 	w.ANSIColor = false
 
-	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"obj":{"a":[1], "b":{}},"message":"hello json console color writer\n"}`)
+	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,"foo"],"obj":{"a":["1"], "b":{"1":"2"}},"message":"hello json console color writer\n"}`)
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}

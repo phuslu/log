@@ -154,6 +154,7 @@ func jsonKeys(data []byte) (keys []string) {
 		if err != nil {
 			break
 		}
+		// fmt.Printf("==== %d %d <%T> %v\n", depth, count, token, token)
 		switch token.(type) {
 		case json.Delim:
 			switch token.(json.Delim) {
@@ -161,6 +162,9 @@ func jsonKeys(data []byte) (keys []string) {
 				depth++
 			case '}', ']':
 				depth--
+				if depth == 1 {
+					count++
+				}
 			}
 		case string:
 			if depth == 1 {
