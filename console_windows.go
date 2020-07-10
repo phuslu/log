@@ -173,16 +173,24 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		printf(White, "%s ", v)
 	}
 
-	if v, ok := m["message"]; ok {
-		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-			v = s[:len(s)-1]
+	if !w.EndWithMessage {
+		if v, ok := m["message"]; ok {
+			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+				v = s[:len(s)-1]
+			}
+			if w.ANSIColor {
+				printf(Aqua, ">")
+			} else {
+				printf(White, ">")
+			}
+			printf(White, " %s", v)
 		}
+	} else {
 		if w.ANSIColor {
 			printf(Aqua, ">")
 		} else {
 			printf(White, ">")
 		}
-		printf(White, " %s", v)
 	}
 
 	for _, k := range jsonKeys(p) {
@@ -200,6 +208,15 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			}
 		} else {
 			printf(White, " %s=%v", k, v)
+		}
+	}
+
+	if w.EndWithMessage {
+		if v, ok := m["message"]; ok {
+			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+				v = s[:len(s)-1]
+			}
+			printf(White, " %s", v)
 		}
 	}
 

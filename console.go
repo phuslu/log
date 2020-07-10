@@ -126,7 +126,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			if w.ANSIColor {
 				fmt.Fprintf(b, "%s %s", Reset, v)
 			} else {
-				fmt.Fprintf(b, "> %s", v)
+				fmt.Fprintf(b, " %s", v)
 			}
 		}
 	}
