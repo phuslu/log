@@ -99,6 +99,17 @@ func TestConsoleWriterMessage(t *testing.T) {
 	}
 }
 
+func TestConsoleWriterStack(t *testing.T) {
+	w := &ConsoleWriter{
+		ANSIColor: true,
+	}
+
+	_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","stack":"stack1\n\tstack2\n\t\tstack3\n","message":"hello console stack writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+}
+
 func TestConsoleWriterInvaild(t *testing.T) {
 	w := &ConsoleWriter{
 		ANSIColor: true,

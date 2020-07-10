@@ -62,6 +62,10 @@ func TestLogger(t *testing.T) {
 		Bytes("bytes2", []byte("\"<>?'")).
 		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
 		Strs("strings", []string{"a", "b", "\"<>?'"}).
+		Stringer("stringer", nil).
+		Stringer("stringer", ipv4Addr).
+		GoStringer("gostringer", nil).
+		GoStringer("gostringer", binary.BigEndian).
 		Time("now_1", timeNow()).
 		TimeFormat("now_2", time.RFC3339, timeNow()).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
@@ -99,6 +103,8 @@ func TestLoggerNil(t *testing.T) {
 		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).
 		Err(errors.New("test error")).
 		Err(nil).
+		AnErr("an_error", fmt.Errorf("an %w", errors.New("test error"))).
+		AnErr("an_error", nil).
 		Float32("float32", 1.111).
 		Floats32("float32", []float32{1.111}).
 		Float64("float64", 1.111).
@@ -119,6 +125,10 @@ func TestLoggerNil(t *testing.T) {
 		Bytes("bytes2", []byte("\"<>?'")).
 		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
 		Strs("strings", []string{"a", "b", "\"<>?'"}).
+		Stringer("stringer", nil).
+		Stringer("stringer", ipv4Addr).
+		GoStringer("gostringer", nil).
+		GoStringer("gostringer", binary.BigEndian).
 		Time("now_1", timeNow()).
 		TimeFormat("now_2", time.RFC3339, timeNow()).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
