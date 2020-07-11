@@ -107,6 +107,9 @@ func TestFileWriterRotate(t *testing.T) {
 	text1 := "hello file writer!\n"
 	text2 := "hello rotated file writer!\n"
 
+	// trigger chown
+	os.Setenv("USER", "root")
+
 	w := &FileWriter{
 		Filename:   filename,
 		MaxBackups: 2,
