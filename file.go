@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -127,6 +128,16 @@ func (w *FileWriter) Rotate() (err error) {
 	w.mu.Unlock()
 	return
 }
+
+var hostname = func() string {
+	s, _ := os.Hostname()
+	if strings.HasPrefix(s, "localhost") {
+		sec, nsec := walltime()
+		ts := sec*1000000 + int64(nsec)/1000
+		s = "localhost-" + strconv.FormatInt(ts, 10)
+	}
+	return s
+}()
 
 func (w *FileWriter) rotate() (err error) {
 	now := timeNow()

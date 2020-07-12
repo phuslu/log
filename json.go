@@ -219,8 +219,6 @@ const smallsString = "00010203040506070809" +
 
 var timeNow = time.Now
 
-var hostname, _ = os.Hostname()
-
 func (l *Logger) header(level Level) *Event {
 	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
 		return nil
