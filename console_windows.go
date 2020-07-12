@@ -173,18 +173,16 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		printf(White, "%s ", v)
 	}
 
-	if !w.EndWithMessage {
-		if v, ok := m["message"]; ok {
-			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-				v = s[:len(s)-1]
-			}
-			if w.ANSIColor {
-				printf(Aqua, ">")
-			} else {
-				printf(White, ">")
-			}
-			printf(White, " %s", v)
+	if v, ok := m["message"]; ok && !w.EndWithMessage {
+		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+			v = s[:len(s)-1]
 		}
+		if w.ANSIColor {
+			printf(Aqua, ">")
+		} else {
+			printf(White, ">")
+		}
+		printf(White, " %s", v)
 	} else {
 		if w.ANSIColor {
 			printf(Aqua, ">")

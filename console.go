@@ -82,16 +82,14 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		fmt.Fprintf(b, "%s ", v)
 	}
 
-	if !w.EndWithMessage {
-		if v, ok := m["message"]; ok {
-			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-				v = s[:len(s)-1]
-			}
-			if w.ANSIColor {
-				fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
-			} else {
-				fmt.Fprintf(b, "> %s", v)
-			}
+	if v, ok := m["message"]; ok && !w.EndWithMessage {
+		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+			v = s[:len(s)-1]
+		}
+		if w.ANSIColor {
+			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
+		} else {
+			fmt.Fprintf(b, "> %s", v)
 		}
 	} else {
 		if w.ANSIColor {
