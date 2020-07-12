@@ -243,14 +243,6 @@ func TestLoggerTimestamp(t *testing.T) {
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
 }
 
-func TestLoggerHost(t *testing.T) {
-	logger := Logger{
-		Level:     ParseLevel("debug"),
-		HostField: "host",
-	}
-	logger.Info().Time("now", timeNow()).Msg("this is test host log event")
-}
-
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		Timestamp: true,

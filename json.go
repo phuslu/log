@@ -23,7 +23,6 @@ var DefaultLogger = Logger{
 	TimeField:  "",
 	TimeFormat: "",
 	Timestamp:  false,
-	HostField:  "",
 	Writer:     os.Stderr,
 }
 
@@ -44,9 +43,6 @@ type Logger struct {
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
 	TimeFormat string
-
-	// HostField specifies the key for hostname in output if not empty
-	HostField string
 
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
@@ -345,14 +341,6 @@ func (l *Logger) header(level Level) *Event {
 		e.buf = append(e.buf, ",\"level\":\"error\""...)
 	case FatalLevel:
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
-	}
-	// hostname
-	if l.HostField != "" {
-		e.buf = append(e.buf, ',', '"')
-		e.buf = append(e.buf, l.HostField...)
-		e.buf = append(e.buf, '"', ':', '"')
-		e.buf = append(e.buf, hostname...)
-		e.buf = append(e.buf, '"')
 	}
 	return e
 }

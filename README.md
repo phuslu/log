@@ -23,7 +23,6 @@ var DefaultLogger = Logger{
 	TimeField:  "",
 	TimeFormat: "",
 	Timestamp:  false,
-	HostField:  "",
 	Writer:     os.Stderr,
 }
 
@@ -44,9 +43,6 @@ type Logger struct {
 	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
 	// If set, the value of TimeField and TimeFormat will be ignored.
 	Timestamp bool
-
-	// HostField specifies the key for hostname in output if not empty
-	HostField string
 
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
@@ -125,12 +121,11 @@ log.DefaultLogger = log.Logger{
 	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
-	HostField:  "host",
 	Writer:     os.Stderr,
 }
 log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
-// Output: {"date":"2019-07-04","level":"info","host":"hk","caller":"test.go:42","foo":"bar","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","foo":"bar","message":"hello world"}
 ```
 
 ### Rotating File Writer
