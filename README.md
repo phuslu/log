@@ -10,6 +10,7 @@
 * Rotating File Writer
 * Pretty Console Writer
 * Dynamic Log Level
+* Contextual Fields
 * High Performance
 
 ## Interfaces
@@ -201,6 +202,23 @@ log.Info().Msg("info log")
 //   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"info log"}
 ```
 
+### Contextual Fields
+
+To add preserved `key:value` pairs to each event, use `log.NewContext()`. [![playground][play-context-img]][play-context]
+
+```go
+ctx := log.NewContext().Str("ctx_str", "a ctx str").Value()
+
+logger := log.Logger{Level: log.InfoLevel}
+logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
+logger.Info().Context(ctx).Int("no1", 1).Msg("first")
+logger.Info().Context(ctx).Int("no2", 2).Msg("second")
+
+// Output:
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
+```
+
 ### Logging to syslog
 
 ```go
@@ -305,3 +323,5 @@ BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/
 [play-pretty]: https://play.golang.org/p/62bWGk67apR
 [play-dynamic-img]: https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go
 [play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
+[play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
+[play-context]: https://play.golang.org/p/ttnMKCLSjyw

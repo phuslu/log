@@ -1001,6 +1001,45 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	}
 }
 
+// Context represents contextual fields.
+type Context []byte
+
+// NewContext starts a new contextual event.
+func NewContext() (e *Event) {
+	e = epool.Get().(*Event)
+	e.buf = e.buf[:0]
+	return
+}
+
+// Value builds the contextual fields.
+func (e *Event) Value() Context {
+	return e.buf
+}
+
+// Context sends the contextual fields to event.
+func (e *Event) Context(ctx Context) *Event {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ctx...)
+	return e
+}
+
+// Dict sends the contextual fields with key to event.
+func (e *Event) Dict(key string, ctx Context) *Event {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '{')
+	if len(ctx) > 0 {
+		e.buf = append(e.buf, ctx[1:]...)
+	}
+	e.buf = append(e.buf, '}')
+	return e
+}
+
 // stacks is a wrapper for runtime.Stack that attempts to recover the data for all goroutines.
 func stacks(all bool) (trace []byte) {
 	// We don't know how big the traces are, so grow a few times if they don't fit. Start large, though.

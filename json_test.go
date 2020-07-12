@@ -243,6 +243,36 @@ func TestLoggerTimestamp(t *testing.T) {
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
 }
 
+func TestLoggerContext(t *testing.T) {
+	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
+
+	logger := Logger{Level: InfoLevel}
+	logger.Debug().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
+	logger.Info().Context(ctx).Int("no1", 1).Msg("this is first context log event")
+	logger.Info().Context(ctx).Int("no2", 2).Msg("this is second context log event")
+}
+
+func TestLoggerContextDict(t *testing.T) {
+	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
+
+	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ANSIColor: true}}
+	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
+	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
+	logger.Info().
+		Dict("a", NewContext().
+			Bool("b", true).
+			Dict("c", NewContext().
+				Bool("d", true).
+				Str("e", "a str").
+				Value()).
+			Value()).
+		Msg("")
+
+	ctx = NewContext().Value()
+	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
+	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
+}
+
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		Timestamp: true,
