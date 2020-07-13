@@ -139,7 +139,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	}
 
 	if v, ok := m["time"]; ok {
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			printf(Gray, "%s ", v)
 		} else {
 			printf(White, "%s ", v)
@@ -163,7 +163,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		default:
 			c, s = Red, "???"
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			printf(c, "%s ", s)
 		} else {
 			printf(White, "%s ", s)
@@ -178,14 +178,14 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			printf(Aqua, ">")
 		} else {
 			printf(White, ">")
 		}
 		printf(White, " %s", v)
 	} else {
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			printf(Aqua, ">")
 		} else {
 			printf(White, ">")
@@ -203,7 +203,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 				v = strconv.Quote(s)
 			}
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			if k == "error" && v != nil {
 				printf(Red, " %s=%v", k, v)
 			} else {

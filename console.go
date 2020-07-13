@@ -17,7 +17,10 @@ func IsTerminal(fd uintptr) bool {
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to os.Stderr
 type ConsoleWriter struct {
-	// ANSIColor determines if used colorized output.
+	// ColorOutput determines if used colorized output.
+	ColorOutput bool
+
+	// Deprecated: Use ColorOutput instead.
 	ANSIColor bool
 
 	// QuoteString determines if quoting string values.
@@ -52,7 +55,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	defer bbpool.Put(b)
 
 	if v, ok := m["time"]; ok {
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s%s%s ", DarkGray, v, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", v)
@@ -75,7 +78,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		default:
 			c, s = Red, "???"
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", s)
@@ -90,13 +93,13 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
 		} else {
 			fmt.Fprintf(b, "> %s", v)
 		}
 	} else {
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		} else {
 			fmt.Fprint(b, ">")
@@ -114,7 +117,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 				v = strconv.Quote(s)
 			}
 		}
-		if w.ANSIColor {
+		if w.ColorOutput || w.ANSIColor {
 			if k == "error" && v != nil {
 				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
 			} else {
@@ -130,7 +133,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 				v = s[:len(s)-1]
 			}
-			if w.ANSIColor {
+			if w.ColorOutput || w.ANSIColor {
 				fmt.Fprintf(b, "%s %s", Reset, v)
 			} else {
 				fmt.Fprintf(b, " %s", v)
