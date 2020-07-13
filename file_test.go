@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var _ = os.Setenv("USER", "root")
-
 func TestFileWriter(t *testing.T) {
 	filename := "file-output.log"
 	text := "hello file writer!\n"
@@ -79,7 +77,8 @@ func TestFileWriterCreate(t *testing.T) {
 
 func TestFileWriterHostname(t *testing.T) {
 	filename := "file-hostname.log"
-	text1 := "hello file writer!\n"
+	text1 := "1. hello file writer!\n"
+	text2 := "2. hello file writer!\n"
 
 	w := &FileWriter{
 		Filename: filename,
@@ -87,6 +86,16 @@ func TestFileWriterHostname(t *testing.T) {
 	}
 
 	_, err := fmt.Fprintf(w, text1)
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	time.Sleep(time.Second)
+	os.Setenv("USER", "root")
+	w.Rotate()
+	w.Close()
+
+	_, err = fmt.Fprintf(w, text2)
 	if err != nil {
 		t.Logf("file writer return error: %+v", err)
 	}
@@ -210,9 +219,10 @@ func TestFileWriterRotateBySize(t *testing.T) {
 		t.Fatalf("filepath glob return %+v number mismath", matches)
 	}
 
-	// text 3 & 4 & 5
-	for i := 3; i <= 5; i++ {
+	// text 3 ~ 6
+	for i := 3; i <= 6; i++ {
 		_, err = fmt.Fprintf(w, text)
+		time.Sleep(time.Second)
 		if err != nil {
 			t.Fatalf("file writer error: %+v", err)
 		}
@@ -222,7 +232,7 @@ func TestFileWriterRotateBySize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("filepath glob error: %+v", err)
 	}
-	if len(matches) != w.MaxBackups {
+	if len(matches) > w.MaxBackups+1 {
 		t.Fatalf("filepath glob return %+v number mismath", matches)
 	}
 
