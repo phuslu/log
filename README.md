@@ -82,8 +82,11 @@ type FileWriter struct {
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to os.Stderr
 type ConsoleWriter struct {
-	// ANSIColor determines if used colorized output.
-	ANSIColor bool
+	// ColorOutput determines if used colorized output.
+	ColorOutput bool
+
+	// QuoteString determines if quoting string values.
+	QuoteString bool
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
@@ -172,7 +175,7 @@ To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playgroun
 if log.IsTerminal(os.Stderr.Fd()) {
 	log.DefaultLogger = log.Logger{
 		Caller: 1,
-		Writer: &log.ConsoleWriter{ANSIColor: true},
+		Writer: &log.ConsoleWriter{ColorOutput: true},
 	}
 }
 
