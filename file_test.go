@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var _ = os.Setenv("USER", "root")
+
 func TestFileWriter(t *testing.T) {
 	filename := "file-output.log"
 	text := "hello file writer!\n"

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -197,6 +198,11 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			continue
 		}
 		v := m[k]
+		if w.QuoteString {
+			if s, ok := v.(string); ok {
+				v = strconv.Quote(s)
+			}
+		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
 				printf(Red, " %s=%v", k, v)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 )
 
 // IsTerminal returns whether the given file descriptor is a terminal.
@@ -18,6 +19,9 @@ func IsTerminal(fd uintptr) bool {
 type ConsoleWriter struct {
 	// ANSIColor determines if used colorized output.
 	ANSIColor bool
+
+	// QuoteString determines if quoting string values.
+	QuoteString bool
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
@@ -105,6 +109,11 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			continue
 		}
 		v := m[k]
+		if w.QuoteString {
+			if s, ok := v.(string); ok {
+				v = strconv.Quote(s)
+			}
+		}
 		if w.ANSIColor {
 			if k == "error" && v != nil {
 				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
