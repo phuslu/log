@@ -128,6 +128,11 @@ func TestConsoleWriterStack(t *testing.T) {
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
+
+	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"message":"hello json console color writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
 }
 
 func TestConsoleWriterInvaild(t *testing.T) {

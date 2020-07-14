@@ -146,7 +146,8 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		if s, ok := v.(string); ok {
 			b.B = append(b.B, s...)
 		} else {
-			fmt.Fprint(b, v)
+			data, _ := json.MarshalIndent(v, "", "  ")
+			b.B = append(b.B, data...)
 		}
 	}
 

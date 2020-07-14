@@ -225,7 +225,12 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	}
 
 	if v, ok := m["stack"]; ok {
-		printf(White, "\n%s", v)
+		if s, ok := v.(string); ok {
+			printf(White, "\n%s", s)
+		} else {
+			data, _ := json.MarshalIndent(v, "", "  ")
+			printf(White, "\n%s", data)
+		}
 	}
 
 	printf(White, " \n")
