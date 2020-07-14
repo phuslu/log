@@ -139,6 +139,8 @@ var hostname = func() string {
 	return s
 }()
 
+var geteuid = os.Geteuid
+
 func (w *FileWriter) rotate() (err error) {
 	now := timeNow()
 	if !w.LocalTime {
@@ -173,7 +175,7 @@ func (w *FileWriter) rotate() (err error) {
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
-		if uid != 0 && gid != 0 && os.Getenv("USER") == "root" {
+		if uid != 0 && gid != 0 && geteuid() == 0 {
 			os.Lchown(filename, uid, gid)
 			os.Chown(newname, uid, gid)
 		}
