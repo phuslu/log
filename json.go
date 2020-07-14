@@ -22,7 +22,6 @@ var DefaultLogger = Logger{
 	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
-	Timestamp:  false,
 	Writer:     os.Stderr,
 }
 
@@ -31,10 +30,6 @@ type Logger struct {
 	// Level defines log levels.
 	Level Level
 
-	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
-	// If set, the value of TimeField and TimeFormat will be ignored.
-	Timestamp bool
-
 	// Caller determines if adds the file:line of the "caller" key.
 	Caller int
 
@@ -42,11 +37,22 @@ type Logger struct {
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
+	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
 }
+
+const (
+	// TimeFormatUnix defines a time format that makes time fields to be
+	// serialized as Unix timestamp integers.
+	TimeFormatUnix = "U"
+
+	// TimeFormatUnixMs defines a time format that makes time fields to be
+	// serialized as Unix timestamp integers in milliseconds.
+	TimeFormatUnixMs = "M"
+)
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
@@ -258,88 +264,120 @@ func (l *Logger) header(level Level) *Event {
 		e.w = os.Stderr
 	}
 	// time
-	if l.Timestamp {
-		e.buf = append(e.buf, "{\"time\":0123456789"...)
-		sec, _ := walltime()
-		// seconds
-		b := sec % 100 * 2
-		sec /= 100
-		e.buf[17] = smallsString[b+1]
-		e.buf[16] = smallsString[b]
-		b = sec % 100 * 2
-		sec /= 100
-		e.buf[15] = smallsString[b+1]
-		e.buf[14] = smallsString[b]
-		b = sec % 100 * 2
-		sec /= 100
-		e.buf[13] = smallsString[b+1]
-		e.buf[12] = smallsString[b]
-		b = sec % 100 * 2
-		sec /= 100
-		e.buf[11] = smallsString[b+1]
-		e.buf[10] = smallsString[b]
-		b = sec % 100 * 2
-		e.buf[9] = smallsString[b+1]
-		e.buf[8] = smallsString[b]
+	if l.TimeField == "" {
+		e.buf = append(e.buf, "{\"time\":"...)
 	} else {
-		if l.TimeField == "" {
-			e.buf = append(e.buf, "{\"time\":"...)
-		} else {
-			e.buf = append(e.buf, '{', '"')
-			e.buf = append(e.buf, l.TimeField...)
-			e.buf = append(e.buf, '"', ':')
-		}
-		if l.TimeFormat == "" {
+		e.buf = append(e.buf, '{', '"')
+		e.buf = append(e.buf, l.TimeField...)
+		e.buf = append(e.buf, '"', ':')
+	}
+	if l.TimeFormat == "" {
+		n := len(e.buf)
+		e.buf = e.buf[:n+26]
+		sec, nsec := walltime()
+		// date time
+		sec += 9223372028715321600 // unixToInternal + internalToAbsolute
+		year, month, day, _ := absDate(uint64(sec), true)
+		hour, minute, second := absClock(uint64(sec))
+		// year
+		a := year / 100 * 2
+		b := year % 100 * 2
+		e.buf[n] = '"'
+		e.buf[n+1] = smallsString[a]
+		e.buf[n+2] = smallsString[a+1]
+		e.buf[n+3] = smallsString[b]
+		e.buf[n+4] = smallsString[b+1]
+		// month
+		month *= 2
+		e.buf[n+5] = '-'
+		e.buf[n+6] = smallsString[month]
+		e.buf[n+7] = smallsString[month+1]
+		// day
+		day *= 2
+		e.buf[n+8] = '-'
+		e.buf[n+9] = smallsString[day]
+		e.buf[n+10] = smallsString[day+1]
+		// hour
+		hour *= 2
+		e.buf[n+11] = 'T'
+		e.buf[n+12] = smallsString[hour]
+		e.buf[n+13] = smallsString[hour+1]
+		// minute
+		minute *= 2
+		e.buf[n+14] = ':'
+		e.buf[n+15] = smallsString[minute]
+		e.buf[n+16] = smallsString[minute+1]
+		// second
+		second *= 2
+		e.buf[n+17] = ':'
+		e.buf[n+18] = smallsString[second]
+		e.buf[n+19] = smallsString[second+1]
+		// milli seconds
+		a = int(nsec) / 1000000
+		b = a % 100 * 2
+		e.buf[n+20] = '.'
+		e.buf[n+21] = byte('0' + a/100)
+		e.buf[n+22] = smallsString[b]
+		e.buf[n+23] = smallsString[b+1]
+		e.buf[n+24] = 'Z'
+		e.buf[n+25] = '"'
+	} else {
+		switch l.TimeFormat[0] {
+		case 'U':
 			n := len(e.buf)
-			e.buf = e.buf[:n+26]
+			e.buf = e.buf[:n+10]
+			sec, _ := walltime()
+			// seconds
+			b := sec % 100 * 2
+			sec /= 100
+			e.buf[n+9] = smallsString[b+1]
+			e.buf[n+8] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+7] = smallsString[b+1]
+			e.buf[n+6] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+5] = smallsString[b+1]
+			e.buf[n+4] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+3] = smallsString[b+1]
+			e.buf[n+2] = smallsString[b]
+			b = sec % 100 * 2
+			e.buf[n+1] = smallsString[b+1]
+			e.buf[n] = smallsString[b]
+		case 'M':
+			n := len(e.buf)
+			e.buf = e.buf[:n+13]
 			sec, nsec := walltime()
-			// date time
-			sec += 9223372028715321600 // unixToInternal + internalToAbsolute
-			year, month, day, _ := absDate(uint64(sec), true)
-			hour, minute, second := absClock(uint64(sec))
-			// year
-			a := year / 100 * 2
-			b := year % 100 * 2
-			e.buf[n] = '"'
-			e.buf[n+1] = smallsString[a]
-			e.buf[n+2] = smallsString[a+1]
-			e.buf[n+3] = smallsString[b]
-			e.buf[n+4] = smallsString[b+1]
-			// month
-			month *= 2
-			e.buf[n+5] = '-'
-			e.buf[n+6] = smallsString[month]
-			e.buf[n+7] = smallsString[month+1]
-			// day
-			day *= 2
-			e.buf[n+8] = '-'
-			e.buf[n+9] = smallsString[day]
-			e.buf[n+10] = smallsString[day+1]
-			// hour
-			hour *= 2
-			e.buf[n+11] = 'T'
-			e.buf[n+12] = smallsString[hour]
-			e.buf[n+13] = smallsString[hour+1]
-			// minute
-			minute *= 2
-			e.buf[n+14] = ':'
-			e.buf[n+15] = smallsString[minute]
-			e.buf[n+16] = smallsString[minute+1]
-			// second
-			second *= 2
-			e.buf[n+17] = ':'
-			e.buf[n+18] = smallsString[second]
-			e.buf[n+19] = smallsString[second+1]
+			// seconds
+			b := sec % 100 * 2
+			sec /= 100
+			e.buf[n+9] = smallsString[b+1]
+			e.buf[n+8] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+7] = smallsString[b+1]
+			e.buf[n+6] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+5] = smallsString[b+1]
+			e.buf[n+4] = smallsString[b]
+			b = sec % 100 * 2
+			sec /= 100
+			e.buf[n+3] = smallsString[b+1]
+			e.buf[n+2] = smallsString[b]
+			b = sec % 100 * 2
+			e.buf[n+1] = smallsString[b+1]
+			e.buf[n] = smallsString[b]
 			// milli seconds
-			a = int(nsec) / 1000000
+			a := int64(nsec) / 1000000
 			b = a % 100 * 2
-			e.buf[n+20] = '.'
-			e.buf[n+21] = byte('0' + a/100)
-			e.buf[n+22] = smallsString[b]
-			e.buf[n+23] = smallsString[b+1]
-			e.buf[n+24] = 'Z'
-			e.buf[n+25] = '"'
-		} else {
+			e.buf[n+10] = byte('0' + a/100)
+			e.buf[n+11] = smallsString[b]
+			e.buf[n+12] = smallsString[b+1]
+		default:
 			e.buf = append(e.buf, '"')
 			e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
 			e.buf = append(e.buf, '"')

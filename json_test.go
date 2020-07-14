@@ -238,12 +238,15 @@ func TestLoggerTime(t *testing.T) {
 	logger2.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
-func TestLoggerTimestamp(t *testing.T) {
-	logger := Logger{
-		Level:     ParseLevel("debug"),
-		Timestamp: true,
-	}
+func TestLoggerTimeFormatUnix(t *testing.T) {
+	logger := Logger{}
+
+	logger.TimeFormat = TimeFormatUnix
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
+
+	logger.TimeFormat = TimeFormatUnixMs
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
+
 }
 
 func TestLoggerContext(t *testing.T) {
@@ -278,9 +281,9 @@ func TestLoggerContextDict(t *testing.T) {
 
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
-		Timestamp: true,
-		Level:     DebugLevel,
-		Writer:    ioutil.Discard,
+		TimeFormat: TimeFormatUnix,
+		Level:      DebugLevel,
+		Writer:     ioutil.Discard,
 	}
 
 	b.ReportAllocs()

@@ -23,7 +23,6 @@ var DefaultLogger = Logger{
 	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
-	Timestamp:  false,
 	Writer:     os.Stderr,
 }
 
@@ -39,11 +38,8 @@ type Logger struct {
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
+	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
-
-	// Timestamp determines if time is formatted as an UNIX timestamp as integer.
-	// If set, the value of TimeField and TimeFormat will be ignored.
-	Timestamp bool
 
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
@@ -295,8 +291,8 @@ func BenchmarkZeroLog(b *testing.B) {
 
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{
-		Timestamp: true,
-		Writer:    ioutil.Discard,
+		TimeFormat: log.TimeFormatUnix,
+		Writer:     ioutil.Discard,
 	}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
