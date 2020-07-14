@@ -102,18 +102,27 @@ func Fatal() (e *Event) {
 	return
 }
 
-// Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
+// Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func Print(v ...interface{}) {
-	e := DefaultLogger.header(DefaultLogger.Level)
+	e := DefaultLogger.header(noLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	e.print(v...)
 }
 
-// Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
+// Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
+func Println(v ...interface{}) {
+	e := DefaultLogger.header(noLevel)
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
+	}
+	e.print(v...)
+}
+
+// Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
-	e := DefaultLogger.header(DefaultLogger.Level)
+	e := DefaultLogger.header(noLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
@@ -180,7 +189,7 @@ func (l *Logger) SetLevel(level Level) {
 	return
 }
 
-// Print sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Print.
+// Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (l *Logger) Print(v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {
@@ -189,7 +198,16 @@ func (l *Logger) Print(v ...interface{}) {
 	e.print(v...)
 }
 
-// Printf sends a log event using debug level and no extra field. Arguments are handled in the manner of fmt.Printf.
+// Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
+func (l *Logger) Println(v ...interface{}) {
+	e := l.header(l.Level)
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	e.print(v...)
+}
+
+// Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(l.Level)
 	if e != nil && l.Caller > 0 {

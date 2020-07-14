@@ -111,7 +111,7 @@ func main() {
 }
 
 // Output:
-//   {"time":"2020-03-22T09:58:41.828Z","level":"debug","message":"Hello, 世界"}
+//   {"time":"2020-03-22T09:58:41.828Z","message":"Hello, 世界"}
 //   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"a structure logger"}
 ```
 > Note: By default log writes to `os.Stderr`

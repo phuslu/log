@@ -76,7 +76,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		case FatalLevel:
 			c, s = Red, "FTL"
 		default:
-			c, s = Red, "???"
+			c, s = Yellow, "???"
 		}
 		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)

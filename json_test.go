@@ -19,6 +19,7 @@ func TestDefaultLogger(t *testing.T) {
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Print("hello from Print")
+	Println("hello from Println")
 	Printf("hello from %s", "Printf")
 }
 
@@ -206,6 +207,7 @@ func TestLoggerCaller(t *testing.T) {
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Print("hello from Print")
+	Println("hello from Println")
 	Printf("hello from %s", "Printf")
 
 	logger := Logger{
@@ -218,6 +220,7 @@ func TestLoggerCaller(t *testing.T) {
 	logger.Error().Str("foo", "bar").Msg("hello from Error")
 	logger.Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	logger.Print("hello from Print")
+	logger.Println("hello from Println")
 	logger.Printf("hello from %s", "Printf")
 }
 

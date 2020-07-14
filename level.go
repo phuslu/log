@@ -15,6 +15,8 @@ const (
 	ErrorLevel
 	// FatalLevel defines fatal log level.
 	FatalLevel
+
+	noLevel
 )
 
 // ParseLevel converts a level string into a log Level value.
