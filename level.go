@@ -23,15 +23,15 @@ const (
 // returns an error if the input string does not match known values.
 func ParseLevel(s string) (level Level) {
 	switch s {
-	case "debug", "Debug", "DEBUG", "D", "DBG":
+	case "debug", "Debug", "DEBUG", "D", "DBG", "DEBU":
 		level = DebugLevel
 	case "info", "Info", "INFO", "I", "INF":
 		level = InfoLevel
 	case "warn", "Warn", "WARN", "warning", "Warning", "WARNING", "W", "WRN":
 		level = WarnLevel
-	case "error", "Error", "ERROR", "E", "ERR":
+	case "error", "Error", "ERROR", "E", "ERR", "ERRO":
 		level = ErrorLevel
-	case "fatal", "Fatal", "FATAL", "F", "FTL":
+	case "fatal", "Fatal", "FATAL", "F", "FTL", "FATA":
 		level = FatalLevel
 	}
 	return
