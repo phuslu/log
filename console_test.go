@@ -135,6 +135,18 @@ func TestConsoleWriterStack(t *testing.T) {
 	}
 }
 
+func TestConsoleWriterTime(t *testing.T) {
+	w := &ConsoleWriter{
+		ANSIColor: true,
+		TimeField: "ts",
+	}
+
+	_, err := fmt.Fprintf(w, `{"ts":1594828508,"level":"info","caller":"pretty.go:42","error":"i am test error","message":"hello console time writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+}
+
 func TestConsoleWriterInvaild(t *testing.T) {
 	w := &ConsoleWriter{
 		ANSIColor: true,

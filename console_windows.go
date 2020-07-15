@@ -138,7 +138,11 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		n += i
 	}
 
-	if v, ok := m["time"]; ok {
+	var timeField = w.TimeField
+	if timeField == "" {
+		timeField = "time"
+	}
+	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
 			printf(Gray, "%s ", v)
 		} else {
@@ -194,7 +198,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 
 	for _, k := range jsonKeys(p) {
 		switch k {
-		case "time", "level", "caller", "stack", "message":
+		case timeField, "level", "caller", "stack", "message":
 			continue
 		}
 		v := m[k]

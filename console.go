@@ -28,6 +28,9 @@ type ConsoleWriter struct {
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
+
+	// TimeField specifies the time filed name of output message.
+	TimeField string
 }
 
 func (w *ConsoleWriter) write(p []byte) (n int, err error) {
@@ -54,7 +57,11 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	b.Reset()
 	defer bbpool.Put(b)
 
-	if v, ok := m["time"]; ok {
+	var timeField = w.TimeField
+	if timeField == "" {
+		timeField = "time"
+	}
+	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
 			fmt.Fprintf(b, "%s%s%s ", DarkGray, v, Reset)
 		} else {
@@ -108,7 +115,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	for _, k := range jsonKeys(p) {
 		switch k {
-		case "time", "level", "caller", "stack", "message":
+		case timeField, "level", "caller", "stack", "message":
 			continue
 		}
 		v := m[k]
