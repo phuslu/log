@@ -11,6 +11,7 @@
 * Pretty Console Writer
 * Dynamic Log Level
 * Contextual Fields
+* Sugar Logger
 * High Performance
 
 ## Interfaces
@@ -218,6 +219,23 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 // Output:
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
+```
+
+### Sugar Logger
+
+```go
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+func main() {
+	sugar := log.DefaultLogger.Sugar(log.InfoLevel, log.NewContext().Str("tag", "hi suagr").Value())
+
+	sugar.Printf("hello %s", "世界")
+	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
+}
 ```
 
 ### Logging to syslog

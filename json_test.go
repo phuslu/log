@@ -18,8 +18,6 @@ func TestDefaultLogger(t *testing.T) {
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
-	Print("hello from Print")
-	Println("hello from Println")
 	Printf("hello from %s", "Printf")
 }
 
@@ -206,8 +204,6 @@ func TestLoggerCaller(t *testing.T) {
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
-	Print("hello from Print")
-	Println("hello from Println")
 	Printf("hello from %s", "Printf")
 
 	logger := Logger{
@@ -219,8 +215,6 @@ func TestLoggerCaller(t *testing.T) {
 	logger.Warn().Str("foo", "bar").Msg("hello from Warn")
 	logger.Error().Str("foo", "bar").Msg("hello from Error")
 	logger.Fatal().Str("foo", "bar").Msg("hello from Fatal")
-	logger.Print("hello from Print")
-	logger.Println("hello from Println")
 	logger.Printf("hello from %s", "Printf")
 }
 
@@ -230,12 +224,6 @@ func TestLoggerTime(t *testing.T) {
 		TimeField: "_time",
 	}
 	logger1.Info().Time("now", timeNow()).Msg("this is test time log event")
-	logger2 := Logger{
-		Level:      ParseLevel("debug"),
-		TimeField:  "_time",
-		TimeFormat: time.RFC822,
-	}
-	logger2.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
 func TestLoggerTimeFormatUnix(t *testing.T) {
@@ -277,6 +265,68 @@ func TestLoggerContextDict(t *testing.T) {
 	ctx = NewContext().Value()
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
+}
+
+func TestLoggerSugar(t *testing.T) {
+	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
+	if err != nil {
+		t.Fatalf("net.ParseCIDR error: %+v", err)
+	}
+
+	logger := Logger{
+		Level:  ParseLevel("debug"),
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true},
+	}
+
+	sugar := logger.Sugar(InfoLevel, NewContext().Str("sugar_ctx_1", "a ctx str").Int("sugar_ctx_2", 42).Value())
+	sugar.Print("hello from sugar Print")
+	sugar.Println("hello from sugar Println")
+	sugar.Printf("hello from sugar %s", "Printf")
+	sugar.Log(
+		"bool", true,
+		"bools", []bool{false},
+		"bools", []bool{true, false},
+		"1_hour", time.Hour,
+		"hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second},
+		"error", errors.New("test error"),
+		"an_error", fmt.Errorf("an %w", errors.New("test error")),
+		"an_nil_error", nil,
+		"float32", 1.111,
+		"float32", []float32{1.111},
+		"float32", []float32{1.111, 2.222},
+		"float64", 1.111,
+		"float64", []float64{1.111, 2.222},
+		"int64", 1234567890,
+		"int32", 123,
+		"int16", 123,
+		"int16", 123,
+		"int64", 1234567890,
+		"int32", 123,
+		"int16", 123,
+		"int16", 123,
+		"int", 123,
+		"raw_json", []byte("{\"a\":1,\"b\":2}"),
+		"hex", []byte("\"<>?'"),
+		"bytes1", []byte("bytes1"),
+		"bytes2", []byte("\"<>?'"),
+		"foobar", "\"\\\t\r\n\f\b\x00<>?'",
+		"strings", []string{"a", "b", "\"<>?'"},
+		"stringer_1", nil,
+		"stringer_2", ipv4Addr,
+		"gostringer_1", nil,
+		"gostringer_2", binary.BigEndian,
+		"now_1", timeNow(),
+		"ip_str", ipv4Addr,
+		"big_edian", binary.BigEndian,
+		"ip6", net.ParseIP("2001:4860:4860::8888"),
+		"ip4", ipv4Addr,
+		"ip_prefix", *ipv4Net,
+		"mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01},
+		"errors", []error{errors.New("error1"), nil, errors.New("error3")},
+		"console_writer", ConsoleWriter{ColorOutput: true},
+		"time.Time", timeNow(),
+		"message", "this is a test")
 }
 
 func BenchmarkLogger(b *testing.B) {
