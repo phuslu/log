@@ -62,6 +62,9 @@ func TestLogger(t *testing.T) {
 		Hex("hex", []byte("\"<>?'")).
 		Bytes("bytes1", []byte("bytes1")).
 		Bytes("bytes2", []byte("\"<>?'")).
+		BytesOrNil("bytes3", []byte("\"<>?'")).
+		Bytes("nil_bytes_1", nil).
+		BytesOrNil("nil_bytes_2", nil).
 		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
 		Strs("strings", []string{"a", "b", "\"<>?'"}).
 		Stringer("stringer", nil).

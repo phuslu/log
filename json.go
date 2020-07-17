@@ -674,6 +674,20 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
+// BytesOrNil adds the field key with val as a string to the event.
+func (e *Event) BytesOrNil(key string, val []byte) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	if val == nil {
+		e.buf = append(e.buf, "null"...)
+	} else {
+		e.bytes(val)
+	}
+	return e
+}
+
 var hex = "0123456789abcdef"
 
 // Hex adds the field key with val as a hex string to the event.
