@@ -223,6 +223,8 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### Sugar & Grpc Logger
 
+To using wrapped logger like sugar or grpc. [![playground][play-sugar-img]][play-sugar]
+
 ```go
 package main
 
@@ -234,6 +236,7 @@ func main() {
 	sugar := log.DefaultLogger.Sugar(log.InfoLevel, log.NewContext().Str("tag", "hi suagr").Value())
 	sugar.Printf("hello %s", "世界")
 	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
+	sugar.Log("i am a leading message", "foo", "bar", "number", 42)
 
 	grpclog := log.DefaultLogger.Grpc(log.NewContext().Str("tag", "hi grpc").Value())
 	grpclog.Infof("hello %s", "grpclog Infof message")
@@ -347,3 +350,5 @@ BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/
 [play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
+[play-sugar-img]: https://img.shields.io/badge/playground-wHwCMM8RsZY-29BEB0?style=flat&logo=go
+[play-sugar]: https://play.golang.org/p/wHwCMM8RsZY

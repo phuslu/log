@@ -674,7 +674,7 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
-// BytesOrNil adds the field key with val as a string to the event.
+// BytesOrNil adds the field key with val as a string or nil to the event.
 func (e *Event) BytesOrNil(key string, val []byte) *Event {
 	if e == nil {
 		return nil

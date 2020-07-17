@@ -82,10 +82,14 @@ func (l *SugaredLogger) Log(keyvals ...interface{}) error {
 	if l.context != nil {
 		e.buf = append(e.buf, l.context...)
 	}
-	var key string
+	var key, msg string
+	if len(keyvals)%2 == 1 {
+		msg, _ = keyvals[0].(string)
+		keyvals = keyvals[1:]
+	}
 	for i, v := range keyvals {
 		if i%2 == 0 {
-			key = v.(string)
+			key, _ = v.(string)
 			continue
 		}
 		if v == nil {
@@ -156,6 +160,6 @@ func (l *SugaredLogger) Log(keyvals ...interface{}) error {
 			e.Interface(key, v)
 		}
 	}
-	e.Msg("")
+	e.Msg(msg)
 	return nil
 }

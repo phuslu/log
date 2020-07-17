@@ -19,7 +19,7 @@ func TestLoggerSugar(t *testing.T) {
 	logger := Logger{
 		Level:  ParseLevel("info"),
 		Caller: 1,
-		Writer: &ConsoleWriter{ColorOutput: true},
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
 	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
@@ -33,6 +33,7 @@ func TestLoggerSugar(t *testing.T) {
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
+	sugar.Log("i am a leading message", "foo", "bar", "number", 42)
 	sugar.Log(
 		"bool", true,
 		"bools", []bool{false},
