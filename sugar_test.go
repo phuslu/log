@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -16,12 +17,19 @@ func TestLoggerSugar(t *testing.T) {
 	}
 
 	logger := Logger{
-		Level:  ParseLevel("debug"),
+		Level:  ParseLevel("info"),
 		Caller: 1,
 		Writer: &ConsoleWriter{ColorOutput: true},
 	}
 
-	sugar := logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	logger.Level = InfoLevel
+	sugar.Print("hello from sugar Print")
+	sugar.Println("hello from sugar Println")
+	sugar.Printf("hello from sugar %s", "Printf")
+	sugar.Log("foo", "bar")
+
+	sugar = logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
@@ -34,20 +42,22 @@ func TestLoggerSugar(t *testing.T) {
 		"error", errors.New("test error"),
 		"an_error", fmt.Errorf("an %w", errors.New("test error")),
 		"an_nil_error", nil,
-		"float32", 1.111,
+		"dict", NewContext().Str("foo", "bar").Int("no", 1).Value(),
+		"float32", float32(1.111),
 		"float32", []float32{1.111},
 		"float32", []float32{1.111, 2.222},
-		"float64", 1.111,
+		"float64", float64(1.111),
 		"float64", []float64{1.111, 2.222},
-		"int64", 1234567890,
-		"int32", 123,
-		"int16", 123,
-		"int16", 123,
-		"int64", 1234567890,
-		"int32", 123,
-		"int16", 123,
-		"int16", 123,
-		"int", 123,
+		"int64", int64(1234567890),
+		"int32", int32(123),
+		"int16", int16(123),
+		"int8", int8(123),
+		"int", int(123),
+		"uint64", uint64(1234567890),
+		"uint32", uint32(123),
+		"uint16", uint16(123),
+		"uint8", uint8(123),
+		"uint", uint(123),
 		"raw_json", []byte("{\"a\":1,\"b\":2}"),
 		"hex", []byte("\"<>?'"),
 		"bytes1", []byte("bytes1"),
@@ -68,5 +78,6 @@ func TestLoggerSugar(t *testing.T) {
 		"errors", []error{errors.New("error1"), nil, errors.New("error3")},
 		"console_writer", ConsoleWriter{ColorOutput: true},
 		"time.Time", timeNow(),
+		"buffer", bytes.NewBuffer([]byte("a_bytes_buffer")),
 		"message", "this is a test")
 }

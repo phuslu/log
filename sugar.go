@@ -17,6 +17,7 @@ import (
 // printf-style formatting.
 type SugaredLogger struct {
 	logger  Logger
+	level   Level
 	context Context
 }
 
@@ -27,17 +28,15 @@ type SugaredLogger struct {
 func (l *Logger) Sugar(level Level, context Context) (logger *SugaredLogger) {
 	logger = &SugaredLogger{
 		logger:  *l,
+		level:   level,
 		context: context,
-	}
-	if level > 0 {
-		logger.logger.Level = level
 	}
 	return
 }
 
 // Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (l *SugaredLogger) Print(v ...interface{}) {
-	e := l.logger.header(l.logger.Level)
+	e := l.logger.header(l.level)
 	if e == nil {
 		return
 	}
@@ -49,7 +48,7 @@ func (l *SugaredLogger) Print(v ...interface{}) {
 
 // Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (l *SugaredLogger) Println(v ...interface{}) {
-	e := l.logger.header(l.logger.Level)
+	e := l.logger.header(l.level)
 	if e == nil {
 		return
 	}
@@ -61,7 +60,7 @@ func (l *SugaredLogger) Println(v ...interface{}) {
 
 // Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *SugaredLogger) Printf(format string, v ...interface{}) {
-	e := l.logger.header(l.logger.Level)
+	e := l.logger.header(l.level)
 	if e == nil {
 		return
 	}
@@ -73,7 +72,7 @@ func (l *SugaredLogger) Printf(format string, v ...interface{}) {
 
 // Log sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *SugaredLogger) Log(keyvals ...interface{}) error {
-	e := l.logger.header(l.logger.Level)
+	e := l.logger.header(l.level)
 	if e == nil {
 		return nil
 	}
@@ -97,10 +96,6 @@ func (l *SugaredLogger) Log(keyvals ...interface{}) error {
 		switch v.(type) {
 		case Context:
 			e.Dict(key, v.(Context))
-		case fmt.GoStringer:
-			e.GoStringer(key, v.(fmt.GoStringer))
-		case fmt.Stringer:
-			e.Stringer(key, v.(fmt.Stringer))
 		case []time.Duration:
 			e.Durs(key, v.([]time.Duration))
 		case time.Duration:
@@ -153,6 +148,10 @@ func (l *SugaredLogger) Log(keyvals ...interface{}) error {
 			e.Uint64(key, v.(uint64))
 		case uint8:
 			e.Uint8(key, v.(uint8))
+		case fmt.GoStringer:
+			e.GoStringer(key, v.(fmt.GoStringer))
+		case fmt.Stringer:
+			e.Stringer(key, v.(fmt.Stringer))
 		default:
 			e.Interface(key, v)
 		}

@@ -19,6 +19,9 @@ func TestDefaultLogger(t *testing.T) {
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Printf("hello from %s", "Printf")
+
+	// for coverage
+	(*Event)(nil).print("goaway", "print")
 }
 
 func TestLogger(t *testing.T) {
@@ -226,7 +229,7 @@ func TestLoggerTime(t *testing.T) {
 	logger1.Info().Time("now", timeNow()).Msg("this is test time log event")
 }
 
-func TestLoggerTimeFormatUnix(t *testing.T) {
+func TestLoggerTimeFormat(t *testing.T) {
 	logger := Logger{}
 
 	logger.TimeFormat = TimeFormatUnix
@@ -235,6 +238,8 @@ func TestLoggerTimeFormatUnix(t *testing.T) {
 	logger.TimeFormat = TimeFormatUnixMs
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
 
+	logger.TimeFormat = time.RFC3339Nano
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is test time log event")
 }
 
 func TestLoggerContext(t *testing.T) {
