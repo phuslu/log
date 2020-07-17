@@ -80,37 +80,39 @@ func TestFileWriterHostname(t *testing.T) {
 	text1 := "1. hello file writer!\n"
 	text2 := "2. hello file writer!\n"
 
-	w := &FileWriter{
-		Filename: filename,
-		HostName: true,
-	}
+	for _, hostname := range []bool{false, true} {
+		for _, pid := range []bool{false, true} {
+			w := &FileWriter{
+				Filename:  filename,
+				HostName:  hostname,
+				ProcessID: pid,
+			}
 
-	_, err := fmt.Fprintf(w, text1)
-	if err != nil {
-		t.Logf("file writer return error: %+v", err)
-	}
+			_, err := fmt.Fprintf(w, text1)
+			if err != nil {
+				t.Logf("file writer return error: %+v", err)
+			}
 
-	time.Sleep(time.Second)
-	os.Setenv("USER", "root")
-	w.Rotate()
-	w.Close()
+			time.Sleep(time.Second)
+			os.Setenv("USER", "root")
+			w.Rotate()
+			w.Close()
 
-	_, err = fmt.Fprintf(w, text2)
-	if err != nil {
-		t.Logf("file writer return error: %+v", err)
-	}
+			_, err = fmt.Fprintf(w, text2)
+			if err != nil {
+				t.Logf("file writer return error: %+v", err)
+			}
 
-	w.Close()
+			w.Close()
 
-	matches, _ := filepath.Glob("file-hostname.*.log")
-	for i := range matches {
-		err = os.Remove(matches[i])
-		if err != nil {
-			t.Fatalf("os remove %s error: %+v", matches[i], err)
+			matches, _ := filepath.Glob("file-hostname.*.log")
+			for i := range matches {
+				os.Remove(matches[i])
+			}
+
+			os.Remove(filename)
 		}
 	}
-
-	os.Remove(filename)
 }
 
 func TestFileWriterRotate(t *testing.T) {
