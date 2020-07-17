@@ -222,7 +222,6 @@ func TestFileWriterRotateBySize(t *testing.T) {
 	// mock
 	os.Setenv("SUDO_UID", "1000")
 	os.Setenv("SUDO_GID", "1000")
-	geteuid = func() int { return 0 }
 
 	// text 3 ~ 6
 	for i := 3; i <= 6; i++ {

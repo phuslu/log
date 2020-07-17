@@ -178,7 +178,14 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		printf(White, "%s ", v)
 	}
 
-	if v, ok := m["message"]; ok && !w.EndWithMessage {
+	var msgField = "message"
+	if _, ok := m[msgField]; !ok {
+		if _, ok := m["msg"]; ok {
+			msgField = "msg"
+		}
+	}
+
+	if v, ok := m[msgField]; ok && !w.EndWithMessage {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
@@ -198,7 +205,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 
 	for _, k := range jsonKeys(p) {
 		switch k {
-		case timeField, "level", "caller", "stack", "message":
+		case timeField, msgField, "level", "caller", "stack":
 			continue
 		}
 		v := m[k]
@@ -220,7 +227,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	}
 
 	if w.EndWithMessage {
-		if v, ok := m["message"]; ok {
+		if v, ok := m[msgField]; ok {
 			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 				v = s[:len(s)-1]
 			}
