@@ -26,8 +26,8 @@ type SugaredLogger struct {
 // API. Sugaring a Logger is quite inexpensive, so it's reasonable for a
 // single application to use both Loggers and SugaredLoggers, converting
 // between them on the boundaries of performance-sensitive code.
-func (l *Logger) Sugar(level Level, context Context) (logger *SugaredLogger) {
-	logger = &SugaredLogger{
+func (l *Logger) Sugar(level Level, context Context) (s *SugaredLogger) {
+	s = &SugaredLogger{
 		logger:  *l,
 		level:   level,
 		context: context,

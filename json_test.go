@@ -19,9 +19,6 @@ func TestDefaultLogger(t *testing.T) {
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Printf("hello from %s", "Printf")
-
-	// for coverage
-	(*Event)(nil).print("goaway", "print")
 }
 
 func TestLogger(t *testing.T) {

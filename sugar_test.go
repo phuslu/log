@@ -27,6 +27,9 @@ func TestSugarLoggerPrintf(t *testing.T) {
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
+
+	// for coverage
+	print((*Event)(nil), []interface{}{"goaway", "print"})
 }
 
 func TestSugarLoggerDebug(t *testing.T) {
