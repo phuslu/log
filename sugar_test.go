@@ -10,14 +10,9 @@ import (
 	"time"
 )
 
-func TestLoggerSugar(t *testing.T) {
-	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
-	if err != nil {
-		t.Fatalf("net.ParseCIDR error: %+v", err)
-	}
-
+func TestSugarLoggerPrintf(t *testing.T) {
 	logger := Logger{
-		Level:  ParseLevel("info"),
+		Level:  InfoLevel,
 		Caller: 1,
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
@@ -27,13 +22,97 @@ func TestLoggerSugar(t *testing.T) {
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
-	sugar.Log("foo", "bar")
 
 	sugar = logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
-	sugar.Log("i am a leading message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerDebug(t *testing.T) {
+	logger := Logger{
+		Level:  DebugLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar.Debug("hello from sugar", "Debug")
+	sugar.Debugf("hello from sugar %s", "Debugf")
+	sugar.Debugw("a Debugw message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerInfo(t *testing.T) {
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar.Info("hello from sugar", "Info")
+	sugar.Infof("hello from sugar %s", "Infof")
+	sugar.Infow("a Infow message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerWarn(t *testing.T) {
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar.Warn("hello from sugar", "Warn")
+	sugar.Warnf("hello from sugar %s", "Warnf")
+	sugar.Warnw("a Warnw message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerError(t *testing.T) {
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar.Error("hello from sugar", "Error")
+	sugar.Errorf("hello from sugar %s", "Errorf")
+	sugar.Errorw("a Errorw message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerFatal(t *testing.T) {
+	osExit = func(int) {}
+
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar.Fatal("hello from sugar", "Fatal")
+	sugar.Fatalf("hello from sugar %s", "Fatalf")
+	sugar.Fatalw("a Fatalw message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerLog(t *testing.T) {
+	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
+	if err != nil {
+		t.Fatalf("net.ParseCIDR error: %+v", err)
+	}
+
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	logger.Level = InfoLevel
+	sugar.Log("foo", "bar")
+
+	sugar = logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
 	sugar.Log(
 		"bool", true,
 		"bools", []bool{false},

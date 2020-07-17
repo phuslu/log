@@ -29,7 +29,7 @@ func (l *GrpcLogger) Info(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Infoln logs to INFO log. Arguments are handled in the manner of fmt.Println.
@@ -38,7 +38,7 @@ func (l *GrpcLogger) Infoln(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Infof logs to INFO log. Arguments are handled in the manner of fmt.Printf.
@@ -56,7 +56,7 @@ func (l *GrpcLogger) Warning(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Warningln logs to WARNING log. Arguments are handled in the manner of fmt.Println.
@@ -65,7 +65,7 @@ func (l *GrpcLogger) Warningln(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Warningf logs to WARNING log. Arguments are handled in the manner of fmt.Printf.
@@ -83,7 +83,7 @@ func (l *GrpcLogger) Error(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Errorln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -92,7 +92,7 @@ func (l *GrpcLogger) Errorln(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Errorf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
@@ -112,7 +112,7 @@ func (l *GrpcLogger) Fatal(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Fatalln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -123,7 +123,7 @@ func (l *GrpcLogger) Fatalln(args ...interface{}) {
 	if len(l.context) != 0 {
 		e.Context(l.context)
 	}
-	e.print(args...)
+	print(e, args)
 }
 
 // Fatalf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.

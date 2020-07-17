@@ -1001,23 +1001,6 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	return e
 }
 
-// print sends the event with msgs added as the message field if not empty.
-func (e *Event) print(v ...interface{}) {
-	if e == nil {
-		return
-	}
-
-	b := bbpool.Get().(*bb)
-	b.Reset()
-
-	fmt.Fprint(b, v...)
-	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
-
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
-	}
-}
-
 // Msgf sends the event with formatted msg added as the message field if not empty.
 func (e *Event) Msgf(format string, v ...interface{}) {
 	if e == nil {
