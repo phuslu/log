@@ -62,12 +62,14 @@ type FileWriter struct {
 	FileMode os.FileMode
 
 	// LocalTime determines if the time used for formatting the timestamps in
-	// backup files is the computer's local time.  The default is to use UTC
-	// time.
+	// log files is the computer's local time.  The default is to use UTC time.
 	LocalTime bool
 
-	// HostName determines if the hostname used for formatting in backup files.
+	// HostName determines if the hostname used for formatting in log files.
 	HostName bool
+
+	// ProcessID determines if the pid used for formatting in log files.
+	ProcessID bool
 }
 
 // Write implements io.FileWriter.  If a write would cause the log file to be larger
@@ -139,7 +141,7 @@ var hostname = func() string {
 	return s
 }()
 
-var geteuid = os.Geteuid
+var pid = strconv.Itoa(os.Getpid())
 
 func (w *FileWriter) rotate() (err error) {
 	now := timeNow()
@@ -151,9 +153,17 @@ func (w *FileWriter) rotate() (err error) {
 	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
 	filename := prefix + now.Format(".2006-01-02T15-04-05")
 	if w.HostName {
-		filename += "." + hostname + ext
+		if w.ProcessID {
+			filename += "." + hostname + "-" + pid + ext
+		} else {
+			filename += "." + hostname + ext
+		}
 	} else {
-		filename += ext
+		if w.ProcessID {
+			filename += "." + pid + ext
+		} else {
+			filename += ext
+		}
 	}
 
 	perm := w.FileMode
@@ -175,7 +185,7 @@ func (w *FileWriter) rotate() (err error) {
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
-		if uid != 0 && gid != 0 && geteuid() == 0 {
+		if uid != 0 && gid != 0 && os.Geteuid() == 0 {
 			os.Lchown(filename, uid, gid)
 			os.Chown(newname, uid, gid)
 		}
@@ -202,9 +212,17 @@ func (w *FileWriter) create() (err error) {
 	ext := filepath.Ext(w.Filename)
 	filename := w.Filename[0:len(w.Filename)-len(ext)] + now.Format(".2006-01-02T15-04-05")
 	if w.HostName {
-		filename += "." + hostname + ext
+		if w.ProcessID {
+			filename += "." + hostname + "-" + pid + ext
+		} else {
+			filename += "." + hostname + ext
+		}
 	} else {
-		filename += ext
+		if w.ProcessID {
+			filename += "." + pid + ext
+		} else {
+			filename += ext
+		}
 	}
 
 	perm := w.FileMode

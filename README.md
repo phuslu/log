@@ -67,12 +67,14 @@ type FileWriter struct {
 	MaxBackups int
 
 	// LocalTime determines if the time used for formatting the timestamps in
-	// backup files is the computer's local time.  The default is to use UTC
-	// time.
+	// log files is the computer's local time.  The default is to use UTC time.
 	LocalTime bool
 
-	// HostName determines if the hostname used for formatting in backup files.
+	// HostName determines if the hostname used for formatting in log files.
 	HostName bool
+
+	// ProcessID determines if the pid used for formatting in log files.
+	ProcessID bool
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
