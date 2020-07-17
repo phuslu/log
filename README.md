@@ -11,7 +11,7 @@
 * Pretty Console Writer
 * Dynamic Log Level
 * Contextual Fields
-* Sugar Logger
+* Sugar & Grpc Logger
 * High Performance
 
 ## Interfaces
@@ -221,7 +221,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
 ```
 
-### Sugar Logger
+### Sugar & Grpc Logger
 
 ```go
 package main
@@ -232,9 +232,12 @@ import (
 
 func main() {
 	sugar := log.DefaultLogger.Sugar(log.InfoLevel, log.NewContext().Str("tag", "hi suagr").Value())
-
 	sugar.Printf("hello %s", "世界")
 	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
+
+	grpclog := log.DefaultLogger.Grpc(log.NewContext().Str("tag", "hi grpc").Value())
+	grpclog.Infof("hello %s", "grpclog Infof message")
+	grpclog.Errorf("hello %s", "grpclog Errorf message")
 }
 ```
 

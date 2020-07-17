@@ -21,12 +21,10 @@ type grpcLoggerV2 interface {
 }
 
 func TestGrpcLogger(t *testing.T) {
-	logger := Logger{
-		Level:  ParseLevel("debug"),
-		Caller: 2,
-	}
+	DefaultLogger.Caller = 1
+	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var grpclog grpcLoggerV2 = &GrpcLogger{logger}
+	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext().Str("tag", "hi sugar").Value())
 
 	osExit = func(int) {}
 
@@ -46,14 +44,4 @@ func TestGrpcLogger(t *testing.T) {
 	if grpclog.V(0) {
 		grpclog.Fatalf("hello %s", "grpclog debug level json")
 	}
-}
-
-func TestGrpcLoggerLevel(t *testing.T) {
-	var grpclog grpcLoggerV2 = &GrpcLogger{
-		Logger: Logger{
-			Level:  ParseLevel("warn"),
-			Caller: 2,
-		},
-	}
-	grpclog.Info("hello", "grpclog Info message")
 }
