@@ -315,6 +315,16 @@ func BenchmarkZeroLog(b *testing.B) {
 	}
 }
 
+func BenchmarkPhusSugar(b *testing.B) {
+	sugar := (&log.Logger{
+		TimeFormat: log.TimeFormatUnix,
+		Writer:     ioutil.Discard,
+	}).Sugar(nil)
+	for i := 0; i < b.N; i++ {
+		sugar.Infow(fakeMessage, "foo", "bar", "int", 123)
+	}
+}
+
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{
 		TimeFormat: log.TimeFormatUnix,
@@ -327,10 +337,11 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 Performance results on my laptop:
 ```
-BenchmarkZap-16        	14383234	       828 ns/op	     128 B/op	       1 allocs/op
-BenchmarkOneLog-16     	42118165	       285 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLog-16    	46848562	       252 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-16    	78545636	       155 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-16          	14169160	       848 ns/op	     128 B/op	       1 allocs/op
+BenchmarkOneLog-16       	41849617	       290 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLog-16      	45624534	       258 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusSugar-16    	68191410	       178 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 allocs/op
 ```
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
