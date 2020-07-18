@@ -1038,7 +1038,9 @@ func (e *Event) Context(ctx Context) *Event {
 	if e == nil {
 		return nil
 	}
-	e.buf = append(e.buf, ctx...)
+	if len(ctx) != 0 {
+		e.buf = append(e.buf, ctx...)
+	}
 	return e
 }
 

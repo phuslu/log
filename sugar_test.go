@@ -15,7 +15,7 @@ func TestSugarLoggerNil(t *testing.T) {
 		Level: noLevel,
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi nil sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi nil sugar").Value())
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
@@ -44,13 +44,13 @@ func TestSugarLoggerPrintf(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	logger.Level = InfoLevel
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
 
-	sugar = logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar = logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Print("hello from sugar Print")
 	sugar.Println("hello from sugar Println")
 	sugar.Printf("hello from sugar %s", "Printf")
@@ -63,7 +63,7 @@ func TestSugarLoggerDebug(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Debug("hello from sugar", "Debug")
 	sugar.Debugf("hello from sugar %s", "Debugf")
 	sugar.Debugw("a Debugw message", "foo", "bar", "number", 42)
@@ -76,7 +76,7 @@ func TestSugarLoggerInfo(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Info("hello from sugar", "Info")
 	sugar.Infof("hello from sugar %s", "Infof")
 	sugar.Infow("a Infow message", "foo", "bar", "number", 42)
@@ -89,7 +89,7 @@ func TestSugarLoggerWarn(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Warn("hello from sugar", "Warn")
 	sugar.Warnf("hello from sugar %s", "Warnf")
 	sugar.Warnw("a Warnw message", "foo", "bar", "number", 42)
@@ -102,7 +102,7 @@ func TestSugarLoggerError(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Error("hello from sugar", "Error")
 	sugar.Errorf("hello from sugar %s", "Errorf")
 	sugar.Errorw("a Errorw message", "foo", "bar", "number", 42)
@@ -117,7 +117,7 @@ func TestSugarLoggerFatal(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	sugar.Fatal("hello from sugar", "Fatal")
 	sugar.Fatalf("hello from sugar %s", "Fatalf")
 	sugar.Fatalw("a Fatalw message", "foo", "bar", "number", 42)
@@ -135,11 +135,11 @@ func TestSugarLoggerLog(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	sugar := logger.Sugar(DebugLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
 	logger.Level = InfoLevel
 	sugar.Log("foo", "bar")
 
-	sugar = logger.Sugar(InfoLevel, NewContext().Str("tag", "hi sugar").Value())
+	sugar = sugar.Level(DebugLevel)
 	sugar.Log(
 		"bool", true,
 		"bools", []bool{false},

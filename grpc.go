@@ -32,10 +32,7 @@ func (g *GrpcLogger) Info(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Infoln logs to INFO log. Arguments are handled in the manner of fmt.Println.
@@ -47,10 +44,7 @@ func (g *GrpcLogger) Infoln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Infof logs to INFO log. Arguments are handled in the manner of fmt.Printf.
@@ -62,10 +56,7 @@ func (g *GrpcLogger) Infof(format string, args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	e.Msgf(format, args...)
+	e.Context(g.context).Msgf(format, args...)
 }
 
 // Warning logs to WARNING log. Arguments are handled in the manner of fmt.Print.
@@ -77,10 +68,7 @@ func (g *GrpcLogger) Warning(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Warningln logs to WARNING log. Arguments are handled in the manner of fmt.Println.
@@ -92,10 +80,7 @@ func (g *GrpcLogger) Warningln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Warningf logs to WARNING log. Arguments are handled in the manner of fmt.Printf.
@@ -107,10 +92,7 @@ func (g *GrpcLogger) Warningf(format string, args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	e.Msgf(format, args...)
+	e.Context(g.context).Msgf(format, args...)
 }
 
 // Error logs to ERROR log. Arguments are handled in the manner of fmt.Print.
@@ -122,10 +104,7 @@ func (g *GrpcLogger) Error(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Errorln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -137,10 +116,7 @@ func (g *GrpcLogger) Errorln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Errorf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
@@ -152,10 +128,7 @@ func (g *GrpcLogger) Errorf(format string, args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	e.Msgf(format, args...)
+	e.Context(g.context).Msgf(format, args...)
 }
 
 // Fatal logs to ERROR log. Arguments are handled in the manner of fmt.Print.
@@ -169,10 +142,7 @@ func (g *GrpcLogger) Fatal(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Fatalln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -186,10 +156,7 @@ func (g *GrpcLogger) Fatalln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	print(e, args)
+	print(e.Context(g.context), args)
 }
 
 // Fatalf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
@@ -203,10 +170,7 @@ func (g *GrpcLogger) Fatalf(format string, args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	if len(g.context) != 0 {
-		e.Context(g.context)
-	}
-	e.Msgf(format, args...)
+	e.Context(g.context).Msgf(format, args...)
 }
 
 // V reports whether verbosity level l is at least the requested verbose leveg.

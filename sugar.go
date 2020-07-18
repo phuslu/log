@@ -18,7 +18,6 @@ import (
 // printf-style formatting.
 type SugaredLogger struct {
 	logger  Logger
-	level   Level
 	context Context
 }
 
@@ -26,49 +25,55 @@ type SugaredLogger struct {
 // API. Sugaring a Logger is quite inexpensive, so it's reasonable for a
 // single application to use both Loggers and SugaredLoggers, converting
 // between them on the boundaries of performance-sensitive code.
-func (l *Logger) Sugar(level Level, context Context) (s *SugaredLogger) {
+func (l *Logger) Sugar(context Context) (s *SugaredLogger) {
 	s = &SugaredLogger{
 		logger:  *l,
-		level:   level,
 		context: context,
 	}
 	return
 }
 
+// Level creates a child logger with the minimum accepted level set to level.
+func (s *SugaredLogger) Level(level Level) *SugaredLogger {
+	sl := *s
+	sl.logger.Level = level
+	return &sl
+}
+
 // Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Print(args ...interface{}) {
-	e := s.logger.header(s.level)
+	e := s.logger.header(s.logger.Level)
 	if e == nil {
 		return
 	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Println(args ...interface{}) {
-	e := s.logger.header(s.level)
+	e := s.logger.header(s.logger.Level)
 	if e == nil {
 		return
 	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (s *SugaredLogger) Printf(format string, args ...interface{}) {
-	e := s.logger.header(s.level)
+	e := s.logger.header(s.logger.Level)
 	if e == nil {
 		return
 	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Msgf(format, args...)
+	e.Context(s.context).Msgf(format, args...)
 }
 
 // Debug uses fmt.Sprint to construct and log a message.
@@ -80,10 +85,7 @@ func (s *SugaredLogger) Debug(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Debugf uses fmt.Sprintf to log a templated message.
@@ -95,10 +97,7 @@ func (s *SugaredLogger) Debugf(template string, args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	e.Msgf(template, args...)
+	e.Context(s.context).Msgf(template, args...)
 }
 
 // Debugw logs a message with some additional context.
@@ -110,11 +109,7 @@ func (s *SugaredLogger) Debugw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-
-	log(e.Str("message", msg), keysAndValues)
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
 // Info uses fmt.Sprint to construct and log a message.
@@ -126,10 +121,7 @@ func (s *SugaredLogger) Info(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Infof uses fmt.Sprintf to log a templated message.
@@ -141,10 +133,7 @@ func (s *SugaredLogger) Infof(template string, args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	e.Msgf(template, args...)
+	e.Context(s.context).Msgf(template, args...)
 }
 
 // Infow logs a message with some additional context.
@@ -156,11 +145,7 @@ func (s *SugaredLogger) Infow(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-
-	log(e.Str("message", msg), keysAndValues)
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
 // Warn uses fmt.Sprint to construct and log a message.
@@ -172,10 +157,7 @@ func (s *SugaredLogger) Warn(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Warnf uses fmt.Sprintf to log a templated message.
@@ -187,10 +169,7 @@ func (s *SugaredLogger) Warnf(template string, args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	e.Msgf(template, args...)
+	e.Context(s.context).Msgf(template, args...)
 }
 
 // Warnw logs a message with some additional context.
@@ -202,11 +181,7 @@ func (s *SugaredLogger) Warnw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-
-	log(e.Str("message", msg), keysAndValues)
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
 // Error uses fmt.Sprint to construct and log a message.
@@ -218,10 +193,7 @@ func (s *SugaredLogger) Error(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Errorf uses fmt.Sprintf to log a templated message.
@@ -233,10 +205,7 @@ func (s *SugaredLogger) Errorf(template string, args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	e.Msgf(template, args...)
+	e.Context(s.context).Msgf(template, args...)
 }
 
 // Errorw logs a message with some additional context.
@@ -248,11 +217,7 @@ func (s *SugaredLogger) Errorw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-
-	log(e.Str("message", msg), keysAndValues)
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
 // Fatal uses fmt.Sprint to construct and log a message.
@@ -264,10 +229,7 @@ func (s *SugaredLogger) Fatal(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	print(e, args)
+	print(e.Context(s.context), args)
 }
 
 // Fatalf uses fmt.Sprintf to log a templated message.
@@ -279,10 +241,7 @@ func (s *SugaredLogger) Fatalf(template string, args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	e.Msgf(template, args...)
+	e.Context(s.context).Msgf(template, args...)
 }
 
 // Fatalw logs a message with some additional context.
@@ -294,26 +253,19 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-
-	log(e.Str("message", msg), keysAndValues)
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
 // Log sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
-	e := s.logger.header(s.level)
+	e := s.logger.header(s.logger.Level)
 	if e == nil {
 		return nil
 	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	if s.context != nil {
-		e.buf = append(e.buf, s.context...)
-	}
-	log(e, keysAndValues)
+	log(e.Context(s.context), keysAndValues)
 	return nil
 }
 

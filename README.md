@@ -233,10 +233,12 @@ import (
 )
 
 func main() {
-	sugar := log.DefaultLogger.Sugar(log.InfoLevel, log.NewContext().Str("tag", "hi suagr").Value())
+	sugar := log.DefaultLogger.Sugar(log.NewContext().Str("tag", "hi suagr").Value())
+	sugar.Infof("hello %s", "世界")
+	sugar.Infow("i am a leading message", "foo", "bar", "number", 42)
+	sugar = sugar.Level(log.ErrorLevel)
 	sugar.Printf("hello %s", "世界")
 	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
-	sugar.Log("i am a leading message", "foo", "bar", "number", 42)
 
 	grpclog := log.DefaultLogger.Grpc(log.NewContext().Str("tag", "hi grpc").Value())
 	grpclog.Infof("hello %s", "grpclog Infof message")
@@ -361,5 +363,5 @@ BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 alloc
 [play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
-[play-sugar-img]: https://img.shields.io/badge/playground-wHwCMM8RsZY-29BEB0?style=flat&logo=go
-[play-sugar]: https://play.golang.org/p/wHwCMM8RsZY
+[play-sugar-img]: https://img.shields.io/badge/playground-FLQCli9DHjN-29BEB0?style=flat&logo=go
+[play-sugar]: https://play.golang.org/p/FLQCli9DHjN
