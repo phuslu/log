@@ -11,10 +11,7 @@ type GrpcLogger struct {
 	context Context
 }
 
-// Grpc wraps the Logger to provide a more ergonomic, but slightly slower,
-// API. Grpcing a Logger is quite inexpensive, so it's reasonable for a
-// single application to use both Loggers and GrpcLoggers, converting
-// between them on the boundaries of performance-sensitive code.
+// Grpc wraps the Logger to provide a LoggerV2 logger
 func (l *Logger) Grpc(context Context) (g *GrpcLogger) {
 	g = &GrpcLogger{
 		logger:  *l,

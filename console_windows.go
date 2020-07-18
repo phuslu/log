@@ -128,7 +128,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		return
 	}
 
-	var printf = func(color uintptr, format string, args ...interface{}) {
+	var cprintf = func(color uintptr, format string, args ...interface{}) {
 		if color != White {
 			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
 			defer setConsoleTextAttribute(uintptr(syscall.Stderr), White)
@@ -144,9 +144,9 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	}
 	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
-			printf(Gray, "%s ", v)
+			cprintf(Gray, "%s ", v)
 		} else {
-			printf(White, "%s ", v)
+			cprintf(White, "%s ", v)
 		}
 	}
 
@@ -168,14 +168,14 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			c, s = Red, "???"
 		}
 		if w.ColorOutput || w.ANSIColor {
-			printf(c, "%s ", s)
+			cprintf(c, "%s ", s)
 		} else {
-			printf(White, "%s ", s)
+			cprintf(White, "%s ", s)
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		printf(White, "%s ", v)
+		cprintf(White, "%s ", v)
 	}
 
 	var msgField = "message"
@@ -190,16 +190,16 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ColorOutput || w.ANSIColor {
-			printf(Aqua, ">")
+			cprintf(Aqua, ">")
 		} else {
-			printf(White, ">")
+			cprintf(White, ">")
 		}
-		printf(White, " %s", v)
+		cprintf(White, " %s", v)
 	} else {
 		if w.ColorOutput || w.ANSIColor {
-			printf(Aqua, ">")
+			cprintf(Aqua, ">")
 		} else {
-			printf(White, ">")
+			cprintf(White, ">")
 		}
 	}
 
@@ -216,13 +216,13 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		}
 		if w.ColorOutput || w.ANSIColor {
 			if k == "error" && v != nil {
-				printf(Red, " %s=%v", k, v)
+				cprintf(Red, " %s=%v", k, v)
 			} else {
-				printf(Aqua, " %s=", k)
-				printf(Gray, "%v", v)
+				cprintf(Aqua, " %s=", k)
+				cprintf(Gray, "%v", v)
 			}
 		} else {
-			printf(White, " %s=%v", k, v)
+			cprintf(White, " %s=%v", k, v)
 		}
 	}
 
@@ -231,20 +231,20 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 				v = s[:len(s)-1]
 			}
-			printf(White, " %s", v)
+			cprintf(White, " %s", v)
 		}
 	}
 
 	if v, ok := m["stack"]; ok {
 		if s, ok := v.(string); ok {
-			printf(White, "\n%s", s)
+			cprintf(White, "\n%s", s)
 		} else {
 			data, _ := json.MarshalIndent(v, "", "  ")
-			printf(White, "\n%s", data)
+			cprintf(White, "\n%s", data)
 		}
 	}
 
-	printf(White, " \n")
+	cprintf(White, " \n")
 
 	return n, err
 }

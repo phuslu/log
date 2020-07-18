@@ -21,7 +21,7 @@ type SugaredLogger struct {
 	context Context
 }
 
-// Sugar wraps the Logger to provide a more ergonomic, but slightly slower,
+// Sugar wraps the Logger to provide a more ergonomic, but a little bit slower,
 // API. Sugaring a Logger is quite inexpensive, so it's reasonable for a
 // single application to use both Loggers and SugaredLoggers, converting
 // between them on the boundaries of performance-sensitive code.
@@ -67,7 +67,7 @@ func (s *SugaredLogger) Printf(format string, args ...interface{}) {
 	e.Context(s.context).Msgf(format, args...)
 }
 
-// Log sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
+// Log sends a log event with extra fields.
 func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
 	e := s.logger.header(s.logger.Level)
 	if s.logger.Caller > 0 {
