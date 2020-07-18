@@ -89,6 +89,9 @@ type ConsoleWriter struct {
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
+
+	// TimeField specifies the time filed name of output message.
+	TimeField string
 }
 ```
 
