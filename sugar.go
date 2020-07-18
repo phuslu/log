@@ -43,9 +43,6 @@ func (s *SugaredLogger) Level(level Level) *SugaredLogger {
 // Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Print(args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
-	if e == nil {
-		return
-	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
@@ -55,9 +52,6 @@ func (s *SugaredLogger) Print(args ...interface{}) {
 // Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Println(args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
-	if e == nil {
-		return
-	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
@@ -67,13 +61,20 @@ func (s *SugaredLogger) Println(args ...interface{}) {
 // Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (s *SugaredLogger) Printf(format string, args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
-	if e == nil {
-		return
-	}
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
 	e.Context(s.context).Msgf(format, args...)
+}
+
+// Log sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
+func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
+	e := s.logger.header(s.logger.Level)
+	if s.logger.Caller > 0 {
+		e.caller(runtime.Caller(s.logger.Caller))
+	}
+	log(e.Context(s.context), keysAndValues)
+	return nil
 }
 
 // Debug uses fmt.Sprint to construct and log a message.
@@ -254,19 +255,6 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
 	log(e.Context(s.context).Str("message", msg), keysAndValues)
-}
-
-// Log sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
-func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
-	e := s.logger.header(s.logger.Level)
-	if e == nil {
-		return nil
-	}
-	if s.logger.Caller > 0 {
-		e.caller(runtime.Caller(s.logger.Caller))
-	}
-	log(e.Context(s.context), keysAndValues)
-	return nil
 }
 
 func print(e *Event, args []interface{}) {

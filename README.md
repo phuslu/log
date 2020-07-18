@@ -174,7 +174,11 @@ To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playgroun
 if log.IsTerminal(os.Stderr.Fd()) {
 	log.DefaultLogger = log.Logger{
 		Caller: 1,
-		Writer: &log.ConsoleWriter{ColorOutput: true},
+		Writer: &log.ConsoleWriter{
+			ColorOutput:    true,
+			QuoteString:    true,
+			EndWithMessage: true,
+		},
 	}
 }
 
@@ -352,13 +356,13 @@ BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 alloc
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
-[pretty-logging-img]: https://user-images.githubusercontent.com/195836/77247067-5cf24000-6c68-11ea-9e65-6cdc00d82384.png
+[pretty-logging-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/EaFFre1DUVJ
-[play-pretty-img]: https://img.shields.io/badge/playground-62bWGk67apR-29BEB0?style=flat&logo=go
-[play-pretty]: https://play.golang.org/p/62bWGk67apR
+[play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
+[play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [play-dynamic-img]: https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go
 [play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
