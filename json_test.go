@@ -86,7 +86,6 @@ func TestLogger(t *testing.T) {
 
 func TestLoggerNil(t *testing.T) {
 	e := Info()
-	e.buf = nil
 	e.Caller(1).Str("foo", "bar").Int("num", 42).Msgf("this is a nil event test")
 
 	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
@@ -125,6 +124,8 @@ func TestLoggerNil(t *testing.T) {
 		Hex("hex", []byte("\"<>?'")).
 		Bytes("bytes1", []byte("bytes1")).
 		Bytes("bytes2", []byte("\"<>?'")).
+		BytesOrNil("bytes3", []byte("\"<>?'")).
+		BytesOrNil("bytes4", nil).
 		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
 		Strs("strings", []string{"a", "b", "\"<>?'"}).
 		Stringer("stringer", nil).

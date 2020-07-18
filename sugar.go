@@ -318,10 +318,6 @@ func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
 }
 
 func print(e *Event, args []interface{}) {
-	if e == nil {
-		return
-	}
-
 	b := bbpool.Get().(*bb)
 	b.Reset()
 

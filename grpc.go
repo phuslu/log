@@ -8,7 +8,6 @@ import (
 // google.golang.org/grpc/grpclog.LoggerV2.
 type GrpcLogger struct {
 	logger  Logger
-	level   Level
 	context Context
 }
 
