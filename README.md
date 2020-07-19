@@ -6,12 +6,12 @@
 
 * No Dependencies
 * Intuitive Interfaces
-* JSON/TSV/Printf Loggers
+* JSON/Sugar/TSV Loggers
 * Rotating File Writer
 * Pretty Console Writer
 * Dynamic Log Level
 * Contextual Fields
-* Sugar & Grpc Logger
+* Grpc & StdLog Interceptor
 * High Performance
 
 ## Interfaces
@@ -131,7 +131,7 @@ log.DefaultLogger = log.Logger{
 }
 log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
-// Output: {"date":"2019-07-04","level":"info","caller":"test.go:42","foo":"bar","message":"hello world"}
+// Output: {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
 ```
 
 ### Rotating File Writer
@@ -228,9 +228,9 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
 ```
 
-### Sugar & Grpc Logger
+### Sugar Logger
 
-To using wrapped logger like sugar or grpc. [![playground][play-sugar-img]][play-sugar]
+In contexts where performance is nice, but not critical, use the `SugaredLogger`. It's 20% slower than `Logger` but still faster than other structured logging packages [![playground][play-sugar-img]][play-sugar]
 
 ```go
 package main
@@ -243,17 +243,41 @@ func main() {
 	sugar := log.DefaultLogger.Sugar(log.NewContext().Str("tag", "hi suagr").Value())
 	sugar.Infof("hello %s", "世界")
 	sugar.Infow("i am a leading message", "foo", "bar", "number", 42)
+
 	sugar = sugar.Level(log.ErrorLevel)
 	sugar.Printf("hello %s", "世界")
 	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
+}
+```
 
-	grpclog := log.DefaultLogger.Grpc(log.NewContext().Str("tag", "hi grpc").Value())
+### Grpc & StdLog Interceptor
+
+To using wrapped logger as std or grpc.
+
+```go
+package main
+
+import (
+	stdLog "log"
+	"github.com/phuslu/log"
+	"google.golang.org/grpc/grpclog"
+)
+
+func main() {
+	ctx := log.NewContext().Str("tag", "hi log").Value()
+
+	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix:", stdLog.LstdFlags)
+	stdlog.Print("hello from stdlog Print")
+	stdlog.Println("hello from stdlog Println")
+	stdlog.Printf("hello from stdlog %s", "Printf")
+
+	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")
 	grpclog.Errorf("hello %s", "grpclog Errorf message")
 }
 ```
 
-### Logging to syslog
+### Logging to syslog Writer
 
 ```go
 package main
@@ -362,13 +386,13 @@ BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 alloc
 [pretty-logging-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
-[play-customize-img]: https://img.shields.io/badge/playground-EaFFre1DUVJ-29BEB0?style=flat&logo=go
-[play-customize]: https://play.golang.org/p/EaFFre1DUVJ
+[play-customize-img]: https://img.shields.io/badge/playground-U2TYAgV7VCR-29BEB0?style=flat&logo=go
+[play-customize]: https://play.golang.org/p/U2TYAgV7VCR
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [play-dynamic-img]: https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go
 [play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
-[play-sugar-img]: https://img.shields.io/badge/playground-FLQCli9DHjN-29BEB0?style=flat&logo=go
-[play-sugar]: https://play.golang.org/p/FLQCli9DHjN
+[play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
+[play-sugar]: https://play.golang.org/p/7qkN1XU1Oe5
