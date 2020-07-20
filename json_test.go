@@ -21,7 +21,7 @@ func TestDefaultLogger(t *testing.T) {
 	Printf("hello from %s", "Printf")
 }
 
-func TestLogger(t *testing.T) {
+func TestLoggerInfo(t *testing.T) {
 	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
 	if err != nil {
 		t.Fatalf("net.ParseCIDR error: %+v", err)
@@ -78,6 +78,7 @@ func TestLogger(t *testing.T) {
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
+		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
 		Interface("time.Time", timeNow()).
@@ -140,6 +141,7 @@ func TestLoggerNil(t *testing.T) {
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
+		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
 		Interface("time.Time", timeNow()).
