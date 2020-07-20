@@ -225,6 +225,8 @@ func TestLoggerCaller(t *testing.T) {
 }
 
 func TestLoggerTime(t *testing.T) {
+	timeNow = func() time.Time { return time.Now().In(time.FixedZone("UTC-8", -8*60*60)) }
+
 	logger1 := Logger{
 		Level:     ParseLevel("debug"),
 		TimeField: "_time",

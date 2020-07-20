@@ -206,6 +206,12 @@ const smallsString = "00010203040506070809" +
 	"90919293949596979899"
 
 var timeNow = time.Now
+var timeOffset, timeZone = func() (int64, string) {
+	now := timeNow()
+	_, n := now.Zone()
+	s := now.Format("Z07:00")
+	return int64(n), s
+}()
 
 func (l *Logger) header(level Level) *Event {
 	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
@@ -237,10 +243,23 @@ func (l *Logger) header(level Level) *Event {
 	}
 	if l.TimeFormat == "" {
 		n := len(e.buf)
-		e.buf = e.buf[:n+26]
+		if timeOffset == 0 {
+			e.buf = e.buf[:n+26]
+			e.buf[n+25] = '"'
+			e.buf[n+24] = 'Z'
+		} else {
+			e.buf = e.buf[:n+31]
+			e.buf[n+30] = '"'
+			e.buf[n+29] = timeZone[5]
+			e.buf[n+28] = timeZone[4]
+			e.buf[n+27] = timeZone[3]
+			e.buf[n+26] = timeZone[2]
+			e.buf[n+25] = timeZone[1]
+			e.buf[n+24] = timeZone[0]
+		}
 		sec, nsec := walltime()
 		// date time
-		sec += 9223372028715321600 // unixToInternal + internalToAbsolute
+		sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
 		year, month, day, _ := absDate(uint64(sec), true)
 		hour, minute, second := absClock(uint64(sec))
 		// year
@@ -283,8 +302,6 @@ func (l *Logger) header(level Level) *Event {
 		e.buf[n+21] = byte('0' + a/100)
 		e.buf[n+22] = smallsString[b]
 		e.buf[n+23] = smallsString[b+1]
-		e.buf[n+24] = 'Z'
-		e.buf[n+25] = '"'
 	} else {
 		switch l.TimeFormat[0] {
 		case 'U':
