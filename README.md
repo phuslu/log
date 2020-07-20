@@ -6,7 +6,7 @@
 
 * No Dependencies
 * Intuitive Interfaces
-* JSON/Sugar/TSV Loggers
+* Fluent & Sugar Loggers
 * Rotating File Writer
 * Pretty Console Writer
 * Dynamic Log Level
@@ -252,7 +252,7 @@ func main() {
 
 ### Grpc & StdLog Interceptor
 
-To using wrapped logger as std or grpc.
+To using wrapped logger for grpc/stdlog. [![playground][play-interceptor-img]][play-interceptor]
 
 ```go
 package main
@@ -266,14 +266,14 @@ import (
 func main() {
 	ctx := log.NewContext().Str("tag", "hi log").Value()
 
-	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix:", stdLog.LstdFlags)
-	stdlog.Print("hello from stdlog Print")
-	stdlog.Println("hello from stdlog Println")
-	stdlog.Printf("hello from stdlog %s", "Printf")
-
 	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")
 	grpclog.Errorf("hello %s", "grpclog Errorf message")
+
+	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix ", stdLog.LstdFlags)
+	stdlog.Print("hello from stdlog Print")
+	stdlog.Println("hello from stdlog Println")
+	stdlog.Printf("hello from stdlog %s", "Printf")
 }
 ```
 
@@ -396,3 +396,5 @@ BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 alloc
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
 [play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
 [play-sugar]: https://play.golang.org/p/7qkN1XU1Oe5
+[play-interceptor-img]: https://img.shields.io/badge/playground-CJoBdaB3Wnz-29BEB0?style=flat&logo=go
+[play-interceptor]: https://play.golang.org/p/CJoBdaB3Wnz
