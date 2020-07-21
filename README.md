@@ -312,7 +312,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/francoispqt/onelog"
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
@@ -329,14 +328,6 @@ func BenchmarkZap(b *testing.B) {
 	))
 	for i := 0; i < b.N; i++ {
 		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 123))
-	}
-}
-
-func BenchmarkOneLog(b *testing.B) {
-	logger := onelog.New(ioutil.Discard, onelog.INFO)
-	logger.Hook(func(e onelog.Entry) { e.Int64("time", time.Now().Unix()) })
-	for i := 0; i < b.N; i++ {
-		logger.InfoWith(fakeMessage).String("foo", "bar").Int("int", 123).Write()
 	}
 }
 
@@ -370,11 +361,10 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 Performance results on my laptop:
 ```
-BenchmarkZap-16          	14169160	       848 ns/op	     128 B/op	       1 allocs/op
-BenchmarkOneLog-16       	41849617	       290 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLog-16      	45624534	       258 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusSugar-16    	68191410	       178 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-16      	70210762	       149 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-8          15153003               789 ns/op             128 B/op          1 allocs/op
+BenchmarkZeroLog-8      62872947               191 ns/op               0 B/op          0 allocs/op
+BenchmarkPhusSugar-8    75497385               161 ns/op               0 B/op          0 allocs/op
+BenchmarkPhusLog-8      91577397               132 ns/op               0 B/op          0 allocs/op
 ```
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
