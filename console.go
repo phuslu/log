@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"text/template"
 )
 
 // IsTerminal returns whether the given file descriptor is a terminal.
@@ -29,19 +30,27 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
+	// Template determines console output template if not empty.
+	Template *template.Template
+
 	// TimeField specifies the time filed name of output message.
 	TimeField string
 }
 
+const (
+	colorReset    = "\x1b[0m"
+	colorRed      = "\x1b[31m"
+	colorGreen    = "\x1b[32m"
+	colorYellow   = "\x1b[33m"
+	colorCyan     = "\x1b[36m"
+	colorDarkGray = "\x1b[90m"
+)
+
 func (w *ConsoleWriter) write(p []byte) (n int, err error) {
-	const (
-		Reset    = "\x1b[0m"
-		Red      = "\x1b[31m"
-		Green    = "\x1b[32m"
-		Yellow   = "\x1b[33m"
-		Cyan     = "\x1b[36m"
-		DarkGray = "\x1b[90m"
-	)
+
+	if w.Template != nil {
+		return w.tmplWrite(p)
+	}
 
 	var m map[string]interface{}
 
@@ -63,7 +72,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	}
 	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", DarkGray, v, Reset)
+			fmt.Fprintf(b, "%s%s%s ", colorDarkGray, v, colorReset)
 		} else {
 			fmt.Fprintf(b, "%s ", v)
 		}
@@ -73,20 +82,20 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
-			c, s = Yellow, "DBG"
+			c, s = colorYellow, "DBG"
 		case InfoLevel:
-			c, s = Green, "INF"
+			c, s = colorGreen, "INF"
 		case WarnLevel:
-			c, s = Red, "WRN"
+			c, s = colorRed, "WRN"
 		case ErrorLevel:
-			c, s = Red, "ERR"
+			c, s = colorRed, "ERR"
 		case FatalLevel:
-			c, s = Red, "FTL"
+			c, s = colorRed, "FTL"
 		default:
-			c, s = Yellow, "???"
+			c, s = colorYellow, "???"
 		}
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
+			fmt.Fprintf(b, "%s%s%s ", c, s, colorReset)
 		} else {
 			fmt.Fprintf(b, "%s ", s)
 		}
@@ -108,13 +117,13 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
+			fmt.Fprintf(b, "%s>%s %s", colorCyan, colorReset, v)
 		} else {
 			fmt.Fprintf(b, "> %s", v)
 		}
 	} else {
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
+			fmt.Fprintf(b, "%s>%s", colorCyan, colorReset)
 		} else {
 			fmt.Fprint(b, ">")
 		}
@@ -133,9 +142,9 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 		}
 		if w.ColorOutput || w.ANSIColor {
 			if k == "error" && v != nil {
-				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
+				fmt.Fprintf(b, " %s%s=%v%s", colorRed, k, v, colorReset)
 			} else {
-				fmt.Fprintf(b, " %s%s=%s%v%s", Cyan, k, DarkGray, v, Reset)
+				fmt.Fprintf(b, " %s%s=%s%v%s", colorCyan, k, colorDarkGray, v, colorReset)
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)
@@ -148,7 +157,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 				v = s[:len(s)-1]
 			}
 			if w.ColorOutput || w.ANSIColor {
-				fmt.Fprintf(b, "%s %s", Reset, v)
+				fmt.Fprintf(b, "%s %s", colorReset, v)
 			} else {
 				fmt.Fprintf(b, " %s", v)
 			}
@@ -166,6 +175,132 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 	}
 
 	b.B = append(b.B, '\n')
+
+	return os.Stderr.Write(b.B)
+}
+
+const ConsoleIndentTemplate = `{{.DarkGray}}{{.Time}}{{.Reset}} {{.LevelColor}}{{.Level}}{{.Reset}} {{.Caller}} {{.Cyan}}>{{.Reset}} {{.Message}}
+{{range $i, $x := .KeyValue}}{{if eq $x.Key "error" -}}
+{{ "\t" }}{{$.Red}}{{$x.Key}}={{$x.Value}}{{$.Reset -}}
+{{else -}}
+{{ "\t" }}{{$.Cyan}}{{$x.Key}}={{$.Reset}}{{$.DarkGray}}{{$x.Value}}{{$.Reset -}}
+{{end}}
+{{end}}{{.Stack}}`
+
+func (w *ConsoleWriter) tmplWrite(p []byte) (n int, err error) {
+	type KeyValue struct {
+		Key   string
+		Value interface{}
+	}
+
+	output := struct {
+		Reset      string
+		Red        string
+		Green      string
+		Yellow     string
+		Cyan       string
+		DarkGray   string
+		LevelColor string
+		Time       string
+		Level      string
+		Caller     string
+		Message    string
+		Stack      string
+		KeyValue   []KeyValue
+	}{
+		Reset:      colorReset,
+		Red:        colorRed,
+		Green:      colorGreen,
+		Yellow:     colorYellow,
+		Cyan:       colorCyan,
+		DarkGray:   colorDarkGray,
+		LevelColor: colorReset,
+	}
+
+	var m map[string]interface{}
+
+	decoder := json.NewDecoder(bytes.NewReader(p))
+	decoder.UseNumber()
+	err = decoder.Decode(&m)
+	if err != nil {
+		n, err = os.Stderr.Write(p)
+		return
+	}
+
+	var timeField = w.TimeField
+	if timeField == "" {
+		timeField = "time"
+	}
+	if v, ok := m[timeField]; ok {
+		output.Time = v.(string)
+	}
+
+	if v, ok := m["level"]; ok {
+		switch l, _ := v.(string); ParseLevel(l) {
+		case DebugLevel:
+			output.LevelColor, output.Level = output.Yellow, "DBG"
+		case InfoLevel:
+			output.LevelColor, output.Level = output.Green, "INF"
+		case WarnLevel:
+			output.LevelColor, output.Level = output.Red, "WRN"
+		case ErrorLevel:
+			output.LevelColor, output.Level = output.Red, "ERR"
+		case FatalLevel:
+			output.LevelColor, output.Level = output.Red, "FTL"
+		default:
+			output.LevelColor, output.Level = output.Yellow, "???"
+		}
+	}
+
+	if v, ok := m["caller"]; ok {
+		output.Caller = v.(string)
+	}
+
+	var msgField = "message"
+	if _, ok := m[msgField]; !ok {
+		if _, ok := m["msg"]; ok {
+			msgField = "msg"
+		}
+	}
+
+	if v, ok := m[msgField]; ok {
+		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
+			v = s[:len(s)-1]
+		}
+		output.Message = v.(string)
+	}
+
+	if v, ok := m["stack"]; ok {
+		if s, ok := v.(string); ok {
+			output.Stack = s
+		} else {
+			b, _ := json.MarshalIndent(v, "", "  ")
+			output.Stack = string(b)
+		}
+	}
+
+	for _, k := range jsonKeys(p) {
+		switch k {
+		case timeField, msgField, "level", "caller", "stack":
+			continue
+		}
+		v := m[k]
+		if w.QuoteString {
+			if s, ok := v.(string); ok {
+				v = strconv.Quote(s)
+			}
+		}
+		output.KeyValue = append(output.KeyValue, KeyValue{k, fmt.Sprint(v)})
+	}
+
+	b := bbpool.Get().(*bb)
+	b.Reset()
+	defer bbpool.Put(b)
+
+	w.Template.Execute(b, &output)
+	if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
+		b.B = append(b.B, '\n')
+	}
 
 	return os.Stderr.Write(b.B)
 }

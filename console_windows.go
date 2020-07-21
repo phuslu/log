@@ -107,6 +107,10 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 	muConsole.Lock()
 	defer muConsole.Unlock()
 
+	if w.Template != nil {
+		return w.tmplWrite(p)
+	}
+
 	const (
 		Blue   = 1
 		Green  = 2

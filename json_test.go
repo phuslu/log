@@ -80,7 +80,7 @@ func TestLoggerInfo(t *testing.T) {
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
 		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
-		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
+		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
 		Msgf("this is a \"%s\"", "test")
 }
@@ -143,7 +143,7 @@ func TestLoggerNil(t *testing.T) {
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
 		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
-		Interface("console_writer", ConsoleWriter{ANSIColor: true}).
+		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
 		Msgf("this is a \"%s\"", "test")
 }
@@ -259,7 +259,7 @@ func TestLoggerContext(t *testing.T) {
 func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
-	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ANSIColor: true}}
+	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
 	logger.Info().
