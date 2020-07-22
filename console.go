@@ -49,7 +49,7 @@ const (
 
 func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 	if w.Template != nil {
-		return w.tmplWrite(p)
+		return w.writeTempl(out, p)
 	}
 
 	var m map[string]interface{}
@@ -187,7 +187,7 @@ const ConsoleIndentTemplate = `{{.DarkGray}}{{.Time}}{{.Reset}} {{.LevelColor}}{
 {{end}}
 {{end}}{{.Stack}}`
 
-func (w *ConsoleWriter) tmplWrite(p []byte) (n int, err error) {
+func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
 	type KeyValue struct {
 		Key   string
 		Value interface{}

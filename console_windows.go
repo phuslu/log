@@ -3,12 +3,10 @@
 package log
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -44,11 +42,12 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		muConsole.Unlock()
 	}
 	// write
-	if vtEnabled {
-		n, err = w.writeTo(os.Stderr, p)
-	} else {
-		n, err = w.writeWindows(p)
-	}
+	n, err = w.writeWindows(os.Stderr, p)
+	// if vtEnabled {
+	// 	n, err = w.writeTo(os.Stderr, p)
+	// } else {
+	// 	n, err = w.writeWindows(os.Stderr, p)
+	// }
 	return
 }
 
@@ -103,13 +102,15 @@ func tryEnableVirtualTerminalProcessing() error {
 	return nil
 }
 
-func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
+func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error) {
 	muConsole.Lock()
 	defer muConsole.Unlock()
 
-	if w.Template != nil {
-		return w.tmplWrite(p)
-	}
+	b := bbpool.Get().(*bb)
+	b.Reset()
+	defer bbpool.Put(b)
+
+	n, err = w.writeTo(b, p)
 
 	const (
 		Blue   = 1
@@ -121,18 +122,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		White  = 7
 		Gray   = 8
 	)
-
-	var m map[string]interface{}
-
-	decoder := json.NewDecoder(bytes.NewReader(p))
-	decoder.UseNumber()
-	err = decoder.Decode(&m)
-	if err != nil {
-		n, err = os.Stderr.Write(p)
-		return
-	}
-
-	var cprintf = func(color uintptr, format string, args ...interface{}) {
+	var _ = func(color uintptr, format string, args ...interface{}) {
 		if color != White {
 			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
 			defer setConsoleTextAttribute(uintptr(syscall.Stderr), White)
@@ -142,113 +132,7 @@ func (w *ConsoleWriter) writeWindows(p []byte) (n int, err error) {
 		n += i
 	}
 
-	var timeField = w.TimeField
-	if timeField == "" {
-		timeField = "time"
-	}
-	if v, ok := m[timeField]; ok {
-		if w.ColorOutput || w.ANSIColor {
-			cprintf(Gray, "%s ", v)
-		} else {
-			cprintf(White, "%s ", v)
-		}
-	}
-
-	if v, ok := m["level"]; ok {
-		var s string
-		var c uintptr
-		switch s, _ = v.(string); ParseLevel(s) {
-		case DebugLevel:
-			c, s = Yellow, "DBG"
-		case InfoLevel:
-			c, s = Green, "INF"
-		case WarnLevel:
-			c, s = Red, "WRN"
-		case ErrorLevel:
-			c, s = Red, "ERR"
-		case FatalLevel:
-			c, s = Red, "FTL"
-		default:
-			c, s = Red, "???"
-		}
-		if w.ColorOutput || w.ANSIColor {
-			cprintf(c, "%s ", s)
-		} else {
-			cprintf(White, "%s ", s)
-		}
-	}
-
-	if v, ok := m["caller"]; ok {
-		cprintf(White, "%s ", v)
-	}
-
-	var msgField = "message"
-	if _, ok := m[msgField]; !ok {
-		if _, ok := m["msg"]; ok {
-			msgField = "msg"
-		}
-	}
-
-	if v, ok := m[msgField]; ok && !w.EndWithMessage {
-		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-			v = s[:len(s)-1]
-		}
-		if w.ColorOutput || w.ANSIColor {
-			cprintf(Aqua, ">")
-		} else {
-			cprintf(White, ">")
-		}
-		cprintf(White, " %s", v)
-	} else {
-		if w.ColorOutput || w.ANSIColor {
-			cprintf(Aqua, ">")
-		} else {
-			cprintf(White, ">")
-		}
-	}
-
-	for _, k := range jsonKeys(p) {
-		switch k {
-		case timeField, msgField, "level", "caller", "stack":
-			continue
-		}
-		v := m[k]
-		if w.QuoteString {
-			if s, ok := v.(string); ok {
-				v = strconv.Quote(s)
-			}
-		}
-		if w.ColorOutput || w.ANSIColor {
-			if k == "error" && v != nil {
-				cprintf(Red, " %s=%v", k, v)
-			} else {
-				cprintf(Aqua, " %s=", k)
-				cprintf(Gray, "%v", v)
-			}
-		} else {
-			cprintf(White, " %s=%v", k, v)
-		}
-	}
-
-	if w.EndWithMessage {
-		if v, ok := m[msgField]; ok {
-			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-				v = s[:len(s)-1]
-			}
-			cprintf(White, " %s", v)
-		}
-	}
-
-	if v, ok := m["stack"]; ok {
-		if s, ok := v.(string); ok {
-			cprintf(White, "\n%s", s)
-		} else {
-			data, _ := json.MarshalIndent(v, "", "  ")
-			cprintf(White, "\n%s", data)
-		}
-	}
-
-	cprintf(White, " \n")
+	n, err = out.Write(b.B)
 
 	return n, err
 }
