@@ -626,6 +626,16 @@ func (e *Event) RawJSON(key string, b []byte) *Event {
 	return e
 }
 
+// RawJSONStr adds already encoded JSON String to the log line under key.
+func (e *Event) RawJSONStr(key string, s string) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = append(e.buf, s...)
+	return e
+}
+
 // Str adds the field key with val as a string to the event.
 func (e *Event) Str(key string, val string) *Event {
 	if e == nil {
