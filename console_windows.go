@@ -4,7 +4,6 @@ package log
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -110,7 +109,10 @@ func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error)
 	b.Reset()
 	defer bbpool.Put(b)
 
-	n, err = w.writeTo(b, p)
+	_, err = w.writeTo(b, p)
+	if err != nil {
+		return 0, err
+	}
 
 	const (
 		Blue   = 1
@@ -122,15 +124,16 @@ func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error)
 		White  = 7
 		Gray   = 8
 	)
-	var _ = func(color uintptr, format string, args ...interface{}) {
-		if color != White {
-			setConsoleTextAttribute(uintptr(syscall.Stderr), color)
-			defer setConsoleTextAttribute(uintptr(syscall.Stderr), White)
-		}
-		var i int
-		i, err = fmt.Fprintf(os.Stderr, format, args...)
-		n += i
-	}
+	// var cprint = func(color uintptr, b []byte) {
+	// 	if color != White {
+	// 		setConsoleTextAttribute(uintptr(syscall.Stderr), color)
+	// 		defer setConsoleTextAttribute(uintptr(syscall.Stderr), White)
+	// 	}
+	// 	var i int
+	// 	i, err = out.Write(b)
+	// 	n += i
+	// }
+	// cprint(White, b.B)
 
 	n, err = out.Write(b.B)
 
