@@ -45,7 +45,7 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	}
 	// write
 	if vtEnabled {
-		n, err = w.write(p)
+		n, err = w.writeTo(os.Stderr, p)
 	} else {
 		n, err = w.writeWindows(p)
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"strconv"
@@ -46,8 +47,7 @@ const (
 	colorDarkGray = "\x1b[90m"
 )
 
-func (w *ConsoleWriter) write(p []byte) (n int, err error) {
-
+func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 	if w.Template != nil {
 		return w.tmplWrite(p)
 	}
@@ -176,7 +176,7 @@ func (w *ConsoleWriter) write(p []byte) (n int, err error) {
 
 	b.B = append(b.B, '\n')
 
-	return os.Stderr.Write(b.B)
+	return out.Write(b.B)
 }
 
 const ConsoleIndentTemplate = `{{.DarkGray}}{{.Time}}{{.Reset}} {{.LevelColor}}{{.Level}}{{.Reset}} {{.Caller}} {{.Cyan}}>{{.Reset}} {{.Message}}
