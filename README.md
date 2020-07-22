@@ -92,6 +92,12 @@ type ConsoleWriter struct {
 
 	// TimeField specifies the time filed name of output message.
 	TimeField string
+
+	// Template determines console output template if not empty.
+	Template *template.Template
+
+	// Out is the output destination. using os.Stderr if empty.
+	Out io.Writer
 }
 ```
 

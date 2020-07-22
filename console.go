@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"strconv"
 	"text/template"
@@ -17,7 +16,7 @@ func IsTerminal(fd uintptr) bool {
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to os.Stderr
+// (optionally) colorized, human-friendly format to Out.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -31,25 +30,39 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
+	// TimeField specifies the field name for time in output.
+	TimeField string
+
 	// Template determines console output template if not empty.
 	Template *template.Template
 
-	// TimeField specifies the time filed name of output message.
-	TimeField string
+	// Out is the output destination. using os.Stderr if empty.
+	Out io.Writer
 }
 
 const (
-	colorReset    = "\x1b[0m"
-	colorRed      = "\x1b[31m"
-	colorGreen    = "\x1b[32m"
-	colorYellow   = "\x1b[33m"
-	colorCyan     = "\x1b[36m"
-	colorDarkGray = "\x1b[90m"
+	colorReset         = "\x1b[0m"
+	colorBlack         = "\x1b[30m"
+	colorRed           = "\x1b[31m"
+	colorGreen         = "\x1b[32m"
+	colorYellow        = "\x1b[33m"
+	colorBlue          = "\x1b[34m"
+	colorMagenta       = "\x1b[35m"
+	colorCyan          = "\x1b[36m"
+	colorWhite         = "\x1b[37m"
+	colorGray          = "\x1b[90m"
+	colorBrightRed     = "\x1b[91m"
+	colorBrightGreen   = "\x1b[92m"
+	colorBrightYellow  = "\x1b[93m"
+	colorBrightBlue    = "\x1b[94m"
+	colorBrightMagenta = "\x1b[95m"
+	colorBrightCyan    = "\x1b[96m"
+	colorBrightWhite   = "\x1b[97m"
 )
 
-func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
+func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	if w.Template != nil {
-		return w.writeTempl(out, p)
+		return w.writet(out, p)
 	}
 
 	var m map[string]interface{}
@@ -58,7 +71,7 @@ func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
 	if err != nil {
-		n, err = os.Stderr.Write(p)
+		n, err = out.Write(p)
 		return
 	}
 
@@ -72,7 +85,7 @@ func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 	}
 	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", colorDarkGray, v, colorReset)
+			fmt.Fprintf(b, "%s%s%s ", colorGray, v, colorReset)
 		} else {
 			fmt.Fprintf(b, "%s ", v)
 		}
@@ -144,7 +157,7 @@ func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 			if k == "error" && v != nil {
 				fmt.Fprintf(b, " %s%s=%v%s", colorRed, k, v, colorReset)
 			} else {
-				fmt.Fprintf(b, " %s%s=%s%v%s", colorCyan, k, colorDarkGray, v, colorReset)
+				fmt.Fprintf(b, " %s%s=%s%v%s", colorCyan, k, colorGray, v, colorReset)
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)
@@ -179,42 +192,66 @@ func (w *ConsoleWriter) writeTo(out io.Writer, p []byte) (n int, err error) {
 	return out.Write(b.B)
 }
 
-const ConsoleIndentTemplate = `{{.DarkGray}}{{.Time}}{{.Reset}} {{.LevelColor}}{{.Level}}{{.Reset}} {{.Caller}} {{.Cyan}}>{{.Reset}} {{.Message}}
-{{range $i, $x := .KeyValue}}{{if eq $x.Key "error" -}}
+const ConsoleIndentTemplate = `{{.Gray}}{{.Time}}{{.Reset}} {{.LevelColor}}{{.Level3}}{{.Reset}} {{.Caller}} {{.Cyan}}>{{.Reset}} {{.Message}}
+{{range $i, $x := .KeyValue -}}
+{{if eq $x.Key "error" -}}
 {{ "\t" }}{{$.Red}}{{$x.Key}}={{$x.Value}}{{$.Reset -}}
 {{else -}}
-{{ "\t" }}{{$.Cyan}}{{$x.Key}}={{$.Reset}}{{$.DarkGray}}{{$x.Value}}{{$.Reset -}}
+{{ "\t" }}{{$.Cyan}}{{$x.Key}}={{$.Reset}}{{$.Gray}}{{$x.Value}}{{$.Reset -}}
 {{end}}
 {{end}}{{.Stack}}`
 
-func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
+func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	type KeyValue struct {
 		Key   string
 		Value interface{}
 	}
 
-	output := struct {
-		Reset      string
-		Red        string
-		Green      string
-		Yellow     string
-		Cyan       string
-		DarkGray   string
-		LevelColor string
-		Time       string
-		Level      string
-		Caller     string
-		Message    string
-		Stack      string
-		KeyValue   []KeyValue
+	o := struct {
+		Reset         string
+		Black         string
+		Red           string
+		Green         string
+		Yellow        string
+		Blue          string
+		Magenta       string
+		Cyan          string
+		White         string
+		Gray          string
+		BrightRed     string
+		BrightGreen   string
+		BrightYellow  string
+		BrightBlue    string
+		BrightMagenta string
+		BrightCyan    string
+		BrightWhite   string
+		LevelColor    string
+		Level         string
+		Level3        string
+		Time          string
+		Caller        string
+		Message       string
+		Stack         string
+		KeyValue      []KeyValue
 	}{
-		Reset:      colorReset,
-		Red:        colorRed,
-		Green:      colorGreen,
-		Yellow:     colorYellow,
-		Cyan:       colorCyan,
-		DarkGray:   colorDarkGray,
-		LevelColor: colorReset,
+		Reset:         colorReset,
+		Black:         colorBlack,
+		Red:           colorRed,
+		Green:         colorGreen,
+		Yellow:        colorYellow,
+		Blue:          colorBlue,
+		Magenta:       colorMagenta,
+		Cyan:          colorCyan,
+		White:         colorWhite,
+		Gray:          colorGray,
+		BrightRed:     colorBrightRed,
+		BrightGreen:   colorBrightGreen,
+		BrightYellow:  colorBrightYellow,
+		BrightBlue:    colorBrightBlue,
+		BrightMagenta: colorBrightMagenta,
+		BrightCyan:    colorBrightCyan,
+		BrightWhite:   colorBrightWhite,
+		LevelColor:    colorReset,
 	}
 
 	var m map[string]interface{}
@@ -223,7 +260,7 @@ func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
 	if err != nil {
-		n, err = os.Stderr.Write(p)
+		n, err = out.Write(p)
 		return
 	}
 
@@ -232,28 +269,28 @@ func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
 		timeField = "time"
 	}
 	if v, ok := m[timeField]; ok {
-		output.Time = v.(string)
+		o.Time = v.(string)
 	}
 
 	if v, ok := m["level"]; ok {
 		switch l, _ := v.(string); ParseLevel(l) {
 		case DebugLevel:
-			output.LevelColor, output.Level = output.Yellow, "DBG"
+			o.Level, o.LevelColor, o.Level3 = "debug", o.Yellow, "DBG"
 		case InfoLevel:
-			output.LevelColor, output.Level = output.Green, "INF"
+			o.Level, o.LevelColor, o.Level3 = "info", o.Green, "INF"
 		case WarnLevel:
-			output.LevelColor, output.Level = output.Red, "WRN"
+			o.Level, o.LevelColor, o.Level3 = "warn", o.Red, "WRN"
 		case ErrorLevel:
-			output.LevelColor, output.Level = output.Red, "ERR"
+			o.Level, o.LevelColor, o.Level3 = "error", o.Red, "ERR"
 		case FatalLevel:
-			output.LevelColor, output.Level = output.Red, "FTL"
+			o.Level, o.LevelColor, o.Level3 = "fatal", o.Red, "FTL"
 		default:
-			output.LevelColor, output.Level = output.Yellow, "???"
+			o.Level, o.LevelColor, o.Level3 = "????", o.Yellow, "???"
 		}
 	}
 
 	if v, ok := m["caller"]; ok {
-		output.Caller = v.(string)
+		o.Caller = v.(string)
 	}
 
 	var msgField = "message"
@@ -267,15 +304,15 @@ func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
-		output.Message = v.(string)
+		o.Message = v.(string)
 	}
 
 	if v, ok := m["stack"]; ok {
 		if s, ok := v.(string); ok {
-			output.Stack = s
+			o.Stack = s
 		} else {
 			b, _ := json.MarshalIndent(v, "", "  ")
-			output.Stack = string(b)
+			o.Stack = string(b)
 		}
 	}
 
@@ -290,19 +327,19 @@ func (w *ConsoleWriter) writeTempl(out io.Writer, p []byte) (n int, err error) {
 				v = strconv.Quote(s)
 			}
 		}
-		output.KeyValue = append(output.KeyValue, KeyValue{k, fmt.Sprint(v)})
+		o.KeyValue = append(o.KeyValue, KeyValue{k, fmt.Sprint(v)})
 	}
 
 	b := bbpool.Get().(*bb)
 	b.Reset()
 	defer bbpool.Put(b)
 
-	w.Template.Execute(b, &output)
+	w.Template.Execute(b, &o)
 	if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
 		b.B = append(b.B, '\n')
 	}
 
-	return os.Stderr.Write(b.B)
+	return out.Write(b.B)
 }
 
 func jsonKeys(data []byte) (keys []string) {

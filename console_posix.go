@@ -3,6 +3,7 @@
 package log
 
 import (
+	"os"
 	"syscall"
 	"unsafe"
 )
@@ -57,5 +58,9 @@ func isTerminal(fd uintptr, os, arch string) bool {
 }
 
 func (w *ConsoleWriter) Write(p []byte) (int, error) {
-	return w.writeTo(os.Stderr, p)
+	out := w.Out
+	if out == nil {
+		out = os.Stderr
+	}
+	return w.write(out, p)
 }
