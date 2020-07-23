@@ -6,6 +6,7 @@ import (
 	_ "unsafe" // for runtime.walltime
 )
 
+// TimestampMS returns Unix timestamp integers in microseconds.
 func TimestampMS() int64 {
 	sec, nsec := walltime()
 	return sec*1000 + int64(nsec)/1000000

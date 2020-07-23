@@ -34,31 +34,13 @@ type ConsoleWriter struct {
 	TimeField string
 
 	// Template determines console output template if not empty.
+	// see https://github.com/phuslu/log/blob/master/console.go#L328
+	// for available Template Arguments.
 	Template *template.Template
 
 	// Out is the output destination. using os.Stderr if empty.
 	Out io.Writer
 }
-
-const (
-	colorReset         = "\x1b[0m"
-	colorBlack         = "\x1b[30m"
-	colorRed           = "\x1b[31m"
-	colorGreen         = "\x1b[32m"
-	colorYellow        = "\x1b[33m"
-	colorBlue          = "\x1b[34m"
-	colorMagenta       = "\x1b[35m"
-	colorCyan          = "\x1b[36m"
-	colorWhite         = "\x1b[37m"
-	colorGray          = "\x1b[90m"
-	colorBrightRed     = "\x1b[91m"
-	colorBrightGreen   = "\x1b[92m"
-	colorBrightYellow  = "\x1b[93m"
-	colorBrightBlue    = "\x1b[94m"
-	colorBrightMagenta = "\x1b[95m"
-	colorBrightCyan    = "\x1b[96m"
-	colorBrightWhite   = "\x1b[97m"
-)
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	if w.Template != nil {
@@ -79,13 +61,33 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	b.Reset()
 	defer bbpool.Put(b)
 
+	const (
+		Reset         = "\x1b[0m"
+		Black         = "\x1b[30m"
+		Red           = "\x1b[31m"
+		Green         = "\x1b[32m"
+		Yellow        = "\x1b[33m"
+		Blue          = "\x1b[34m"
+		Magenta       = "\x1b[35m"
+		Cyan          = "\x1b[36m"
+		White         = "\x1b[37m"
+		Gray          = "\x1b[90m"
+		BrightRed     = "\x1b[91m"
+		BrightGreen   = "\x1b[92m"
+		BrightYellow  = "\x1b[93m"
+		BrightBlue    = "\x1b[94m"
+		BrightMagenta = "\x1b[95m"
+		BrightCyan    = "\x1b[96m"
+		BrightWhite   = "\x1b[97m"
+	)
+
 	var timeField = w.TimeField
 	if timeField == "" {
 		timeField = "time"
 	}
 	if v, ok := m[timeField]; ok {
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", colorGray, v, colorReset)
+			fmt.Fprintf(b, "%s%s%s ", Gray, v, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", v)
 		}
@@ -95,20 +97,20 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
 		case DebugLevel:
-			c, s = colorYellow, "DBG"
+			c, s = Yellow, "DBG"
 		case InfoLevel:
-			c, s = colorGreen, "INF"
+			c, s = Green, "INF"
 		case WarnLevel:
-			c, s = colorRed, "WRN"
+			c, s = Red, "WRN"
 		case ErrorLevel:
-			c, s = colorRed, "ERR"
+			c, s = Red, "ERR"
 		case FatalLevel:
-			c, s = colorRed, "FTL"
+			c, s = Red, "FTL"
 		default:
-			c, s = colorYellow, "???"
+			c, s = Yellow, "???"
 		}
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", c, s, colorReset)
+			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", s)
 		}
@@ -130,13 +132,13 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			v = s[:len(s)-1]
 		}
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s %s", colorCyan, colorReset, v)
+			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
 		} else {
 			fmt.Fprintf(b, "> %s", v)
 		}
 	} else {
 		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s>%s", colorCyan, colorReset)
+			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		} else {
 			fmt.Fprint(b, ">")
 		}
@@ -155,9 +157,9 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 		if w.ColorOutput || w.ANSIColor {
 			if k == "error" && v != nil {
-				fmt.Fprintf(b, " %s%s=%v%s", colorRed, k, v, colorReset)
+				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
 			} else {
-				fmt.Fprintf(b, " %s%s=%s%v%s", colorCyan, k, colorGray, v, colorReset)
+				fmt.Fprintf(b, " %s%s=%s%v%s", Cyan, k, Gray, v, Reset)
 			}
 		} else {
 			fmt.Fprintf(b, " %s=%v", k, v)
@@ -170,7 +172,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 				v = s[:len(s)-1]
 			}
 			if w.ColorOutput || w.ANSIColor {
-				fmt.Fprintf(b, "%s %s", colorReset, v)
+				fmt.Fprintf(b, "%s %s", Reset, v)
 			} else {
 				fmt.Fprintf(b, " %s", v)
 			}
@@ -192,15 +194,6 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	return out.Write(b.B)
 }
 
-const ConsoleIndentTemplate = `{{.Gray}}{{.Time}}{{.Reset}} {{.LevelColor}}{{.Level3}}{{.Reset}} {{.Caller}} {{.Cyan}}>{{.Reset}} {{.Message}}
-{{range $i, $x := .KeyValue -}}
-{{if eq $x.Key "error" -}}
-{{ "\t" }}{{$.Red}}{{$x.Key}}={{$x.Value}}{{$.Reset -}}
-{{else -}}
-{{ "\t" }}{{$.Cyan}}{{$x.Key}}={{$.Reset}}{{$.Gray}}{{$x.Value}}{{$.Reset -}}
-{{end}}
-{{end}}{{.Stack}}`
-
 func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	type KeyValue struct {
 		Key   string
@@ -208,51 +201,13 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	o := struct {
-		Reset         string
-		Black         string
-		Red           string
-		Green         string
-		Yellow        string
-		Blue          string
-		Magenta       string
-		Cyan          string
-		White         string
-		Gray          string
-		BrightRed     string
-		BrightGreen   string
-		BrightYellow  string
-		BrightBlue    string
-		BrightMagenta string
-		BrightCyan    string
-		BrightWhite   string
-		LevelColor    string
-		Level         string
-		Level3        string
-		Time          string
-		Caller        string
-		Message       string
-		Stack         string
-		KeyValue      []KeyValue
-	}{
-		Reset:         colorReset,
-		Black:         colorBlack,
-		Red:           colorRed,
-		Green:         colorGreen,
-		Yellow:        colorYellow,
-		Blue:          colorBlue,
-		Magenta:       colorMagenta,
-		Cyan:          colorCyan,
-		White:         colorWhite,
-		Gray:          colorGray,
-		BrightRed:     colorBrightRed,
-		BrightGreen:   colorBrightGreen,
-		BrightYellow:  colorBrightYellow,
-		BrightBlue:    colorBrightBlue,
-		BrightMagenta: colorBrightMagenta,
-		BrightCyan:    colorBrightCyan,
-		BrightWhite:   colorBrightWhite,
-		LevelColor:    colorReset,
-	}
+		Time     string
+		Level    string
+		Caller   string
+		Message  string
+		Stack    string
+		KeyValue []KeyValue
+	}{}
 
 	var m map[string]interface{}
 
@@ -273,20 +228,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	if v, ok := m["level"]; ok {
-		switch l, _ := v.(string); ParseLevel(l) {
-		case DebugLevel:
-			o.Level, o.LevelColor, o.Level3 = "debug", o.Yellow, "DBG"
-		case InfoLevel:
-			o.Level, o.LevelColor, o.Level3 = "info", o.Green, "INF"
-		case WarnLevel:
-			o.Level, o.LevelColor, o.Level3 = "warn", o.Red, "WRN"
-		case ErrorLevel:
-			o.Level, o.LevelColor, o.Level3 = "error", o.Red, "ERR"
-		case FatalLevel:
-			o.Level, o.LevelColor, o.Level3 = "fatal", o.Red, "FTL"
-		default:
-			o.Level, o.LevelColor, o.Level3 = "????", o.Yellow, "???"
-		}
+		o.Level = v.(string)
 	}
 
 	if v, ok := m["caller"]; ok {
@@ -379,3 +321,31 @@ func jsonKeys(data []byte) (keys []string) {
 
 	return
 }
+
+// ColorTemplate provides a pre-defined text/template for console color output
+//
+//    type . struct {
+//        Time     string    // "2019-07-10T05:35:54.277Z"
+//        Level    string    // "info"
+//        Caller   string    // "prog.go:42"
+//        Message  string    // "a structure message"
+//        Stack    string    // "<stack string>"
+//        KeyValue []struct {
+//            Key   string       // "foo"
+//            Value interface{}  // "bar"
+//        }
+//    }
+//
+// Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
+const ColorTemplate = `{{"\x1b[90m"}}{{.Time}}{{"\x1b[0m " -}}
+{{if eq "debug" .Level }}{{"\x1b[33mDBG\x1b[0m " -}}
+{{else if eq "info"  .Level}}{{"\x1b[32mDBG\x1b[0m " -}}
+{{else if eq "warn"  .Level}}{{"\x1b[31mWRN\x1b[0m " -}}
+{{else if eq "error" .Level}}{{"\x1b[31mERR\x1b[0m " -}}
+{{else if eq "fatal" .Level}}{{"\x1b[31mFTL\x1b[0m " -}}
+{{else}}{{"\x1b[31m???\x1b[0m "}}{{end -}}
+{{.Caller}}{{" \x1b[36m>\x1b[0m "}}{{.Message}}
+{{range .KeyValue -}}
+{{if eq .Key "error" -}}{{"\t\x1b[31m"}}{{.Key}}={{.Value}}{{"\x1b[0m" -}}
+{{else}}{{"\t\x1b[36m"}}{{.Key}}={{"\x1b[90m"}}{{.Value}}{{"\x1b[0m"}}{{end}}
+{{end}}{{.Stack}}`

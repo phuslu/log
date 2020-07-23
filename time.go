@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// TimestampMS returns Unix timestamp integers in microseconds.
 func TimestampMS() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }

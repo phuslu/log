@@ -8,8 +8,7 @@
 * Intuitive Interfaces
 * Fluent & Sugar Loggers
 * Rotating File Writer
-* Pretty Console Writer
-* Dynamic Log Level
+* Pretty & Template Console Writer
 * Contextual Fields
 * Grpc & StdLog Interceptor
 * High Performance
@@ -93,13 +92,33 @@ type ConsoleWriter struct {
 	// TimeField specifies the time filed name of output message.
 	TimeField string
 
-	// Template determines console output template if not empty.
-	Template *template.Template
-
 	// Out is the output destination. using os.Stderr if empty.
 	Out io.Writer
+
+	// Template determines console output template if not empty.
+	Template *template.Template
 }
 ```
+
+### Console Template Arguments
+```go
+// a glog like template:
+//     template.New("").Parse(`{{.Level}} {{.Time}}  {{.Caller}}] {{.Message}}`)
+// for a real & colorful example, see https://github.com/phuslu/log/blob/master/console.go#L340
+type . struct {
+    Time     string    // "2019-07-10T05:35:54.277Z"
+    Level    string    // "info"
+    Caller   string    // "prog.go:42"
+    Message  string    // "a structure message"
+    Stack    string    // "<stack string>"
+    KeyValue []struct {
+        Key   string       // "foo"
+        Value interface{}  // "bar"
+    }
+}
+```
+> Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
+
 
 ## Getting Started
 
@@ -194,27 +213,34 @@ if log.IsTerminal(os.Stderr.Fd()) {
 log.Printf("a printf style line")
 log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
 ```
-![Pretty logging][pretty-logging-img]
+![Pretty logging][pretty-img]
 > Note: pretty logging also works on windows console
 
-### Dynamic log Level
+### Template Console Writer
 
-To change log level on the fly, use `log.DefaultLogger.SetLevel`. [![playground][play-dynamic-img]][play-dynamic]
+To log a user-defined format, using `log.ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
 
 ```go
-log.DefaultLogger.SetLevel(log.InfoLevel)
-log.Debug().Msg("debug log")
-log.Info().Msg("info log")
-log.Warn().Msg("warn log")
-log.DefaultLogger.SetLevel(log.DebugLevel)
-log.Debug().Msg("debug log")
-log.Info().Msg("info log")
+package main
+
+import (
+	"text/template"
+	"github.com/phuslu/log"
+)
+
+func main() {
+	// see https://github.com/phuslu/log#console-template-arguments to define new templates.
+	log.DefaultLogger.Writer = &log.ConsoleWriter{
+		Template: template.Must(template.New("").Parse(log.ColorTemplate)),
+		Out:      os.Stderr,
+	}
+	log.Info().Str("foo", "bar").Int("number", 42).Msg("hello template")
+}
 
 // Output:
-//   {"time":"2020-03-24T05:06:54.674Z","level":"info","message":"info log"}
-//   {"time":"2020-03-24T05:06:54.674Z","level":"warn","message":"warn log"}
-//   {"time":"2020-03-24T05:06:54.675Z","level":"debug","message":"debug log"}
-//   {"time":"2020-03-24T05:06:54.675Z","level":"info","message":"info log"}
+// 2019-07-10T05:35:54.277Z INF prog.go:42 > hello template
+//         foo=bar
+//         number=42
 ```
 
 ### Contextual Fields
@@ -379,15 +405,15 @@ BenchmarkPhusLog-8      91577397               132 ns/op               0 B/op   
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
-[pretty-logging-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-U2TYAgV7VCR-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/U2TYAgV7VCR
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
-[play-dynamic-img]: https://img.shields.io/badge/playground-0S--JT7h--QXI-29BEB0?style=flat&logo=go
-[play-dynamic]: https://play.golang.org/p/0S-JT7h-QXI
+[pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
+[play-template-img]: https://img.shields.io/badge/playground-vTHJwZG8oKP-29BEB0?style=flat&logo=go
+[play-template]: https://play.golang.org/p/vTHJwZG8oKP
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
 [play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
