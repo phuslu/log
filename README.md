@@ -5,7 +5,6 @@
 ## Features
 
 * No Dependencies
-* Intuitive Interfaces
 * Fluent & Sugar Loggers
 * Rotating File Writer
 * Pretty & Template Console Writer
@@ -104,7 +103,6 @@ type ConsoleWriter struct {
 ```go
 // a glog like template:
 //     template.New("").Parse(`{{.Level}} {{.Time}}  {{.Caller}}] {{.Message}}`)
-// for a real & colorful example, see https://github.com/phuslu/log/blob/master/console.go#L340
 type . struct {
     Time     string    // "2019-07-10T05:35:54.277Z"
     Level    string    // "info"
@@ -116,6 +114,21 @@ type . struct {
         Value interface{}  // "bar"
     }
 }
+```
+a colorful template from https://github.com/phuslu/log/blob/master/console.go#L340
+```php
+{{gray .Time -}}
+{{if eq "debug" .Level }}{{yellow " DBG " -}}
+{{else if eq "info"  .Level}}{{green " INF " -}}
+{{else if eq "warn"  .Level}}{{red " WRN " -}}
+{{else if eq "error" .Level}}{{red " ERR " -}}
+{{else if eq "fatal" .Level}}{{red " FTL " -}}
+{{else}}{{red " ??? "}}{{end -}}
+{{.Caller}}{{cyan " > "}}{{.Message}}
+{{range .KeyValue -}}
+{{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
+{{else}}	{{cyan .Key}}={{gray .Value}}{{end}}
+{{end}}{{.Stack}}
 ```
 > Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 
@@ -134,12 +147,12 @@ import (
 
 func main() {
 	log.Printf("Hello, %s", "世界")
-	log.Info().Str("foo", "bar").Int("number", 42).Msg("a structured logger")
+	log.Info().Str("foo", "bar").Int("number", 42).Msg("hi, phuslog")
 }
 
 // Output:
 //   {"time":"2020-03-22T09:58:41.828Z","message":"Hello, 世界"}
-//   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"a structure logger"}
+//   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"hi, phuslog"}
 ```
 > Note: By default log writes to `os.Stderr`
 
@@ -231,7 +244,7 @@ import (
 func main() {
 	// see https://github.com/phuslu/log#console-template-arguments to define new templates.
 	log.DefaultLogger.Writer = &log.ConsoleWriter{
-		Template: template.Must(template.New("").Parse(log.ColorTemplate)),
+		Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
 		Out:      os.Stderr,
 	}
 	log.Info().Str("foo", "bar").Int("number", 42).Msg("hello template")

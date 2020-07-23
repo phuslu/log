@@ -335,17 +335,35 @@ func jsonKeys(data []byte) (keys []string) {
 //            Value interface{}  // "bar"
 //        }
 //    }
+const ColorTemplate = `{{gray .Time -}}
+{{if eq "debug" .Level }}{{yellow " DBG " -}}
+{{else if eq "info"  .Level}}{{green " INF " -}}
+{{else if eq "warn"  .Level}}{{red " WRN " -}}
+{{else if eq "error" .Level}}{{red " ERR " -}}
+{{else if eq "fatal" .Level}}{{red " FTL " -}}
+{{else}}{{red " ??? "}}{{end -}}
+{{.Caller}}{{cyan " > "}}{{.Message}}
+{{range .KeyValue -}}
+{{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
+{{else}}	{{cyan .Key}}={{gray .Value}}{{end}}
+{{end}}{{.Stack}}`
+
+// ColorFuncMap provides a pre-defined template functions for color string
+//
+//    log.DefaultLogger.Writer = &log.ConsoleWriter{
+//        Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
+//        Out:      os.Stderr,
+//    }
 //
 // Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
-const ColorTemplate = `{{"\x1b[90m"}}{{.Time}}{{"\x1b[0m " -}}
-{{if eq "debug" .Level }}{{"\x1b[33mDBG\x1b[0m " -}}
-{{else if eq "info"  .Level}}{{"\x1b[32mDBG\x1b[0m " -}}
-{{else if eq "warn"  .Level}}{{"\x1b[31mWRN\x1b[0m " -}}
-{{else if eq "error" .Level}}{{"\x1b[31mERR\x1b[0m " -}}
-{{else if eq "fatal" .Level}}{{"\x1b[31mFTL\x1b[0m " -}}
-{{else}}{{"\x1b[31m???\x1b[0m "}}{{end -}}
-{{.Caller}}{{" \x1b[36m>\x1b[0m "}}{{.Message}}
-{{range .KeyValue -}}
-{{if eq .Key "error" -}}{{"\t\x1b[31m"}}{{.Key}}={{.Value}}{{"\x1b[0m" -}}
-{{else}}{{"\t\x1b[36m"}}{{.Key}}={{"\x1b[90m"}}{{.Value}}{{"\x1b[0m"}}{{end}}
-{{end}}{{.Stack}}`
+var ColorFuncMap = template.FuncMap{
+	"black":   func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
+	"red":     func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
+	"green":   func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
+	"yellow":  func(s string) string { return "\x1b[33m" + s + "\x1b[0m" },
+	"blue":    func(s string) string { return "\x1b[34m" + s + "\x1b[0m" },
+	"magenta": func(s string) string { return "\x1b[35m" + s + "\x1b[0m" },
+	"cyan":    func(s string) string { return "\x1b[36m" + s + "\x1b[0m" },
+	"white":   func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
+	"gray":    func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
+}
