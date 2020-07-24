@@ -167,6 +167,25 @@ func TestConsoleWriterTemplate(t *testing.T) {
 	}
 }
 
+func TestConsoleWriterGlog(t *testing.T) {
+	osExit = func(int) {}
+
+	glog := (&Logger{
+		Level:      InfoLevel,
+		Caller:     1,
+		TimeFormat: "0102 15:04:05.999999",
+		Writer: &ConsoleWriter{
+			Template: template.Must(template.New("").Parse(
+				`{{.Level.One}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
+		},
+	}).Sugar(nil)
+
+	glog.Infof("hello glog %s", "Info")
+	glog.Warnf("hello glog %s", "Earn")
+	glog.Errorf("hello glog %s", "Error")
+	glog.Fatalf("hello glog %s", "Fatal")
+}
+
 func TestConsoleWriterTime(t *testing.T) {
 	w := &ConsoleWriter{
 		ColorOutput: true,

@@ -101,8 +101,6 @@ type ConsoleWriter struct {
 
 ### Console Template Arguments
 ```go
-// a glog like template:
-//     template.New("").Parse(`{{.Level}} {{.Time}}  {{.Caller}}] {{.Message}}`)
 type . struct {
     Time     string    // "2019-07-10T05:35:54.277Z"
     Level    string    // "info"
@@ -116,14 +114,15 @@ type . struct {
     }
 }
 ```
-a colorful template from https://github.com/phuslu/log/blob/master/console.go#L340
+a example from [log.ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L349)
+or, see a [glog clone](https://github.com/phuslu/log#template-console-writer)
 ```php
 {{gray .Time -}}
-{{if eq "debug" .Level }}{{yellow " DBG " -}}
-{{else if eq "info"  .Level}}{{green " INF " -}}
-{{else if eq "warn"  .Level}}{{red " WRN " -}}
-{{else if eq "error" .Level}}{{red " ERR " -}}
-{{else if eq "fatal" .Level}}{{red " FTL " -}}
+{{if eq .Level 1 }}{{yellow " DBG " -}}
+{{else if eq .Level 2}}{{green " INF " -}}
+{{else if eq .Level 3}}{{red " WRN " -}}
+{{else if eq .Level 4}}{{red " ERR " -}}
+{{else if eq .Level 5}}{{red " FTL " -}}
 {{else}}{{red " ??? "}}{{end -}}
 {{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
 {{range .KeyValue -}}
@@ -232,7 +231,7 @@ log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").M
 
 ### Template Console Writer
 
-To log a user-defined format, using `log.ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
+To log a user-defined format(glog), using `log.ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
 
 ```go
 package main
@@ -242,19 +241,28 @@ import (
 	"github.com/phuslu/log"
 )
 
+var glog = (&log.Logger{
+	Level:      log.InfoLevel,
+	Caller:     1,
+	TimeFormat: "0102 15:04:05.999999",
+	Writer: &log.ConsoleWriter{
+		Template: template.Must(template.New("").Parse(
+			`{{.Level.One}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
+	},
+}).Sugar(nil)
+
 func main() {
-	// see https://github.com/phuslu/log#console-template-arguments to define new templates.
-	log.DefaultLogger.Writer = &log.ConsoleWriter{
-		Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
-		Out:      os.Stderr,
-	}
-	log.Info().Str("foo", "bar").Int("number", 42).Msg("hello template")
+	glog.Infof("hello glog %s", "Info")
+	glog.Warnf("hello glog %s", "Earn")
+	glog.Errorf("hello glog %s", "Error")
+	glog.Fatalf("hello glog %s", "Fatal")
 }
 
 // Output:
-// 2019-07-10T05:35:54.277Z INF prog.go:42 > hello template
-//         foo=bar
-//         number=42
+// I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
+// W0725 09:59:57.504247 19 console_test.go:184] hello glog Earn
+// E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
+// F0725 09:59:57.504247 19 console_test.go:186] hello glog Fatal
 ```
 
 ### Contextual Fields

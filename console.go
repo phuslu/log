@@ -7,6 +7,7 @@ import (
 	"io"
 	"runtime"
 	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -206,7 +207,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 
 	o := struct {
 		Time     string
-		Level    string
+		Level    Level
 		Caller   string
 		Goid     string
 		Message  string
@@ -233,7 +234,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	if v, ok := m["level"]; ok {
-		o.Level = v.(string)
+		o.Level = ParseLevel(v.(string))
 	}
 
 	if v, ok := m["caller"]; ok {
@@ -346,11 +347,11 @@ func jsonKeys(data []byte) (keys []string) {
 //        }
 //    }
 const ColorTemplate = `{{gray .Time -}}
-{{if eq "debug" .Level }}{{yellow " DBG " -}}
-{{else if eq "info"  .Level}}{{green " INF " -}}
-{{else if eq "warn"  .Level}}{{red " WRN " -}}
-{{else if eq "error" .Level}}{{red " ERR " -}}
-{{else if eq "fatal" .Level}}{{red " FTL " -}}
+{{if eq .Level 1 }}{{yellow " DBG " -}}
+{{else if eq .Level 2}}{{green " INF " -}}
+{{else if eq .Level 3}}{{red " WRN " -}}
+{{else if eq .Level 4}}{{red " ERR " -}}
+{{else if eq .Level 5}}{{red " FTL " -}}
 {{else}}{{red " ??? "}}{{end -}}
 {{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
 {{range .KeyValue -}}
@@ -367,6 +368,10 @@ const ColorTemplate = `{{gray .Time -}}
 //
 // Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 var ColorFuncMap = template.FuncMap{
+	"upper":   strings.ToUpper,
+	"low":     strings.ToLower,
+	"title":   strings.ToTitle,
+	"quote":   strconv.Quote,
 	"black":   func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
 	"red":     func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
 	"green":   func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
