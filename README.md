@@ -347,7 +347,7 @@ func main() {
 
 ### High Performance
 
-A quick and simple benchmark with zap/zerolog/onelog
+A quick and simple benchmark with zap/zerolog
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -356,7 +356,6 @@ package main
 import (
 	"io/ioutil"
 	"testing"
-	"time"
 
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
@@ -373,44 +372,29 @@ func BenchmarkZap(b *testing.B) {
 		zapcore.InfoLevel,
 	))
 	for i := 0; i < b.N; i++ {
-		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 123))
+		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 42))
 	}
 }
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
-	}
-}
-
-func BenchmarkPhusSugar(b *testing.B) {
-	sugar := (&log.Logger{
-		TimeFormat: log.TimeFormatUnix,
-		Writer:     ioutil.Discard,
-	}).Sugar(nil)
-	for i := 0; i < b.N; i++ {
-		sugar.Infow(fakeMessage, "foo", "bar", "int", 123)
+		logger.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
 	}
 }
 
 func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{
-		TimeFormat: log.TimeFormatUnix,
-		Writer:     ioutil.Discard,
-	}
+	logger := log.Logger{Writer: ioutil.Discard}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 123).Msg(fakeMessage)
+		logge.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
 	}
 }
 ```
 Performance results on my laptop:
 ```
-BenchmarkZap-8          15153003               789 ns/op             128 B/op          1 allocs/op
-BenchmarkZeroLog-8      62872947               191 ns/op               0 B/op          0 allocs/op
-BenchmarkPhusSugar-8    75497385               161 ns/op               0 B/op          0 allocs/op
-BenchmarkPhusLog-8      91577397               132 ns/op               0 B/op          0 allocs/op
+BenchmarkZap-16        	12786758	       947 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZeroLog-16    	26904843	       447 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-16    	62713196	       188 ns/op	       0 B/op	       0 allocs/op
 ```
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
