@@ -425,8 +425,8 @@ BenchmarkPhusLog-8      91577397               132 ns/op               0 B/op   
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
-[play-template-img]: https://img.shields.io/badge/playground-vTHJwZG8oKP-29BEB0?style=flat&logo=go
-[play-template]: https://play.golang.org/p/vTHJwZG8oKP
+[play-template-img]: https://img.shields.io/badge/playground-vhbUNkphodJ-29BEB0?style=flat&logo=go
+[play-template]: https://play.golang.org/p/vhbUNkphodJ
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
 [play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
