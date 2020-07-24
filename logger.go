@@ -912,7 +912,8 @@ func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.buf = append(e.buf, '"')
+	e.buf = append(e.buf, "\",\"goid\":"...)
+	e.buf = strconv.AppendInt(e.buf, goid(), 10)
 }
 
 var escapes = [256]bool{
@@ -1155,3 +1156,7 @@ func absClock(abs uint64) (hour, min, sec int)
 //go:noescape
 //go:linkname Fastrandn runtime.fastrandn
 func Fastrandn(x uint32) uint32
+
+// Goid returns the current goroutine id.
+// It exactly matches goroutine id of the stack trace.
+func Goid() int64 { return goid() }

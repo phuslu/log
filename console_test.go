@@ -146,7 +146,7 @@ func TestConsoleWriterTemplate(t *testing.T) {
 		Template: template.Must(template.New("").Funcs(ColorFuncMap).Parse(ColorTemplate)),
 	}
 
-	_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","stack":"stack1\n\tstack2\n\t\tstack3\n","message":"hello console stack writer"}`)
+	_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","goid":123,"error":"i am test error","stack":"stack1\n\tstack2\n\t\tstack3\n","message":"hello console stack writer"}`)
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
@@ -156,7 +156,7 @@ func TestConsoleWriterTemplate(t *testing.T) {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
 
-	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"error","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"message":"hello json console color writer"}`)
+	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"error","caller":"pretty.go:42","goid":0,"error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"message":"hello json console color writer"}`)
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}

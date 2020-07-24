@@ -107,6 +107,7 @@ type . struct {
     Time     string    // "2019-07-10T05:35:54.277Z"
     Level    string    // "info"
     Caller   string    // "prog.go:42"
+    Goid     string    // "123"
     Message  string    // "a structure message"
     Stack    string    // "<stack string>"
     KeyValue []struct {
@@ -124,7 +125,7 @@ a colorful template from https://github.com/phuslu/log/blob/master/console.go#L3
 {{else if eq "error" .Level}}{{red " ERR " -}}
 {{else if eq "fatal" .Level}}{{red " FTL " -}}
 {{else}}{{red " ??? "}}{{end -}}
-{{.Caller}}{{cyan " > "}}{{.Message}}
+{{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
 {{range .KeyValue -}}
 {{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
 {{else}}	{{cyan .Key}}={{gray .Value}}{{end}}

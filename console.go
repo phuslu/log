@@ -116,6 +116,10 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
+	if v, ok := m["goid"]; ok {
+		fmt.Fprintf(b, "%s ", v)
+	}
+
 	if v, ok := m["caller"]; ok {
 		fmt.Fprintf(b, "%s ", v)
 	}
@@ -146,7 +150,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 
 	for _, k := range jsonKeys(p) {
 		switch k {
-		case timeField, msgField, "level", "caller", "stack":
+		case timeField, msgField, "level", "goid", "caller", "stack":
 			continue
 		}
 		v := m[k]
@@ -204,6 +208,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		Time     string
 		Level    string
 		Caller   string
+		Goid     string
 		Message  string
 		Stack    string
 		KeyValue []KeyValue
@@ -235,6 +240,10 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		o.Caller = v.(string)
 	}
 
+	if v, ok := m["goid"]; ok {
+		o.Goid = v.(json.Number).String()
+	}
+
 	var msgField = "message"
 	if _, ok := m[msgField]; !ok {
 		if _, ok := m["msg"]; ok {
@@ -260,7 +269,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 
 	for _, k := range jsonKeys(p) {
 		switch k {
-		case timeField, msgField, "level", "caller", "stack":
+		case timeField, msgField, "level", "caller", "goid", "stack":
 			continue
 		}
 		v := m[k]
@@ -328,6 +337,7 @@ func jsonKeys(data []byte) (keys []string) {
 //        Time     string    // "2019-07-10T05:35:54.277Z"
 //        Level    string    // "info"
 //        Caller   string    // "prog.go:42"
+//        Goid     string    // "123"
 //        Message  string    // "a structure message"
 //        Stack    string    // "<stack string>"
 //        KeyValue []struct {
@@ -342,7 +352,7 @@ const ColorTemplate = `{{gray .Time -}}
 {{else if eq "error" .Level}}{{red " ERR " -}}
 {{else if eq "fatal" .Level}}{{red " FTL " -}}
 {{else}}{{red " ??? "}}{{end -}}
-{{.Caller}}{{cyan " > "}}{{.Message}}
+{{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
 {{range .KeyValue -}}
 {{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
 {{else}}	{{cyan .Key}}={{gray .Value}}{{end}}
