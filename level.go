@@ -4,9 +4,8 @@ package log
 type Level uint32
 
 const (
-	_ Level = iota
 	// DebugLevel defines debug log level.
-	DebugLevel
+	DebugLevel Level = iota
 	// InfoLevel defines info log level.
 	InfoLevel
 	// WarnLevel defines warn log level.
@@ -15,7 +14,9 @@ const (
 	ErrorLevel
 	// FatalLevel defines fatal log level.
 	FatalLevel
-
+	// PanicLevel defines panic log level.
+	PanicLevel
+	// NoLevel defines an absent log level.
 	noLevel
 )
 
@@ -31,6 +32,8 @@ func (l Level) Lower() (s string) {
 		s = "error"
 	case FatalLevel:
 		s = "fatal"
+	case PanicLevel:
+		s = "panic"
 	default:
 		s = "????"
 	}
@@ -49,6 +52,8 @@ func (l Level) Upper() (s string) {
 		s = "ERROR"
 	case FatalLevel:
 		s = "FATAL"
+	case PanicLevel:
+		s = "PANIC"
 	default:
 		s = "????"
 	}
@@ -67,6 +72,8 @@ func (l Level) Title() (s string) {
 		s = "Error"
 	case FatalLevel:
 		s = "Fatal"
+	case PanicLevel:
+		s = "Panic"
 	default:
 		s = "????"
 	}
@@ -85,8 +92,10 @@ func (l Level) Three() (s string) {
 		s = "ERR"
 	case FatalLevel:
 		s = "FTL"
+	case PanicLevel:
+		s = "PNC"
 	default:
-		s = "????"
+		s = "???"
 	}
 	return
 }
@@ -103,6 +112,8 @@ func (l Level) One() (s string) {
 		s = "E"
 	case FatalLevel:
 		s = "F"
+	case PanicLevel:
+		s = "P"
 	default:
 		s = "?"
 	}
@@ -123,6 +134,10 @@ func ParseLevel(s string) (level Level) {
 		level = ErrorLevel
 	case "fatal", "Fatal", "FATAL", "F", "FTL", "FATA":
 		level = FatalLevel
+	case "panic", "Panic", "PANIC", "P", "PNC", "PANI":
+		level = PanicLevel
+	default:
+		level = noLevel
 	}
 	return
 }

@@ -118,11 +118,12 @@ a example from [log.ColorTemplate](https://github.com/phuslu/log/blob/master/con
 or, see a [glog clone](https://github.com/phuslu/log#template-console-writer)
 ```php
 {{gray .Time -}}
-{{if eq .Level 1 }}{{yellow " DBG " -}}
-{{else if eq .Level 2}}{{green " INF " -}}
-{{else if eq .Level 3}}{{red " WRN " -}}
-{{else if eq .Level 4}}{{red " ERR " -}}
-{{else if eq .Level 5}}{{red " FTL " -}}
+{{if eq .Level 0 }}{{yellow " DBG " -}}
+{{else if eq .Level 1}}{{green " INF " -}}
+{{else if eq .Level 2}}{{red " WRN " -}}
+{{else if eq .Level 3}}{{red " ERR " -}}
+{{else if eq .Level 4}}{{red " FTL " -}}
+{{else if eq .Level 5}}{{red " PNC " -}}
 {{else}}{{red " ??? "}}{{end -}}
 {{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
 {{range .KeyValue -}}

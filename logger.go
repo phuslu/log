@@ -61,6 +61,7 @@ type Event struct {
 	stack    bool
 	stackall bool
 	exit     bool
+	panic    bool
 }
 
 // Debug starts a new message with debug level.
@@ -102,6 +103,15 @@ func Error() (e *Event) {
 // Fatal starts a new message with fatal level.
 func Fatal() (e *Event) {
 	e = DefaultLogger.header(FatalLevel)
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
+	}
+	return
+}
+
+// Panic starts a new message with panic level.
+func Panic() (e *Event) {
+	e = DefaultLogger.header(PanicLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
@@ -156,6 +166,15 @@ func (l *Logger) Error() (e *Event) {
 // Fatal starts a new message with fatal level.
 func (l *Logger) Fatal() (e *Event) {
 	e = l.header(FatalLevel)
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
+}
+
+// Panic starts a new message with panic level.
+func (l *Logger) Panic() (e *Event) {
+	e = l.header(PanicLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
@@ -219,14 +238,23 @@ func (l *Logger) header(level Level) *Event {
 	}
 	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
-	if level != FatalLevel {
+
+	switch level {
+	default:
 		e.stack = false
 		e.stackall = false
 		e.exit = false
-	} else {
+		e.panic = false
+	case FatalLevel:
 		e.stack = true
 		e.stackall = true
 		e.exit = true
+		e.panic = false
+	case PanicLevel:
+		e.stack = true
+		e.stackall = false
+		e.exit = false
+		e.panic = true
 	}
 	if l.Writer != nil {
 		e.w = l.Writer
@@ -376,6 +404,8 @@ func (l *Logger) header(level Level) *Event {
 		e.buf = append(e.buf, ",\"level\":\"error\""...)
 	case FatalLevel:
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
+	case PanicLevel:
+		e.buf = append(e.buf, ",\"level\":\"panic\""...)
 	}
 	return e
 }
@@ -892,6 +922,9 @@ func (e *Event) Msg(msg string) {
 	e.w.Write(e.buf)
 	if e.exit {
 		osExit(255)
+	}
+	if e.panic {
+		panic(msg)
 	}
 	if cap(e.buf) <= bbcap {
 		epool.Put(e)
