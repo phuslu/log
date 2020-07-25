@@ -47,11 +47,11 @@ type Logger struct {
 const (
 	// TimeFormatUnix defines a time format that makes time fields to be
 	// serialized as Unix timestamp integers.
-	TimeFormatUnix = "U"
+	TimeFormatUnix = "\x01"
 
 	// TimeFormatUnixMs defines a time format that makes time fields to be
 	// serialized as Unix timestamp integers in milliseconds.
-	TimeFormatUnixMs = "M"
+	TimeFormatUnixMs = "\x02"
 )
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
@@ -198,7 +198,7 @@ func (l *Logger) SetLevel(level Level) {
 
 // Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *Logger) Printf(format string, v ...interface{}) {
-	e := l.header(l.Level)
+	e := l.header(noLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
@@ -269,13 +269,16 @@ func (l *Logger) header(level Level) *Event {
 		e.buf = append(e.buf, l.TimeField...)
 		e.buf = append(e.buf, '"', ':')
 	}
-	if l.TimeFormat == "" {
+	switch l.TimeFormat {
+	case "":
 		n := len(e.buf)
 		if timeOffset == 0 {
+			// "2006-01-02T15:04:05.999Z"
 			e.buf = e.buf[:n+26]
 			e.buf[n+25] = '"'
 			e.buf[n+24] = 'Z'
 		} else {
+			// "2006-01-02T15:04:05.999Z07:00"
 			e.buf = e.buf[:n+31]
 			e.buf[n+30] = '"'
 			e.buf[n+29] = timeZone[5]
@@ -330,67 +333,66 @@ func (l *Logger) header(level Level) *Event {
 		e.buf[n+21] = byte('0' + a/100)
 		e.buf[n+22] = smallsString[b]
 		e.buf[n+23] = smallsString[b+1]
-	} else {
-		switch l.TimeFormat[0] {
-		case 'U':
-			n := len(e.buf)
-			e.buf = e.buf[:n+10]
-			sec, _ := walltime()
-			// seconds
-			b := sec % 100 * 2
-			sec /= 100
-			e.buf[n+9] = smallsString[b+1]
-			e.buf[n+8] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+7] = smallsString[b+1]
-			e.buf[n+6] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+5] = smallsString[b+1]
-			e.buf[n+4] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+3] = smallsString[b+1]
-			e.buf[n+2] = smallsString[b]
-			b = sec % 100 * 2
-			e.buf[n+1] = smallsString[b+1]
-			e.buf[n] = smallsString[b]
-		case 'M':
-			n := len(e.buf)
-			e.buf = e.buf[:n+13]
-			sec, nsec := walltime()
-			// seconds
-			b := sec % 100 * 2
-			sec /= 100
-			e.buf[n+9] = smallsString[b+1]
-			e.buf[n+8] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+7] = smallsString[b+1]
-			e.buf[n+6] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+5] = smallsString[b+1]
-			e.buf[n+4] = smallsString[b]
-			b = sec % 100 * 2
-			sec /= 100
-			e.buf[n+3] = smallsString[b+1]
-			e.buf[n+2] = smallsString[b]
-			b = sec % 100 * 2
-			e.buf[n+1] = smallsString[b+1]
-			e.buf[n] = smallsString[b]
-			// milli seconds
-			a := int64(nsec) / 1000000
-			b = a % 100 * 2
-			e.buf[n+10] = byte('0' + a/100)
-			e.buf[n+11] = smallsString[b]
-			e.buf[n+12] = smallsString[b+1]
-		default:
-			e.buf = append(e.buf, '"')
-			e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
-			e.buf = append(e.buf, '"')
-		}
+	case TimeFormatUnix:
+		// 1595759807
+		n := len(e.buf)
+		e.buf = e.buf[:n+10]
+		sec, _ := walltime()
+		// seconds
+		b := sec % 100 * 2
+		sec /= 100
+		e.buf[n+9] = smallsString[b+1]
+		e.buf[n+8] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+7] = smallsString[b+1]
+		e.buf[n+6] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+5] = smallsString[b+1]
+		e.buf[n+4] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+3] = smallsString[b+1]
+		e.buf[n+2] = smallsString[b]
+		b = sec % 100 * 2
+		e.buf[n+1] = smallsString[b+1]
+		e.buf[n] = smallsString[b]
+	case TimeFormatUnixMs:
+		// 1595759807105
+		n := len(e.buf)
+		e.buf = e.buf[:n+13]
+		sec, nsec := walltime()
+		// seconds
+		b := sec % 100 * 2
+		sec /= 100
+		e.buf[n+9] = smallsString[b+1]
+		e.buf[n+8] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+7] = smallsString[b+1]
+		e.buf[n+6] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+5] = smallsString[b+1]
+		e.buf[n+4] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		e.buf[n+3] = smallsString[b+1]
+		e.buf[n+2] = smallsString[b]
+		b = sec % 100 * 2
+		e.buf[n+1] = smallsString[b+1]
+		e.buf[n] = smallsString[b]
+		// milli seconds
+		a := int64(nsec) / 1000000
+		b = a % 100 * 2
+		e.buf[n+10] = byte('0' + a/100)
+		e.buf[n+11] = smallsString[b]
+		e.buf[n+12] = smallsString[b+1]
+	default:
+		e.buf = append(e.buf, '"')
+		e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
+		e.buf = append(e.buf, '"')
 	}
 	// level
 	switch level {
