@@ -346,6 +346,15 @@ func jsonKeys(data []byte) (keys []string) {
 //            Value interface{}  // "bar"
 //        }
 //    }
+//
+// A quick example is
+//
+//    log.DefaultLogger.Writer = &log.ConsoleWriter{
+//        Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
+//        Out:      os.Stderr,
+//    }
+//
+// Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 const ColorTemplate = `{{gray .Time -}}
 {{if eq .Level 0 }}{{yellow " DBG " -}}
 {{else if eq .Level 1}}{{green " INF " -}}
@@ -361,18 +370,7 @@ const ColorTemplate = `{{gray .Time -}}
 {{end}}{{.Stack}}`
 
 // ColorFuncMap provides a pre-defined template functions for color string
-//
-//    log.DefaultLogger.Writer = &log.ConsoleWriter{
-//        Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
-//        Out:      os.Stderr,
-//    }
-//
-// Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 var ColorFuncMap = template.FuncMap{
-	"upper":   strings.ToUpper,
-	"low":     strings.ToLower,
-	"title":   strings.ToTitle,
-	"quote":   strconv.Quote,
 	"black":   func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
 	"red":     func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
 	"green":   func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
@@ -382,4 +380,8 @@ var ColorFuncMap = template.FuncMap{
 	"cyan":    func(s string) string { return "\x1b[36m" + s + "\x1b[0m" },
 	"white":   func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
 	"gray":    func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
+	"upper":   strings.ToUpper,
+	"low":     strings.ToLower,
+	"title":   strings.ToTitle,
+	"quote":   strconv.Quote,
 }

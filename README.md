@@ -114,23 +114,8 @@ type . struct {
     }
 }
 ```
-a example from [log.ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L349)
-or, see a [glog clone](https://github.com/phuslu/log#template-console-writer)
-```php
-{{gray .Time -}}
-{{if eq .Level 0 }}{{yellow " DBG " -}}
-{{else if eq .Level 1}}{{green " INF " -}}
-{{else if eq .Level 2}}{{red " WRN " -}}
-{{else if eq .Level 3}}{{red " ERR " -}}
-{{else if eq .Level 4}}{{red " FTL " -}}
-{{else if eq .Level 5}}{{red " PNC " -}}
-{{else}}{{red " ??? "}}{{end -}}
-{{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
-{{range .KeyValue -}}
-{{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
-{{else}}	{{cyan .Key}}={{gray .Value}}{{end}}
-{{end}}{{.Stack}}
-```
+1. a glog clone on [Template Console Witer](https://github.com/phuslu/log#template-console-writer)
+1. a more complex and useful example on [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L350).
 > Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 
 
