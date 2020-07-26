@@ -905,7 +905,7 @@ func (e *Event) Discard() *Event {
 	return nil
 }
 
-var osExit = os.Exit
+var notTest = true
 
 // Msg sends the event with msg added as the message field if not empty.
 func (e *Event) Msg(msg string) {
@@ -922,10 +922,10 @@ func (e *Event) Msg(msg string) {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.Write(e.buf)
-	if e.exit {
-		osExit(255)
+	if e.exit && notTest {
+		os.Exit(255)
 	}
-	if e.panic {
+	if e.panic && notTest {
 		panic(msg)
 	}
 	if cap(e.buf) <= bbcap {

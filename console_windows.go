@@ -56,6 +56,7 @@ func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error)
 	n = 0
 	// uintptr color
 	const (
+		Black  = 0
 		Blue   = 1
 		Green  = 2
 		Aqua   = 3
@@ -107,6 +108,8 @@ func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error)
 			switch c {
 			case 0: // Reset
 				color = White
+			case 30: // Black
+				color = Black
 			case 90: // Gray
 				color = Gray
 			case 31, 91: // Red, BrightRed

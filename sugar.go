@@ -257,6 +257,42 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	log(e.Context(s.context).Str("message", msg), keysAndValues)
 }
 
+// Panic uses fmt.Sprint to construct and log a message.
+func (s *SugaredLogger) Panic(args ...interface{}) {
+	e := s.logger.header(PanicLevel)
+	if e == nil {
+		return
+	}
+	if s.logger.Caller > 0 {
+		e.caller(runtime.Caller(s.logger.Caller))
+	}
+	print(e.Context(s.context), args)
+}
+
+// Panicf uses fmt.Sprintf to log a templated message.
+func (s *SugaredLogger) Panicf(template string, args ...interface{}) {
+	e := s.logger.header(PanicLevel)
+	if e == nil {
+		return
+	}
+	if s.logger.Caller > 0 {
+		e.caller(runtime.Caller(s.logger.Caller))
+	}
+	e.Context(s.context).Msgf(template, args...)
+}
+
+// Panicw logs a message with some additional context.
+func (s *SugaredLogger) Panicw(msg string, keysAndValues ...interface{}) {
+	e := s.logger.header(PanicLevel)
+	if e == nil {
+		return
+	}
+	if s.logger.Caller > 0 {
+		e.caller(runtime.Caller(s.logger.Caller))
+	}
+	log(e.Context(s.context).Str("message", msg), keysAndValues)
+}
+
 func print(e *Event, args []interface{}) {
 	b := bbpool.Get().(*bb)
 	b.Reset()

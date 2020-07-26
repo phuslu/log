@@ -10,14 +10,15 @@ import (
 	"time"
 )
 
-func TestDefaultLogger(t *testing.T) {
-	osExit = func(int) {}
+func TestLoggerDefault(t *testing.T) {
+	notTest = false
 
 	Debug().Str("foo", "bar").Msg("hello from Debug")
 	Info().Str("foo", "bar").Msg("hello from Info")
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Panic().Str("foo", "bar").Msg("hello from Panic")
 	Printf("hello from %s", "Printf")
 }
 
@@ -41,6 +42,7 @@ func TestLoggerInfo(t *testing.T) {
 		Err(nil).
 		AnErr("an_error", fmt.Errorf("an %w", errors.New("test error"))).
 		AnErr("an_error", nil).
+		Int64("goid", Goid()).
 		Float32("float32", 1.111).
 		Floats32("float32", []float32{1.111}).
 		Floats32("float32", []float32{1.111, 2.222}).
@@ -203,7 +205,7 @@ func TestLoggerWithLevel(t *testing.T) {
 }
 
 func TestLoggerCaller(t *testing.T) {
-	osExit = func(int) {}
+	notTest = false
 
 	DefaultLogger.Caller = 1
 	DefaultLogger.SetLevel(DebugLevel)
@@ -212,6 +214,7 @@ func TestLoggerCaller(t *testing.T) {
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Panic().Str("foo", "bar").Msg("hello from Panic")
 	Printf("hello from %s", "Printf")
 
 	logger := Logger{
@@ -223,6 +226,7 @@ func TestLoggerCaller(t *testing.T) {
 	logger.Warn().Str("foo", "bar").Msg("hello from Warn")
 	logger.Error().Str("foo", "bar").Msg("hello from Error")
 	logger.Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	logger.Panic().Str("foo", "bar").Msg("hello from Panic")
 	logger.Printf("hello from %s", "Printf")
 }
 
@@ -244,6 +248,15 @@ func TestLoggerTimeFormat(t *testing.T) {
 
 	logger.TimeFormat = time.RFC3339Nano
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is rfc3339 time log event")
+}
+
+func TestLoggerTimeOffset(t *testing.T) {
+	logger := Logger{}
+
+	timeOffset = -7 * 3600
+	timeZone = "-07:00"
+
+	logger.Info().Msg("this is -7:00 timezone time log event")
 }
 
 func TestLoggerContext(t *testing.T) {

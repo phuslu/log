@@ -34,6 +34,9 @@ func TestSugarLoggerNil(t *testing.T) {
 	sugar.Fatal("hello from sugar", "Fatal")
 	sugar.Fatalf("hello from sugar %s", "Fatalf")
 	sugar.Fatalw("a Fatalw message", "foo", "bar", "number", 42)
+	sugar.Panic("hello from sugar", "Panic")
+	sugar.Panicf("hello from sugar %s", "Panicf")
+	sugar.Panicw("a Panicw message", "foo", "bar", "number", 42)
 	sugar.Log("foo", "bar", "number", 42)
 }
 
@@ -109,7 +112,7 @@ func TestSugarLoggerError(t *testing.T) {
 }
 
 func TestSugarLoggerFatal(t *testing.T) {
-	osExit = func(int) {}
+	notTest = false
 
 	logger := Logger{
 		Level:  InfoLevel,
@@ -121,6 +124,21 @@ func TestSugarLoggerFatal(t *testing.T) {
 	sugar.Fatal("hello from sugar", "Fatal")
 	sugar.Fatalf("hello from sugar %s", "Fatalf")
 	sugar.Fatalw("a Fatalw message", "foo", "bar", "number", 42)
+}
+
+func TestSugarLoggerPanic(t *testing.T) {
+	notTest = false
+
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
+	}
+
+	sugar := logger.Sugar(NewContext().Str("tag", "hi sugar").Value())
+	sugar.Panic("hello from sugar", "Panic")
+	sugar.Panicf("hello from sugar %s", "Panicf")
+	sugar.Panicw("a Fatalw message", "foo", "bar", "number", 42)
 }
 
 func TestSugarLoggerLog(t *testing.T) {

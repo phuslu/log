@@ -107,6 +107,8 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			c, s = Red, "ERR"
 		case FatalLevel:
 			c, s = Red, "FTL"
+		case PanicLevel:
+			c, s = Red, "PNC"
 		default:
 			c, s = Yellow, "???"
 		}

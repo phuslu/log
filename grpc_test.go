@@ -10,7 +10,7 @@ func TestGrpcLogger(t *testing.T) {
 
 	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext().Str("tag", "hi sugar").Value())
 
-	osExit = func(int) {}
+	notTest = false
 
 	grpclog.Info("hello", "grpclog Info message")
 	grpclog.Infoln("hello", "grpclog Infoln message")
@@ -37,7 +37,7 @@ func TestGrpcLoggerLevel(t *testing.T) {
 
 	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext().Str("tag", "hi sugar").Value())
 
-	osExit = func(int) {}
+	notTest = false
 
 	grpclog.Info("hello", "grpclog Info message")
 	grpclog.Infoln("hello", "grpclog Infoln message")

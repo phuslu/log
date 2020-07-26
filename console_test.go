@@ -165,10 +165,43 @@ func TestConsoleWriterTemplate(t *testing.T) {
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
+
+	w.QuoteString = true
+
+	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"hahaha","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"msg":"hello json console color writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+
+	_, err = fmt.Fprintf(w, "a long long message not a json format\n")
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+}
+
+func TestConsoleWriterTemplateColor(t *testing.T) {
+	w := &ConsoleWriter{
+		Template: template.Must(template.New("").Funcs(ColorFuncMap).Parse(`
+			black {{black .Message}}
+			red {{red .Message}}
+			green {{green .Message}}
+			yellow {{yellow .Message}}
+			blue {{blue .Message}}
+			magenta {{magenta .Message}}
+			cyan {{cyan .Message}}
+			white {{white .Message}}
+			gray {{gray .Message}}
+		`)),
+	}
+
+	_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"info","message":"hello console stack writer"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
 }
 
 func TestConsoleWriterGlog(t *testing.T) {
-	osExit = func(int) {}
+	notTest = false
 
 	glog := (&Logger{
 		Level:      InfoLevel,
