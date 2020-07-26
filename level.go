@@ -20,6 +20,7 @@ const (
 	noLevel
 )
 
+// Lower return lowe case string of Level
 func (l Level) Lower() (s string) {
 	switch l {
 	case DebugLevel:
@@ -40,6 +41,7 @@ func (l Level) Lower() (s string) {
 	return
 }
 
+// Upper return upper case string of Level
 func (l Level) Upper() (s string) {
 	switch l {
 	case DebugLevel:
@@ -60,6 +62,7 @@ func (l Level) Upper() (s string) {
 	return
 }
 
+// Title return title case string of Level
 func (l Level) Title() (s string) {
 	switch l {
 	case DebugLevel:
@@ -80,6 +83,7 @@ func (l Level) Title() (s string) {
 	return
 }
 
+// Three return three letters of Level
 func (l Level) Three() (s string) {
 	switch l {
 	case DebugLevel:
@@ -100,6 +104,7 @@ func (l Level) Three() (s string) {
 	return
 }
 
+// One return first upper letter of Level
 func (l Level) One() (s string) {
 	switch l {
 	case DebugLevel:
