@@ -13,7 +13,7 @@ func isTerminal(fd uintptr, os, arch string) bool {
 	switch os {
 	case "plan9", "js", "nacl":
 		return false
-	case "linux":
+	case "linux", "android":
 		switch arch {
 		case "amd64":
 			trap = 16
@@ -32,7 +32,7 @@ func isTerminal(fd uintptr, os, arch string) bool {
 
 	var req uintptr // TIOCGETA
 	switch os {
-	case "linux":
+	case "linux", "android":
 		switch arch {
 		case "ppc64", "ppc64le":
 			req = 0x402c7413

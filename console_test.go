@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 	"text/template"
 )
@@ -12,6 +13,10 @@ func TestIsTerminal(t *testing.T) {
 
 	if IsTerminal(file.Fd()) {
 		t.Errorf("test is terminal mode for %s failed", os.DevNull)
+	}
+
+	if runtime.GOARCH != "amd64" {
+		return
 	}
 
 	cases := []struct {
