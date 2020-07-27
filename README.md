@@ -1,6 +1,6 @@
 # Structured Logging for Humans
 
-[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov]
+[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov] ![stability-stable][stability-img]
 
 ## Features
 
@@ -397,6 +397,7 @@ BenchmarkPhusLog-16    	62713196	       188 ns/op	       0 B/op	       0 allocs/
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
+[stability-img]: https://img.shields.io/badge/stability-stable-green.svg
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-U2TYAgV7VCR-29BEB0?style=flat&logo=go
@@ -404,8 +405,8 @@ BenchmarkPhusLog-16    	62713196	       188 ns/op	       0 B/op	       0 allocs/
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
-[play-template-img]: https://img.shields.io/badge/playground-vhbUNkphodJ-29BEB0?style=flat&logo=go
-[play-template]: https://play.golang.org/p/vhbUNkphodJ
+[play-template-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
+[play-template]: https://play.golang.org/p/0sQ03po5N3X
 [play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/ttnMKCLSjyw
 [play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
