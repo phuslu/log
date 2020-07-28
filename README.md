@@ -397,16 +397,19 @@ func BenchmarkZeroLog(b *testing.B) {
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{Writer: ioutil.Discard}
 	for i := 0; i < b.N; i++ {
-		logge.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
+		logger.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
 	}
 }
 ```
-Performance results on my laptop:
+Performance results on Amazon Linux c5.large instance:
 ```
-BenchmarkZap-16        	12786758	       947 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZeroLog-16    	26904843	       447 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-16    	62713196	       188 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-2       	12461403	       976 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-2   	22679424	       513 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-2   	55579468	       216 ns/op	       0 B/op	       0 allocs/op
 ```
+
+### Acknowledgment
+This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [zap][zap] and [lumberjack][lumberjack].
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
 [pkg]: https://godoc.org/github.com/phuslu/log
@@ -430,3 +433,8 @@ BenchmarkPhusLog-16    	62713196	       188 ns/op	       0 B/op	       0 allocs/
 [play-sugar]: https://play.golang.org/p/7qkN1XU1Oe5
 [play-interceptor-img]: https://img.shields.io/badge/playground-CJoBdaB3Wnz-29BEB0?style=flat&logo=go
 [play-interceptor]: https://play.golang.org/p/CJoBdaB3Wnz
+[zerolog]: https://github.com/rs/zerolog
+[glog]: https://github.com/golang/glog
+[quicktemplate]: https://github.com/valyala/quicktemplate
+[zap]: https://github.com/uber-go/zap
+[lumberjack]: https://github.com/natefinch/lumberjack
