@@ -1,5 +1,4 @@
 // +build arm64
-// +build go1.9
 
 #include "textflag.h"
 // func goid() int64
