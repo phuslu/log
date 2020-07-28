@@ -83,7 +83,7 @@ type BufferWriter struct {
 	// FlushDuration is the period of the writer flush duration
 	FlushDuration time.Duration
 
-	// Writer specifies the writer of output. It uses os.Stderr in if empty.
+	// Writer specifies the writer of output.
 	Writer io.Writer
 }
 
