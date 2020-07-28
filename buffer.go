@@ -15,8 +15,8 @@ type BufferWriter struct {
 	// FlushDuration is the period of the writer flush duration
 	FlushDuration time.Duration
 
-	// Out specifies the writer of output.
-	Out io.Writer
+	// Writer specifies the writer of output.
+	Writer io.Writer
 
 	once sync.Once
 	mu   sync.Mutex
@@ -27,7 +27,7 @@ type BufferWriter struct {
 func (w *BufferWriter) Flush() (err error) {
 	w.mu.Lock()
 	if len(w.buf) != 0 {
-		_, err = w.Out.Write(w.buf)
+		_, err = w.Writer.Write(w.buf)
 		w.buf = w.buf[:0]
 	}
 	w.mu.Unlock()
@@ -37,9 +37,9 @@ func (w *BufferWriter) Flush() (err error) {
 // Close implements io.Closer, and closes the underlaying Writer.
 func (w *BufferWriter) Close() (err error) {
 	w.mu.Lock()
-	_, err = w.Out.Write(w.buf)
+	_, err = w.Writer.Write(w.buf)
 	w.buf = w.buf[:0]
-	if closer, ok := w.Out.(io.Closer); ok {
+	if closer, ok := w.Writer.(io.Closer); ok {
 		err = closer.Close()
 	}
 	w.mu.Unlock()
@@ -79,11 +79,11 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 		w.buf = append(w.buf, p...)
 		n = len(p)
 		if len(w.buf) > w.MaxSize {
-			_, err = w.Out.Write(w.buf)
+			_, err = w.Writer.Write(w.buf)
 			w.buf = w.buf[:0]
 		}
 	} else {
-		n, err = w.Out.Write(p)
+		n, err = w.Writer.Write(p)
 	}
 	w.mu.Unlock()
 

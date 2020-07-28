@@ -21,7 +21,7 @@ func isTerminal(fd uintptr, _, _ string) bool {
 }
 
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
-	out := w.Out
+	out := w.Writer
 	if out == nil {
 		out = os.Stderr
 	}

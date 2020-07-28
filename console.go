@@ -17,7 +17,7 @@ func IsTerminal(fd uintptr) bool {
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to Out.
+// (optionally) colorized, human-friendly format to Writer.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -39,8 +39,8 @@ type ConsoleWriter struct {
 	// for available Template Arguments.
 	Template *template.Template
 
-	// Out is the output destination. using os.Stderr if empty.
-	Out io.Writer
+	// Writer is the output destination. using os.Stderr if empty.
+	Writer io.Writer
 }
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
@@ -353,7 +353,7 @@ func jsonKeys(data []byte) (keys []string) {
 //
 //    log.DefaultLogger.Writer = &log.ConsoleWriter{
 //        Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
-//        Out:      os.Stderr,
+//        Writer:   os.Stderr,
 //    }
 //
 // Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.

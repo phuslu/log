@@ -83,8 +83,8 @@ type BufferWriter struct {
 	// FlushDuration is the period of the writer flush duration
 	FlushDuration time.Duration
 
-	// Out specifies the writer of output. It uses os.Stderr in if empty.
-	Out io.Writer
+	// Writer specifies the writer of output. It uses os.Stderr in if empty.
+	Writer io.Writer
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
@@ -102,8 +102,8 @@ type ConsoleWriter struct {
 	// TimeField specifies the time filed name of output message.
 	TimeField string
 
-	// Out is the output destination. using os.Stderr if empty.
-	Out io.Writer
+	// Writer is the output destination. using os.Stderr if empty.
+	Writer io.Writer
 
 	// Template determines console output template if not empty.
 	Template *template.Template
