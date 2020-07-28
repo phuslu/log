@@ -9,7 +9,7 @@
 * Rotating File Writer
 * Pretty & Template Console Writer
 * Contextual Fields
-* Grpc & StdLog Interceptor
+* Grpc & Logr & StdLog Interceptor
 * High Performance
 
 ## Interfaces
@@ -290,7 +290,7 @@ func main() {
 }
 ```
 
-### Grpc & StdLog Interceptor
+### Grpc & Logr & StdLog Interceptor
 
 To using wrapped logger for grpc/stdlog. [![playground][play-interceptor-img]][play-interceptor]
 
@@ -299,6 +299,7 @@ package main
 
 import (
 	stdLog "log"
+	"github.com/go-logr/logr"
 	"github.com/phuslu/log"
 	"google.golang.org/grpc/grpclog"
 )
@@ -309,6 +310,11 @@ func main() {
 	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")
 	grpclog.Errorf("hello %s", "grpclog Errorf message")
+
+	var logrLog logr.Logger = log.DefaultLogger.Logr(ctx)
+	logrLog = logrLog.WithName("a_named_logger").WithValues("a_key", "a_value")
+	logrLog.Info("hello", "foo", "bar", "number", 42)
+	logrLog.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
 
 	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix ", stdLog.LstdFlags)
 	stdlog.Print("hello from stdlog Print")

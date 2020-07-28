@@ -2,9 +2,7 @@ package log
 
 import (
 	"fmt"
-	"net"
 	"runtime"
-	"time"
 	"unsafe"
 )
 
@@ -73,7 +71,7 @@ func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg("")
 	return nil
 }
 
@@ -110,7 +108,7 @@ func (s *SugaredLogger) Debugw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 // Info uses fmt.Sprint to construct and log a message.
@@ -146,7 +144,7 @@ func (s *SugaredLogger) Infow(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 // Warn uses fmt.Sprint to construct and log a message.
@@ -182,7 +180,7 @@ func (s *SugaredLogger) Warnw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 // Error uses fmt.Sprint to construct and log a message.
@@ -218,7 +216,7 @@ func (s *SugaredLogger) Errorw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 // Fatal uses fmt.Sprint to construct and log a message.
@@ -254,7 +252,7 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 // Panic uses fmt.Sprint to construct and log a message.
@@ -290,7 +288,7 @@ func (s *SugaredLogger) Panicw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	log(e.Context(s.context).Str("message", msg), keysAndValues)
+	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
 }
 
 func print(e *Event, args []interface{}) {
@@ -303,82 +301,4 @@ func print(e *Event, args []interface{}) {
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
 	}
-}
-
-func log(e *Event, keysAndValues []interface{}) {
-	var key string
-	for i, v := range keysAndValues {
-		if i%2 == 0 {
-			key, _ = v.(string)
-			continue
-		}
-		if v == nil {
-			e.key(key)
-			e.buf = append(e.buf, "null"...)
-			continue
-		}
-		switch v.(type) {
-		case Context:
-			e.Dict(key, v.(Context))
-		case []time.Duration:
-			e.Durs(key, v.([]time.Duration))
-		case time.Duration:
-			e.Dur(key, v.(time.Duration))
-		case time.Time:
-			e.Time(key, v.(time.Time))
-		case net.HardwareAddr:
-			e.MACAddr(key, v.(net.HardwareAddr))
-		case net.IP:
-			e.IPAddr(key, v.(net.IP))
-		case net.IPNet:
-			e.IPPrefix(key, v.(net.IPNet))
-		case []bool:
-			e.Bools(key, v.([]bool))
-		case []byte:
-			e.Bytes(key, v.([]byte))
-		case []error:
-			e.Errs(key, v.([]error))
-		case []float32:
-			e.Floats32(key, v.([]float32))
-		case []float64:
-			e.Floats64(key, v.([]float64))
-		case []string:
-			e.Strs(key, v.([]string))
-		case string:
-			e.Str(key, v.(string))
-		case bool:
-			e.Bool(key, v.(bool))
-		case error:
-			e.AnErr(key, v.(error))
-		case float32:
-			e.Float32(key, v.(float32))
-		case float64:
-			e.Float64(key, v.(float64))
-		case int16:
-			e.Int16(key, v.(int16))
-		case int32:
-			e.Int32(key, v.(int32))
-		case int64:
-			e.Int64(key, v.(int64))
-		case int8:
-			e.Int8(key, v.(int8))
-		case int:
-			e.Int(key, v.(int))
-		case uint16:
-			e.Uint16(key, v.(uint16))
-		case uint32:
-			e.Uint32(key, v.(uint32))
-		case uint64:
-			e.Uint64(key, v.(uint64))
-		case uint8:
-			e.Uint8(key, v.(uint8))
-		case fmt.GoStringer:
-			e.GoStringer(key, v.(fmt.GoStringer))
-		case fmt.Stringer:
-			e.Stringer(key, v.(fmt.Stringer))
-		default:
-			e.Interface(key, v)
-		}
-	}
-	e.Msg("")
 }
