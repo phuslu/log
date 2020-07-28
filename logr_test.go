@@ -15,7 +15,7 @@ type logrLogger interface {
 }
 
 func TestLogrLoggerNil(t *testing.T) {
-	var logger *Logger = nil
+	var logger *Logger
 
 	var logr logrLogger = logger.Logr(NewContext().Str("tag", "hi logr").Value())
 

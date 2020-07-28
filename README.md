@@ -45,7 +45,7 @@ type Logger struct {
 }
 ```
 
-### FileWriter & ConsoleWriter
+### FileWriter & BufferWriter & ConsoleWriter
 ```go
 // FileWriter is an io.WriteCloser that writes to the specified filename.
 type FileWriter struct {
@@ -57,8 +57,7 @@ type FileWriter struct {
 	// mode is 0644
 	FileMode os.FileMode
 
-	// MaxSize is the maximum size in megabytes of the log file before it gets
-	// rotated.
+	// MaxSize is the maximum size in bytes of the log file before it gets rotated.
 	MaxSize int64
 
 	// MaxBackups is the maximum number of old log files to retain.  The default
@@ -74,6 +73,18 @@ type FileWriter struct {
 
 	// ProcessID determines if the pid used for formatting in log files.
 	ProcessID bool
+}
+
+// BufferWriter is an io.WriteCloser that writes with fixed size buffer.
+type BufferWriter struct {
+	// MaxSize is the size in bytes of the buffer before it gets flushed.
+	MaxSize int
+
+	// FlushDuration is the period of the writer flush duration
+	FlushDuration time.Duration
+
+	// Out specifies the writer of output. It uses os.Stderr in if empty.
+	Out io.Writer
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
