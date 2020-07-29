@@ -723,6 +723,39 @@ func (e *Event) Strs(key string, vals []string) *Event {
 	return e
 }
 
+// Byte adds the field key with val as a byte to the event.
+func (e *Event) Byte(key string, val byte) *Event {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	switch val {
+	case '"':
+		e.buf = append(e.buf, "\"\\\"\""...)
+	case '\\':
+		e.buf = append(e.buf, "\"\\\\\""...)
+	case '\n':
+		e.buf = append(e.buf, "\"\\n\""...)
+	case '\r':
+		e.buf = append(e.buf, "\"\\r\""...)
+	case '\t':
+		e.buf = append(e.buf, "\"\\t\""...)
+	case '\f':
+		e.buf = append(e.buf, "\"\\u000c\""...)
+	case '\b':
+		e.buf = append(e.buf, "\"\\u0008\""...)
+	case '<':
+		e.buf = append(e.buf, "\"\\u003c\""...)
+	case '\'':
+		e.buf = append(e.buf, "\"\\u0027\""...)
+	case 0:
+		e.buf = append(e.buf, "\"\\u0000\""...)
+	default:
+		e.buf = append(e.buf, '"', val, '"')
+	}
+	return e
+}
+
 // Bytes adds the field key with val as a string to the event.
 func (e *Event) Bytes(key string, val []byte) *Event {
 	if e == nil {

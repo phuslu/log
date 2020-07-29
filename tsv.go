@@ -109,13 +109,19 @@ func (e *TSVEvent) TimestampMS() *TSVEvent {
 	return e
 }
 
-// Bool append append the val as a bool to the event.
+// Bool append the b as a bool to the event.
 func (e *TSVEvent) Bool(b bool) *TSVEvent {
 	if b {
 		e.buf = append(e.buf, '1', e.sep)
 	} else {
 		e.buf = append(e.buf, '0', e.sep)
 	}
+	return e
+}
+
+// Byte append the b as a byte to the event.
+func (e *TSVEvent) Byte(b byte) *TSVEvent {
+	e.buf = append(e.buf, b, e.sep)
 	return e
 }
 

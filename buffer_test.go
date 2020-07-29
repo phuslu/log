@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -77,7 +76,7 @@ func TestBufferWriterClose(t *testing.T) {
 	w := &BufferWriter{
 		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
-		Writer:        ioutil.Discard,
+		Writer:        func() *os.File { f, _ := os.Open(os.DevNull); return f }(),
 	}
 	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
 	w.Close()

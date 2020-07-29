@@ -14,6 +14,7 @@ func TestTSVLogger(t *testing.T) {
 		TimestampMS().
 		Bool(true).
 		Bool(false).
+		Byte('m').
 		Float64(0.618).
 		Int64(123).
 		Uint64(456).
@@ -44,6 +45,7 @@ func TestTSVSeparator(t *testing.T) {
 		TimestampMS().
 		Bool(true).
 		Bool(false).
+		Byte('m').
 		Float64(0.618).
 		Int64(123).
 		Uint64(456).

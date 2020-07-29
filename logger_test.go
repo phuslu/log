@@ -132,6 +132,7 @@ func TestLoggerNil(t *testing.T) {
 		Bytes("bytes2", []byte("\"<>?'")).
 		BytesOrNil("bytes3", []byte("\"<>?'")).
 		BytesOrNil("bytes4", nil).
+		Byte("zero", 0).
 		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
 		Strs("strings", []string{"a", "b", "\"<>?'"}).
 		Stringer("stringer", nil).
@@ -169,6 +170,24 @@ func TestLoggerInterface(t *testing.T) {
 		Caller(1).
 		Interface("a_cyclic_struct", cyclicStruct).
 		Msgf("this is a cyclic struct test")
+}
+
+func TestLoggerByte(t *testing.T) {
+	logger := Logger{
+		Level: ParseLevel("debug"),
+	}
+
+	logger.Info().Byte("gender", 'm').Msg("")
+	logger.Info().Byte("quote", '"').Msg("")
+	logger.Info().Byte("reverse", '\\').Msg("")
+	logger.Info().Byte("cf", '\n').Msg("")
+	logger.Info().Byte("cr", '\r').Msg("")
+	logger.Info().Byte("tab", '\t').Msg("")
+	logger.Info().Byte("forward", '\f').Msg("")
+	logger.Info().Byte("back", '\b').Msg("")
+	logger.Info().Byte("less", '<').Msg("")
+	logger.Info().Byte("singlequote", '\'').Msg("")
+	logger.Info().Byte("zerobyte", '\x00').Msg("")
 }
 
 func TestLoggerSetLevel(t *testing.T) {
