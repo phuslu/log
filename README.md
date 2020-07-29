@@ -77,8 +77,8 @@ type FileWriter struct {
 
 // BufferWriter is an io.WriteCloser that writes with fixed size buffer.
 type BufferWriter struct {
-	// MaxSize is the size in bytes of the buffer before it gets flushed.
-	MaxSize int
+	// BufferSize is the size in bytes of the buffer before it gets flushed.
+	BufferSize int
 
 	// FlushDuration is the period of the writer flush duration
 	FlushDuration time.Duration

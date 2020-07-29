@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -9,7 +10,7 @@ import (
 
 func TestBufferWriterSize(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize:       1000,
+		BufferSize:    1000,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
 	}
@@ -21,8 +22,8 @@ func TestBufferWriterSize(t *testing.T) {
 
 func TestBufferWriterSizeZero(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize: 0,
-		Writer:  os.Stderr,
+		BufferSize: 0,
+		Writer:     os.Stderr,
 	}
 	fmt.Fprintf(w, "%s, before buffer writer zero size\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
@@ -31,7 +32,7 @@ func TestBufferWriterSizeZero(t *testing.T) {
 
 func TestBufferWriterDuration(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize:       1000,
+		BufferSize:    1000,
 		FlushDuration: 10 * time.Millisecond,
 		Writer:        os.Stderr,
 	}
@@ -41,7 +42,7 @@ func TestBufferWriterDuration(t *testing.T) {
 
 func TestBufferWriterFlushAuto(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize:       8192,
+		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
 	}
@@ -52,7 +53,7 @@ func TestBufferWriterFlushAuto(t *testing.T) {
 
 func TestBufferWriterFlushCall(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize:       8192,
+		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
 	}
@@ -61,11 +62,22 @@ func TestBufferWriterFlushCall(t *testing.T) {
 	fmt.Fprintf(os.Stderr, "%s, after buffer writer flush\n", timeNow())
 }
 
-func TestBufferWriterClose(t *testing.T) {
+func TestBufferWriterFlusher(t *testing.T) {
 	w := &BufferWriter{
-		MaxSize:       8192,
+		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
+	}
+	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
+
+	Flush(w)
+}
+
+func TestBufferWriterClose(t *testing.T) {
+	w := &BufferWriter{
+		BufferSize:    8192,
+		FlushDuration: 1000 * time.Millisecond,
+		Writer:        ioutil.Discard,
 	}
 	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
 	w.Close()

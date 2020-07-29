@@ -7,10 +7,17 @@ import (
 	"time"
 )
 
+// The Flusher interface is implemented by BufferWriters that allow
+// an Logger to flush buffered data to the output.
+type Flusher interface {
+	// Flush sends any buffered data to the output.
+	Flush() error
+}
+
 // BufferWriter is an io.WriteCloser that writes with fixed size buffer.
 type BufferWriter struct {
-	// MaxSize is the size in bytes of the buffer before it gets flushed.
-	MaxSize int
+	// BufferSize is the size in bytes of the buffer before it gets flushed.
+	BufferSize int
 
 	// FlushDuration is the period of the writer flush duration
 	FlushDuration time.Duration
@@ -50,14 +57,14 @@ func (w *BufferWriter) Close() (err error) {
 // than Size, the buffer is written to the underlaying Writer and cleared.
 func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	w.once.Do(func() {
-		if w.MaxSize == 0 {
+		if w.BufferSize == 0 {
 			return
 		}
-		if page := os.Getpagesize(); w.MaxSize%page != 0 {
-			w.MaxSize = (w.MaxSize + page) / page * page
+		if page := os.Getpagesize(); w.BufferSize%page != 0 {
+			w.BufferSize = (w.BufferSize + page) / page * page
 		}
 		if w.buf == nil {
-			w.buf = make([]byte, 0, w.MaxSize)
+			w.buf = make([]byte, 0, w.BufferSize)
 		}
 		if w.FlushDuration > 0 {
 			if w.FlushDuration < 100*time.Millisecond {
@@ -75,10 +82,10 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	})
 
 	w.mu.Lock()
-	if w.MaxSize > 0 {
+	if w.BufferSize > 0 {
 		w.buf = append(w.buf, p...)
 		n = len(p)
-		if len(w.buf) > w.MaxSize {
+		if len(w.buf) > w.BufferSize {
 			_, err = w.Writer.Write(w.buf)
 			w.buf = w.buf[:0]
 		}
@@ -87,5 +94,12 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	}
 	w.mu.Unlock()
 
+	return
+}
+
+func Flush(writer io.Writer) (err error) {
+	if flusher, ok := writer.(Flusher); ok {
+		err = flusher.Flush()
+	}
 	return
 }
