@@ -145,11 +145,13 @@ import (
 func main() {
 	log.Printf("Hello, %s", "世界")
 	log.Info().Str("foo", "bar").Int("number", 42).Msg("hi, phuslog")
+	log.Error().Str("foo", "bar").Int("number", 42).Msgf("oops, %s", "phuslog")
 }
 
 // Output:
 //   {"time":"2020-03-22T09:58:41.828Z","message":"Hello, 世界"}
 //   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"hi, phuslog"}
+//   {"time":"2020-03-22T09:58:41.828Z","level":"error","foo":"bar","number":42,"message":"oops, phuslog"}
 ```
 > Note: By default log writes to `os.Stderr`
 
@@ -358,7 +360,7 @@ func main() {
 
 ### High Performance
 
-A quick and simple benchmark with zap/zerolog
+A quick and simple benchmark with zap/zerolog, performance advantage comes from [inline function][inline function], [loop unrolling][loop unrolling] and [runtime linkage][runtime linkage].
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -432,6 +434,9 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
 [play-sugar]: https://play.golang.org/p/7qkN1XU1Oe5
 [play-interceptor-img]: https://img.shields.io/badge/playground-CJoBdaB3Wnz-29BEB0?style=flat&logo=go
+[inline function]: https://en.wikipedia.org/wiki/Inline_function
+[loop unrolling]: https://en.wikipedia.org/wiki/Loop_unrolling
+[runtime linkage]: https://github.com/golang/go/issues/15006
 [play-interceptor]: https://play.golang.org/p/CJoBdaB3Wnz
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog

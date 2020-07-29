@@ -7,13 +7,6 @@ import (
 	"time"
 )
 
-// The Flusher interface is implemented by BufferWriters that allow
-// an Logger to flush buffered data to the output.
-type Flusher interface {
-	// Flush sends any buffered data to the output.
-	Flush() error
-}
-
 // BufferWriter is an io.WriteCloser that writes with fixed size buffer.
 type BufferWriter struct {
 	// BufferSize is the size in bytes of the buffer before it gets flushed.
@@ -97,6 +90,14 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
+// The Flusher interface is implemented by BufferWriters that allow
+// an Logger to flush buffered data to the output.
+type Flusher interface {
+	// Flush sends any buffered data to the output.
+	Flush() error
+}
+
+// Flush writes any buffered data to the underlying io.Writer.
 func Flush(writer io.Writer) (err error) {
 	if flusher, ok := writer.(Flusher); ok {
 		err = flusher.Flush()
