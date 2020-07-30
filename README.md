@@ -173,6 +173,7 @@ log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
 ### Rotating File Writer
 
+To log to a rotating file, use `log.FileWriter`. [![playground][play-file-img]][play-file]
 ```go
 package main
 
@@ -424,6 +425,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-U2TYAgV7VCR-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/U2TYAgV7VCR
+[play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
+[play-file]: https://play.golang.org/p/nS-ILxFyhHM
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
