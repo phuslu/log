@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -207,7 +208,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		Value interface{}
 	}
 
-	o := struct {
+	dot := struct {
 		Time     string
 		Level    Level
 		Caller   string
@@ -232,19 +233,19 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		timeField = "time"
 	}
 	if v, ok := m[timeField]; ok {
-		o.Time = v.(string)
+		dot.Time = v.(string)
 	}
 
 	if v, ok := m["level"]; ok {
-		o.Level = ParseLevel(v.(string))
+		dot.Level = ParseLevel(v.(string))
 	}
 
 	if v, ok := m["caller"]; ok {
-		o.Caller = v.(string)
+		dot.Caller = v.(string)
 	}
 
 	if v, ok := m["goid"]; ok {
-		o.Goid = v.(json.Number).String()
+		dot.Goid = v.(json.Number).String()
 	}
 
 	var msgField = "message"
@@ -258,15 +259,15 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
-		o.Message = v.(string)
+		dot.Message = v.(string)
 	}
 
 	if v, ok := m["stack"]; ok {
 		if s, ok := v.(string); ok {
-			o.Stack = s
+			dot.Stack = s
 		} else {
 			b, _ := json.MarshalIndent(v, "", "  ")
-			o.Stack = string(b)
+			dot.Stack = string(b)
 		}
 	}
 
@@ -281,14 +282,14 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 				v = strconv.Quote(s)
 			}
 		}
-		o.KeyValue = append(o.KeyValue, KeyValue{k, fmt.Sprint(v)})
+		dot.KeyValue = append(dot.KeyValue, KeyValue{k, fmt.Sprint(v)})
 	}
 
 	b := bbpool.Get().(*bb)
 	b.Reset()
 	defer bbpool.Put(b)
 
-	w.Template.Execute(b, &o)
+	w.Template.Execute(b, &dot)
 	if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
 		b.B = append(b.B, '\n')
 	}
@@ -373,17 +374,21 @@ const ColorTemplate = `{{gray .Time -}}
 
 // ColorFuncMap provides a pre-defined template functions for color string
 var ColorFuncMap = template.FuncMap{
-	"black":   func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
-	"red":     func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
-	"green":   func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
-	"yellow":  func(s string) string { return "\x1b[33m" + s + "\x1b[0m" },
-	"blue":    func(s string) string { return "\x1b[34m" + s + "\x1b[0m" },
-	"magenta": func(s string) string { return "\x1b[35m" + s + "\x1b[0m" },
-	"cyan":    func(s string) string { return "\x1b[36m" + s + "\x1b[0m" },
-	"white":   func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
-	"gray":    func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
-	"upper":   strings.ToUpper,
-	"low":     strings.ToLower,
-	"title":   strings.ToTitle,
-	"quote":   strconv.Quote,
+	"black":     func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
+	"red":       func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
+	"green":     func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
+	"yellow":    func(s string) string { return "\x1b[33m" + s + "\x1b[0m" },
+	"blue":      func(s string) string { return "\x1b[34m" + s + "\x1b[0m" },
+	"magenta":   func(s string) string { return "\x1b[35m" + s + "\x1b[0m" },
+	"cyan":      func(s string) string { return "\x1b[36m" + s + "\x1b[0m" },
+	"white":     func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
+	"gray":      func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
+	"contains":  strings.Contains,
+	"endsswith": strings.HasSuffix,
+	"low":       strings.ToLower,
+	"match":     path.Match,
+	"quote":     strconv.Quote,
+	"statswith": strings.HasPrefix,
+	"title":     strings.ToTitle,
+	"upper":     strings.ToUpper,
 }
