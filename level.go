@@ -104,8 +104,8 @@ func (l Level) Three() (s string) {
 	return
 }
 
-// One return first upper letter of Level
-func (l Level) One() (s string) {
+// First return first upper letter of Level
+func (l Level) First() (s string) {
 	switch l {
 	case DebugLevel:
 		s = "D"

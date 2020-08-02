@@ -11,7 +11,7 @@ func TestLevel(t *testing.T) {
 		Upper string
 		Title string
 		Three string
-		One   string
+		First string
 	}{
 		{DebugLevel, "debug", "DEBUG", "Debug", "DBG", "D"},
 		{InfoLevel, "info", "INFO", "Info", "INF", "I"},
@@ -38,8 +38,8 @@ func TestLevel(t *testing.T) {
 		if v := c.Level.Three(); v != c.Three {
 			t.Errorf("%T.Three() must return %#v, not %#v", c.Level, c.Three, v)
 		}
-		if v := c.Level.One(); v != c.One {
-			t.Errorf("%T.One() must return %#v, not %#v", c.Level, c.One, v)
+		if v := c.Level.First(); v != c.First {
+			t.Errorf("%T.First() must return %#v, not %#v", c.Level, c.First, v)
 		}
 	}
 }

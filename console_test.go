@@ -214,7 +214,7 @@ func TestConsoleWriterGlog(t *testing.T) {
 		TimeFormat: "0102 15:04:05.999999",
 		Writer: &ConsoleWriter{
 			Template: template.Must(template.New("").Parse(
-				`{{.Level.One}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
+				`{{.Level.First}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
 		},
 	}).Sugar(nil)
 
