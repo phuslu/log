@@ -369,11 +369,12 @@ const ColorTemplate = `{{gray .Time -}}
 {{else if eq .Level 4}}{{red " FTL " -}}
 {{else if eq .Level 5}}{{red " PNC " -}}
 {{else}}{{red " ??? "}}{{end -}}
-{{.Goid}} {{.Caller}}{{cyan " > "}}{{.Message}}
+{{.Goid}} {{.Caller}}{{cyan " >" -}}
 {{range .KeyValue -}}
-{{if eq .Key "error" }}	{{red (printf "%s%s%s" .Key "=" .Value) -}}
-{{else}}	{{cyan .Key}}={{gray .Value}}{{end}}
-{{end}}{{.Stack}}`
+{{if eq .Key "error" }} {{red (printf "%s%s%s" .Key "=" .Value) -}}
+{{else}} {{cyan .Key}}={{gray .Value}}{{end -}}
+{{end}} {{.Message}}
+{{.Stack}}`
 
 // ColorFuncMap provides a pre-defined template functions for color string
 var ColorFuncMap = template.FuncMap{
