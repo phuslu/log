@@ -98,6 +98,8 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	if v, ok := m["level"]; ok {
 		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
+		case TraceLevel:
+			c, s = Magenta, "TRC"
 		case DebugLevel:
 			c, s = Yellow, "DBG"
 		case InfoLevel:
@@ -359,7 +361,8 @@ func jsonKeys(data []byte) (keys []string) {
 //
 // Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
 const ColorTemplate = `{{gray .Time -}}
-{{if eq .Level 0 }}{{yellow " DBG " -}}
+{{if eq .Level -1 }}{{magenta " TRC " -}}
+{{else if eq .Level 0 }}{{yellow " DBG " -}}
 {{else if eq .Level 1}}{{green " INF " -}}
 {{else if eq .Level 2}}{{red " WRN " -}}
 {{else if eq .Level 3}}{{red " ERR " -}}

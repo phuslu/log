@@ -13,6 +13,7 @@ import (
 func TestLoggerDefault(t *testing.T) {
 	notTest = false
 
+	Trace().Str("foo", "bar").Msg("hello from Trace")
 	Debug().Str("foo", "bar").Msg("hello from Debug")
 	Info().Str("foo", "bar").Msg("hello from Info")
 	Warn().Str("foo", "bar").Msg("hello from Warn")
@@ -195,9 +196,11 @@ func TestLoggerSetLevel(t *testing.T) {
 	Warn().Msg("1. i am a warn log")
 	Info().Msg("2. i am a info log")
 	Debug().Msg("3. i am a debug log")
-	DefaultLogger.SetLevel(DebugLevel)
+	Trace().Msg("3. i am a trace log")
+	DefaultLogger.SetLevel(TraceLevel)
 	Info().Msg("4. i am a info log")
 	Debug().Msg("5. i am a debug log")
+	Trace().Msg("5. i am a trace log")
 }
 
 func TestLoggerStack(t *testing.T) {
@@ -229,7 +232,8 @@ func TestLoggerCaller(t *testing.T) {
 	notTest = false
 
 	DefaultLogger.Caller = 1
-	DefaultLogger.SetLevel(DebugLevel)
+	DefaultLogger.SetLevel(TraceLevel)
+	Trace().Str("foo", "bar").Msg("hello from Trace")
 	Debug().Str("foo", "bar").Msg("hello from Debug")
 	Info().Str("foo", "bar").Msg("hello from Info")
 	Warn().Str("foo", "bar").Msg("hello from Warn")
@@ -239,9 +243,10 @@ func TestLoggerCaller(t *testing.T) {
 	Printf("hello from %s", "Printf")
 
 	logger := Logger{
-		Level:  ParseLevel("debug"),
+		Level:  ParseLevel("trace"),
 		Caller: 1,
 	}
+	logger.Trace().Str("foo", "bar").Msg("hello from Trace")
 	logger.Debug().Str("foo", "bar").Msg("hello from Debug")
 	logger.Info().Str("foo", "bar").Msg("hello from Info")
 	logger.Warn().Str("foo", "bar").Msg("hello from Warn")
@@ -284,6 +289,7 @@ func TestLoggerContext(t *testing.T) {
 	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel}
+	logger.Trace().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
 	logger.Debug().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
 	logger.Info().Context(ctx).Int("no1", 1).Msg("this is first context log event")
 	logger.Info().Context(ctx).Int("no2", 2).Msg("this is second context log event")
@@ -292,7 +298,8 @@ func TestLoggerContext(t *testing.T) {
 func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
-	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	logger := Logger{Level: TraceLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
 	logger.Info().
@@ -306,6 +313,7 @@ func TestLoggerContextDict(t *testing.T) {
 		Msg("")
 
 	ctx = NewContext().Value()
+	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
 }

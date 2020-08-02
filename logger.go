@@ -64,6 +64,15 @@ type Event struct {
 	panic    bool
 }
 
+// Trace starts a new message with trace level.
+func Trace() (e *Event) {
+	e = DefaultLogger.header(TraceLevel)
+	if e != nil && DefaultLogger.Caller > 0 {
+		e.caller(runtime.Caller(DefaultLogger.Caller))
+	}
+	return
+}
+
 // Debug starts a new message with debug level.
 func Debug() (e *Event) {
 	e = DefaultLogger.header(DebugLevel)
@@ -125,6 +134,15 @@ func Printf(format string, v ...interface{}) {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	e.Msgf(format, v...)
+}
+
+// Trace starts a new message with trace level.
+func (l *Logger) Trace() (e *Event) {
+	e = l.header(TraceLevel)
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
 }
 
 // Debug starts a new message with debug level.
@@ -192,7 +210,7 @@ func (l *Logger) WithLevel(level Level) (e *Event) {
 
 // SetLevel changes logger default level.
 func (l *Logger) SetLevel(level Level) {
-	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
+	atomic.StoreInt32((*int32)(&l.Level), int32(level))
 	return
 }
 
@@ -233,7 +251,7 @@ var timeOffset, timeZone = func() (int64, string) {
 }()
 
 func (l *Logger) header(level Level) *Event {
-	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
+	if int32(level) < atomic.LoadInt32((*int32)(&l.Level)) {
 		return nil
 	}
 	e := epool.Get().(*Event)
@@ -404,6 +422,8 @@ func (l *Logger) header(level Level) *Event {
 		e.buf = append(e.buf, ",\"level\":\"warn\""...)
 	case ErrorLevel:
 		e.buf = append(e.buf, ",\"level\":\"error\""...)
+	case TraceLevel:
+		e.buf = append(e.buf, ",\"level\":\"trace\""...)
 	case FatalLevel:
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
 	case PanicLevel:

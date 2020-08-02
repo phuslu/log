@@ -1,28 +1,32 @@
 package log
 
 // Level defines log levels.
-type Level uint32
+type Level int32
 
 const (
+	// TraceLevel defines trace log level.
+	TraceLevel Level = -1
 	// DebugLevel defines debug log level.
-	DebugLevel Level = iota
+	DebugLevel Level = 0
 	// InfoLevel defines info log level.
-	InfoLevel
+	InfoLevel Level = 1
 	// WarnLevel defines warn log level.
-	WarnLevel
+	WarnLevel Level = 2
 	// ErrorLevel defines error log level.
-	ErrorLevel
+	ErrorLevel Level = 3
 	// FatalLevel defines fatal log level.
-	FatalLevel
+	FatalLevel Level = 4
 	// PanicLevel defines panic log level.
-	PanicLevel
+	PanicLevel Level = 5
 	// NoLevel defines an absent log level.
-	noLevel
+	noLevel Level = 6
 )
 
 // Lower return lowe case string of Level
 func (l Level) Lower() (s string) {
 	switch l {
+	case TraceLevel:
+		s = "trace"
 	case DebugLevel:
 		s = "debug"
 	case InfoLevel:
@@ -44,6 +48,8 @@ func (l Level) Lower() (s string) {
 // Upper return upper case string of Level
 func (l Level) Upper() (s string) {
 	switch l {
+	case TraceLevel:
+		s = "TRACE"
 	case DebugLevel:
 		s = "DEBUG"
 	case InfoLevel:
@@ -65,6 +71,8 @@ func (l Level) Upper() (s string) {
 // Title return title case string of Level
 func (l Level) Title() (s string) {
 	switch l {
+	case TraceLevel:
+		s = "Trace"
 	case DebugLevel:
 		s = "Debug"
 	case InfoLevel:
@@ -86,6 +94,8 @@ func (l Level) Title() (s string) {
 // Three return three letters of Level
 func (l Level) Three() (s string) {
 	switch l {
+	case TraceLevel:
+		s = "TRC"
 	case DebugLevel:
 		s = "DBG"
 	case InfoLevel:
@@ -107,6 +117,8 @@ func (l Level) Three() (s string) {
 // First return first upper letter of Level
 func (l Level) First() (s string) {
 	switch l {
+	case TraceLevel:
+		s = "T"
 	case DebugLevel:
 		s = "D"
 	case InfoLevel:
@@ -129,6 +141,8 @@ func (l Level) First() (s string) {
 // returns an error if the input string does not match known values.
 func ParseLevel(s string) (level Level) {
 	switch s {
+	case "trace", "Trace", "TRACE", "T", "TRC", "TRAC":
+		level = TraceLevel
 	case "debug", "Debug", "DEBUG", "D", "DBG", "DEBU":
 		level = DebugLevel
 	case "info", "Info", "INFO", "I", "INF":

@@ -13,6 +13,7 @@ func TestLevel(t *testing.T) {
 		Three string
 		First string
 	}{
+		{TraceLevel, "trace", "TRACE", "Trace", "TRC", "T"},
 		{DebugLevel, "debug", "DEBUG", "Debug", "DBG", "D"},
 		{InfoLevel, "info", "INFO", "Info", "INF", "I"},
 		{WarnLevel, "warn", "WARN", "Warn", "WRN", "W"},
