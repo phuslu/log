@@ -1257,9 +1257,9 @@ func (e *Event) kvs(keysAndValues ...interface{}) *Event {
 type Context []byte
 
 // NewContext starts a new contextual event.
-func NewContext() (e *Event) {
-	e = epool.Get().(*Event)
-	e.buf = e.buf[:0]
+func NewContext(dst []byte) (e *Event) {
+	e = new(Event)
+	e.buf = dst
 	return
 }
 

@@ -33,7 +33,7 @@ func TestStdLogger(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	stdLog := logger.Std(InfoLevel, NewContext().Str("tag", "std_log").Value(), "", stdLog.LstdFlags)
+	stdLog := logger.Std(InfoLevel, NewContext(nil).Str("tag", "std_log").Value(), "", stdLog.LstdFlags)
 	stdLog.Print("hello from stdLog Print")
 	stdLog.Println("hello from stdLog Println")
 	stdLog.Printf("hello from stdLog %s", "Printf")

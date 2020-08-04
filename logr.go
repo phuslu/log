@@ -77,7 +77,7 @@ func (l *LogrLogger) WithValues(keysAndValues ...interface{}) *LogrLogger {
 	if l == nil {
 		return nil
 	}
-	l.context = append(l.context, NewContext().kvs(keysAndValues...).Value()...)
+	l.context = append(l.context, NewContext(nil).kvs(keysAndValues...).Value()...)
 	return l
 }
 

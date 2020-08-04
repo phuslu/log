@@ -286,7 +286,7 @@ func TestLoggerTimeOffset(t *testing.T) {
 }
 
 func TestLoggerContext(t *testing.T) {
-	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
+	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel}
 	logger.Trace().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
@@ -296,23 +296,23 @@ func TestLoggerContext(t *testing.T) {
 }
 
 func TestLoggerContextDict(t *testing.T) {
-	ctx := NewContext().Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
+	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: TraceLevel, Writer: &ConsoleWriter{ColorOutput: true}}
 	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
 	logger.Info().
-		Dict("a", NewContext().
+		Dict("a", NewContext(nil).
 			Bool("b", true).
-			Dict("c", NewContext().
+			Dict("c", NewContext(nil).
 				Bool("d", true).
 				Str("e", "a str").
 				Value()).
 			Value()).
 		Msg("")
 
-	ctx = NewContext().Value()
+	ctx = NewContext(nil).Value()
 	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")

@@ -8,7 +8,7 @@ func TestGrpcLogger(t *testing.T) {
 	DefaultLogger.Caller = 1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext().Str("tag", "hi sugar").Value())
+	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext(nil).Str("tag", "hi sugar").Value())
 
 	notTest = false
 
@@ -35,7 +35,7 @@ func TestGrpcLoggerLevel(t *testing.T) {
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 	DefaultLogger.Level = noLevel
 
-	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext().Str("tag", "hi sugar").Value())
+	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext(nil).Str("tag", "hi sugar").Value())
 
 	notTest = false
 

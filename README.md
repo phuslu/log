@@ -267,10 +267,10 @@ func main() {
 
 ### Contextual Fields
 
-To add preserved `key:value` pairs to each event, use `log.NewContext()`. [![playground][play-context-img]][play-context]
+To add preserved `key:value` pairs to each event, use `log.NewContext(nil)`. [![playground][play-context-img]][play-context]
 
 ```go
-ctx := log.NewContext().Str("ctx_str", "a ctx str").Value()
+ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()
 
 logger := log.Logger{Level: log.InfoLevel}
 logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
@@ -294,7 +294,7 @@ import (
 )
 
 func main() {
-	sugar := log.DefaultLogger.Sugar(log.NewContext().Str("tag", "hi suagr").Value())
+	sugar := log.DefaultLogger.Sugar(log.NewContext(nil).Str("tag", "hi suagr").Value())
 	sugar.Infof("hello %s", "世界")
 	sugar.Infow("i am a leading message", "foo", "bar", "number", 42)
 
@@ -319,7 +319,7 @@ import (
 )
 
 func main() {
-	ctx := log.NewContext().Str("tag", "hi log").Value()
+	ctx := log.NewContext(nil).Str("tag", "hi log").Value()
 
 	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")

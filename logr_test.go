@@ -17,7 +17,7 @@ type logrLogger interface {
 func TestLogrLoggerNil(t *testing.T) {
 	var logger *Logger
 
-	var logr logrLogger = logger.Logr(NewContext().Str("tag", "hi logr").Value())
+	var logr logrLogger = logger.Logr(NewContext(nil).Str("tag", "hi logr").Value())
 
 	logr.Info("hello", "foo", "bar", "number", 42)
 	logr.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
@@ -38,7 +38,7 @@ func TestLogrLogger(t *testing.T) {
 	DefaultLogger.Caller = 1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var logr logrLogger = DefaultLogger.Logr(NewContext().Str("tag", "hi logr").Value())
+	var logr logrLogger = DefaultLogger.Logr(NewContext(nil).Str("tag", "hi logr").Value())
 
 	logr.Info("hello", "foo", "bar", "number", 42)
 	logr.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
@@ -59,7 +59,7 @@ func TestLogrLoggerLevel(t *testing.T) {
 	DefaultLogger.Caller = 1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var logr logrLogger = DefaultLogger.Logr(NewContext().Str("tag", "hi logr").Value())
+	var logr logrLogger = DefaultLogger.Logr(NewContext(nil).Str("tag", "hi logr").Value())
 
 	logr.(*LogrLogger).logger.Level = FatalLevel
 
