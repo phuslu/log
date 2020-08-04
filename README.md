@@ -432,15 +432,15 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
 [play-template-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
 [play-template]: https://play.golang.org/p/0sQ03po5N3X
-[play-context-img]: https://img.shields.io/badge/playground-ttnMKCLSjyw-29BEB0?style=flat&logo=go
-[play-context]: https://play.golang.org/p/ttnMKCLSjyw
-[play-sugar-img]: https://img.shields.io/badge/playground-7qkN1XU1Oe5-29BEB0?style=flat&logo=go
-[play-sugar]: https://play.golang.org/p/7qkN1XU1Oe5
-[play-interceptor-img]: https://img.shields.io/badge/playground-CJoBdaB3Wnz-29BEB0?style=flat&logo=go
+[play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
+[play-context]: https://play.golang.org/p/oAVAo302faf
+[play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go
+[play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
+[play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
+[play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
 [inline function]: https://en.wikipedia.org/wiki/Inline_function
 [loop unrolling]: https://en.wikipedia.org/wiki/Loop_unrolling
 [runtime linkage]: https://github.com/golang/go/issues/15006
-[play-interceptor]: https://play.golang.org/p/CJoBdaB3Wnz
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [quicktemplate]: https://github.com/valyala/quicktemplate
