@@ -318,6 +318,33 @@ func TestLoggerContextDict(t *testing.T) {
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
 }
 
+type errno uint
+
+func (e errno) Error() string {
+	return fmt.Sprintf("errno: %d", e)
+}
+
+func (e errno) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if e == 0 {
+			fmt.Fprintf(s, "%d", e)
+			return
+		}
+		fmt.Fprintf(s, "stack layer: %v\t", e-1)
+	case 's':
+		fmt.Fprintf(s, "errno: %d", e)
+	}
+}
+
+func TestLoggerErrorStack(t *testing.T) {
+	logger := Logger{Level: TraceLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	logger.Info().Err(errno(0)).Msg("log errno(0) here")
+	logger.Info().Err(errno(1)).Msg("log errno(1) here")
+	logger.Info().Err(errno(2)).Msg("log errno(2) here")
+	logger.Info().Err(errno(3)).Msg("log errno(3) here")
+}
+
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		TimeFormat: TimeFormatUnix,

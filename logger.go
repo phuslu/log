@@ -516,16 +516,7 @@ func (e *Event) Durs(key string, d []time.Duration) *Event {
 
 // Err adds the field "error" with serialized err to the event.
 func (e *Event) Err(err error) *Event {
-	if e == nil {
-		return nil
-	}
-	if err == nil {
-		e.buf = append(e.buf, ",\"error\":null"...)
-	} else {
-		e.buf = append(e.buf, ",\"error\":"...)
-		e.string(err.Error())
-	}
-	return e
+	return e.AnErr("error", err)
 }
 
 // AnErr adds the field key with serialized err to the logger context.
@@ -533,12 +524,28 @@ func (e *Event) AnErr(key string, err error) *Event {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+
 	if err == nil {
+		e.key(key)
 		e.buf = append(e.buf, "null"...)
-	} else {
-		e.string(err.Error())
+		return e
 	}
+
+	if !e.stack {
+		if _, ok := err.(fmt.Formatter); ok {
+			b := bbpool.Get().(*bb)
+			b.Reset()
+			fmt.Fprintf(b, "%+v", err)
+			e.key("stack")
+			e.bytes(b.B)
+			if cap(b.B) <= bbcap {
+				bbpool.Put(b)
+			}
+		}
+	}
+
+	e.key(key)
+	e.string(err.Error())
 	return e
 }
 
