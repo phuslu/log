@@ -337,31 +337,9 @@ func main() {
 }
 ```
 
-### Logging to syslog Writer
-
-```go
-package main
-
-import (
-	"log/syslog"
-
-	"github.com/phuslu/log"
-)
-
-func main() {
-	logger, err := syslog.NewLogger(syslog.LOG_INFO, 0)
-	if err != nil {
-		log.Fatal().Err(err).Msg("new syslog error")
-	}
-
-	log.DefaultLogger.Writer = logger.Writer()
-	log.Info().Str("foo", "bar").Msg("a syslog message")
-}
-```
-
 ### High Performance
 
-A quick and simple benchmark with zap/zerolog, performance advantage comes from [inline function][inline function], [loop unrolling][loop unrolling] and [runtime linkage][runtime linkage].
+A quick and simple benchmark with logrus/zap/zerolog, performance advantage comes from [inline function][inline function], [loop unrolling][loop unrolling] and [runtime linkage][runtime linkage].
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -373,11 +351,21 @@ import (
 
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var fakeMessage = "Test logging, but use a somewhat realistic message length. "
+
+func BenchmarkLogrus(b *testing.B) {
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetOutput(ioutil.Discard)
+	for i := 0; i < b.N; i++ {
+		logger.WithFields(logrus.Fields{"foo": "bar", "int": 42}).Info(fakeMessage)
+	}
+}
 
 func BenchmarkZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -393,22 +381,23 @@ func BenchmarkZap(b *testing.B) {
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
+		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
 }
 
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{Writer: ioutil.Discard}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Str("hello", "世界").Int("int", 42).Msg(fakeMessage)
+		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
 }
 ```
 Performance results on Amazon Linux c5.large instance:
 ```
-BenchmarkZap-2       	12461403	       976 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-2   	22679424	       513 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-2   	55579468	       216 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogrus-8        3216494              3763 ns/op            1834 B/op         31 allocs/op
+BenchmarkZap-8          15588312               789 ns/op             128 B/op          1 allocs/op
+BenchmarkZeroLog-8      32658090               400 ns/op               0 B/op          0 allocs/op
+BenchmarkPhusLog-8      71507228               161 ns/op               0 B/op          0 allocs/op
 ```
 
 ### Acknowledgment

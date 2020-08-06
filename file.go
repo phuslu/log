@@ -11,18 +11,6 @@ import (
 
 // FileWriter is an io.WriteCloser that writes to the specified filename.
 //
-// FileWriter opens or creates the logfile on first Write.  If the file exists and
-// is less than MaxSize megabytes, FileWriter will open and append to that file.
-// If the file exists and its size is >= MaxSize megabytes, the file is renamed
-// by putting the current time in a timestamp in the name immediately before the
-// file's extension (or the end of the filename if there's no extension). A new
-// log file is then created using original filename.
-//
-// Whenever a write would cause the current log file exceed MaxSize megabytes,
-// the current file is closed, renamed, and a new log file created with the
-// original name. Thus, the filename you give FileWriter is always the "current" log
-// file.
-//
 // Backups use the log file name given to FileWriter, in the form
 // `name.timestamp.ext` where name is the filename without the extension,
 // timestamp is the time at which the log was rotated formatted with the
