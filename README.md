@@ -8,6 +8,7 @@
 * Fluent & Sugar Loggers
 * Rotating File Writer
 * Pretty & Template Console Writer
+* JournalD & EventLog Writer
 * Contextual Fields
 * Grpc & Logr & StdLog Interceptor
 * High Performance
@@ -45,7 +46,7 @@ type Logger struct {
 }
 ```
 
-### FileWriter & BufferWriter & ConsoleWriter
+### FileWriter & ConsoleWriter
 ```go
 // FileWriter is an io.WriteCloser that writes to the specified filename.
 type FileWriter struct {
@@ -73,18 +74,6 @@ type FileWriter struct {
 
 	// ProcessID determines if the pid used for formatting in log files.
 	ProcessID bool
-}
-
-// BufferWriter is an io.WriteCloser that writes with fixed size buffer.
-type BufferWriter struct {
-	// BufferSize is the size in bytes of the buffer before it gets flushed.
-	BufferSize int
-
-	// FlushDuration is the period of the writer flush duration
-	FlushDuration time.Duration
-
-	// Writer specifies the writer of output.
-	Writer io.Writer
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
@@ -263,6 +252,25 @@ func main() {
 // W0725 09:59:57.504247 19 console_test.go:184] hello glog Earn
 // E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 // F0725 09:59:57.504247 19 console_test.go:186] hello glog Fatal
+```
+
+### JournalWriter & EventlogWriter
+
+To log to linux systemd journald,
+
+```go
+log.DefaultLogger.Writer = &log.JournalWriter{}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
+```
+
+To log to windows system event,
+
+```go
+log.DefaultLogger.Writer = &log.EventlogWriter{
+	Source: ".NET Runtime",
+	ID:     1000,
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
 ### Contextual Fields
