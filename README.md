@@ -273,6 +273,35 @@ log.DefaultLogger.Writer = &log.EventlogWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
+### MultiWriter
+
+To log to different filenames according different level, use `log.MultiWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.MultiWriter{
+	InfoWriter: &log.FileWriter{
+		Filename: "file.info.log",
+		MaxSize:  100_000_000,
+	},
+	WarnWriter: &log.FileWriter{
+		Filename: "file.warn.log",
+		MaxSize:  20_000_000,
+	},
+	ErrorWriter: &log.FileWriter{
+		Filename: "file.error.log",
+		MaxSize:  20_000_000,
+	},
+	StderrWriter: &log.ConsoleWriter{
+		ColorOutput:    true,
+		EndWithMessage: true,
+	},
+	StderrLevel: ErrorLevel,
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
+log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
+log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
+```
+
 ### Contextual Fields
 
 To add preserved `key:value` pairs to each event, use `log.NewContext(nil)`. [![playground][play-context-img]][play-context]
