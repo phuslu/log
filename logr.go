@@ -39,7 +39,7 @@ func (l *LogrLogger) Info(msg string, keysAndValues ...interface{}) {
 	if l.logger.Caller > 0 {
 		e.caller(runtime.Caller(l.logger.Caller))
 	}
-	e.Context(l.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(l.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Error logs an error, with the given message and key/value pairs as context.
@@ -61,7 +61,7 @@ func (l *LogrLogger) Error(err error, msg string, keysAndValues ...interface{}) 
 	if l.logger.Caller > 0 {
 		e.caller(runtime.Caller(l.logger.Caller))
 	}
-	e.Context(l.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(l.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Enabled tests whether this Logger is enabled.  For example, commandline
@@ -77,7 +77,7 @@ func (l *LogrLogger) WithValues(keysAndValues ...interface{}) *LogrLogger {
 	if l == nil {
 		return nil
 	}
-	l.context = append(l.context, NewContext(nil).kvs(keysAndValues...).Value()...)
+	l.context = append(l.context, NewContext(nil).keysAndValues(keysAndValues...).Value()...)
 	return l
 }
 

@@ -1179,7 +1179,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 }
 
 // kvs sends keysAndValues to Event
-func (e *Event) kvs(keysAndValues ...interface{}) *Event {
+func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
 	if e == nil {
 		return nil
 	}

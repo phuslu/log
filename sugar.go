@@ -71,7 +71,7 @@ func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg("")
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg("")
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (s *SugaredLogger) Debugw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Info uses fmt.Sprint to construct and log a message.
@@ -144,7 +144,7 @@ func (s *SugaredLogger) Infow(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Warn uses fmt.Sprint to construct and log a message.
@@ -180,7 +180,7 @@ func (s *SugaredLogger) Warnw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Error uses fmt.Sprint to construct and log a message.
@@ -216,7 +216,7 @@ func (s *SugaredLogger) Errorw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Fatal uses fmt.Sprint to construct and log a message.
@@ -252,7 +252,7 @@ func (s *SugaredLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 // Panic uses fmt.Sprint to construct and log a message.
@@ -288,7 +288,7 @@ func (s *SugaredLogger) Panicw(msg string, keysAndValues ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	e.Context(s.context).kvs(keysAndValues...).Msg(msg)
+	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
 }
 
 func print(e *Event, args []interface{}) {
