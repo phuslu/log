@@ -32,12 +32,26 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
-	// TimeField specifies the field name for time in output.
+	// TimeField specifies an optional field name for time parsing in output.
 	TimeField string
 
-	// Template determines console output template if not empty.
-	// see https://github.com/phuslu/log/blob/master/console.go#L328
-	// for available Template Arguments.
+	// Template specifies an optional text/template for creating a
+	// user-defined output format, available arguments are:
+	//    type . struct {
+	//        Time     string    // "2019-07-10T05:35:54.277Z"
+	//        Level    string    // "info"
+	//        Caller   string    // "prog.go:42"
+	//        Goid     string    // "123"
+	//        Message  string    // "a structure message"
+	//        Stack    string    // "<stack string>"
+	//        KeyValue []struct {
+	//            Key   string       // "foo"
+	//            Value interface{}  // "bar"
+	//        }
+	//    }
+	// See https://github.com/phuslu/log#template-console-writer for example.
+	//
+	// If Template is nil, ColorOutput, QuoteString and EndWithMessage are used.
 	Template *template.Template
 
 	// Writer is the output destination. using os.Stderr if empty.
@@ -338,28 +352,7 @@ func jsonKeys(data []byte) (keys []string) {
 }
 
 // ColorTemplate provides a pre-defined text/template for console color output
-//
-//    type . struct {
-//        Time     string    // "2019-07-10T05:35:54.277Z"
-//        Level    string    // "info"
-//        Caller   string    // "prog.go:42"
-//        Goid     string    // "123"
-//        Message  string    // "a structure message"
-//        Stack    string    // "<stack string>"
-//        KeyValue []struct {
-//            Key   string       // "foo"
-//            Value interface{}  // "bar"
-//        }
-//    }
-//
-// A quick example is
-//
-//    log.DefaultLogger.Writer = &log.ConsoleWriter{
-//        Template: template.Must(template.New("").Funcs(log.ColorFuncMap).Parse(log.ColorTemplate)),
-//        Writer:   os.Stderr,
-//    }
-//
-// Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
+// Note: use [sprig](https://github.com/Masterminds/sprig) to introduce more template functions.
 const ColorTemplate = `{{gray .Time -}}
 {{if eq .Level -1 }}{{magenta " TRC " -}}
 {{else if eq .Level 0 }}{{yellow " DBG " -}}

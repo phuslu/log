@@ -38,7 +38,7 @@ func TestMultiWriter(t *testing.T) {
 		t.Errorf("test close mutli writer error: %+v", err)
 	}
 
-	matches, err := filepath.Glob("file.*.log")
+	matches, _ := filepath.Glob("file.*.log")
 	if len(matches) != 3 {
 		t.Fatalf("filepath glob return %+v number mismath", matches)
 	}
@@ -101,7 +101,7 @@ func TestMultiWriterError(t *testing.T) {
 		t.Errorf("test close mutli writer error: %+v", err)
 	}
 
-	matches, err := filepath.Glob("file.*.log")
+	matches, _ := filepath.Glob("file.*.log")
 	if len(matches) != 3 {
 		t.Fatalf("filepath glob return %+v number mismath", matches)
 	}

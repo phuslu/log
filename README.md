@@ -9,8 +9,8 @@
 * Rotating File Writer
 * Pretty & Template Console Writer
 * JournalD & EventLog Writer
+* StdLog & Grpc & Logr Interceptor
 * Contextual Fields
-* Grpc & Logr & StdLog Interceptor
 * High Performance
 
 ## Interfaces
@@ -88,36 +88,32 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
-	// TimeField specifies the time filed name of output message.
+	// TimeField specifies an optional field name for time parsing in output.
 	TimeField string
+
+	// Template specifies an optional text/template for creating a
+	// user-defined output format, available arguments are:
+	//    type . struct {
+	//        Time     string    // "2019-07-10T05:35:54.277Z"
+	//        Level    string    // "info"
+	//        Caller   string    // "prog.go:42"
+	//        Goid     string    // "123"
+	//        Message  string    // "a structure message"
+	//        Stack    string    // "<stack string>"
+	//        KeyValue []struct {
+	//            Key   string       // "foo"
+	//            Value interface{}  // "bar"
+	//        }
+	//    }
+	// See https://github.com/phuslu/log#template-console-writer for example.
+	//
+	// If Template is nil, ColorOutput, QuoteString and EndWithMessage are used.
+	Template *template.Template
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
-
-	// Template determines console output template if not empty.
-	Template *template.Template
 }
 ```
-
-### Console Template Arguments
-```go
-type . struct {
-    Time     string    // "2019-07-10T05:35:54.277Z"
-    Level    string    // "info"
-    Caller   string    // "prog.go:42"
-    Goid     string    // "123"
-    Message  string    // "a structure message"
-    Stack    string    // "<stack string>"
-    KeyValue []struct {
-        Key   string       // "foo"
-        Value interface{}  // "bar"
-    }
-}
-```
-1. a glog clone on [Template Console Witer](https://github.com/phuslu/log#template-console-writer)
-1. a more complex and useful example on [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L350).
-> Note: use [sprig](https://github.com/Masterminds/sprig) to provides more template functions.
-
 
 ## Getting Started
 
@@ -162,7 +158,7 @@ log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
 ### Rotating File Writer
 
-To log to a rotating file, use `log.FileWriter`. [![playground][play-file-img]][play-file]
+To log to a rotating file, use `FileWriter`. [![playground][play-file-img]][play-file]
 ```go
 package main
 
@@ -198,7 +194,7 @@ func main() {
 
 ### Pretty Console Writer
 
-To log a human-friendly, colorized output, use `log.ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
+To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
 
 ```go
 if log.IsTerminal(os.Stderr.Fd()) {
@@ -220,7 +216,7 @@ log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").M
 
 ### Template Console Writer
 
-To log a user-defined format(glog), using `log.ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
+To log with user-defined format(e.g. glog), using `ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
 
 ```go
 package main
@@ -253,17 +249,18 @@ func main() {
 // E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 // F0725 09:59:57.504247 19 console_test.go:186] hello glog Fatal
 ```
+> Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
 ### JournalWriter & EventlogWriter
 
-To log to linux systemd journald,
+To log to linux systemd journald, using `JournalWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.JournalWriter{}
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
-To log to windows system event,
+To log to windows system event, using `EventlogWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.EventlogWriter{
@@ -275,7 +272,7 @@ log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 
 ### MultiWriter
 
-To log to different filenames according different level, use `log.MultiWriter`.
+To log to different writers by different levels, use `MultiWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.MultiWriter{
@@ -302,23 +299,6 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
-### Contextual Fields
-
-To add preserved `key:value` pairs to each event, use `log.NewContext(nil)`. [![playground][play-context-img]][play-context]
-
-```go
-ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()
-
-logger := log.Logger{Level: log.InfoLevel}
-logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
-logger.Info().Context(ctx).Int("no1", 1).Msg("first")
-logger.Info().Context(ctx).Int("no2", 2).Msg("second")
-
-// Output:
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
-```
-
 ### Sugar Logger
 
 In contexts where performance is nice, but not critical, use the `SugaredLogger`. It's 20% slower than `Logger` but still faster than other structured logging packages [![playground][play-sugar-img]][play-sugar]
@@ -341,9 +321,9 @@ func main() {
 }
 ```
 
-### Grpc & Logr & StdLog Interceptor
+### StdLog & Logr & Grpc Interceptor
 
-To using wrapped logger for grpc/stdlog. [![playground][play-interceptor-img]][play-interceptor]
+Using wrapped loggers for stdlog/grpc/logr. [![playground][play-interceptor-img]][play-interceptor]
 
 ```go
 package main
@@ -358,6 +338,11 @@ import (
 func main() {
 	ctx := log.NewContext(nil).Str("tag", "hi log").Value()
 
+	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix ", stdLog.LstdFlags)
+	stdlog.Print("hello from stdlog Print")
+	stdlog.Println("hello from stdlog Println")
+	stdlog.Printf("hello from stdlog %s", "Printf")
+
 	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")
 	grpclog.Errorf("hello %s", "grpclog Errorf message")
@@ -366,12 +351,24 @@ func main() {
 	logrLog = logrLog.WithName("a_named_logger").WithValues("a_key", "a_value")
 	logrLog.Info("hello", "foo", "bar", "number", 42)
 	logrLog.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
-
-	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix ", stdLog.LstdFlags)
-	stdlog.Print("hello from stdlog Print")
-	stdlog.Println("hello from stdlog Println")
-	stdlog.Printf("hello from stdlog %s", "Printf")
 }
+```
+
+### Contextual Fields
+
+To add preserved `key:value` pairs to each event, use `NewContext`. [![playground][play-context-img]][play-context]
+
+```go
+ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()
+
+logger := log.Logger{Level: log.InfoLevel}
+logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
+logger.Info().Context(ctx).Int("no1", 1).Msg("first")
+logger.Info().Context(ctx).Int("no2", 2).Msg("second")
+
+// Output:
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
 ```
 
 ### High Performance

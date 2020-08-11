@@ -19,10 +19,10 @@ import (
 
 // JournalWriter is an io.WriteCloser that writes logs to journald.
 type JournalWriter struct {
-	// journal socket, using `/run/systemd/journal/socket` if empty.
+	// JournalSocket specifies socket name, using `/run/systemd/journal/socket` if empty.
 	JournalSocket string
 
-	// TimeField specifies the field name for time in output.
+	// TimeField specifies an optional field name for time parsing in output.
 	TimeField string
 
 	once sync.Once
@@ -30,7 +30,7 @@ type JournalWriter struct {
 	conn *net.UnixConn
 }
 
-// Write implements io.Closer.
+// Close implements io.Closer.
 func (w *JournalWriter) Close() (err error) {
 	if w.conn != nil {
 		err = w.conn.Close()

@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// MultiWriter is an io.WriteCloser that writes to multi writers
+// MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
 	// InfoWriter specifies the level large than info logs writes to
 	InfoWriter io.Writer
@@ -22,7 +22,7 @@ type MultiWriter struct {
 	// StderrLevel specifies the minimal level logs it will be writes to stderr
 	StderrLevel Level
 
-	// ParseLevel defines the callback finds out level from output, optional
+	// ParseLevel specifies an optional callback for parse log level in output
 	ParseLevel func([]byte) Level
 }
 
