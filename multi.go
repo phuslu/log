@@ -55,23 +55,43 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 	if w.ParseLevel != nil {
 		level = w.ParseLevel(p)
 	} else {
-		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < len(p) {
-			switch p[i+len(levelBegin)] {
-			case 't', 'T':
-				level = TraceLevel
-			case 'd', 'D':
-				level = DebugLevel
-			case 'i', 'I':
-				level = InfoLevel
-			case 'w', 'W':
-				level = WarnLevel
-			case 'e', 'E':
-				level = ErrorLevel
-			case 'f', 'F':
-				level = FatalLevel
-			case 'p', 'P':
-				level = PanicLevel
+		var l byte
+		// guess level by fixed offset
+		lp := len(p)
+		if lp > 48 {
+			_ = p[48]
+			if timeOffset == 0 {
+				if p[32] == 'Z' && p[43] == '"' {
+					l = p[44]
+				}
+			} else {
+				if p[32] == '+' && p[47] == '"' {
+					l = p[48]
+				}
 			}
+		}
+		// guess level by "level":" beginning
+		if l == 0 {
+			if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
+				l = p[i+len(levelBegin)]
+			}
+		}
+		// convert byte to Level
+		switch l {
+		case 't':
+			level = TraceLevel
+		case 'd':
+			level = DebugLevel
+		case 'i':
+			level = InfoLevel
+		case 'w':
+			level = WarnLevel
+		case 'e':
+			level = ErrorLevel
+		case 'f':
+			level = FatalLevel
+		case 'p':
+			level = PanicLevel
 		}
 	}
 

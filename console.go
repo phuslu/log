@@ -19,6 +19,9 @@ func IsTerminal(fd uintptr) bool {
 
 // ConsoleWriter parses the JSON input and writes it in an
 // (optionally) colorized, human-friendly format to Writer.
+//
+// Default output format:
+//     {time} {level} {goid} {caller} > {message} {key}={value} {key}={value}
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
