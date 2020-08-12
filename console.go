@@ -22,6 +22,9 @@ func IsTerminal(fd uintptr) bool {
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
+//
+// Note: ConsoleWriter performance is not good, it will parses JSON input into
+// structured records, then outputs them in a specific order.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool

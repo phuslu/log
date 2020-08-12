@@ -81,6 +81,9 @@ type FileWriter struct {
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
+//
+// Note: ConsoleWriter performance is not good, it will parses JSON input into
+// structured records, then outputs them in a specific order.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -208,8 +211,10 @@ if log.IsTerminal(os.Stderr.Fd()) {
 	}
 }
 
-log.Printf("a printf style line")
-log.Info().Err(errors.New("an error")).Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Debug().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Info().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Warn().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Error().Err(errors.New("an error")).Msg("hello world")
 ```
 ![Pretty logging][pretty-img]
 > Note: pretty logging also works on windows console
@@ -452,7 +457,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-file]: https://play.golang.org/p/nS-ILxFyhHM
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
-[pretty-img]: https://user-images.githubusercontent.com/195836/87854177-b16da980-c942-11ea-9b00-5f1b092452f3.png
+[pretty-img]: https://user-images.githubusercontent.com/195836/90043818-37d99900-dcff-11ea-9f93-7de9ce8b7316.png
 [play-template-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
 [play-template]: https://play.golang.org/p/0sQ03po5N3X
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
