@@ -1178,7 +1178,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	}
 }
 
-// kvs sends keysAndValues to Event
+// keysAndValues sends keysAndValues to Event
 func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
 	if e == nil {
 		return nil
@@ -1255,6 +1255,83 @@ func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
 			e.Stringer(key, v.(fmt.Stringer))
 		default:
 			e.Interface(key, v)
+		}
+	}
+	return e
+}
+
+// Fields is a helper function to use a map to set fields using type assertion.
+func (e *Event) Fields(fields map[string]interface{}) *Event {
+	if e == nil {
+		return nil
+	}
+	for k, v := range fields {
+		if v == nil {
+			e.key(k)
+			e.buf = append(e.buf, "null"...)
+			continue
+		}
+		switch v.(type) {
+		case Context:
+			e.Dict(k, v.(Context))
+		case []time.Duration:
+			e.Durs(k, v.([]time.Duration))
+		case time.Duration:
+			e.Dur(k, v.(time.Duration))
+		case time.Time:
+			e.Time(k, v.(time.Time))
+		case net.HardwareAddr:
+			e.MACAddr(k, v.(net.HardwareAddr))
+		case net.IP:
+			e.IPAddr(k, v.(net.IP))
+		case net.IPNet:
+			e.IPPrefix(k, v.(net.IPNet))
+		case []bool:
+			e.Bools(k, v.([]bool))
+		case []byte:
+			e.Bytes(k, v.([]byte))
+		case []error:
+			e.Errs(k, v.([]error))
+		case []float32:
+			e.Floats32(k, v.([]float32))
+		case []float64:
+			e.Floats64(k, v.([]float64))
+		case []string:
+			e.Strs(k, v.([]string))
+		case string:
+			e.Str(k, v.(string))
+		case bool:
+			e.Bool(k, v.(bool))
+		case error:
+			e.AnErr(k, v.(error))
+		case float32:
+			e.Float32(k, v.(float32))
+		case float64:
+			e.Float64(k, v.(float64))
+		case int16:
+			e.Int16(k, v.(int16))
+		case int32:
+			e.Int32(k, v.(int32))
+		case int64:
+			e.Int64(k, v.(int64))
+		case int8:
+			e.Int8(k, v.(int8))
+		case int:
+			e.Int(k, v.(int))
+		case uint16:
+			e.Uint16(k, v.(uint16))
+		case uint32:
+			e.Uint32(k, v.(uint32))
+		case uint64:
+			e.Uint64(k, v.(uint64))
+		case uint8:
+			e.Uint8(k, v.(uint8))
+		case fmt.GoStringer:
+			e.GoStringer(k, v.(fmt.GoStringer))
+		case fmt.Stringer:
+			e.Stringer(k, v.(fmt.Stringer))
+		default:
+			e.Interface(k, v)
 		}
 	}
 	return e
