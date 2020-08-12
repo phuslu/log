@@ -22,9 +22,6 @@ type JournalWriter struct {
 	// JournalSocket specifies socket name, using `/run/systemd/journal/socket` if empty.
 	JournalSocket string
 
-	// TimeField specifies an optional field name for time parsing in output.
-	TimeField string
-
 	once sync.Once
 	addr *net.UnixAddr
 	conn *net.UnixConn
@@ -110,12 +107,6 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 		print(b, "PRIORITY", priority)
 	}
 
-	// time
-	var timeField = w.TimeField
-	if timeField == "" {
-		timeField = "time"
-	}
-
 	// message
 	var msgField = "message"
 	if _, ok := m[msgField]; !ok {
@@ -132,12 +123,11 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 	}
 
 	// fields
-	for _, k := range jsonKeys(p) {
+	for k, v := range m {
 		switch k {
-		case "level", msgField, timeField:
+		case "level", "time", msgField:
 			continue
 		}
-		v := m[k]
 		s, ok := v.(string)
 		if !ok {
 			s = fmt.Sprint(v)

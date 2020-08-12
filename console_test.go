@@ -128,6 +128,11 @@ func TestConsoleWriterMessage(t *testing.T) {
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
+
+	_, err = fmt.Fprintf(w, "{\"msg\":\"hello world\\n\"}\n")
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
 }
 
 func TestConsoleWriterStack(t *testing.T) {
@@ -174,6 +179,16 @@ func TestConsoleWriterTemplate(t *testing.T) {
 	w.QuoteString = true
 
 	_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"hahaha","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"msg":"hello json console color writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+
+	_, err = fmt.Fprintf(w, `{"ts":1234567890,"level":"hahaha","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"stack":{"a":[1,2], "b":{"c":3}},"msg":"hello json console color writer\n"}`)
+	if err != nil {
+		t.Errorf("test plain text console writer error: %+v", err)
+	}
+
+	_, err = fmt.Fprintf(w, "{\"msg\":\"hello world\\n\"}\n")
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
@@ -227,7 +242,6 @@ func TestConsoleWriterGlog(t *testing.T) {
 func TestConsoleWriterTime(t *testing.T) {
 	w := &ConsoleWriter{
 		ColorOutput: true,
-		TimeField:   "ts",
 	}
 
 	_, err := fmt.Fprintf(w, `{"ts":1594828508,"level":"info","caller":"pretty.go:42","error":"i am test error","message":"hello console time writer\n"}`)

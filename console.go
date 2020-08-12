@@ -21,7 +21,7 @@ func IsTerminal(fd uintptr) bool {
 // (optionally) colorized, human-friendly format to Writer.
 //
 // Default output format:
-//     {time} {level} {goid} {caller} > {message} {key}={value} {key}={value}
+//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -34,9 +34,6 @@ type ConsoleWriter struct {
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
-
-	// TimeField specifies an optional field name for time parsing in output.
-	TimeField string
 
 	// Template specifies an optional text/template for creating a
 	// user-defined output format, available arguments are:
@@ -54,7 +51,7 @@ type ConsoleWriter struct {
 	//    }
 	// See https://github.com/phuslu/log#template-console-writer for example.
 	//
-	// If Template is nil, ColorOutput, QuoteString and EndWithMessage are used.
+	// If Template is not nil, ColorOutput, QuoteString and EndWithMessage are override.
 	Template *template.Template
 
 	// Writer is the output destination. using os.Stderr if empty.
@@ -67,11 +64,16 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	var m map[string]interface{}
-
 	decoder := json.NewDecoder(bytes.NewReader(p))
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
 	if err != nil {
+		n, err = out.Write(p)
+		return
+	}
+
+	keys := jsonKeys(p)
+	if len(keys) < 2 {
 		n, err = out.Write(p)
 		return
 	}
@@ -100,18 +102,20 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		BrightWhite   = "\x1b[97m"
 	)
 
-	var timeField = w.TimeField
-	if timeField == "" {
-		timeField = "time"
+	// time
+	var timeField = "time"
+	v, ok := m[timeField]
+	if !ok {
+		timeField = keys[0]
+		v = m[timeField]
 	}
-	if v, ok := m[timeField]; ok {
-		if w.ColorOutput || w.ANSIColor {
-			fmt.Fprintf(b, "%s%s%s ", Gray, v, Reset)
-		} else {
-			fmt.Fprintf(b, "%s ", v)
-		}
+	if w.ColorOutput || w.ANSIColor {
+		fmt.Fprintf(b, "%s%s%s ", Gray, v, Reset)
+	} else {
+		fmt.Fprintf(b, "%s ", v)
 	}
 
+	// level
 	if v, ok := m["level"]; ok {
 		var c, s string
 		switch s, _ = v.(string); ParseLevel(s) {
@@ -139,14 +143,17 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
+	// goid
 	if v, ok := m["goid"]; ok {
 		fmt.Fprintf(b, "%s ", v)
 	}
 
+	// caller
 	if v, ok := m["caller"]; ok {
 		fmt.Fprintf(b, "%s ", v)
 	}
 
+	// message
 	var msgField = "message"
 	if _, ok := m[msgField]; !ok {
 		if _, ok := m["msg"]; ok {
@@ -154,6 +161,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
+	// >
 	if v, ok := m[msgField]; ok && !w.EndWithMessage {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
@@ -171,7 +179,8 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
-	for _, k := range jsonKeys(p) {
+	// key and values
+	for _, k := range keys {
 		switch k {
 		case timeField, msgField, "level", "goid", "caller", "stack":
 			continue
@@ -193,6 +202,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
+	// message
 	if w.EndWithMessage {
 		if v, ok := m[msgField]; ok {
 			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
@@ -206,6 +216,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
+	// stack
 	if v, ok := m["stack"]; ok {
 		b.B = append(b.B, '\n')
 		if s, ok := v.(string); ok {
@@ -238,7 +249,6 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 	}{}
 
 	var m map[string]interface{}
-
 	decoder := json.NewDecoder(bytes.NewReader(p))
 	decoder.UseNumber()
 	err = decoder.Decode(&m)
@@ -247,33 +257,46 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		return
 	}
 
-	var timeField = w.TimeField
-	if timeField == "" {
-		timeField = "time"
-	}
-	if v, ok := m[timeField]; ok {
-		dot.Time = v.(string)
+	keys := jsonKeys(p)
+	if len(keys) < 2 {
+		n, err = out.Write(p)
+		return
 	}
 
+	// time
+	var timeField = "time"
+	v, ok := m[timeField]
+	if !ok {
+		timeField = keys[0]
+		v = m[timeField]
+	}
+	dot.Time, ok = v.(string)
+	if !ok {
+		dot.Time = fmt.Sprint(v)
+	}
+
+	// level
 	if v, ok := m["level"]; ok {
 		dot.Level = ParseLevel(v.(string))
 	}
 
+	// caller
 	if v, ok := m["caller"]; ok {
 		dot.Caller = v.(string)
 	}
 
+	// goid
 	if v, ok := m["goid"]; ok {
 		dot.Goid = v.(json.Number).String()
 	}
 
+	// message
 	var msgField = "message"
 	if _, ok := m[msgField]; !ok {
 		if _, ok := m["msg"]; ok {
 			msgField = "msg"
 		}
 	}
-
 	if v, ok := m[msgField]; ok {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
@@ -281,6 +304,7 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		dot.Message = v.(string)
 	}
 
+	// stack
 	if v, ok := m["stack"]; ok {
 		if s, ok := v.(string); ok {
 			dot.Stack = s
@@ -290,7 +314,8 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
-	for _, k := range jsonKeys(p) {
+	// key and values
+	for _, k := range keys {
 		switch k {
 		case timeField, msgField, "level", "caller", "goid", "stack":
 			continue

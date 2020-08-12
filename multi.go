@@ -60,14 +60,11 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 		lp := len(p)
 		if lp > 48 {
 			_ = p[48]
-			if timeOffset == 0 {
-				if p[32] == 'Z' && p[43] == '"' {
-					l = p[44]
-				}
-			} else {
-				if p[32] == '+' && p[47] == '"' {
-					l = p[48]
-				}
+			switch {
+			case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
+				l = p[44]
+			case p[32] == '+' && p[46] == ':' && p[47] == '"':
+				l = p[48]
 			}
 		}
 		// guess level by "level":" beginning

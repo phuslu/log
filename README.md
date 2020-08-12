@@ -5,7 +5,7 @@
 ## Features
 
 * No Dependencies
-* Fluent & Sugar Loggers
+* Intuitive Interfaces
 * Rotating File Writer
 * Pretty & Template Console Writer
 * JournalD & EventLog Writer
@@ -80,7 +80,7 @@ type FileWriter struct {
 // (optionally) colorized, human-friendly format to os.Stderr
 //
 // Default output format:
-//     {time} {level} {goid} {caller} > {message} {key}={value} {key}={value}
+//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -90,9 +90,6 @@ type ConsoleWriter struct {
 
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
-
-	// TimeField specifies an optional field name for time parsing in output.
-	TimeField string
 
 	// Template specifies an optional text/template for creating a
 	// user-defined output format, available arguments are:
@@ -110,7 +107,7 @@ type ConsoleWriter struct {
 	//    }
 	// See https://github.com/phuslu/log#template-console-writer for example.
 	//
-	// If Template is nil, ColorOutput, QuoteString and EndWithMessage are used.
+	// If Template is not nil, ColorOutput, QuoteString and EndWithMessage are override.
 	Template *template.Template
 
 	// Writer is the output destination. using os.Stderr if empty.
