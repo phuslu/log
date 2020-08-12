@@ -20,7 +20,19 @@ func isTerminal(fd uintptr, _, _ string) bool {
 	return true
 }
 
+var (
+	kernel32                = syscall.NewLazyDLL("kernel32.dll")
+	setConsoleMode          = kernel32.NewProc("SetConsoleMode").Call
+	setConsoleTextAttribute = kernel32.NewProc("SetConsoleTextAttribute").Call
+
+	muConsole   sync.Mutex
+	onceConsole sync.Once
+	isvt        bool
+)
+
 func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
+	onceConsole.Do(func() { isvt = isVirtualTerminal() })
+
 	out := w.Writer
 	if out == nil {
 		out = os.Stderr
@@ -32,14 +44,6 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	}
 	return
 }
-
-var (
-	muConsole sync.Mutex
-
-	kernel32                = syscall.NewLazyDLL("kernel32.dll")
-	setConsoleMode          = kernel32.NewProc("SetConsoleMode").Call
-	setConsoleTextAttribute = kernel32.NewProc("SetConsoleTextAttribute").Call
-)
 
 func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error) {
 	muConsole.Lock()
@@ -141,7 +145,7 @@ func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error)
 	return
 }
 
-var isvt = func() bool {
+func isVirtualTerminal() bool {
 	var h syscall.Handle
 	var b [64]uint16
 	var n uint32
@@ -180,4 +184,4 @@ var isvt = func() bool {
 	// enable ENABLE_VIRTUAL_TERMINAL_PROCESSING
 	ret, _, _ := setConsoleMode(uintptr(syscall.Stderr), uintptr(n|0x4))
 	return ret != 0
-}()
+}
