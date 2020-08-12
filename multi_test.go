@@ -37,7 +37,7 @@ func TestMultiWriter(t *testing.T) {
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
-		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+0800","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
@@ -150,7 +150,7 @@ func TestMultiWriterLevel(t *testing.T) {
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
-		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+0800","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}

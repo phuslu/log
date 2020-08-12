@@ -66,9 +66,7 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 			go func(w *BufferWriter) {
 				for {
 					time.Sleep(w.FlushDuration)
-					if len(w.buf) != 0 {
-						w.Flush()
-					}
+					w.Flush()
 				}
 			}(w)
 		}

@@ -58,13 +58,13 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 		var l byte
 		// guess level by fixed offset
 		lp := len(p)
-		if lp > 48 {
-			_ = p[48]
+		if lp > 49 {
+			_ = p[49]
 			switch {
 			case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
 				l = p[44]
-			case p[32] == '+' && p[46] == ':' && p[47] == '"':
-				l = p[48]
+			case p[32] == '+' && p[47] == ':' && p[48] == '"':
+				l = p[49]
 			}
 		}
 		// guess level by "level":" beginning
