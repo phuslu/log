@@ -287,3 +287,43 @@ func TestFileWriterBackups(t *testing.T) {
 
 	os.Remove(filename)
 }
+
+func TestGetFileName(t *testing.T) {
+	filename := "file-output.log"
+	d := time.Date(2020, 8, 12, 16, 7, 0, 0, time.UTC)
+
+	t.Run("neither hostname nor pid appears", func(t *testing.T) {
+		w := &FileWriter{Filename: filename}
+		expected := "file-output.2020-08-12T16-07-00.log"
+		if name := w.getFileName(d); name != expected {
+			t.Fatalf("expected: %q, actual: %q", expected, name)
+		}
+	})
+	t.Run("hostname or pid appears", func(t *testing.T) {
+		origHost := hostname
+		hostname = "shire"
+		defer func() { hostname = origHost }()
+		origPid := pid
+		pid = "198400"
+		defer func() { pid = origPid }()
+
+		w := &FileWriter{Filename: filename, HostName: true}
+
+		cases := []struct{
+			hostName bool
+			processID bool
+			expected string
+		}{
+			{hostName: true, expected: "file-output.2020-08-12T16-07-00.shire.log"},
+			{processID: true, expected: "file-output.2020-08-12T16-07-00-198400.log"},
+			{hostName: true, processID: true, expected: "file-output.2020-08-12T16-07-00.shire-198400.log"},
+		}
+		for _, c := range cases {
+			w.HostName = c.hostName
+			w.ProcessID = c.processID
+			if name := w.getFileName(d); name != c.expected {
+				t.Fatalf("expected: %q, actual: %q", c.expected, name)
+			}
+		}
+	})
+}

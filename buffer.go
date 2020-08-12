@@ -47,7 +47,7 @@ func (w *BufferWriter) Close() (err error) {
 }
 
 // Write implements io.Writer.  If a write would cause the log buffer to be larger
-// than Size, the buffer is written to the underlaying Writer and cleared.
+// than Size, the buffer is written to the underlying Writer and cleared.
 func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	w.once.Do(func() {
 		if w.BufferSize == 0 {
