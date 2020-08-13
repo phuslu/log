@@ -34,7 +34,7 @@ func (w *BufferWriter) Flush() (err error) {
 	return
 }
 
-// Close implements io.Closer, and closes the underlaying Writer.
+// Close implements io.Closer, and closes the underlying Writer.
 func (w *BufferWriter) Close() (err error) {
 	w.mu.Lock()
 	_, err = w.Writer.Write(w.buf)

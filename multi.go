@@ -26,7 +26,7 @@ type MultiWriter struct {
 	ParseLevel func([]byte) Level
 }
 
-// Close implements io.Closer, and closes the underlaying Writers.
+// Close implements io.Closer, and closes the underlying Writers.
 func (w *MultiWriter) Close() (err error) {
 	for _, writer := range []io.Writer{
 		w.InfoWriter,

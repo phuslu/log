@@ -29,9 +29,6 @@ type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
 
-	// Deprecated: Use ColorOutput instead.
-	ANSIColor bool
-
 	// QuoteString determines if quoting string values.
 	QuoteString bool
 
@@ -42,7 +39,7 @@ type ConsoleWriter struct {
 	// user-defined output format, available arguments are:
 	//    type . struct {
 	//        Time     string    // "2019-07-10T05:35:54.277Z"
-	//        Level    string    // "info"
+	//        Level    Level     // InfoLevel
 	//        Caller   string    // "prog.go:42"
 	//        Goid     string    // "123"
 	//        Message  string    // "a structure message"
@@ -112,7 +109,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		timeField = keys[0]
 		v = m[timeField]
 	}
-	if w.ColorOutput || w.ANSIColor {
+	if w.ColorOutput {
 		fmt.Fprintf(b, "%s%s%s ", Gray, v, Reset)
 	} else {
 		fmt.Fprintf(b, "%s ", v)
@@ -139,7 +136,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		default:
 			c, s = Yellow, "???"
 		}
-		if w.ColorOutput || w.ANSIColor {
+		if w.ColorOutput {
 			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
 		} else {
 			fmt.Fprintf(b, "%s ", s)
@@ -169,13 +166,13 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 			v = s[:len(s)-1]
 		}
-		if w.ColorOutput || w.ANSIColor {
+		if w.ColorOutput {
 			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
 		} else {
 			fmt.Fprintf(b, "> %s", v)
 		}
 	} else {
-		if w.ColorOutput || w.ANSIColor {
+		if w.ColorOutput {
 			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		} else {
 			fmt.Fprint(b, ">")
@@ -194,7 +191,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 				v = strconv.Quote(s)
 			}
 		}
-		if w.ColorOutput || w.ANSIColor {
+		if w.ColorOutput {
 			if k == "error" && v != nil {
 				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
 			} else {
@@ -211,7 +208,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
 				v = s[:len(s)-1]
 			}
-			if w.ColorOutput || w.ANSIColor {
+			if w.ColorOutput {
 				fmt.Fprintf(b, "%s %s", Reset, v)
 			} else {
 				fmt.Fprintf(b, " %s", v)

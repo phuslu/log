@@ -40,12 +40,12 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 	if isvt {
 		n, err = w.write(out, p)
 	} else {
-		n, err = w.writeWindows(out, p)
+		n, err = w.writew(out, p)
 	}
 	return
 }
 
-func (w *ConsoleWriter) writeWindows(out io.Writer, p []byte) (n int, err error) {
+func (w *ConsoleWriter) writew(out io.Writer, p []byte) (n int, err error) {
 	muConsole.Lock()
 	defer muConsole.Unlock()
 
