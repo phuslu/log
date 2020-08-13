@@ -180,6 +180,9 @@ func TestLoggerLog(t *testing.T) {
 	}
 
 	logger.Log().Msgf("this is a no level log")
+
+	logger.Caller = 1
+	logger.Log().Msgf("this is a no level log with caller")
 }
 
 func TestLoggerByte(t *testing.T) {
@@ -307,7 +310,7 @@ func TestLoggerContext(t *testing.T) {
 func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
-	logger := Logger{Level: TraceLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
 	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
 	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")

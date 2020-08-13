@@ -3,9 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"runtime"
-	"syscall"
 	"testing"
 	"text/template"
 )
@@ -17,7 +15,13 @@ func TestIsTerminal(t *testing.T) {
 		t.Errorf("test is terminal mode for %s failed", os.DevNull)
 	}
 
-	if runtime.GOARCH != "amd64" {
+	// The SIGSYS signal would be triggered for errors like "function not implemented".
+	// The process would crash for SIGSYS on some platforms (eg. Darwin), so we need to
+	// ignore the signal to make sure this test runs correctly on all platforms.
+	// signal.Ignore(syscall.SIGSYS)
+
+	// Mute "function not implemented" and "undefined: syscall.SIGSYS" for non linux_amd64 platforms
+	if !(runtime.GOOS == "linux" && runtime.GOARCH == "amd64") {
 		return
 	}
 
@@ -45,10 +49,6 @@ func TestIsTerminal(t *testing.T) {
 		{"windows", "arm64"},
 	}
 
-	// The SIGSYS signal would be triggered for errors like "function not implemented".
-	// The process would crash for SIGSYS on some platforms (eg. Darwin), so we need to
-	// ignore the signal to make sure this test runs correctly on all platforms.
-	signal.Ignore(syscall.SIGSYS)
 	for _, c := range cases {
 		if isTerminal(file.Fd(), c.GOOS, c.GOARCH) {
 			t.Errorf("test is terminal mode for %s failed", os.DevNull)

@@ -309,10 +309,10 @@ func TestGetFileName(t *testing.T) {
 
 		w := &FileWriter{Filename: filename, HostName: true}
 
-		cases := []struct{
-			hostName bool
+		cases := []struct {
+			hostName  bool
 			processID bool
-			expected string
+			expected  string
 		}{
 			{hostName: true, expected: "file-output.2020-08-12T16-07-00.shire.log"},
 			{processID: true, expected: "file-output.2020-08-12T16-07-00-198400.log"},

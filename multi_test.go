@@ -13,13 +13,13 @@ import (
 func TestMultiWriter(t *testing.T) {
 	w := &MultiWriter{
 		InfoWriter: &FileWriter{
-			Filename: "file.info.log",
+			Filename: "file-info.log",
 		},
 		WarnWriter: &FileWriter{
-			Filename: "file.warn.log",
+			Filename: "file-warn.log",
 		},
 		ErrorWriter: &FileWriter{
-			Filename: "file.error.log",
+			Filename: "file-error.log",
 		},
 		StderrWriter: &ConsoleWriter{
 			ColorOutput: true,
@@ -47,9 +47,10 @@ func TestMultiWriter(t *testing.T) {
 		t.Errorf("test close mutli writer error: %+v", err)
 	}
 
-	matches, _ := filepath.Glob("file.*.log")
-	if len(matches) != 6 {
-		t.Fatalf("filepath glob return %+v number mismatch", matches)
+	matches, _ := filepath.Glob("file-*.*.log")
+	want := 3
+	if len(matches) != want {
+		t.Fatalf("filepath glob return %+v number mismatch, got %+v want %+v", matches, len(matches), want)
 	}
 
 	for i := range matches {
@@ -85,13 +86,13 @@ func (ew errorWriter) Close() (err error) {
 func TestMultiWriterError(t *testing.T) {
 	w := &MultiWriter{
 		InfoWriter: errorWriter{&FileWriter{
-			Filename: "file.info.log",
+			Filename: "file-info.log",
 		}},
 		WarnWriter: errorWriter{&FileWriter{
-			Filename: "file.warn.log",
+			Filename: "file-warn.log",
 		}},
 		ErrorWriter: errorWriter{&FileWriter{
-			Filename: "file.error.log",
+			Filename: "file-error.log",
 		}},
 		StderrWriter: &ConsoleWriter{
 			ColorOutput: true,
@@ -110,9 +111,10 @@ func TestMultiWriterError(t *testing.T) {
 		t.Errorf("test close mutli writer error: %+v", err)
 	}
 
-	matches, _ := filepath.Glob("file.*.log")
-	if len(matches) != 6 {
-		t.Fatalf("filepath glob return %+v number mismatch", matches)
+	matches, _ := filepath.Glob("file-*.*.log")
+	want := 3
+	if len(matches) != want {
+		t.Fatalf("filepath glob return %+v number mismatch, got %+v want %+v", matches, len(matches), want)
 	}
 
 	for i := range matches {
