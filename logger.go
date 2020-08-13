@@ -199,6 +199,15 @@ func (l *Logger) Panic() (e *Event) {
 	return
 }
 
+// Log starts a new message with no level.
+func (l *Logger) Log() (e *Event) {
+	e = l.header(noLevel)
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
+}
+
 // WithLevel starts a new message with level.
 func (l *Logger) WithLevel(level Level) (e *Event) {
 	e = l.header(level)

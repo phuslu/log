@@ -174,6 +174,14 @@ func TestLoggerInterface(t *testing.T) {
 		Msgf("this is a cyclic struct test")
 }
 
+func TestLoggerLog(t *testing.T) {
+	logger := Logger{
+		Level: ParseLevel("debug"),
+	}
+
+	logger.Log().Msgf("this is a no level log")
+}
+
 func TestLoggerByte(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
