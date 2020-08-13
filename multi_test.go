@@ -48,8 +48,8 @@ func TestMultiWriter(t *testing.T) {
 	}
 
 	matches, _ := filepath.Glob("file.*.log")
-	if len(matches) != 3 {
-		t.Fatalf("filepath glob return %+v number mismath", matches)
+	if len(matches) != 6 {
+		t.Fatalf("filepath glob return %+v number mismatch", matches)
 	}
 
 	for i := range matches {
@@ -111,8 +111,8 @@ func TestMultiWriterError(t *testing.T) {
 	}
 
 	matches, _ := filepath.Glob("file.*.log")
-	if len(matches) != 3 {
-		t.Fatalf("filepath glob return %+v number mismath", matches)
+	if len(matches) != 6 {
+		t.Fatalf("filepath glob return %+v number mismatch", matches)
 	}
 
 	for i := range matches {
