@@ -5,6 +5,21 @@ import (
 	"io"
 )
 
+type CombineWriter []io.Writer
+
+func (cw CombineWriter) Write(p []byte) (n int, firstErr error) {
+	for _, w := range cw {
+		var err error
+		n, err = w.Write(p)
+		if err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return n, firstErr
+}
+
+var _ io.Writer = CombineWriter{}
+
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
 	// InfoWriter specifies the level large than info logs writes to
@@ -31,6 +46,26 @@ type MultiWriter struct {
 	//        ParseLevel:   func([]byte) log.Level { return log.ParseLevel(string(p[49])) },
 	//  }
 	ParseLevel func([]byte) Level
+
+	writers []*io.Writer
+}
+
+func (w *MultiWriter) CombineWriters(level Level) CombineWriter {
+	// TODO: The fixed number of combinations can be cached to avoid unnecessary allocations
+	var cw CombineWriter
+	if level>= ErrorLevel && w.ErrorWriter != nil {
+		cw = append(cw, w.ErrorWriter)
+	}
+	if level >= WarnLevel && w.WarnWriter != nil {
+		cw = append(cw, w.WarnWriter)
+	}
+	if w.InfoWriter != nil {
+		cw = append(cw, w.InfoWriter)
+	}
+	if w.StderrWriter != nil && level >= w.StderrLevel {
+		cw = append(cw, w.StderrWriter)
+	}
+	return cw
 }
 
 // Close implements io.Closer, and closes the underlying Writers.
