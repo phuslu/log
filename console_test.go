@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sort"
 	"syscall"
 	"testing"
 	"text/template"
@@ -264,5 +265,41 @@ func TestConsoleWriterInvaild(t *testing.T) {
 	_, err := fmt.Fprintf(w, "a long long long long plain text\n")
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
+	}
+}
+
+func TestJSONKeys(t *testing.T) {
+	t.Run("should only return top level keys", func(t *testing.T) {
+		input := []byte(`{"key1": {"nested": 42}, "key2": true}`)
+		keys := jsonKeys(input)
+		sort.Strings(keys)
+		if len(keys) != 2 || keys[0] != "key1" || keys[1] != "key2" {
+			t.Fatalf("incorrect keys returned: %v", keys)
+		}
+	})
+}
+
+func BenchmarkJSONKeys(b *testing.B) {
+	cases := []struct{
+		name string
+		jsonData []byte
+		expected int
+	}{
+		{name: "short", jsonData: []byte(`{"key1": {"nested": 42}, "key2": true}`), expected: 2},
+		{name: "long", jsonData: []byte(`{"ts":1594828508,"level":"info","caller":"pretty.go:42","error":"i am test error","message":"this is going to be looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong\n"}`), expected: 5},
+	}
+	for _, tc := range cases {
+		tc := tc
+		b.Run(tc.name, func(b *testing.B) {
+			var keys []string
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				keys = jsonKeys(tc.jsonData)
+			}
+			if len(keys) != tc.expected {
+				b.Fatalf("Wrong number of keys returned: %d", len(keys))
+			}
+		})
 	}
 }
