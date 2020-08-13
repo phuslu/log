@@ -98,7 +98,7 @@ type ConsoleWriter struct {
 	// user-defined output format, available arguments are:
 	//    type . struct {
 	//        Time     string    // "2019-07-10T05:35:54.277Z"
-	//        Level    string    // "info"
+	//        Level    Level     // log.InfoLevel
 	//        Caller   string    // "prog.go:42"
 	//        Goid     string    // "123"
 	//        Message  string    // "a structure message"
