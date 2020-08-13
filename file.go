@@ -132,15 +132,12 @@ var hostname = func() string {
 var pid = strconv.Itoa(os.Getpid())
 
 func (w *FileWriter) rotate() (err error) {
-	now := timeNow()
-	if !w.LocalTime {
-		now = now.UTC()
-	}
-
 	oldfile := w.file
 
-	filename, flag, perm := w.fileinfo(now)
-	w.file, err = os.OpenFile(filename, flag, perm)
+	w.file, err = os.OpenFile(w.fileinfo(timeNow()))
+	if err != nil {
+		return err
+	}
 	w.size = 0
 
 	go func(oldfile *os.File, newname, filename string, backups int) {
@@ -166,32 +163,30 @@ func (w *FileWriter) rotate() (err error) {
 				os.Remove(names[i])
 			}
 		}
-	}(oldfile, filename, w.Filename, w.MaxBackups)
+	}(oldfile, w.file.Name(), w.Filename, w.MaxBackups)
 
 	return
 }
 
 func (w *FileWriter) create() (err error) {
-	now := timeNow()
-	if !w.LocalTime {
-		now = now.UTC()
-	}
-
-	filename, flag, perm := w.fileinfo(now)
-	w.file, err = os.OpenFile(filename, flag, perm)
+	w.file, err = os.OpenFile(w.fileinfo(timeNow()))
 	if err != nil {
 		return err
 	}
 	w.size = 0
 
 	os.Remove(w.Filename)
-	os.Symlink(filepath.Base(filename), w.Filename)
+	os.Symlink(filepath.Base(w.file.Name()), w.Filename)
 
 	return
 }
 
 // fileinfo returns a new filename, flag, perm based on the original name and the given time.
 func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
+	if !w.LocalTime {
+		now = now.UTC()
+	}
+
 	// filename
 	ext := filepath.Ext(w.Filename)
 	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
@@ -209,8 +204,10 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 			filename += ext
 		}
 	}
+
 	// flag
 	flag = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+
 	// perm
 	perm = w.FileMode
 	if perm == 0 {
