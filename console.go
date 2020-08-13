@@ -412,11 +412,11 @@ var ColorFuncMap = template.FuncMap{
 	"white":     func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
 	"gray":      func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
 	"contains":  strings.Contains,
-	"endsswith": strings.HasSuffix,
+	"endswith": strings.HasSuffix,
 	"low":       strings.ToLower,
 	"match":     path.Match,
 	"quote":     strconv.Quote,
-	"statswith": strings.HasPrefix,
+	"startswith": strings.HasPrefix,
 	"title":     strings.ToTitle,
 	"upper":     strings.ToUpper,
 }
