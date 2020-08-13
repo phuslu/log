@@ -117,6 +117,7 @@ func TestMultiWriterError(t *testing.T) {
 		t.Fatalf("filepath glob return %+v number mismatch, got %+v want %+v", matches, len(matches), want)
 	}
 
+	matches, _ = filepath.Glob("file-*.log")
 	for i := range matches {
 		err := os.Remove(matches[i])
 		if err != nil {
