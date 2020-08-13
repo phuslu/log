@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // FileWriter is an io.WriteCloser that writes to the specified filename.
@@ -136,22 +137,7 @@ func (w *FileWriter) rotate() (err error) {
 		now = now.UTC()
 	}
 
-	ext := filepath.Ext(w.Filename)
-	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
-	filename := prefix + now.Format(".2006-01-02T15-04-05")
-	if w.HostName {
-		if w.ProcessID {
-			filename += "." + hostname + "-" + pid + ext
-		} else {
-			filename += "." + hostname + ext
-		}
-	} else {
-		if w.ProcessID {
-			filename += "." + pid + ext
-		} else {
-			filename += ext
-		}
-	}
+	filename := w.getFileName(now)
 
 	perm := w.FileMode
 	if perm == 0 {
@@ -190,27 +176,29 @@ func (w *FileWriter) rotate() (err error) {
 	return
 }
 
+// getFileName returns a new file name based on the original name and the given time.
+func (w *FileWriter) getFileName(now time.Time) string {
+	ext := filepath.Ext(w.Filename)
+	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
+	filename := prefix + now.Format(".2006-01-02T15-04-05")
+	var hostnamePart, pidPart string
+	if w.HostName {
+		hostnamePart = "." + hostname
+	}
+	if w.ProcessID {
+		pidPart = "-" + pid
+	}
+	filename += hostnamePart + pidPart + ext
+	return filename
+}
+
 func (w *FileWriter) create() (err error) {
 	now := timeNow()
 	if !w.LocalTime {
 		now = now.UTC()
 	}
 
-	ext := filepath.Ext(w.Filename)
-	filename := w.Filename[0:len(w.Filename)-len(ext)] + now.Format(".2006-01-02T15-04-05")
-	if w.HostName {
-		if w.ProcessID {
-			filename += "." + hostname + "-" + pid + ext
-		} else {
-			filename += "." + hostname + ext
-		}
-	} else {
-		if w.ProcessID {
-			filename += "." + pid + ext
-		} else {
-			filename += ext
-		}
-	}
+	filename := w.getFileName(now)
 
 	perm := w.FileMode
 	if perm == 0 {
