@@ -345,40 +345,15 @@ func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
 }
 
 func jsonKeys(data []byte) (keys []string) {
-	var depth, count int
-
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	for {
-		token, err := decoder.Token()
-		if err != nil {
-			break
-		}
-		// fmt.Printf("==== %d %d <%T> %v\n", depth, count, token, token)
-		switch token.(type) {
-		case json.Delim:
-			switch token.(json.Delim) {
-			case '{', '[':
-				depth++
-			case '}', ']':
-				depth--
-				if depth == 1 {
-					count++
-				}
-			}
-		case string:
-			if depth == 1 {
-				if count%2 == 0 {
-					keys = append(keys, token.(string))
-				}
-				count++
-			}
-		default:
-			if depth == 1 {
-				count++
-			}
-		}
+	tmp := make(map[string]interface{})
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		return
 	}
-
+	keys = make([]string, 0, len(tmp))
+	for k := range tmp {
+		keys = append(keys, k)
+	}
 	return
 }
 
