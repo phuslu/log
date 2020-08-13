@@ -137,15 +137,10 @@ func (w *FileWriter) rotate() (err error) {
 		now = now.UTC()
 	}
 
-	filename := w.getFileName(now)
+	oldfile := w.file
 
-	perm := w.FileMode
-	if perm == 0 {
-		perm = 0644
-	}
-
-	file := w.file
-	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
+	filename, flag, perm := w.fileinfo(now)
+	w.file, err = os.OpenFile(filename, flag, perm)
 	w.size = 0
 
 	go func(oldfile *os.File, newname, filename string, backups int) {
@@ -171,25 +166,9 @@ func (w *FileWriter) rotate() (err error) {
 				os.Remove(names[i])
 			}
 		}
-	}(file, filename, w.Filename, w.MaxBackups)
+	}(oldfile, filename, w.Filename, w.MaxBackups)
 
 	return
-}
-
-// getFileName returns a new file name based on the original name and the given time.
-func (w *FileWriter) getFileName(now time.Time) string {
-	ext := filepath.Ext(w.Filename)
-	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
-	filename := prefix + now.Format(".2006-01-02T15-04-05")
-	var hostnamePart, pidPart string
-	if w.HostName {
-		hostnamePart = "." + hostname
-	}
-	if w.ProcessID {
-		pidPart = "-" + pid
-	}
-	filename += hostnamePart + pidPart + ext
-	return filename
 }
 
 func (w *FileWriter) create() (err error) {
@@ -198,14 +177,8 @@ func (w *FileWriter) create() (err error) {
 		now = now.UTC()
 	}
 
-	filename := w.getFileName(now)
-
-	perm := w.FileMode
-	if perm == 0 {
-		perm = 0644
-	}
-
-	w.file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, perm)
+	filename, flag, perm := w.fileinfo(now)
+	w.file, err = os.OpenFile(filename, flag, perm)
 	if err != nil {
 		return err
 	}
@@ -213,6 +186,36 @@ func (w *FileWriter) create() (err error) {
 
 	os.Remove(w.Filename)
 	os.Symlink(filepath.Base(filename), w.Filename)
+
+	return
+}
+
+// fileinfo returns a new filename, flag, perm based on the original name and the given time.
+func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
+	// filename
+	ext := filepath.Ext(w.Filename)
+	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
+	filename = prefix + now.Format(".2006-01-02T15-04-05")
+	if w.HostName {
+		if w.ProcessID {
+			filename += "." + hostname + "-" + pid + ext
+		} else {
+			filename += "." + hostname + ext
+		}
+	} else {
+		if w.ProcessID {
+			filename += "." + pid + ext
+		} else {
+			filename += ext
+		}
+	}
+	// flag
+	flag = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	// perm
+	perm = w.FileMode
+	if perm == 0 {
+		perm = 0644
+	}
 
 	return
 }
