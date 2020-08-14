@@ -8,7 +8,7 @@ import (
 
 // Std wraps the Logger to provide *stdLog.Logger
 func (l *Logger) Std(level Level, context Context, prefix string, flag int) *stdLog.Logger {
-	w := &levelWriter{
+	w := &stdLogWriter{
 		logger:  *l,
 		level:   level,
 		context: context,
@@ -16,13 +16,13 @@ func (l *Logger) Std(level Level, context Context, prefix string, flag int) *std
 	return stdLog.New(w, prefix, flag)
 }
 
-type levelWriter struct {
+type stdLogWriter struct {
 	logger  Logger
 	level   Level
 	context Context
 }
 
-func (w *levelWriter) Write(p []byte) (int, error) {
+func (w *stdLogWriter) Write(p []byte) (int, error) {
 	e := w.logger.header(w.level)
 	if e == nil {
 		return 0, nil

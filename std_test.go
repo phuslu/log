@@ -8,7 +8,7 @@ import (
 )
 
 func TestStdWriter(t *testing.T) {
-	w := &levelWriter{
+	w := &stdLogWriter{
 		logger: Logger{
 			Level:  InfoLevel,
 			Writer: os.Stderr,
