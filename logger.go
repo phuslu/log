@@ -286,7 +286,7 @@ func (l *Logger) header(level Level) *Event {
 		e.panic = true
 	}
 	if l.MultiWriters != nil {
-		e.w = l.MultiWriters.CombineWriters(level)
+		e.w = l.MultiWriters.GetWriterByLevel(level)
 	} else if l.Writer != nil {
 		e.w = l.Writer
 	} else {

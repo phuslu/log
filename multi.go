@@ -52,9 +52,10 @@ type MultiWriter struct {
 
 	// One writer slot for each of the 8 levels
 	levelWriters []io.Writer
+	levels       []Level
 }
 
-func (w *MultiWriter) CombineWriters(level Level) CombinedWriter {
+func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
 	// TODO: Make sure the writers can not be updated directly
 	if len(w.levelWriters) == 0 {
 		w.levelWriters = make([]io.Writer, 8)
