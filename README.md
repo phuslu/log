@@ -256,7 +256,7 @@ func main() {
 ```
 > Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
-### JournalWriter & EventlogWriter
+### JournalWriter & EventlogWriter & MultiWriter
 
 To log to linux systemd journald, using `JournalWriter`.
 
@@ -275,29 +275,15 @@ log.DefaultLogger.Writer = &log.EventlogWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
-### MultiWriter
-
 To log to different writers by different levels, use `MultiWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.MultiWriter{
-	InfoWriter: &log.FileWriter{
-		Filename: "file.info.log",
-		MaxSize:  100_000_000,
-	},
-	WarnWriter: &log.FileWriter{
-		Filename: "file.warn.log",
-		MaxSize:  20_000_000,
-	},
-	ErrorWriter: &log.FileWriter{
-		Filename: "file.error.log",
-		MaxSize:  20_000_000,
-	},
-	StderrWriter: &log.ConsoleWriter{
-		ColorOutput:    true,
-		EndWithMessage: true,
-	},
-	StderrLevel: ErrorLevel,
+	InfoWriter:   &log.FileWriter{Filename: "main.INFO"},
+	WarnWriter:   &log.FileWriter{Filename: "main.WARNING"},
+	ErrorWriter:  &log.FileWriter{Filename: "main.ERROR"},
+	StderrWriter: &log.ConsoleWriter{ColorOutput: true},
+	StderrLevel:  log.ErrorLevel,
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
@@ -442,7 +428,7 @@ BenchmarkPhusLog-8      71507228               161 ns/op               0 B/op   
 ### Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [zap][zap] and [lumberjack][lumberjack].
 
-[pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square
+[pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
 [pkg]: https://godoc.org/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
