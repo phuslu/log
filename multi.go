@@ -5,10 +5,13 @@ import (
 	"io"
 )
 
-type CombineWriter []io.Writer
+type CombinedWriter []io.Writer
 
-func (cw CombineWriter) Write(p []byte) (n int, firstErr error) {
+func (cw CombinedWriter) Write(p []byte) (n int, firstErr error) {
 	for _, w := range cw {
+		if w == nil {
+			continue
+		}
 		var err error
 		n, err = w.Write(p)
 		if err != nil && firstErr == nil {
@@ -18,7 +21,7 @@ func (cw CombineWriter) Write(p []byte) (n int, firstErr error) {
 	return n, firstErr
 }
 
-var _ io.Writer = CombineWriter{}
+var _ io.Writer = CombinedWriter{}
 
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
@@ -47,28 +50,36 @@ type MultiWriter struct {
 	//  }
 	ParseLevel func([]byte) Level
 
-	writers []*io.Writer
+	// One writer slot for each of the 8 levels
+	levelWriters []io.Writer
 }
 
-func (w *MultiWriter) CombineWriters(level Level) CombineWriter {
-	// TODO: The fixed number of combinations can be cached to avoid unnecessary allocations
-	var cw CombineWriter
-	if level>= ErrorLevel && w.ErrorWriter != nil {
-		cw = append(cw, w.ErrorWriter)
+func (w *MultiWriter) CombineWriters(level Level) CombinedWriter {
+	// TODO: Make sure the writers can not be updated directly
+	if len(w.levelWriters) == 0 {
+		w.levelWriters = make([]io.Writer, 8)
+		if w.InfoWriter != nil {
+			w.levelWriters[int(InfoLevel)] = w.InfoWriter
+		}
+		if w.WarnWriter != nil {
+			w.levelWriters[int(WarnLevel)] = w.WarnWriter
+		}
+		if w.ErrorWriter != nil {
+			w.levelWriters[int(ErrorLevel)] = w.ErrorWriter
+		}
+		if w.StderrWriter != nil {
+			lvl := int(w.StderrLevel)
+			if lw := w.levelWriters[lvl]; lw != nil {
+				w.levelWriters[lvl] = CombinedWriter{lw, w.StderrWriter}
+			} else {
+				w.levelWriters[lvl] = w.StderrWriter
+			}
+		}
 	}
-	if level >= WarnLevel && w.WarnWriter != nil {
-		cw = append(cw, w.WarnWriter)
-	}
-	if w.InfoWriter != nil {
-		cw = append(cw, w.InfoWriter)
-	}
-	if w.StderrWriter != nil && level >= w.StderrLevel {
-		cw = append(cw, w.StderrWriter)
-	}
-	return cw
+	return CombinedWriter(w.levelWriters[:int(level)])
 }
 
-// Close implements io.Closer, and closes the underlying Writers.
+// Close implements io.Closer, and closes the underlying MultiWriters.
 func (w *MultiWriter) Close() (err error) {
 	for _, writer := range []io.Writer{
 		w.InfoWriter,
