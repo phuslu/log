@@ -5,6 +5,10 @@ import (
 	"io"
 )
 
+type LeveledWriterRouter interface {
+	GetWriterByLevel(level Level) io.Writer
+}
+
 type CombinedWriter []io.Writer
 
 func (cw CombinedWriter) Write(p []byte) (n int, firstErr error) {
@@ -82,7 +86,7 @@ func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
 	return CombinedWriter(w.levelWriters[:int(level)+1])
 }
 
-// Close implements io.Closer, and closes the underlying MultiWriters.
+// Close implements io.Closer, and closes the underlying leveledWriterRouter.
 func (w *MultiWriter) Close() (err error) {
 	for _, writer := range []io.Writer{
 		w.InfoWriter,

@@ -24,9 +24,9 @@ func TestNewMultiWriters(t *testing.T) {
 		},
 	}
 	logger := Logger{
-		Level:        InfoLevel,
-		Caller:       1,
-		MultiWriters: w,
+		Level:               InfoLevel,
+		Caller:              1,
+		leveledWriterRouter: w,
 	}
 	assertNLogs := func(want int) {
 		matches, _ := filepath.Glob("file-*.*.log")
@@ -229,9 +229,9 @@ func BenchmarkNewMultiWriter(b *testing.B) {
 		},
 	}
 	logger := Logger{
-		Level:        InfoLevel,
-		Caller:       1,
-		MultiWriters: w,
+		Level:               InfoLevel,
+		Caller:              1,
+		leveledWriterRouter: w,
 	}
 	b.ReportAllocs()
 	b.ResetTimer()
