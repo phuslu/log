@@ -141,19 +141,19 @@ func (l Level) First() (s string) {
 // returns an error if the input string does not match known values.
 func ParseLevel(s string) (level Level) {
 	switch s {
-	case "trace", "Trace", "TRACE", "T", "TRC", "TRAC":
+	case "t", "trace", "Trace", "TRACE", "T", "TRC":
 		level = TraceLevel
-	case "debug", "Debug", "DEBUG", "D", "DBG", "DEBU":
+	case "d", "debug", "Debug", "DEBUG", "D", "DBG":
 		level = DebugLevel
-	case "info", "Info", "INFO", "I", "INF":
+	case "i", "info", "Info", "INFO", "I", "INF":
 		level = InfoLevel
-	case "warn", "Warn", "WARN", "warning", "Warning", "WARNING", "W", "WRN":
+	case "w", "warn", "Warn", "WARN", "warning", "Warning", "WARNING", "W", "WRN":
 		level = WarnLevel
-	case "error", "Error", "ERROR", "E", "ERR", "ERRO":
+	case "e", "error", "Error", "ERROR", "E", "ERR":
 		level = ErrorLevel
-	case "fatal", "Fatal", "FATAL", "F", "FTL", "FATA":
+	case "f", "fatal", "Fatal", "FATAL", "F", "FTL":
 		level = FatalLevel
-	case "panic", "Panic", "PANIC", "P", "PNC", "PANI":
+	case "p", "panic", "Panic", "PANIC", "P", "PNC":
 		level = PanicLevel
 	default:
 		level = noLevel

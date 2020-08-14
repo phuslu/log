@@ -23,6 +23,13 @@ type MultiWriter struct {
 	StderrLevel Level
 
 	// ParseLevel specifies an optional callback for parse log level in output
+	//    log.DebugLogger.Writer = &log.MultiWriter {
+	//        InfoWriter:   &log.FileWriter{Filename: "main-info.log"},
+	//        ErrorWriter:  &log.FileWriter{Filename: "main-error.log"},
+	//        StderrWriter: &log.ConsoleWriter{ColorOutput: true},
+	//        StderrLevel:  log.ErrorLevel,
+	//        ParseLevel:   func([]byte) log.Level { return log.ParseLevel(string(p[49])) },
+	//  }
 	ParseLevel func([]byte) Level
 }
 
