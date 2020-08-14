@@ -52,7 +52,6 @@ type MultiWriter struct {
 
 	// One writer slot for each of the 8 levels
 	levelWriters []io.Writer
-	levels       []Level
 }
 
 func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
@@ -77,7 +76,10 @@ func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
 			}
 		}
 	}
-	return CombinedWriter(w.levelWriters[:int(level)])
+	if level < InfoLevel {
+		level = InfoLevel
+	}
+	return CombinedWriter(w.levelWriters[:int(level)+1])
 }
 
 // Close implements io.Closer, and closes the underlying MultiWriters.
