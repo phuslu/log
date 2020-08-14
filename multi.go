@@ -63,13 +63,13 @@ func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
 	if len(w.levelWriters) == 0 {
 		w.levelWriters = make([]io.Writer, 8)
 		if w.InfoWriter != nil {
-			w.levelWriters[int(InfoLevel)] = w.InfoWriter
+			w.levelWriters[int(TraceLevel)+1] = w.InfoWriter
 		}
 		if w.WarnWriter != nil {
-			w.levelWriters[int(WarnLevel)] = w.WarnWriter
+			w.levelWriters[int(WarnLevel)+1] = w.WarnWriter
 		}
 		if w.ErrorWriter != nil {
-			w.levelWriters[int(ErrorLevel)] = w.ErrorWriter
+			w.levelWriters[int(ErrorLevel)+1] = w.ErrorWriter
 		}
 		if w.StderrWriter != nil {
 			lvl := int(w.StderrLevel)
@@ -83,7 +83,7 @@ func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
 	if level < InfoLevel {
 		level = InfoLevel
 	}
-	return CombinedWriter(w.levelWriters[:int(level)+1])
+	return CombinedWriter(w.levelWriters[:int(level)+2])
 }
 
 // Close implements io.Closer, and closes the underlying leveledWriterRouter.
