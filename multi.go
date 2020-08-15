@@ -5,6 +5,12 @@ import (
 	"io"
 )
 
+// LeveledWriter is an interface that wraps WriteAtLevel.
+type LeveledWriter interface {
+	// WriteAtLevel decides which writers to use by checking the specified Level.
+	WriteAtLevel(Level, []byte) (int, error)
+}
+
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
 	// InfoWriter specifies the level large than info logs writes to
@@ -33,7 +39,7 @@ type MultiWriter struct {
 	ParseLevel func([]byte) Level
 }
 
-// Close implements io.Closer, and closes the underlying Writers.
+// Close implements io.Closer, and closes the underlying LeveledWriter.
 func (w *MultiWriter) Close() (err error) {
 	for _, writer := range []io.Writer{
 		w.InfoWriter,
@@ -55,6 +61,42 @@ func (w *MultiWriter) Close() (err error) {
 }
 
 var levelBegin = []byte(`"level":"`)
+
+// WriteAtLevel implements LeveledWriter.
+func (w *MultiWriter) WriteAtLevel(level Level, p []byte) (n int, err error) {
+	var err1 error
+	switch level {
+	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
+		if w.ErrorWriter != nil {
+			n, err1 = w.ErrorWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	case WarnLevel:
+		if w.WarnWriter != nil {
+			n, err1 = w.WarnWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	default:
+		if w.InfoWriter != nil {
+			n, err1 = w.InfoWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+	}
+
+	if w.StderrWriter != nil && level >= w.StderrLevel {
+		w.StderrWriter.Write(p)
+	}
+
+	return
+}
 
 // Write implements io.Writer.
 func (w *MultiWriter) Write(p []byte) (n int, err error) {
@@ -132,3 +174,16 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 
 	return
 }
+
+// wrapLeveledWriter wraps a LeveledWriter to implement io.Writer.
+type wrapLeveledWriter struct {
+	Level         Level
+	LeveledWriter LeveledWriter
+}
+
+// Write implements io.Writer.
+func (w wrapLeveledWriter) Write(p []byte) (int, error) {
+	return w.LeveledWriter.WriteAtLevel(w.Level, p)
+}
+
+var _ io.Writer = wrapLeveledWriter{}

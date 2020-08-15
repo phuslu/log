@@ -10,6 +10,49 @@ import (
 	"testing"
 )
 
+func TestLoggerWithLeveledWriters(t *testing.T) {
+	// TODO: Use mock writers to validate that the logs are routed correctly
+	w := &MultiWriter{
+		InfoWriter: &FileWriter{
+			Filename: "file-info.log",
+		},
+		WarnWriter: &FileWriter{
+			Filename: "file-warn.log",
+		},
+		ErrorWriter: &FileWriter{
+			Filename: "file-error.log",
+		},
+	}
+	logger := Logger{
+		Level:         InfoLevel,
+		Caller:        1,
+		LeveledWriter: w,
+	}
+	assertNLogs := func(want int) {
+		matches, _ := filepath.Glob("file-*.*.log")
+		if len(matches) != want {
+			t.Fatalf("filepath glob return %+v number mismatch, got %+v want %+v", matches, len(matches), want)
+		}
+	}
+
+	logger.Info().Int("id", 42).Msg("I'm loving it.")
+	assertNLogs(1)
+
+	logger.Warn().Int("id", 43).Msg("I double dare you.")
+	assertNLogs(2)
+
+	logger.Error().Str("action", "cleanup").Msg("World")
+	assertNLogs(3)
+
+	matches, _ := filepath.Glob("file-*.log")
+	for i := range matches {
+		err := os.Remove(matches[i])
+		if err != nil {
+			t.Fatalf("os remove %s error: %+v", matches[i], err)
+		}
+	}
+}
+
 func TestMultiWriter(t *testing.T) {
 	w := &MultiWriter{
 		InfoWriter: &FileWriter{
@@ -170,5 +213,73 @@ func TestMultiWriterLevel(t *testing.T) {
 
 	if err := w.Close(); err != nil {
 		t.Errorf("test close mutli writer error: %+v", err)
+	}
+}
+
+func BenchmarkNewMultiWriter(b *testing.B) {
+	w := &MultiWriter{
+		InfoWriter: &FileWriter{
+			Filename: "file-info.log",
+		},
+		WarnWriter: &FileWriter{
+			Filename: "file-warn.log",
+		},
+		ErrorWriter: &FileWriter{
+			Filename: "file-error.log",
+		},
+	}
+	logger := Logger{
+		Level:         InfoLevel,
+		Caller:        1,
+		LeveledWriter: w,
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Int("id", 42).Msg("I'm loving it.")
+		logger.Warn().Int("id", 43).Msg("I double dare you.")
+		logger.Error().Str("action", "cleanup").Msg("World")
+	}
+	b.StopTimer()
+	matches, _ := filepath.Glob("file-*.log")
+	for i := range matches {
+		err := os.Remove(matches[i])
+		if err != nil {
+			b.Fatalf("os remove %s error: %+v", matches[i], err)
+		}
+	}
+}
+
+func BenchmarkOldMultiWriter(b *testing.B) {
+	w := &MultiWriter{
+		InfoWriter: &FileWriter{
+			Filename: "file-info.log",
+		},
+		WarnWriter: &FileWriter{
+			Filename: "file-warn.log",
+		},
+		ErrorWriter: &FileWriter{
+			Filename: "file-error.log",
+		},
+	}
+	logger := Logger{
+		Level:  InfoLevel,
+		Caller: 1,
+		Writer: w,
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Int("id", 42).Strs("names", []string{"apple", "orange"}).Msg("I'm loving it.")
+		logger.Warn().Int("id", 43).Msg("I double dare you.")
+		logger.Error().Str("action", "cleanup").Msg("World")
+	}
+	b.StopTimer()
+	matches, _ := filepath.Glob("file-*.log")
+	for i := range matches {
+		err := os.Remove(matches[i])
+		if err != nil {
+			b.Fatalf("os remove %s error: %+v", matches[i], err)
+		}
 	}
 }
