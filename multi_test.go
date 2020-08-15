@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestNewMultiWriters(t *testing.T) {
+func TestLoggerWithLeveledWriters(t *testing.T) {
 	// TODO: Use mock writers to validate that the logs are routed correctly
 	w := &MultiWriter{
 		InfoWriter: &FileWriter{
@@ -24,9 +24,9 @@ func TestNewMultiWriters(t *testing.T) {
 		},
 	}
 	logger := Logger{
-		Level:               InfoLevel,
-		Caller:              1,
-		leveledWriterRouter: w,
+		Level:         InfoLevel,
+		Caller:        1,
+		LeveledWriter: w,
 	}
 	assertNLogs := func(want int) {
 		matches, _ := filepath.Glob("file-*.*.log")
@@ -229,9 +229,9 @@ func BenchmarkNewMultiWriter(b *testing.B) {
 		},
 	}
 	logger := Logger{
-		Level:               InfoLevel,
-		Caller:              1,
-		leveledWriterRouter: w,
+		Level:         InfoLevel,
+		Caller:        1,
+		LeveledWriter: w,
 	}
 	b.ReportAllocs()
 	b.ResetTimer()

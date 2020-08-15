@@ -5,27 +5,11 @@ import (
 	"io"
 )
 
-type LeveledWriterRouter interface {
-	GetWriterByLevel(level Level) io.Writer
+// LeveledWriter is an interface that wraps WriteAtLevel.
+type LeveledWriter interface {
+	// WriteAtLevel decides which writers to use by checking the specified Level.
+	WriteAtLevel(Level, []byte) (int, error)
 }
-
-type CombinedWriter []io.Writer
-
-func (cw CombinedWriter) Write(p []byte) (n int, firstErr error) {
-	for _, w := range cw {
-		if w == nil {
-			continue
-		}
-		var err error
-		n, err = w.Write(p)
-		if err != nil && firstErr == nil {
-			firstErr = err
-		}
-	}
-	return n, firstErr
-}
-
-var _ io.Writer = CombinedWriter{}
 
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
@@ -53,40 +37,9 @@ type MultiWriter struct {
 	//        ParseLevel:   func([]byte) log.Level { return log.ParseLevel(string(p[49])) },
 	//  }
 	ParseLevel func([]byte) Level
-
-	// One writer slot for each of the 8 levels
-	levelWriters []io.Writer
 }
 
-func (w *MultiWriter) GetWriterByLevel(level Level) io.Writer {
-	// TODO: Make sure the writers can not be updated directly
-	if len(w.levelWriters) == 0 {
-		w.levelWriters = make([]io.Writer, 8)
-		if w.InfoWriter != nil {
-			w.levelWriters[int(TraceLevel)+1] = w.InfoWriter
-		}
-		if w.WarnWriter != nil {
-			w.levelWriters[int(WarnLevel)+1] = w.WarnWriter
-		}
-		if w.ErrorWriter != nil {
-			w.levelWriters[int(ErrorLevel)+1] = w.ErrorWriter
-		}
-		if w.StderrWriter != nil {
-			lvl := int(w.StderrLevel)
-			if lw := w.levelWriters[lvl]; lw != nil {
-				w.levelWriters[lvl] = CombinedWriter{lw, w.StderrWriter}
-			} else {
-				w.levelWriters[lvl] = w.StderrWriter
-			}
-		}
-	}
-	if level < InfoLevel {
-		level = InfoLevel
-	}
-	return CombinedWriter(w.levelWriters[:int(level)+2])
-}
-
-// Close implements io.Closer, and closes the underlying leveledWriterRouter.
+// Close implements io.Closer, and closes the underlying LeveledWriter.
 func (w *MultiWriter) Close() (err error) {
 	for _, writer := range []io.Writer{
 		w.InfoWriter,
@@ -108,6 +61,42 @@ func (w *MultiWriter) Close() (err error) {
 }
 
 var levelBegin = []byte(`"level":"`)
+
+// WriteAtLevel implements LeveledWriter.
+func (w *MultiWriter) WriteAtLevel(level Level, p []byte) (n int, err error) {
+	var err1 error
+	switch level {
+	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
+		if w.ErrorWriter != nil {
+			n, err1 = w.ErrorWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	case WarnLevel:
+		if w.WarnWriter != nil {
+			n, err1 = w.WarnWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	default:
+		if w.InfoWriter != nil {
+			n, err1 = w.InfoWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+	}
+
+	if w.StderrWriter != nil && level >= w.StderrLevel {
+		w.StderrWriter.Write(p)
+	}
+
+	return
+}
 
 // Write implements io.Writer.
 func (w *MultiWriter) Write(p []byte) (n int, err error) {
@@ -185,3 +174,16 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 
 	return
 }
+
+// wrapLeveledWriter wraps a LeveledWriter to implement io.Writer.
+type wrapLeveledWriter struct {
+	Level         Level
+	LeveledWriter LeveledWriter
+}
+
+// Write implements io.Writer.
+func (w wrapLeveledWriter) Write(p []byte) (int, error) {
+	return w.LeveledWriter.WriteAtLevel(w.Level, p)
+}
+
+var _ io.Writer = wrapLeveledWriter{}

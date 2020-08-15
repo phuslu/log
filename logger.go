@@ -43,7 +43,9 @@ type Logger struct {
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
 	Writer io.Writer
 
-	leveledWriterRouter LeveledWriterRouter
+	// LeveledWriter decides which writers to write for each level.
+	// When this field is set, the Writer field is ignored.
+	LeveledWriter LeveledWriter
 }
 
 const (
@@ -285,8 +287,8 @@ func (l *Logger) header(level Level) *Event {
 		e.exit = false
 		e.panic = true
 	}
-	if l.leveledWriterRouter != nil {
-		e.w = l.leveledWriterRouter.GetWriterByLevel(level)
+	if l.LeveledWriter != nil {
+		e.w = wrapLeveledWriter{Level: level, LeveledWriter: l.LeveledWriter}
 	} else if l.Writer != nil {
 		e.w = l.Writer
 	} else {
