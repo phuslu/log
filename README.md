@@ -278,7 +278,7 @@ log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 To log to different writers by different levels, use `MultiWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.MultiWriter{
+log.DefaultLogger.LeveledWriter = &log.MultiWriter{
 	InfoWriter:   &log.FileWriter{Filename: "main.INFO"},
 	WarnWriter:   &log.FileWriter{Filename: "main.WARNING"},
 	ErrorWriter:  &log.FileWriter{Filename: "main.ERROR"},
