@@ -169,16 +169,15 @@ func TestMultiWriterError(t *testing.T) {
 }
 
 func BenchmarkNewMultiWriter(b *testing.B) {
+	file, err := os.Open(os.DevNull)
+	if err != nil {
+		b.Errorf("open %+v error: %+v", os.DevNull, err)
+	}
+
 	w := &MultiWriter{
-		InfoWriter: &FileWriter{
-			Filename: "file-info.log",
-		},
-		WarnWriter: &FileWriter{
-			Filename: "file-warn.log",
-		},
-		ErrorWriter: &FileWriter{
-			Filename: "file-error.log",
-		},
+		InfoWriter:  file,
+		WarnWriter:  file,
+		ErrorWriter: file,
 	}
 	logger := Logger{
 		Level:         InfoLevel,
@@ -193,26 +192,20 @@ func BenchmarkNewMultiWriter(b *testing.B) {
 		logger.Error().Str("action", "cleanup").Msg("World")
 	}
 	b.StopTimer()
-	matches, _ := filepath.Glob("file-*.log")
-	for i := range matches {
-		err := os.Remove(matches[i])
-		if err != nil {
-			b.Fatalf("os remove %s error: %+v", matches[i], err)
-		}
-	}
+
+	file.Close()
 }
 
 func BenchmarkOldMultiWriter(b *testing.B) {
+	file, err := os.Open(os.DevNull)
+	if err != nil {
+		b.Errorf("open %+v error: %+v", os.DevNull, err)
+	}
+
 	w := &MultiWriter{
-		InfoWriter: &FileWriter{
-			Filename: "file-info.log",
-		},
-		WarnWriter: &FileWriter{
-			Filename: "file-warn.log",
-		},
-		ErrorWriter: &FileWriter{
-			Filename: "file-error.log",
-		},
+		InfoWriter:  file,
+		WarnWriter:  file,
+		ErrorWriter: file,
 	}
 	logger := Logger{
 		Level:  InfoLevel,
@@ -227,11 +220,6 @@ func BenchmarkOldMultiWriter(b *testing.B) {
 		logger.Error().Str("action", "cleanup").Msg("World")
 	}
 	b.StopTimer()
-	matches, _ := filepath.Glob("file-*.log")
-	for i := range matches {
-		err := os.Remove(matches[i])
-		if err != nil {
-			b.Fatalf("os remove %s error: %+v", matches[i], err)
-		}
-	}
+
+	file.Close()
 }

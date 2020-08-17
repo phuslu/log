@@ -128,7 +128,38 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 		level = PanicLevel
 	}
 
-	return w.WriteAtLevel(level, p)
+	var err1 error
+	switch level {
+	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
+		if w.ErrorWriter != nil {
+			n, err1 = w.ErrorWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	case WarnLevel:
+		if w.WarnWriter != nil {
+			n, err1 = w.WarnWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+		fallthrough
+	default:
+		if w.InfoWriter != nil {
+			n, err1 = w.InfoWriter.Write(p)
+			if err1 != nil && err == nil {
+				err = err1
+			}
+		}
+	}
+
+	if w.StderrWriter != nil && level >= w.StderrLevel {
+		w.StderrWriter.Write(p)
+	}
+
+	return
 }
 
 // wrapLeveledWriter wraps a LeveledWriter to implement io.Writer.
