@@ -1,7 +1,6 @@
 package log
 
 import (
-	"bytes"
 	"io"
 )
 
@@ -13,7 +12,7 @@ type LeveledWriter interface {
 
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
-	// InfoWriter specifies the level large than info logs writes to
+	// InfoWriter specifies all the level logs writes to
 	InfoWriter io.Writer
 
 	// WarnWriter specifies the level large than warn logs writes to
@@ -52,82 +51,6 @@ func (w *MultiWriter) Close() (err error) {
 
 // WriteAtLevel implements LeveledWriter.
 func (w *MultiWriter) WriteAtLevel(level Level, p []byte) (n int, err error) {
-	var err1 error
-	switch level {
-	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
-		if w.ErrorWriter != nil {
-			n, err1 = w.ErrorWriter.Write(p)
-			if err1 != nil && err == nil {
-				err = err1
-			}
-		}
-		fallthrough
-	case WarnLevel:
-		if w.WarnWriter != nil {
-			n, err1 = w.WarnWriter.Write(p)
-			if err1 != nil && err == nil {
-				err = err1
-			}
-		}
-		fallthrough
-	default:
-		if w.InfoWriter != nil {
-			n, err1 = w.InfoWriter.Write(p)
-			if err1 != nil && err == nil {
-				err = err1
-			}
-		}
-	}
-
-	if w.StderrWriter != nil && level >= w.StderrLevel {
-		w.StderrWriter.Write(p)
-	}
-
-	return
-}
-
-var levelBegin = []byte(`"level":"`)
-
-// Write implements io.Writer.
-func (w *MultiWriter) Write(p []byte) (n int, err error) {
-	var l byte
-	// guess level by fixed offset
-	lp := len(p)
-	if lp > 49 {
-		_ = p[49]
-		switch {
-		case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
-			l = p[44]
-		case p[32] == '+' && p[47] == ':' && p[48] == '"':
-			l = p[49]
-		}
-	}
-	// guess level by "level":" beginning
-	if l == 0 {
-		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
-			l = p[i+len(levelBegin)]
-		}
-	}
-
-	// convert byte to Level
-	var level = noLevel
-	switch l {
-	case 't':
-		level = TraceLevel
-	case 'd':
-		level = DebugLevel
-	case 'i':
-		level = InfoLevel
-	case 'w':
-		level = WarnLevel
-	case 'e':
-		level = ErrorLevel
-	case 'f':
-		level = FatalLevel
-	case 'p':
-		level = PanicLevel
-	}
-
 	var err1 error
 	switch level {
 	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
