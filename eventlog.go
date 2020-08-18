@@ -86,7 +86,7 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 
 	if len(p) > 0 && p[0] == '{' {
 		var t dot
-		err = parseJsonDot(p, &t)
+		err = jsonToDot(p, &t)
 		if err == nil {
 			// level
 			switch t.Level {

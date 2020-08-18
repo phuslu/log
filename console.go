@@ -60,7 +60,7 @@ type ConsoleWriter struct {
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	var t dot
 
-	err = parseJsonDot(p, &t)
+	err = jsonToDot(p, &t)
 	if err != nil {
 		n, err = out.Write(p)
 		return
@@ -173,13 +173,15 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	return out.Write(b.B)
 }
 
-func parseJsonDot(json []byte, t *dot) error {
+var errInvalidJson = errors.New("invalid json object")
+
+func jsonToDot(json []byte, t *dot) error {
 	items, err := jsonParse(json)
 	if err != nil {
 		return err
 	}
 	if len(items) <= 1 {
-		return errors.New("invalid json object")
+		return errInvalidJson
 	}
 
 	t.Time = b2s(items[1].Value)

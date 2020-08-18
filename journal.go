@@ -57,7 +57,7 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 	}
 
 	var t dot
-	err = parseJsonDot(p, &t)
+	err = jsonToDot(p, &t)
 	if err != nil {
 		return
 	}
