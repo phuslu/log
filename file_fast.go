@@ -35,10 +35,6 @@ func (w *FastFileWriter) Write(p []byte) (n int, err error) {
 
 	if file != nil {
 		n, err = file.(*os.File).Write(p)
-		// try again, see https://github.com/golang/go/issues/7970
-		if e, ok := err.(*os.PathError); ok && e.Err == os.ErrClosed {
-			n, err = w.file.Load().(*os.File).Write(p)
-		}
 	} else {
 		w.mu.Lock()
 		// double check
@@ -52,7 +48,14 @@ func (w *FastFileWriter) Write(p []byte) (n int, err error) {
 		n, err = file.(*os.File).Write(p)
 	}
 
-	if w.MaxSize > 0 && atomic.AddInt64(&w.size, int64(n)) > w.MaxSize {
+	if err != nil {
+		// try again, see https://github.com/golang/go/issues/7970
+		if e, ok := err.(*os.PathError); ok && e.Err == os.ErrClosed {
+			n, err = w.file.Load().(*os.File).Write(p)
+		}
+	}
+
+	if w.MaxSize > 0 && n > 0 && atomic.AddInt64(&w.size, int64(n)) > w.MaxSize {
 		w.mu.Lock()
 		// double check
 		if atomic.LoadInt64(&w.size) > w.MaxSize {
