@@ -13,7 +13,7 @@ import (
 type FastFileWriter struct {
 	size int64
 	file atomic.Value // *os.File
-	mu   sync.Mutex
+	mu   sync.Mutex   // For create/rotate/close
 
 	Filename string
 
@@ -35,26 +35,26 @@ func (w *FastFileWriter) Write(p []byte) (n int, err error) {
 
 	if file != nil {
 		n, err = file.(*os.File).Write(p)
-		// see https://github.com/golang/go/issues/7970
+		// try again, see https://github.com/golang/go/issues/7970
 		if e, ok := err.(*os.PathError); ok && e.Err == os.ErrClosed {
 			n, err = w.file.Load().(*os.File).Write(p)
 		}
 	} else {
 		w.mu.Lock()
 		// double check
-		file = w.file.Load()
-		if file == nil {
-			err = w.create()
+		if w.file.Load() == nil {
+			file, err = w.create()
 		}
 		w.mu.Unlock()
 		if err != nil {
 			return
 		}
-		n, err = w.file.Load().(*os.File).Write(p)
+		n, err = file.(*os.File).Write(p)
 	}
 
 	if w.MaxSize > 0 && atomic.AddInt64(&w.size, int64(n)) > w.MaxSize {
 		w.mu.Lock()
+		// double check
 		if atomic.LoadInt64(&w.size) > w.MaxSize {
 			w.rotate()
 		}
@@ -85,47 +85,45 @@ func (w *FastFileWriter) Rotate() (err error) {
 }
 
 func (w *FastFileWriter) rotate() error {
-	oldfile := w.file.Load()
-
-	file, err := os.OpenFile(w.fileinfo(timeNow()))
+	file, err := os.OpenFile(w.openinfo(timeNow()))
 	if err != nil {
 		return err
 	}
+
+	oldfile := w.file.Load()
 	w.file.Store(file)
 	atomic.StoreInt64(&w.size, 0)
 
-	go func(oldfile interface{}, newname, filename string, backups int) {
-		if oldfile != nil {
-			oldfile.(*os.File).Close()
-		}
+	if oldfile != nil {
+		oldfile.(*os.File).Close()
+	}
 
-		os.Remove(filename)
-		os.Symlink(filepath.Base(newname), filename)
+	os.Remove(w.Filename)
+	os.Symlink(filepath.Base(file.Name()), w.Filename)
 
-		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
-		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
-		if uid != 0 && gid != 0 && os.Geteuid() == 0 {
-			os.Lchown(filename, uid, gid)
-			os.Chown(newname, uid, gid)
-		}
+	uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
+	gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
+	if uid != 0 && gid != 0 && os.Geteuid() == 0 {
+		os.Lchown(w.Filename, uid, gid)
+		os.Chown(file.Name(), uid, gid)
+	}
 
-		ext := filepath.Ext(filename)
-		pattern := filename[0:len(filename)-len(ext)] + ".20*" + ext
-		if names, _ := filepath.Glob(pattern); len(names) > 0 {
-			sort.Strings(names)
-			for i := 0; i < len(names)-backups-1; i++ {
-				os.Remove(names[i])
-			}
+	ext := filepath.Ext(w.Filename)
+	pattern := w.Filename[0:len(w.Filename)-len(ext)] + ".20*" + ext
+	if names, _ := filepath.Glob(pattern); len(names) > 0 {
+		sort.Strings(names)
+		for i := 0; i < len(names)-w.MaxBackups-1; i++ {
+			os.Remove(names[i])
 		}
-	}(oldfile, file.Name(), w.Filename, w.MaxBackups)
+	}
 
 	return nil
 }
 
-func (w *FastFileWriter) create() error {
-	file, err := os.OpenFile(w.fileinfo(timeNow()))
+func (w *FastFileWriter) create() (*os.File, error) {
+	file, err := os.OpenFile(w.openinfo(timeNow()))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	w.file.Store(file)
 	atomic.StoreInt64(&w.size, 0)
@@ -133,10 +131,10 @@ func (w *FastFileWriter) create() error {
 	os.Remove(w.Filename)
 	os.Symlink(filepath.Base(file.Name()), w.Filename)
 
-	return nil
+	return file, nil
 }
 
-func (w *FastFileWriter) fileinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
+func (w *FastFileWriter) openinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
 	if !w.LocalTime {
 		now = now.UTC()
 	}
