@@ -113,7 +113,10 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			levelColor = Red
 		}
 		// header
-		fmt.Fprintf(b, "%s%s%s %s%s%s %s %s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset, t.Goid, t.Caller)
+		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset)
+		if t.Caller != "" {
+			fmt.Fprintf(b, "%s %s ", t.Goid, t.Caller)
+		}
 		if !w.EndWithMessage {
 			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, t.Message)
 		} else {
@@ -136,7 +139,12 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	} else {
 		// header
-		fmt.Fprintf(b, "%s %s %s %s >", t.Time, t.Level.Three(), t.Goid, t.Caller)
+		fmt.Fprintf(b, "%s %s ", t.Time, t.Level.Three())
+		if t.Caller != "" {
+			fmt.Fprintf(b, "%s %s >", t.Goid, t.Caller)
+		} else {
+			fmt.Fprint(b, ">")
+		}
 		if !w.EndWithMessage {
 			fmt.Fprintf(b, " %s", t.Message)
 		}
