@@ -3,9 +3,8 @@
 package log
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
+	"strconv"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -86,43 +85,36 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 	var ecat uintptr = 0
 
 	if len(p) > 0 && p[0] == '{' {
-		var m map[string]interface{}
-		decoder := json.NewDecoder(bytes.NewReader(p))
-		decoder.UseNumber()
-		err = decoder.Decode(&m)
+		var t dot
+		err = parseJsonDot(p, &t)
 		if err == nil {
 			// level
-			if v, ok := m["level"]; ok {
-				switch s, _ := v.(string); ParseLevel(s) {
-				case TraceLevel:
-					etype = EVENTLOG_INFORMATION_TYPE
-				case DebugLevel:
-					etype = EVENTLOG_INFORMATION_TYPE
-				case InfoLevel:
-					etype = EVENTLOG_INFORMATION_TYPE
-				case WarnLevel:
-					etype = EVENTLOG_WARNING_TYPE
-				case ErrorLevel:
-					etype = EVENTLOG_ERROR_TYPE
-				case FatalLevel:
-					etype = EVENTLOG_AUDIT_FAILURE
-				case PanicLevel:
-					etype = EVENTLOG_AUDIT_FAILURE
-				}
+			switch t.Level {
+			case TraceLevel:
+				etype = EVENTLOG_INFORMATION_TYPE
+			case DebugLevel:
+				etype = EVENTLOG_INFORMATION_TYPE
+			case InfoLevel:
+				etype = EVENTLOG_INFORMATION_TYPE
+			case WarnLevel:
+				etype = EVENTLOG_WARNING_TYPE
+			case ErrorLevel:
+				etype = EVENTLOG_ERROR_TYPE
+			case FatalLevel:
+				etype = EVENTLOG_AUDIT_FAILURE
+			case PanicLevel:
+				etype = EVENTLOG_AUDIT_FAILURE
 			}
-			// eid
-			if v, ok := m["eid"]; ok {
-				if num, ok := v.(json.Number); ok {
-					if i, err := num.Int64(); err == nil {
-						eid = uintptr(i)
+			// eid && ecat
+			for _, kv := range t.KeyValue {
+				switch kv.Key {
+				case "eid":
+					if n, err := strconv.ParseUint(kv.Value, 10, 64); err == nil {
+						eid = uintptr(n)
 					}
-				}
-			}
-			// ecat
-			if v, ok := m["ecat"]; ok {
-				if num, ok := v.(json.Number); ok {
-					if i, err := num.Int64(); err == nil {
-						ecat = uintptr(i)
+				case "ecat":
+					if n, err := strconv.ParseUint(kv.Value, 10, 64); err == nil {
+						ecat = uintptr(n)
 					}
 				}
 			}

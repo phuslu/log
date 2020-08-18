@@ -1,5 +1,3 @@
-// json.go extracted from https://github.com/tidwall/gjson/blob/master/gjson.go
-
 package log
 
 import (
@@ -13,33 +11,34 @@ type jsonItem struct {
 	Value []byte
 }
 
-func jsonParse(data []byte) (items []jsonItem, err error) {
+// jsonParse extracts from https://github.com/tidwall/gjson
+func jsonParse(json []byte) (items []jsonItem, err error) {
 	var keys bool
 	var i int
 	var key, value jsonItem
-	for ; i < len(data); i++ {
-		if data[i] == '{' {
+	for ; i < len(json); i++ {
+		if json[i] == '{' {
 			i++
 			key.Type = 's'
 			keys = true
 			break
-		} else if data[i] == '[' {
+		} else if json[i] == '[' {
 			i++
 			break
 		}
-		if data[i] > ' ' {
+		if json[i] > ' ' {
 			return
 		}
 	}
 	var str []byte
 	var vesc bool
 	var ok bool
-	for ; i < len(data); i++ {
+	for ; i < len(json); i++ {
 		if keys {
-			if data[i] != '"' {
+			if json[i] != '"' {
 				continue
 			}
-			i, str, vesc, ok = jsonParseString(data, i+1)
+			i, str, vesc, ok = jsonParseString(json, i+1)
 			if !ok {
 				return
 			}
@@ -49,13 +48,13 @@ func jsonParse(data []byte) (items []jsonItem, err error) {
 				key.Value = str[1 : len(str)-1]
 			}
 		}
-		for ; i < len(data); i++ {
-			if data[i] <= ' ' || data[i] == ',' || data[i] == ':' {
+		for ; i < len(json); i++ {
+			if json[i] <= ' ' || json[i] == ',' || json[i] == ':' {
 				continue
 			}
 			break
 		}
-		i, value, ok = jsonParseAny(data, i, true)
+		i, value, ok = jsonParseAny(json, i, true)
 		if !ok {
 			return
 		}

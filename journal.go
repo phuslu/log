@@ -3,9 +3,7 @@
 package log
 
 import (
-	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -58,11 +56,8 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 		return
 	}
 
-	var m map[string]interface{}
-
-	decoder := json.NewDecoder(bytes.NewReader(p))
-	decoder.UseNumber()
-	err = decoder.Decode(&m)
+	var t dot
+	err = parseJsonDot(p, &t)
 	if err != nil {
 		return
 	}
@@ -83,55 +78,33 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 	}
 
 	// level
-	if v, ok := m["level"]; ok {
-		var priority string
-		switch s, _ := v.(string); ParseLevel(s) {
-		case TraceLevel:
-			priority = "7" // Debug
-		case DebugLevel:
-			priority = "7" // Debug
-		case InfoLevel:
-			priority = "6" // Informational
-		case WarnLevel:
-			priority = "4" // Warning
-		case ErrorLevel:
-			priority = "3" // Error
-		case FatalLevel:
-			priority = "2" // Critical
-		case PanicLevel:
-			priority = "0" // Emergency
-		default:
-			priority = "5" // Notice
-		}
-		print(b, "PRIORITY", priority)
+	var priority string
+	switch t.Level {
+	case TraceLevel:
+		priority = "7" // Debug
+	case DebugLevel:
+		priority = "7" // Debug
+	case InfoLevel:
+		priority = "6" // Informational
+	case WarnLevel:
+		priority = "4" // Warning
+	case ErrorLevel:
+		priority = "3" // Error
+	case FatalLevel:
+		priority = "2" // Critical
+	case PanicLevel:
+		priority = "0" // Emergency
+	default:
+		priority = "5" // Notice
 	}
+	print(b, "PRIORITY", priority)
 
 	// message
-	var msgField = "message"
-	if _, ok := m[msgField]; !ok {
-		if _, ok := m["msg"]; ok {
-			msgField = "msg"
-		}
-	}
-	if v, ok := m[msgField]; ok {
-		s, _ := v.(string)
-		if s != "" && s[len(s)-1] == '\n' {
-			s = s[:len(s)-1]
-		}
-		print(b, "MESSAGE", s)
-	}
+	print(b, "MESSAGE", t.Message)
 
 	// fields
-	for k, v := range m {
-		switch k {
-		case "level", "time", msgField:
-			continue
-		}
-		s, ok := v.(string)
-		if !ok {
-			s = fmt.Sprint(v)
-		}
-		print(b, strings.ToUpper(k), s)
+	for _, kv := range t.KeyValue {
+		print(b, strings.ToUpper(kv.Key), kv.Value)
 	}
 
 	print(b, "JSON", b2s(p))

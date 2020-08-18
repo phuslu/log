@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -56,24 +57,11 @@ type ConsoleWriter struct {
 	Writer io.Writer
 }
 
-type dot struct {
-	Time     string
-	Level    Level
-	Caller   string
-	Goid     string
-	Message  string
-	Stack    string
-	KeyValue []dotkv
-}
-
-type dotkv struct {
-	Key   string
-	Value string
-}
-
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
-	items, err := jsonParse(p)
-	if err != nil || len(items) <= 1 {
+	var t dot
+
+	err = parseJsonDot(p, &t)
+	if err != nil {
 		n, err = out.Write(p)
 		return
 	}
@@ -94,9 +82,98 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		White   = "\x1b[37m"
 		Gray    = "\x1b[90m"
 	)
-	var levelColor = Gray
 
-	var t dot
+	// template console writer
+	if w.Template != nil {
+		w.Template.Execute(b, &t)
+		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
+			b.B = append(b.B, '\n')
+		}
+		return out.Write(b.B)
+	}
+
+	// pretty console writer
+	if w.ColorOutput {
+		// colorful level string
+		var levelColor = Gray
+		switch t.Level {
+		case TraceLevel:
+			levelColor = Magenta
+		case DebugLevel:
+			levelColor = Yellow
+		case InfoLevel:
+			levelColor = Green
+		case WarnLevel:
+			levelColor = Red
+		case ErrorLevel:
+			levelColor = Red
+		case FatalLevel:
+			levelColor = Red
+		case PanicLevel:
+			levelColor = Red
+		}
+		// header
+		fmt.Fprintf(b, "%s%s%s %s%s%s %s %s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset, t.Goid, t.Caller)
+		if !w.EndWithMessage {
+			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, t.Message)
+		} else {
+			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
+		}
+		// key and values
+		for _, kv := range t.KeyValue {
+			if w.QuoteString {
+				kv.Value = strconv.Quote(kv.Value)
+			}
+			if kv.Key == "error" {
+				fmt.Fprintf(b, " %s%s=%s%s", Red, kv.Key, kv.Value, Reset)
+			} else {
+				fmt.Fprintf(b, " %s%s=%s%s%s", Cyan, kv.Key, Gray, kv.Value, Reset)
+			}
+		}
+		// message
+		if w.EndWithMessage {
+			fmt.Fprintf(b, "%s %s", Reset, t.Message)
+		}
+	} else {
+		// header
+		fmt.Fprintf(b, "%s %s %s %s >", t.Time, t.Level.Three(), t.Goid, t.Caller)
+		if !w.EndWithMessage {
+			fmt.Fprintf(b, " %s", t.Message)
+		}
+		// key and values
+		for _, kv := range t.KeyValue {
+			if w.QuoteString {
+				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
+			} else {
+				fmt.Fprintf(b, " %s=%s", kv.Key, kv.Value)
+			}
+		}
+		// message
+		if w.EndWithMessage {
+			fmt.Fprintf(b, " %s", t.Message)
+		}
+	}
+
+	// stack
+	if t.Stack != "" {
+		b.B = append(b.B, '\n')
+		b.B = append(b.B, t.Stack...)
+	}
+
+	b.B = append(b.B, '\n')
+
+	return out.Write(b.B)
+}
+
+func parseJsonDot(json []byte, t *dot) error {
+	items, err := jsonParse(json)
+	if err != nil {
+		return err
+	}
+	if len(items) <= 1 {
+		return errors.New("invalid json object")
+	}
+
 	t.Time = b2s(items[1].Value)
 	for i := 2; i < len(items); i += 2 {
 		k, v := items[i].Value, items[i+1].Value
@@ -106,19 +183,19 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			if len(v) > 0 {
 				switch v[0] {
 				case 't':
-					t.Level, levelColor = TraceLevel, Magenta
+					t.Level = TraceLevel
 				case 'd':
-					t.Level, levelColor = DebugLevel, Yellow
+					t.Level = DebugLevel
 				case 'i':
-					t.Level, levelColor = InfoLevel, Green
+					t.Level = InfoLevel
 				case 'w':
-					t.Level, levelColor = WarnLevel, Red
+					t.Level = WarnLevel
 				case 'e':
-					t.Level, levelColor = ErrorLevel, Red
+					t.Level = ErrorLevel
 				case 'f':
-					t.Level, levelColor = FatalLevel, Red
+					t.Level = FatalLevel
 				case 'p':
-					t.Level, levelColor = PanicLevel, Red
+					t.Level = PanicLevel
 				}
 			}
 		case "goid":
@@ -138,62 +215,22 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	}
 
-	// template console writer
-	if w.Template != nil {
-		w.Template.Execute(b, &t)
-		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
-			b.B = append(b.B, '\n')
-		}
-		return out.Write(b.B)
-	}
+	return nil
+}
 
-	// pretty console writer
-	if w.ColorOutput {
-		fmt.Fprintf(b, "%s%s%s %s%s%s %s %s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset, t.Goid, t.Caller)
-		if !w.EndWithMessage {
-			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, t.Message)
-		} else {
-			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
-		}
-		for _, kv := range t.KeyValue {
-			if w.QuoteString {
-				kv.Value = strconv.Quote(kv.Value)
-			}
-			if kv.Key == "error" {
-				fmt.Fprintf(b, " %s%s=%s%s", Red, kv.Key, kv.Value, Reset)
-			} else {
-				fmt.Fprintf(b, " %s%s=%s%s%s", Cyan, kv.Key, Gray, kv.Value, Reset)
-			}
-		}
-		if w.EndWithMessage {
-			fmt.Fprintf(b, "%s %s", Reset, t.Message)
-		}
-	} else {
-		fmt.Fprintf(b, "%s %s %s %s >", t.Time, t.Level.Three(), t.Goid, t.Caller)
-		if !w.EndWithMessage {
-			fmt.Fprintf(b, " %s", t.Message)
-		}
-		for _, kv := range t.KeyValue {
-			if w.QuoteString {
-				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
-			} else {
-				fmt.Fprintf(b, " %s=%s", kv.Key, kv.Value)
-			}
-		}
-		if w.EndWithMessage {
-			fmt.Fprintf(b, " %s", t.Message)
-		}
-	}
+type dot struct {
+	Time     string
+	Level    Level
+	Caller   string
+	Goid     string
+	Message  string
+	Stack    string
+	KeyValue []dotkv
+}
 
-	// stack
-	if t.Stack != "" {
-		b.B = append(b.B, '\n')
-		b.B = append(b.B, t.Stack...)
-	}
-
-	b.B = append(b.B, '\n')
-
-	return out.Write(b.B)
+type dotkv struct {
+	Key   string
+	Value string
 }
 
 // ColorTemplate provides a pre-defined text/template for console color output
@@ -227,7 +264,7 @@ var ColorFuncMap = template.FuncMap{
 	"gray":       func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
 	"contains":   strings.Contains,
 	"endswith":   strings.HasSuffix,
-	"low":        strings.ToLower,
+	"lower":      strings.ToLower,
 	"match":      path.Match,
 	"quote":      strconv.Quote,
 	"startswith": strings.HasPrefix,
