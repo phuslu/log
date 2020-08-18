@@ -20,15 +20,11 @@ const (
 )
 
 type jsonResult struct {
-	// Type is the json type
-	Type jsonType
-	// Raw is the raw json
-	Raw string
-	// Str is the json string/number
-	Str string
+	Type  jsonType
+	Value []byte
 }
 
-func parseJson(data string) (results []jsonResult, err error) {
+func jsonParse(data []byte) (results []jsonResult, err error) {
 	var keys bool
 	var i int
 	var key, value jsonResult
@@ -46,7 +42,7 @@ func parseJson(data string) (results []jsonResult, err error) {
 			return
 		}
 	}
-	var str string
+	var str []byte
 	var vesc bool
 	var ok bool
 	for ; i < len(data); i++ {
@@ -54,16 +50,15 @@ func parseJson(data string) (results []jsonResult, err error) {
 			if data[i] != '"' {
 				continue
 			}
-			i, str, vesc, ok = parseJsonString(data, i+1)
+			i, str, vesc, ok = jsonParseString(data, i+1)
 			if !ok {
 				return
 			}
 			if vesc {
-				key.Str = unescapeJsonString(str[1 : len(str)-1])
+				key.Value = unescapeJsonString(str[1 : len(str)-1])
 			} else {
-				key.Str = str[1 : len(str)-1]
+				key.Value = str[1 : len(str)-1]
 			}
-			key.Raw = str
 		}
 		for ; i < len(data); i++ {
 			if data[i] <= ' ' || data[i] == ',' || data[i] == ':' {
@@ -71,7 +66,7 @@ func parseJson(data string) (results []jsonResult, err error) {
 			}
 			break
 		}
-		i, value, ok = parseJsonAny(data, i, true)
+		i, value, ok = jsonParseAny(data, i, true)
 		if !ok {
 			return
 		}
@@ -80,7 +75,7 @@ func parseJson(data string) (results []jsonResult, err error) {
 	return
 }
 
-func parseJsonString(json string, i int) (int, string, bool, bool) {
+func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
 	var s = i
 	for ; i < len(json); i++ {
 		if json[i] > '\\' {
@@ -119,22 +114,22 @@ func parseJsonString(json string, i int) (int, string, bool, bool) {
 }
 
 // unescapeJsonString unescapes a string
-func unescapeJsonString(json string) string {
+func unescapeJsonString(json []byte) []byte {
 	var str = make([]byte, 0, len(json))
 	for i := 0; i < len(json); i++ {
 		switch {
 		default:
 			str = append(str, json[i])
 		case json[i] < ' ':
-			return string(str)
+			return str
 		case json[i] == '\\':
 			i++
 			if i >= len(json) {
-				return string(str)
+				return str
 			}
 			switch json[i] {
 			default:
-				return string(str)
+				return str
 			case '\\':
 				str = append(str, '\\')
 			case '/':
@@ -153,9 +148,9 @@ func unescapeJsonString(json string) string {
 				str = append(str, '"')
 			case 'u':
 				if i+5 > len(json) {
-					return string(str)
+					return str
 				}
-				m, _ := strconv.ParseUint(json[i+1:4], 16, 64)
+				m, _ := strconv.ParseUint(string(json[i+1:4]), 16, 64)
 				r := rune(m)
 				i += 5
 				if utf16.IsSurrogate(r) {
@@ -163,7 +158,7 @@ func unescapeJsonString(json string) string {
 					if len(json[i:]) >= 6 && json[i] == '\\' &&
 						json[i+1] == 'u' {
 						// we expect it to be correct so just consume it
-						m, _ = strconv.ParseUint(json[i+2:4], 16, 64)
+						m, _ = strconv.ParseUint(string(json[i+2:4]), 16, 64)
 						r = utf16.DecodeRune(r, rune(m))
 						i += 6
 					}
@@ -176,20 +171,20 @@ func unescapeJsonString(json string) string {
 			}
 		}
 	}
-	return string(str)
+	return str
 }
 
-// parseJsonAny parses the next value from a json string.
+// jsonParseAny parses the next value from a json string.
 // A Result is returned when the hit param is set.
 // The return values are (i int, res Result, ok bool)
-func parseJsonAny(json string, i int, hit bool) (int, jsonResult, bool) {
+func jsonParseAny(json []byte, i int, hit bool) (int, jsonResult, bool) {
 	var res jsonResult
-	var val string
+	var val []byte
 	for ; i < len(json); i++ {
 		if json[i] == '{' || json[i] == '[' {
-			i, val = parseJsonSquash(json, i)
+			i, val = jsonParseSquash(json, i)
 			if hit {
-				res.Raw = val
+				res.Value = val
 				res.Type = jsonJSON
 			}
 			return i, res, true
@@ -202,33 +197,31 @@ func parseJsonAny(json string, i int, hit bool) (int, jsonResult, bool) {
 			i++
 			var vesc bool
 			var ok bool
-			i, val, vesc, ok = parseJsonString(json, i)
+			i, val, vesc, ok = jsonParseString(json, i)
 			if !ok {
 				return i, res, false
 			}
 			if hit {
 				res.Type = jsonString
-				res.Raw = val
 				if vesc {
-					res.Str = unescapeJsonString(val[1 : len(val)-1])
+					res.Value = unescapeJsonString(val[1 : len(val)-1])
 				} else {
-					res.Str = val[1 : len(val)-1]
+					res.Value = val[1 : len(val)-1]
 				}
 			}
 			return i, res, true
 		case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			i, val = parseJsonNumber(json, i)
+			i, val = jsonParseNumber(json, i)
 			if hit {
-				res.Raw = val
 				res.Type = jsonNumber
-				res.Str = val
+				res.Value = val
 			}
 			return i, res, true
 		case 't', 'f', 'n':
 			vc := json[i]
-			i, val = parseJsonLiteral(json, i)
+			i, val = jsonParseLiteral(json, i)
 			if hit {
-				res.Raw = val
+				res.Value = val
 				switch vc {
 				case 't':
 					res.Type = jsonTrue
@@ -242,7 +235,7 @@ func parseJsonAny(json string, i int, hit bool) (int, jsonResult, bool) {
 	return i, res, false
 }
 
-func parseJsonSquash(json string, i int) (int, string) {
+func jsonParseSquash(json []byte, i int) (int, []byte) {
 	// expects that the lead character is a '[' or '{' or '('
 	// squash the value, ignoring all nested arrays and objects.
 	// the first '[' or '{' or '(' has already been read
@@ -290,7 +283,7 @@ func parseJsonSquash(json string, i int) (int, string) {
 	return i, json[s:]
 }
 
-func parseJsonNumber(json string, i int) (int, string) {
+func jsonParseNumber(json []byte, i int) (int, []byte) {
 	var s = i
 	i++
 	for ; i < len(json); i++ {
@@ -302,7 +295,7 @@ func parseJsonNumber(json string, i int) (int, string) {
 	return i, json[s:]
 }
 
-func parseJsonLiteral(json string, i int) (int, string) {
+func jsonParseLiteral(json []byte, i int) (int, []byte) {
 	var s = i
 	i++
 	for ; i < len(json); i++ {
