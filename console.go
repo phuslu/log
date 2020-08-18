@@ -1,8 +1,6 @@
 package log
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"path"
@@ -46,7 +44,7 @@ type ConsoleWriter struct {
 	//        Stack    string    // "<stack string>"
 	//        KeyValue []struct {
 	//            Key   string       // "foo"
-	//            Value interface{}  // "bar"
+	//            Value string       // "bar"
 	//        }
 	//    }
 	// See https://github.com/phuslu/log#template-console-writer for example.
@@ -58,22 +56,24 @@ type ConsoleWriter struct {
 	Writer io.Writer
 }
 
+type dot struct {
+	Time     string
+	Level    Level
+	Caller   string
+	Goid     string
+	Message  string
+	Stack    string
+	KeyValue []dotkv
+}
+
+type dotkv struct {
+	Key   string
+	Value string
+}
+
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
-	if w.Template != nil {
-		return w.writet(out, p)
-	}
-
-	var m map[string]interface{}
-	decoder := json.NewDecoder(bytes.NewReader(p))
-	decoder.UseNumber()
-	err = decoder.Decode(&m)
-	if err != nil {
-		n, err = out.Write(p)
-		return
-	}
-
-	keys := jsonKeys(p)
-	if len(keys) < 2 {
+	items, err := jsonParse(p)
+	if err != nil || len(items) <= 1 {
 		n, err = out.Write(p)
 		return
 	}
@@ -83,300 +83,117 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	defer bbpool.Put(b)
 
 	const (
-		Reset         = "\x1b[0m"
-		Black         = "\x1b[30m"
-		Red           = "\x1b[31m"
-		Green         = "\x1b[32m"
-		Yellow        = "\x1b[33m"
-		Blue          = "\x1b[34m"
-		Magenta       = "\x1b[35m"
-		Cyan          = "\x1b[36m"
-		White         = "\x1b[37m"
-		Gray          = "\x1b[90m"
-		BrightRed     = "\x1b[91m"
-		BrightGreen   = "\x1b[92m"
-		BrightYellow  = "\x1b[93m"
-		BrightBlue    = "\x1b[94m"
-		BrightMagenta = "\x1b[95m"
-		BrightCyan    = "\x1b[96m"
-		BrightWhite   = "\x1b[97m"
+		Reset   = "\x1b[0m"
+		Black   = "\x1b[30m"
+		Red     = "\x1b[31m"
+		Green   = "\x1b[32m"
+		Yellow  = "\x1b[33m"
+		Blue    = "\x1b[34m"
+		Magenta = "\x1b[35m"
+		Cyan    = "\x1b[36m"
+		White   = "\x1b[37m"
+		Gray    = "\x1b[90m"
 	)
+	var levelColor = Gray
 
-	// time
-	var timeField = "time"
-	v, ok := m[timeField]
-	if !ok {
-		timeField = keys[0]
-		v = m[timeField]
-	}
-	if w.ColorOutput {
-		fmt.Fprintf(b, "%s%s%s ", Gray, v, Reset)
-	} else {
-		fmt.Fprintf(b, "%s ", v)
-	}
-
-	// level
-	if v, ok := m["level"]; ok {
-		var c, s string
-		switch s, _ = v.(string); ParseLevel(s) {
-		case TraceLevel:
-			c, s = Magenta, "TRC"
-		case DebugLevel:
-			c, s = Yellow, "DBG"
-		case InfoLevel:
-			c, s = Green, "INF"
-		case WarnLevel:
-			c, s = Red, "WRN"
-		case ErrorLevel:
-			c, s = Red, "ERR"
-		case FatalLevel:
-			c, s = Red, "FTL"
-		case PanicLevel:
-			c, s = Red, "PNC"
+	var t dot
+	t.Time = b2s(items[1].Value)
+	for i := 2; i < len(items); i += 2 {
+		k, v := items[i].Value, items[i+1].Value
+		switch b2s(k) {
+		case "level":
+			t.Level = noLevel
+			if len(v) > 0 {
+				switch v[0] {
+				case 't':
+					t.Level, levelColor = TraceLevel, Magenta
+				case 'd':
+					t.Level, levelColor = DebugLevel, Yellow
+				case 'i':
+					t.Level, levelColor = InfoLevel, Green
+				case 'w':
+					t.Level, levelColor = WarnLevel, Red
+				case 'e':
+					t.Level, levelColor = ErrorLevel, Red
+				case 'f':
+					t.Level, levelColor = FatalLevel, Red
+				case 'p':
+					t.Level, levelColor = PanicLevel, Red
+				}
+			}
+		case "goid":
+			t.Goid = b2s(v)
+		case "caller":
+			t.Caller = b2s(v)
+		case "message", "msg":
+			if len(v) != 0 && v[len(v)-1] == '\n' {
+				t.Message = b2s(v[:len(v)-1])
+			} else {
+				t.Message = b2s(v)
+			}
+		case "stack":
+			t.Stack = b2s(v)
 		default:
-			c, s = Yellow, "???"
+			t.KeyValue = append(t.KeyValue, dotkv{b2s(k), b2s(v)})
 		}
-		if w.ColorOutput {
-			fmt.Fprintf(b, "%s%s%s ", c, s, Reset)
+	}
+
+	// template console writer
+	if w.Template != nil {
+		w.Template.Execute(b, &t)
+		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
+			b.B = append(b.B, '\n')
+		}
+		return out.Write(b.B)
+	}
+
+	// pretty console writer
+	if w.ColorOutput {
+		fmt.Fprintf(b, "%s%s%s %s%s%s %s %s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset, t.Goid, t.Caller)
+		if !w.EndWithMessage {
+			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, t.Message)
 		} else {
-			fmt.Fprintf(b, "%s ", s)
+			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		}
-	}
-
-	// goid
-	if v, ok := m["goid"]; ok {
-		fmt.Fprintf(b, "%s ", v)
-	}
-
-	// caller
-	if v, ok := m["caller"]; ok {
-		fmt.Fprintf(b, "%s ", v)
-	}
-
-	// message
-	var msgField = "message"
-	if _, ok := m[msgField]; !ok {
-		if _, ok := m["msg"]; ok {
-			msgField = "msg"
+		for _, kv := range t.KeyValue {
+			if w.QuoteString {
+				kv.Value = strconv.Quote(kv.Value)
+			}
+			if kv.Key == "error" {
+				fmt.Fprintf(b, " %s%s=%s%s", Red, kv.Key, kv.Value, Reset)
+			} else {
+				fmt.Fprintf(b, " %s%s=%s%s%s", Cyan, kv.Key, Gray, kv.Value, Reset)
+			}
 		}
-	}
-
-	// >
-	if v, ok := m[msgField]; ok && !w.EndWithMessage {
-		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-			v = s[:len(s)-1]
-		}
-		if w.ColorOutput {
-			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, v)
-		} else {
-			fmt.Fprintf(b, "> %s", v)
+		if w.EndWithMessage {
+			fmt.Fprintf(b, "%s %s", Reset, t.Message)
 		}
 	} else {
-		if w.ColorOutput {
-			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
-		} else {
-			fmt.Fprint(b, ">")
+		fmt.Fprintf(b, "%s %s %s %s >", t.Time, t.Level.Three(), t.Goid, t.Caller)
+		if !w.EndWithMessage {
+			fmt.Fprintf(b, " %s", t.Message)
 		}
-	}
-
-	// key and values
-	for _, k := range keys {
-		switch k {
-		case timeField, msgField, "level", "goid", "caller", "stack":
-			continue
-		}
-		v := m[k]
-		if w.QuoteString {
-			if s, ok := v.(string); ok {
-				v = strconv.Quote(s)
-			}
-		}
-		if w.ColorOutput {
-			if k == "error" && v != nil {
-				fmt.Fprintf(b, " %s%s=%v%s", Red, k, v, Reset)
+		for _, kv := range t.KeyValue {
+			if w.QuoteString {
+				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
 			} else {
-				fmt.Fprintf(b, " %s%s=%s%v%s", Cyan, k, Gray, v, Reset)
+				fmt.Fprintf(b, " %s=%s", kv.Key, kv.Value)
 			}
-		} else {
-			fmt.Fprintf(b, " %s=%v", k, v)
 		}
-	}
-
-	// message
-	if w.EndWithMessage {
-		if v, ok := m[msgField]; ok {
-			if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-				v = s[:len(s)-1]
-			}
-			if w.ColorOutput {
-				fmt.Fprintf(b, "%s %s", Reset, v)
-			} else {
-				fmt.Fprintf(b, " %s", v)
-			}
+		if w.EndWithMessage {
+			fmt.Fprintf(b, " %s", t.Message)
 		}
 	}
 
 	// stack
-	if v, ok := m["stack"]; ok {
+	if t.Stack != "" {
 		b.B = append(b.B, '\n')
-		if s, ok := v.(string); ok {
-			b.B = append(b.B, s...)
-		} else {
-			data, _ := json.MarshalIndent(v, "", "  ")
-			b.B = append(b.B, data...)
-		}
+		b.B = append(b.B, t.Stack...)
 	}
 
 	b.B = append(b.B, '\n')
 
 	return out.Write(b.B)
-}
-
-func (w *ConsoleWriter) writet(out io.Writer, p []byte) (n int, err error) {
-	type KeyValue struct {
-		Key   string
-		Value interface{}
-	}
-
-	dot := struct {
-		Time     string
-		Level    Level
-		Caller   string
-		Goid     string
-		Message  string
-		Stack    string
-		KeyValue []KeyValue
-	}{}
-
-	var m map[string]interface{}
-	decoder := json.NewDecoder(bytes.NewReader(p))
-	decoder.UseNumber()
-	err = decoder.Decode(&m)
-	if err != nil {
-		n, err = out.Write(p)
-		return
-	}
-
-	keys := jsonKeys(p)
-	if len(keys) < 2 {
-		n, err = out.Write(p)
-		return
-	}
-
-	// time
-	var timeField = "time"
-	v, ok := m[timeField]
-	if !ok {
-		timeField = keys[0]
-		v = m[timeField]
-	}
-	dot.Time, ok = v.(string)
-	if !ok {
-		dot.Time = fmt.Sprint(v)
-	}
-
-	// level
-	if v, ok := m["level"]; ok {
-		dot.Level = ParseLevel(v.(string))
-	}
-
-	// caller
-	if v, ok := m["caller"]; ok {
-		dot.Caller = v.(string)
-	}
-
-	// goid
-	if v, ok := m["goid"]; ok {
-		dot.Goid = v.(json.Number).String()
-	}
-
-	// message
-	var msgField = "message"
-	if _, ok := m[msgField]; !ok {
-		if _, ok := m["msg"]; ok {
-			msgField = "msg"
-		}
-	}
-	if v, ok := m[msgField]; ok {
-		if s, _ := v.(string); s != "" && s[len(s)-1] == '\n' {
-			v = s[:len(s)-1]
-		}
-		dot.Message = v.(string)
-	}
-
-	// stack
-	if v, ok := m["stack"]; ok {
-		if s, ok := v.(string); ok {
-			dot.Stack = s
-		} else {
-			b, _ := json.MarshalIndent(v, "", "  ")
-			dot.Stack = string(b)
-		}
-	}
-
-	// key and values
-	for _, k := range keys {
-		switch k {
-		case timeField, msgField, "level", "caller", "goid", "stack":
-			continue
-		}
-		v := m[k]
-		if w.QuoteString {
-			if s, ok := v.(string); ok {
-				v = strconv.Quote(s)
-			}
-		}
-		dot.KeyValue = append(dot.KeyValue, KeyValue{k, fmt.Sprint(v)})
-	}
-
-	b := bbpool.Get().(*bb)
-	b.Reset()
-	defer bbpool.Put(b)
-
-	w.Template.Execute(b, &dot)
-	if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
-		b.B = append(b.B, '\n')
-	}
-
-	return out.Write(b.B)
-}
-
-func jsonKeys(data []byte) (keys []string) {
-	var depth, count int
-
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	for {
-		token, err := decoder.Token()
-		if err != nil {
-			break
-		}
-		// fmt.Printf("==== %d %d <%T> %v\n", depth, count, token, token)
-		switch token.(type) {
-		case json.Delim:
-			switch token.(json.Delim) {
-			case '{', '[':
-				depth++
-			case '}', ']':
-				depth--
-				if depth == 1 {
-					count++
-				}
-			}
-		case string:
-			if depth == 1 {
-				if count%2 == 0 {
-					keys = append(keys, token.(string))
-				}
-				count++
-			}
-		default:
-			if depth == 1 {
-				count++
-			}
-		}
-	}
-
-	return
 }
 
 // ColorTemplate provides a pre-defined text/template for console color output

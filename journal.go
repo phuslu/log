@@ -14,7 +14,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"unsafe"
 )
 
 // JournalWriter is an io.WriteCloser that writes logs to journald.
@@ -135,7 +134,7 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 		print(b, strings.ToUpper(k), s)
 	}
 
-	print(b, "JSON", *(*string)(unsafe.Pointer(&p)))
+	print(b, "JSON", b2s(p))
 
 	// write
 	n, _, err = w.conn.WriteMsgUnix(b.B, nil, w.addr)

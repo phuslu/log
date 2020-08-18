@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"runtime"
-	"unsafe"
 )
 
 // A SugaredLogger wraps the base Logger functionality in a slower, but less
@@ -296,7 +295,7 @@ func print(e *Event, args []interface{}) {
 	b.Reset()
 
 	fmt.Fprint(b, args...)
-	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
+	e.Msg(b2s(b.B))
 
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)

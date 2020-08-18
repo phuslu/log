@@ -3,7 +3,6 @@ package log
 import (
 	stdLog "log"
 	"runtime"
-	"unsafe"
 )
 
 // Std wraps the Logger to provide *stdLog.Logger
@@ -30,6 +29,6 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 	if w.logger.Caller > 0 {
 		e.caller(runtime.Caller(w.logger.Caller + 2))
 	}
-	e.Context(w.context).Msg(*(*string)(unsafe.Pointer(&p)))
+	e.Context(w.context).Msg(b2s(p))
 	return len(p), nil
 }

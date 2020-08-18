@@ -1186,7 +1186,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	b.Reset()
 
 	fmt.Fprintf(b, format, v...)
-	e.Msg(*(*string)(unsafe.Pointer(&b.B)))
+	e.Msg(b2s(b.B))
 
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
@@ -1411,6 +1411,8 @@ func stacks(all bool) (trace []byte) {
 	}
 	return
 }
+
+func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }
 
 //go:noescape
 //go:linkname absDate time.absDate

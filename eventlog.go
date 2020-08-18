@@ -129,7 +129,7 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 		}
 	}
 
-	ss := []*uint16{syscall.StringToUTF16Ptr(*(*string)(unsafe.Pointer(&p)))}
+	ss := []*uint16{syscall.StringToUTF16Ptr(b2s(p))}
 
 	var ret uintptr
 	ret, _, err = syscall.Syscall9(w.report.Addr(), 9, w.handle, uintptr(etype), ecat, eid, 0, 1, 0, uintptr(unsafe.Pointer(&ss[0])), 0)

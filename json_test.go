@@ -13,6 +13,6 @@ func TestJsonParse(t *testing.T) {
 	}
 
 	for _, v := range results {
-		t.Logf("%d %s", v.Type, v.Value)
+		t.Logf("%c %s", v.Type, v.Value)
 	}
 }

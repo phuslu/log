@@ -105,7 +105,7 @@ type ConsoleWriter struct {
 	//        Stack    string    // "<stack string>"
 	//        KeyValue []struct {
 	//            Key   string       // "foo"
-	//            Value interface{}  // "bar"
+	//            Value string       // "bar"
 	//        }
 	//    }
 	// See https://github.com/phuslu/log#template-console-writer for example.
