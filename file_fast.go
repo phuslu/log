@@ -39,13 +39,13 @@ func (w *FastFileWriter) Write(p []byte) (n int, err error) {
 		w.mu.Lock()
 		// double check
 		if w.file.Load() == nil {
-			file, err = w.create()
+			err = w.create()
 		}
 		w.mu.Unlock()
 		if err != nil {
 			return
 		}
-		n, err = file.(*os.File).Write(p)
+		n, err = w.file.Load().(*os.File).Write(p)
 	}
 
 	if err != nil {
@@ -123,10 +123,10 @@ func (w *FastFileWriter) rotate() error {
 	return nil
 }
 
-func (w *FastFileWriter) create() (*os.File, error) {
+func (w *FastFileWriter) create() error {
 	file, err := os.OpenFile(w.openinfo(timeNow()))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	w.file.Store(file)
 	atomic.StoreInt64(&w.size, 0)
@@ -134,7 +134,7 @@ func (w *FastFileWriter) create() (*os.File, error) {
 	os.Remove(w.Filename)
 	os.Symlink(filepath.Base(file.Name()), w.Filename)
 
-	return file, nil
+	return nil
 }
 
 func (w *FastFileWriter) openinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
