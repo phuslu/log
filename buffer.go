@@ -21,6 +21,14 @@ type BufferWriter struct {
 	once sync.Once
 	mu   sync.Mutex
 	buf  []byte
+	ch   chan []byte
+	quit chan struct{}
+}
+
+var bufpool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 0, 16*1024)
+	},
 }
 
 // Flush flushes all pending log I/O.
@@ -59,14 +67,39 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 		if w.buf == nil {
 			w.buf = make([]byte, 0, w.BufferSize)
 		}
+		if w.ch == nil {
+			w.ch = make(chan []byte, 64)
+		}
+		if w.quit == nil {
+			w.quit = make(chan struct{})
+		}
 		if w.FlushDuration > 0 {
 			if w.FlushDuration < 100*time.Millisecond {
 				w.FlushDuration = 100 * time.Millisecond
 			}
 			go func(w *BufferWriter) {
-				for {
-					time.Sleep(w.FlushDuration)
-					w.Flush()
+				tick := time.Tick(w.FlushDuration)
+				select {
+				case buf := <-w.ch:
+					w.Writer.Write(buf)
+					bufpool.Put(buf)
+				case <-tick:
+					w.mu.Lock()
+					buf := w.buf
+					w.buf = bufpool.Get().([]byte)
+					w.buf = w.buf[:0]
+					w.mu.Unlock()
+					w.Writer.Write(buf)
+					bufpool.Put(buf)
+				case <-w.quit:
+					w.mu.Lock()
+					buf := w.buf
+					w.buf = bufpool.Get().([]byte)
+					w.buf = w.buf[:0]
+					w.mu.Unlock()
+					w.Writer.Write(buf)
+					bufpool.Put(buf)
+					return
 				}
 			}(w)
 		}
@@ -75,11 +108,12 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 	if w.BufferSize > 0 {
 		w.buf = append(w.buf, p...)
-		n = len(p)
 		if len(w.buf) > w.BufferSize {
-			_, err = w.Writer.Write(w.buf)
+			w.ch <- w.buf
+			w.buf = bufpool.Get().([]byte)
 			w.buf = w.buf[:0]
 		}
+		n = len(p)
 	} else {
 		n, err = w.Writer.Write(p)
 	}

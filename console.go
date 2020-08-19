@@ -115,12 +115,12 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		// header
 		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset)
 		if t.Caller != "" {
-			fmt.Fprintf(b, "%s %s ", t.Goid, t.Caller)
-		}
-		if !w.EndWithMessage {
-			fmt.Fprintf(b, "%s>%s %s", Cyan, Reset, t.Message)
+			fmt.Fprintf(b, "%s %s %s>%s", t.Goid, t.Caller, Cyan, Reset)
 		} else {
 			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
+		}
+		if !w.EndWithMessage {
+			fmt.Fprintf(b, " %s", t.Message)
 		}
 		// key and values
 		for _, kv := range t.KeyValue {
