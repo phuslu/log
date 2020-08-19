@@ -9,9 +9,9 @@ import (
 
 func TestAsyncWriterSize(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    1000,
-		FlushDuration: 1000 * time.Millisecond,
-		Writer:        os.Stderr,
+		BufferSize:   1000,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
 	for i := 0; i < 100; i++ {
 		fmt.Fprintf(w, "%s, %d during buffer writer 1k buff size\n", timeNow(), i)
@@ -31,54 +31,54 @@ func TestAsyncWriterSizeZero(t *testing.T) {
 
 func TestAsyncWriterDuration(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    1000,
-		FlushDuration: 10 * time.Millisecond,
-		Writer:        os.Stderr,
+		BufferSize:   1000,
+		SyncDuration: 10 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
 	fmt.Fprintf(w, "%s, during buffer writer tiny duration\n", timeNow())
 	time.Sleep(200 * time.Millisecond)
 }
 
-func TestAsyncWriterFlushAuto(t *testing.T) {
+func TestAsyncWriterSyncAuto(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    8192,
-		FlushDuration: 1000 * time.Millisecond,
-		Writer:        os.Stderr,
+		BufferSize:   8192,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
-	fmt.Fprintf(w, "%s, before buffer writer auto flush\n", timeNow())
+	fmt.Fprintf(w, "%s, before buffer writer auto sync\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
-	fmt.Fprintf(os.Stderr, "%s, after buffer writer auto flush\n", timeNow())
+	fmt.Fprintf(os.Stderr, "%s, after buffer writer auto sync\n", timeNow())
 }
 
-func TestAsyncWriterFlushCall(t *testing.T) {
+func TestAsyncWriterSyncCall(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    8192,
-		FlushDuration: 1000 * time.Millisecond,
-		Writer:        os.Stderr,
+		BufferSize:   8192,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
-	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
-	w.Flush()
-	fmt.Fprintf(os.Stderr, "%s, after buffer writer flush\n", timeNow())
+	fmt.Fprintf(w, "%s, before buffer writer sync\n", timeNow())
+	w.Sync()
+	fmt.Fprintf(os.Stderr, "%s, after buffer writer sync\n", timeNow())
 }
 
-func TestAsyncWriterFlusher(t *testing.T) {
+func TestAsyncWriterSyncer(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    8192,
-		FlushDuration: 1000 * time.Millisecond,
-		Writer:        os.Stderr,
+		BufferSize:   8192,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
-	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
+	fmt.Fprintf(w, "%s, before buffer writer sync\n", timeNow())
 
-	Flush(w)
+	w.Sync()
 }
 
 func TestAsyncWriterClose(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:    8192,
-		FlushDuration: 1000 * time.Millisecond,
-		Writer:        func() *os.File { f, _ := os.Open(os.DevNull); return f }(),
+		BufferSize:   8192,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       func() *os.File { f, _ := os.Open(os.DevNull); return f }(),
 	}
-	fmt.Fprintf(w, "%s, before buffer writer flush\n", timeNow())
+	fmt.Fprintf(w, "%s, before buffer writer sync\n", timeNow())
 	w.Close()
-	fmt.Fprintf(os.Stderr, "%s, after buffer writer flush\n", timeNow())
+	fmt.Fprintf(os.Stderr, "%s, after buffer writer sync\n", timeNow())
 }

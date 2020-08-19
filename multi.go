@@ -39,7 +39,15 @@ func (w *MultiWriter) Close() (err error) {
 		if writer == nil {
 			continue
 		}
-		Flush(writer)
+		// Sync writer
+		if syncer, ok := err.(interface {
+			Sync() error
+		}); ok {
+			if err1 := syncer.Sync(); err1 != nil {
+				err = err1
+			}
+		}
+		// Close writer
 		if closer, ok := writer.(io.Closer); ok {
 			if err1 := closer.Close(); err1 != nil {
 				err = err1

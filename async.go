@@ -2,56 +2,53 @@ package log
 
 import (
 	"io"
-	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-// AsyncWriter is an io.WriteCloser that writes with fixed size buffer.
+// AsyncWriter is an io.WriteCloser that writes asynchronously.
 type AsyncWriter struct {
-	// BufferSize is the size in bytes of the buffer before it gets flushed.
+	// BufferSize is the size in bytes of the buffer, using 32Kb by default.
 	BufferSize int
 
-	// FlushDuration is the period of the writer flush duration
-	FlushDuration time.Duration
+	// ChannelSize is the size of the bytes channel, using 100 by default.
+	ChannelSize int
+
+	// SyncDuration is the period of the writer sync duration, using 5s by default.
+	SyncDuration time.Duration
 
 	// Writer specifies the writer of output.
 	Writer io.Writer
 
-	once sync.Once
-	mu   sync.Mutex
-	buf  []byte
-	ch   chan []byte
-	quit chan struct{}
+	// LastError specifies the last error of writer.
+	LastError atomic.Value
+
+	once     sync.Once
+	ch       chan []byte
+	chDone   chan error
+	sync     chan struct{}
+	syncDone chan error
 }
 
-var bufpool = sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 0, 16*1024)
-	},
-}
-
-// Flush flushes all pending log I/O.
-func (w *AsyncWriter) Flush() (err error) {
-	w.mu.Lock()
-	if len(w.buf) != 0 {
-		_, err = w.Writer.Write(w.buf)
-		w.buf = w.buf[:0]
-	}
-	w.mu.Unlock()
+// Sync sends all pending log I/O.
+func (w *AsyncWriter) Sync() (err error) {
+	w.sync <- struct{}{}
+	err = <-w.syncDone
 	return
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
 func (w *AsyncWriter) Close() (err error) {
-	w.mu.Lock()
-	_, err = w.Writer.Write(w.buf)
-	w.buf = w.buf[:0]
-	if closer, ok := w.Writer.(io.Closer); ok {
-		err = closer.Close()
-	}
-	w.mu.Unlock()
+	close(w.ch)
+	err = <-w.chDone
 	return
+}
+
+var a2kpool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 0, 2048)
+	},
 }
 
 // Write implements io.Writer.  If a write would cause the log buffer to be larger
@@ -59,80 +56,75 @@ func (w *AsyncWriter) Close() (err error) {
 func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 	w.once.Do(func() {
 		if w.BufferSize == 0 {
-			return
+			w.BufferSize = 32 * 1024
 		}
-		if page := os.Getpagesize(); w.BufferSize%page != 0 {
-			w.BufferSize = (w.BufferSize + page) / page * page
+		if w.ChannelSize == 0 {
+			w.ChannelSize = 100
 		}
-		if w.buf == nil {
-			w.buf = make([]byte, 0, w.BufferSize)
+		if w.SyncDuration == 0 {
+			w.SyncDuration = 5 * time.Second
 		}
-		if w.ch == nil {
-			w.ch = make(chan []byte, 64)
-		}
-		if w.quit == nil {
-			w.quit = make(chan struct{})
-		}
-		if w.FlushDuration > 0 {
-			if w.FlushDuration < 100*time.Millisecond {
-				w.FlushDuration = 100 * time.Millisecond
-			}
-			go func(w *AsyncWriter) {
-				tick := time.Tick(w.FlushDuration)
+		// data channel
+		w.ch = make(chan []byte, w.ChannelSize)
+		w.chDone = make(chan error)
+		// control channel
+		w.sync = make(chan struct{})
+		w.syncDone = make(chan error)
+		// writer routine
+		go func(w *AsyncWriter) {
+			var err error
+			buf := make([]byte, 0, w.BufferSize)
+			tick := time.Tick(w.SyncDuration)
+			for {
 				select {
-				case buf := <-w.ch:
-					w.Writer.Write(buf)
-					bufpool.Put(buf)
+				case b, ok := <-w.ch:
+					if len(b) != 0 {
+						buf = append(buf, b...)
+						a2kpool.Put(b)
+					}
+					// buffer is full or channel is closed.
+					if len(buf) >= w.BufferSize || (!ok && len(buf) > 0) {
+						_, err = w.Writer.Write(buf)
+						if err != nil {
+							w.LastError.Store(err)
+						}
+						buf = buf[:0]
+					}
+					// channel closed, so close writer and quit.
+					if !ok {
+						if closer, ok := w.Writer.(io.Closer); ok {
+							err = closer.Close()
+							if err != nil {
+								w.LastError.Store(err)
+							}
+						}
+						w.chDone <- err
+						return
+					}
+				case <-w.sync:
+					if len(buf) > 0 {
+						_, err = w.Writer.Write(buf)
+						if err != nil {
+							w.LastError.Store(err)
+						}
+						buf = buf[:0]
+					}
+					w.syncDone <- err
 				case <-tick:
-					w.mu.Lock()
-					buf := w.buf
-					w.buf = bufpool.Get().([]byte)
-					w.buf = w.buf[:0]
-					w.mu.Unlock()
-					w.Writer.Write(buf)
-					bufpool.Put(buf)
-				case <-w.quit:
-					w.mu.Lock()
-					buf := w.buf
-					w.buf = bufpool.Get().([]byte)
-					w.buf = w.buf[:0]
-					w.mu.Unlock()
-					w.Writer.Write(buf)
-					bufpool.Put(buf)
-					return
+					if len(buf) > 0 {
+						_, err = w.Writer.Write(buf)
+						if err != nil {
+							w.LastError.Store(err)
+						}
+						buf = buf[:0]
+					}
 				}
-			}(w)
-		}
+			}
+		}(w)
 	})
 
-	w.mu.Lock()
-	if w.BufferSize > 0 {
-		w.buf = append(w.buf, p...)
-		if len(w.buf) > w.BufferSize {
-			w.ch <- w.buf
-			w.buf = bufpool.Get().([]byte)
-			w.buf = w.buf[:0]
-		}
-		n = len(p)
-	} else {
-		n, err = w.Writer.Write(p)
-	}
-	w.mu.Unlock()
+	// copy and sends data
+	w.ch <- append(a2kpool.Get().([]byte)[:0], p...)
 
-	return
-}
-
-// The Flusher interface is implemented by AsyncWriters that allow
-// an Logger to flush buffered data to the output.
-type Flusher interface {
-	// Flush sends any buffered data to the output.
-	Flush() error
-}
-
-// Flush writes any buffered data to the underlying io.Writer.
-func Flush(writer io.Writer) (err error) {
-	if flusher, ok := writer.(Flusher); ok {
-		err = flusher.Flush()
-	}
 	return
 }
