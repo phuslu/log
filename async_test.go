@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func TestBufferWriterSize(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterSize(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    1000,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
@@ -19,8 +19,8 @@ func TestBufferWriterSize(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
-func TestBufferWriterSizeZero(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterSizeZero(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize: 0,
 		Writer:     os.Stderr,
 	}
@@ -29,8 +29,8 @@ func TestBufferWriterSizeZero(t *testing.T) {
 	fmt.Fprintf(os.Stderr, "%s, after buffer writer zero size\n", timeNow())
 }
 
-func TestBufferWriterDuration(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterDuration(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    1000,
 		FlushDuration: 10 * time.Millisecond,
 		Writer:        os.Stderr,
@@ -39,8 +39,8 @@ func TestBufferWriterDuration(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 }
 
-func TestBufferWriterFlushAuto(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterFlushAuto(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
@@ -50,8 +50,8 @@ func TestBufferWriterFlushAuto(t *testing.T) {
 	fmt.Fprintf(os.Stderr, "%s, after buffer writer auto flush\n", timeNow())
 }
 
-func TestBufferWriterFlushCall(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterFlushCall(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
@@ -61,8 +61,8 @@ func TestBufferWriterFlushCall(t *testing.T) {
 	fmt.Fprintf(os.Stderr, "%s, after buffer writer flush\n", timeNow())
 }
 
-func TestBufferWriterFlusher(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterFlusher(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        os.Stderr,
@@ -72,8 +72,8 @@ func TestBufferWriterFlusher(t *testing.T) {
 	Flush(w)
 }
 
-func TestBufferWriterClose(t *testing.T) {
-	w := &BufferWriter{
+func TestAsyncWriterClose(t *testing.T) {
+	w := &AsyncWriter{
 		BufferSize:    8192,
 		FlushDuration: 1000 * time.Millisecond,
 		Writer:        func() *os.File { f, _ := os.Open(os.DevNull); return f }(),

@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// BufferWriter is an io.WriteCloser that writes with fixed size buffer.
-type BufferWriter struct {
+// AsyncWriter is an io.WriteCloser that writes with fixed size buffer.
+type AsyncWriter struct {
 	// BufferSize is the size in bytes of the buffer before it gets flushed.
 	BufferSize int
 
@@ -32,7 +32,7 @@ var bufpool = sync.Pool{
 }
 
 // Flush flushes all pending log I/O.
-func (w *BufferWriter) Flush() (err error) {
+func (w *AsyncWriter) Flush() (err error) {
 	w.mu.Lock()
 	if len(w.buf) != 0 {
 		_, err = w.Writer.Write(w.buf)
@@ -43,7 +43,7 @@ func (w *BufferWriter) Flush() (err error) {
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
-func (w *BufferWriter) Close() (err error) {
+func (w *AsyncWriter) Close() (err error) {
 	w.mu.Lock()
 	_, err = w.Writer.Write(w.buf)
 	w.buf = w.buf[:0]
@@ -56,7 +56,7 @@ func (w *BufferWriter) Close() (err error) {
 
 // Write implements io.Writer.  If a write would cause the log buffer to be larger
 // than Size, the buffer is written to the underlying Writer and cleared.
-func (w *BufferWriter) Write(p []byte) (n int, err error) {
+func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 	w.once.Do(func() {
 		if w.BufferSize == 0 {
 			return
@@ -77,7 +77,7 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 			if w.FlushDuration < 100*time.Millisecond {
 				w.FlushDuration = 100 * time.Millisecond
 			}
-			go func(w *BufferWriter) {
+			go func(w *AsyncWriter) {
 				tick := time.Tick(w.FlushDuration)
 				select {
 				case buf := <-w.ch:
@@ -122,7 +122,7 @@ func (w *BufferWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-// The Flusher interface is implemented by BufferWriters that allow
+// The Flusher interface is implemented by AsyncWriters that allow
 // an Logger to flush buffered data to the output.
 type Flusher interface {
 	// Flush sends any buffered data to the output.
