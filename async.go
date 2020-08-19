@@ -3,7 +3,6 @@ package log
 import (
 	"io"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -12,7 +11,7 @@ type AsyncWriter struct {
 	// BufferSize is the size in bytes of the buffer, using 32Kb by default.
 	BufferSize int
 
-	// ChannelSize is the size of the bytes channel, using 100 by default.
+	// ChannelSize is the size of the data channel, using 100 by default.
 	ChannelSize int
 
 	// SyncDuration is the period of the writer sync duration, using 5s by default.
@@ -20,9 +19,6 @@ type AsyncWriter struct {
 
 	// Writer specifies the writer of output.
 	Writer io.Writer
-
-	// LastError specifies the last error of writer.
-	LastError atomic.Value
 
 	once     sync.Once
 	ch       chan []byte
@@ -64,17 +60,16 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 		if w.SyncDuration == 0 {
 			w.SyncDuration = 5 * time.Second
 		}
-		// data channel
+		// channels
 		w.ch = make(chan []byte, w.ChannelSize)
 		w.chDone = make(chan error)
-		// control channel
 		w.sync = make(chan struct{})
 		w.syncDone = make(chan error)
-		// writer routine
+		// data routine
 		go func(w *AsyncWriter) {
 			var err error
-			buf := make([]byte, 0, w.BufferSize)
-			tick := time.Tick(w.SyncDuration)
+			buf := make([]byte, 0, w.BufferSize+4096)
+			ticker := time.NewTicker(w.SyncDuration)
 			for {
 				select {
 				case b, ok := <-w.ch:
@@ -82,41 +77,37 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 						buf = append(buf, b...)
 						a2kpool.Put(b)
 					}
-					// buffer is full or channel is closed.
-					if len(buf) >= w.BufferSize || (!ok && len(buf) > 0) {
+					// full or closed
+					if len(buf) >= w.BufferSize || !ok {
 						_, err = w.Writer.Write(buf)
-						if err != nil {
-							w.LastError.Store(err)
-						}
 						buf = buf[:0]
 					}
-					// channel closed, so close writer and quit.
 					if !ok {
+						// channel closed, so close writer and quit.
 						if closer, ok := w.Writer.(io.Closer); ok {
-							err = closer.Close()
-							if err != nil {
-								w.LastError.Store(err)
+							err1 := closer.Close()
+							if err1 != nil && err == nil {
+								err = err1
 							}
 						}
+						ticker.Stop()
 						w.chDone <- err
 						return
 					}
 				case <-w.sync:
-					if len(buf) > 0 {
+					if len(buf) != 0 {
 						_, err = w.Writer.Write(buf)
-						if err != nil {
-							w.LastError.Store(err)
-						}
 						buf = buf[:0]
+					} else {
+						err = nil
 					}
 					w.syncDone <- err
-				case <-tick:
-					if len(buf) > 0 {
+				case <-ticker.C:
+					if len(buf) != 0 {
 						_, err = w.Writer.Write(buf)
-						if err != nil {
-							w.LastError.Store(err)
-						}
 						buf = buf[:0]
+					} else {
+						err = nil
 					}
 				}
 			}

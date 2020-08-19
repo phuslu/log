@@ -7,22 +7,25 @@ import (
 	"time"
 )
 
-func TestAsyncWriterSize(t *testing.T) {
+func TestAsyncWriterSmallSize(t *testing.T) {
 	w := &AsyncWriter{
 		BufferSize:   1000,
-		SyncDuration: 1000 * time.Millisecond,
+		SyncDuration: 1100 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 20; i++ {
 		fmt.Fprintf(w, "%s, %d during buffer writer 1k buff size\n", timeNow(), i)
 	}
 	time.Sleep(time.Second)
+	fmt.Fprintf(os.Stderr, "%s, sync to writer\n", timeNow())
+	w.Close()
 }
 
-func TestAsyncWriterSizeZero(t *testing.T) {
+func TestAsyncWriterZeroSize(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize: 0,
-		Writer:     os.Stderr,
+		BufferSize:   0,
+		SyncDuration: 1000 * time.Millisecond,
+		Writer:       os.Stderr,
 	}
 	fmt.Fprintf(w, "%s, before buffer writer zero size\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
@@ -81,4 +84,23 @@ func TestAsyncWriterClose(t *testing.T) {
 	fmt.Fprintf(w, "%s, before buffer writer sync\n", timeNow())
 	w.Close()
 	fmt.Fprintf(os.Stderr, "%s, after buffer writer sync\n", timeNow())
+}
+
+func BenchmarkAsyncWriter(b *testing.B) {
+	file, err := os.Open(os.DevNull)
+	if err != nil {
+		b.Errorf("open null device error: %+v", err)
+	}
+
+	w := &AsyncWriter{
+		Writer: file,
+	}
+
+	p := []byte(`{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","error":"i am test error","foo":"bar","n":42,"a":[1,2,3],"obj":{"a":[1], "b":{}},"message":"hello json console color writer"}`)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		w.Write(p)
+	}
 }
