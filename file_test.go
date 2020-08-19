@@ -327,39 +327,3 @@ func TestFileWriterFileinfo(t *testing.T) {
 		}
 	})
 }
-
-func BenchmarkFileWriter(b *testing.B) {
-	w := &FileWriter{
-		Filename: os.DevNull,
-		MaxSize:  100 * 1024 * 1024 * 1024 * 1024,
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	b.SetParallelism(5000)
-
-	b.RunParallel(func(pb *testing.PB) {
-		data := []byte(`{"time":"2019-07-10T05:35:54.277Z","level":"info","error":"i am test error","foo":"bar","n":42,"message":"hello file writer"}`)
-		for pb.Next() {
-			w.Write(data)
-		}
-	})
-}
-
-func BenchmarkFastFileWriter(b *testing.B) {
-	w := &FastFileWriter{
-		Filename: os.DevNull,
-		MaxSize:  100 * 1024 * 1024 * 1024 * 1024,
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	b.SetParallelism(5000)
-
-	b.RunParallel(func(pb *testing.PB) {
-		data := []byte(`{"time":"2019-07-10T05:35:54.277Z","level":"info","error":"i am test error","foo":"bar","n":42,"message":"hello file writer"}`)
-		for pb.Next() {
-			w.Write(data)
-		}
-	})
-}
