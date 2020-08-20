@@ -1,6 +1,6 @@
 # Structured Logging for Humans
 
-[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![coverage][cov-img]][cov] ![stability-stable][stability-img]
+[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![build][build-img]][build] [![coverage][cov-img]][cov] ![stability-stable][stability-img]
 
 ## Features
 
@@ -432,6 +432,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [pkg]: https://godoc.org/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
+[build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
+[build]: https://github.com/phuslu/log/actions
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
 [stability-img]: https://img.shields.io/badge/stability-stable-green.svg
