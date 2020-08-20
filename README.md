@@ -364,7 +364,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-A quick and simple benchmark with logrus/zap/zerolog, performance advantage comes from [inline function][inline function], [loop unrolling][loop unrolling] and [runtime linkage][runtime linkage].
+A quick and simple benchmark with logrus/zap/zerolog,
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -417,12 +417,12 @@ func BenchmarkPhusLog(b *testing.B) {
 	}
 }
 ```
-Performance results on Amazon Linux c5.large instance:
+Performance results on current [Github Actions][build] run:
 ```
-BenchmarkLogrus-8        3216494              3763 ns/op            1834 B/op         31 allocs/op
-BenchmarkZap-8          15588312               789 ns/op             128 B/op          1 allocs/op
-BenchmarkZeroLog-8      32658090               400 ns/op               0 B/op          0 allocs/op
-BenchmarkPhusLog-8      71507228               161 ns/op               0 B/op          0 allocs/op
+BenchmarkLogrus-2    	 2369252	      5285 ns/op	    1832 B/op	      31 allocs/op
+BenchmarkZap-2       	 9446341	      1228 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-2   	18532412	       618 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-2   	46513542	       257 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ### Acknowledgment
@@ -454,9 +454,6 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
-[inline function]: https://en.wikipedia.org/wiki/Inline_function
-[loop unrolling]: https://en.wikipedia.org/wiki/Loop_unrolling
-[runtime linkage]: https://github.com/golang/go/issues/15006
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [quicktemplate]: https://github.com/valyala/quicktemplate
