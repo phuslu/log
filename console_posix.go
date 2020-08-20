@@ -54,6 +54,7 @@ func isTerminal(fd uintptr, os, arch string) bool {
 
 	var termios [256]byte
 	_, _, err := syscall.Syscall6(trap, fd, req, uintptr(unsafe.Pointer(&termios[0])), 0, 0, 0)
+	println(os, arch, err)
 	return err == 0
 }
 

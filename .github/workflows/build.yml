@@ -1,0 +1,21 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '30 11 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: build
+        run: |
+          go test -v
+      - name: benchmark
+        run: |
+          go test -v -run=none -bench=.

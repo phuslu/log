@@ -12,7 +12,7 @@ func TestIsTerminal(t *testing.T) {
 	file, _ := os.Open(os.DevNull)
 
 	if IsTerminal(file.Fd()) {
-		t.Errorf("test is terminal mode for %s failed", os.DevNull)
+		t.Errorf("test %s terminal mode failed", os.DevNull)
 	}
 
 	// The SIGSYS signal would be triggered for errors like "function not implemented".
@@ -50,9 +50,7 @@ func TestIsTerminal(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if isTerminal(file.Fd(), c.GOOS, c.GOARCH) {
-			t.Errorf("test is terminal mode for %s failed", os.DevNull)
-		}
+		t.Logf("isTerminal(%s, %s) return %+v", c.GOOS, c.GOARCH, isTerminal(file.Fd(), c.GOOS, c.GOARCH))
 	}
 
 }
