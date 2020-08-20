@@ -8,13 +8,13 @@ import (
 
 // AsyncWriter is an io.WriteCloser that writes asynchronously.
 type AsyncWriter struct {
-	// BufferSize is the size in bytes of the buffer, using 32Kb by default.
+	// BufferSize is the size in bytes of the buffer, the default size is 32KB.
 	BufferSize int
 
-	// ChannelSize is the size of the data channel, using 100 by default.
+	// ChannelSize is the size of the data channel, the default size is 100.
 	ChannelSize int
 
-	// SyncDuration is the period of the writer sync duration, using 5s by default.
+	// SyncDuration is the duration of the writer syncs, the default duration is 5s.
 	SyncDuration time.Duration
 
 	// Writer specifies the writer of output.
@@ -27,7 +27,7 @@ type AsyncWriter struct {
 	syncDone chan error
 }
 
-// Sync sends all pending log I/O.
+// Sync syncs all pending log I/O.
 func (w *AsyncWriter) Sync() (err error) {
 	w.sync <- struct{}{}
 	err = <-w.syncDone
