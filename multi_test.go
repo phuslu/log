@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -87,5 +88,52 @@ func TestMultiWriterError(t *testing.T) {
 
 	if err := w.Close(); err == nil {
 		t.Errorf("test close error writer error: %+v", err)
+	}
+}
+
+func TestMultiWriterLevel(t *testing.T) {
+	w := &MultiWriter{
+		StderrWriter: &ConsoleWriter{
+			ColorOutput: true,
+		},
+		StderrLevel: InfoLevel,
+		ParseLevel: func(data []byte) (level Level) {
+			v := struct {
+				Level string `json:"level"`
+			}{}
+			if err := json.Unmarshal(data, &v); err == nil {
+				level = ParseLevel(v.Level)
+			}
+			return
+		},
+	}
+
+	var err error
+	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
+		_, err = fmt.Fprintf(w, `{"time":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		if err != nil {
+			t.Errorf("test json mutli writer error: %+v", err)
+		}
+		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		if err != nil {
+			t.Errorf("test json mutli writer error: %+v", err)
+		}
+		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		if err != nil {
+			t.Errorf("test json mutli writer error: %+v", err)
+		}
+	}
+
+	w.ParseLevel = func(p []byte) Level { return ParseLevel(string(p[49])) }
+	w.StderrLevel = ErrorLevel
+	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
+		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","foo":"bar","n":42,"message":"hello user-defined parse level mutli writer"}`+"\n", level)
+		if err != nil {
+			t.Errorf("test json mutli writer error: %+v", err)
+		}
+	}
+
+	if err := w.Close(); err != nil {
+		t.Errorf("test close mutli writer error: %+v", err)
 	}
 }
