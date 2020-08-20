@@ -78,7 +78,7 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 						a2kpool.Put(b)
 					}
 					// full or closed
-					if len(buf) >= w.BufferSize || !ok {
+					if len(buf) >= w.BufferSize || (!ok && len(buf) != 0) {
 						_, err = w.Writer.Write(buf)
 						buf = buf[:0]
 					}
@@ -90,8 +90,8 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 								err = err1
 							}
 						}
-						ticker.Stop()
 						w.chDone <- err
+						ticker.Stop()
 						return
 					}
 				case <-w.sync:

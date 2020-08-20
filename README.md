@@ -77,7 +77,7 @@ type FileWriter struct {
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to os.Stderr
+// (optionally) colorized, human-friendly format to output Writer.
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
