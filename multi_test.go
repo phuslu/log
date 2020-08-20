@@ -10,7 +10,7 @@ import (
 )
 
 func TestMultiWriter(t *testing.T) {
-	mw := &MultiWriter{
+	w := &MultiWriter{
 		InfoWriter:   &FileWriter{Filename: "file-info.log"},
 		WarnWriter:   &FileWriter{Filename: "file-warn.log"},
 		ErrorWriter:  &FileWriter{Filename: "file-error.log"},
@@ -19,7 +19,6 @@ func TestMultiWriter(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		var w io.Writer = wrapLeveledWriter{ParseLevel(level), mw}
 		_, err := fmt.Fprintf(w, `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
@@ -34,7 +33,7 @@ func TestMultiWriter(t *testing.T) {
 		}
 	}
 
-	if err := mw.Close(); err != nil {
+	if err := w.Close(); err != nil {
 		t.Errorf("test close mutli writer error: %+v", err)
 	}
 
@@ -71,7 +70,7 @@ func TestMultiWriterError(t *testing.T) {
 		t.Errorf("open null file error: %+v", err)
 	}
 
-	mw := &MultiWriter{
+	w := &MultiWriter{
 		InfoWriter:   file,
 		WarnWriter:   file,
 		ErrorWriter:  file,
@@ -80,14 +79,13 @@ func TestMultiWriterError(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		var w io.Writer = wrapLeveledWriter{ParseLevel(level), mw}
 		_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json error writer error: %+v", err)
 		}
 	}
 
-	if err := mw.Close(); err == nil {
+	if err := w.Close(); err == nil {
 		t.Errorf("test close error writer error: %+v", err)
 	}
 }

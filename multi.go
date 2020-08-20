@@ -1,14 +1,9 @@
 package log
 
 import (
+	"bytes"
 	"io"
 )
-
-// LeveledWriter is an interface that wraps WriteAtLevel.
-type LeveledWriter interface {
-	// WriteAtLevel decides which writers to use by checking the specified Level.
-	WriteAtLevel(Level, []byte) (int, error)
-}
 
 // MultiWriter is an io.WriteCloser that log to different writers by different levels
 type MultiWriter struct {
@@ -26,6 +21,9 @@ type MultiWriter struct {
 
 	// StderrLevel specifies the minimal level logs it will be writes to stderr
 	StderrLevel Level
+
+	// ParseLevel specifies an optional callback for parse log level from JSON input
+	ParseLevel func([]byte) Level
 }
 
 // Close implements io.Closer, and closes the underlying LeveledWriter.
@@ -48,8 +46,51 @@ func (w *MultiWriter) Close() (err error) {
 	return
 }
 
-// WriteAtLevel implements LeveledWriter.
-func (w *MultiWriter) WriteAtLevel(level Level, p []byte) (n int, err error) {
+var levelBegin = []byte(`"level":"`)
+
+// Write implements io.Writer.
+func (w *MultiWriter) Write(p []byte) (n int, err error) {
+	var level = noLevel
+	if w.ParseLevel != nil {
+		level = w.ParseLevel(p)
+	} else {
+		var l byte
+		// guess level by fixed offset
+		lp := len(p)
+		if lp > 49 {
+			_ = p[49]
+			switch {
+			case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
+				l = p[44]
+			case p[32] == '+' && p[47] == ':' && p[48] == '"':
+				l = p[49]
+			}
+		}
+		// guess level by "level":" beginning
+		if l == 0 {
+			if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
+				l = p[i+len(levelBegin)]
+			}
+		}
+		// convert byte to Level
+		switch l {
+		case 't':
+			level = TraceLevel
+		case 'd':
+			level = DebugLevel
+		case 'i':
+			level = InfoLevel
+		case 'w':
+			level = WarnLevel
+		case 'e':
+			level = ErrorLevel
+		case 'f':
+			level = FatalLevel
+		case 'p':
+			level = PanicLevel
+		}
+	}
+
 	var err1 error
 	switch level {
 	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
@@ -83,16 +124,3 @@ func (w *MultiWriter) WriteAtLevel(level Level, p []byte) (n int, err error) {
 
 	return
 }
-
-// wrapLeveledWriter wraps a LeveledWriter to implement io.Writer.
-type wrapLeveledWriter struct {
-	Level         Level
-	LeveledWriter LeveledWriter
-}
-
-// Write implements io.Writer.
-func (w wrapLeveledWriter) Write(p []byte) (int, error) {
-	return w.LeveledWriter.WriteAtLevel(w.Level, p)
-}
-
-var _ io.Writer = wrapLeveledWriter{}
