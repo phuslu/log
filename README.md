@@ -6,11 +6,14 @@
 
 * No Dependencies
 * Intuitive Interfaces
-* Rotating File Writer
-* Pretty & Template Console Writer
-* JournalD & EventLog Writer
-* StdLog & Grpc & Logr Interceptor
-* Contextual Fields
+* Consistent Writers
+    - FileWriter, *rotating & robust*
+    - ConsoleWriter, *colorful & templating*
+    - MultiWriter, *multiple level dispatch*
+    - AsyncWriter, *asynchronously writing*
+    - JournalDWriter, *systemd logging*
+    - EventlogWriter, *windows system event*
+* Third-party(StdLog/Grpc/Logr) Logger Interceptor
 * High Performance
 
 ## Interfaces
@@ -256,24 +259,7 @@ func main() {
 ```
 > Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
-### JournalWriter & EventlogWriter & MultiWriter & AsyncWriter
-
-To log to linux systemd journald, using `JournalWriter`.
-
-```go
-log.DefaultLogger.Writer = &log.JournalWriter{}
-log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
-```
-
-To log to windows system event, using `EventlogWriter`.
-
-```go
-log.DefaultLogger.Writer = &log.EventlogWriter{
-	Source: ".NET Runtime",
-	ID:     1000,
-}
-log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
-```
+### MultiWriter & AsyncWriter & JournalWriter & EventlogWriter
 
 To log to different writers by different levels, use `MultiWriter`.
 
@@ -300,6 +286,22 @@ log.DefaultLogger.Writer = &log.AsyncWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
+```
+To log to linux systemd journald, using `JournalWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.JournalWriter{}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
+```
+
+To log to windows system event, using `EventlogWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.EventlogWriter{
+	Source: ".NET Runtime",
+	ID:     1000,
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
 ### Sugar Logger
