@@ -57,6 +57,16 @@ type ConsoleWriter struct {
 	Writer io.Writer
 }
 
+// Close implements io.Closer, will closes the underlying Writer if not empty.
+func (w *ConsoleWriter) Close() (err error) {
+	if w.Writer != nil {
+		if closer, ok := w.Writer.(io.Closer); ok {
+			err = closer.Close()
+		}
+	}
+	return
+}
+
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	var t dot
 
