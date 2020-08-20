@@ -36,7 +36,7 @@ func (w *AsyncWriter) Sync() (err error) {
 
 // Close implements io.Closer, and closes the underlying Writer.
 func (w *AsyncWriter) Close() (err error) {
-	close(w.ch)
+	w.ch <- nil // instead of close(w.ch) to avoid panic other goroutine
 	err = <-w.chDone
 	return
 }
@@ -72,17 +72,18 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 			ticker := time.NewTicker(w.SyncDuration)
 			for {
 				select {
-				case b, ok := <-w.ch:
+				case b := <-w.ch:
+					isNil := b == nil
 					if len(b) != 0 {
 						buf = append(buf, b...)
 						a2kpool.Put(b)
 					}
 					// full or closed
-					if len(buf) >= w.BufferSize || (!ok && len(buf) != 0) {
+					if len(buf) >= w.BufferSize || (isNil && len(buf) != 0) {
 						_, err = w.Writer.Write(buf)
 						buf = buf[:0]
 					}
-					if !ok {
+					if isNil {
 						// channel closed, so close writer and quit.
 						if closer, ok := w.Writer.(io.Closer); ok {
 							err1 := closer.Close()

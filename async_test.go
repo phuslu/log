@@ -18,7 +18,7 @@ func TestAsyncWriterSmallSize(t *testing.T) {
 	}
 	time.Sleep(time.Second)
 	fmt.Fprintf(os.Stderr, "%s, sync to writer\n", timeNow())
-	w.Close()
+	w.Sync()
 }
 
 func TestAsyncWriterZeroSize(t *testing.T) {
