@@ -256,7 +256,7 @@ func main() {
 ```
 > Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
-### JournalWriter & EventlogWriter & MultiWriter
+### JournalWriter & EventlogWriter & MultiWriter & AsyncWriter
 
 To log to linux systemd journald, using `JournalWriter`.
 
@@ -288,6 +288,18 @@ log.DefaultLogger.Writer = &log.MultiWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
+```
+
+To log to file asynchronously for maximize performance, use `AsyncWriter`.
+
+```go
+file, _ := os.OpenFile("main.log", os.O_WRONLY, 0644)
+log.DefaultLogger.Writer = &log.AsyncWriter{
+	Writer: file,
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
+log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
+log.DefaultLogger.Writer.(io.Closer).Close()
 ```
 
 ### Sugar Logger
