@@ -41,9 +41,9 @@ func (w *AsyncWriter) Close() (err error) {
 	return
 }
 
-var a2kpool = sync.Pool{
+var a1kpool = sync.Pool{
 	New: func() interface{} {
-		return make([]byte, 0, 2048)
+		return make([]byte, 0, 1024)
 	},
 }
 
@@ -76,7 +76,9 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 					isNil := b == nil
 					if len(b) != 0 {
 						buf = append(buf, b...)
-						a2kpool.Put(b)
+						if cap(b) <= bbcap {
+							a1kpool.Put(b[:0])
+						}
 					}
 					// full or closed
 					if len(buf) >= w.BufferSize || (isNil && len(buf) != 0) {
@@ -116,7 +118,6 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 	})
 
 	// copy and sends data
-	w.ch <- append(a2kpool.Get().([]byte)[:0], p...)
-
-	return
+	w.ch <- append(a1kpool.Get().([]byte), p...)
+	return len(p), nil
 }

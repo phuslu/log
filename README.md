@@ -7,7 +7,7 @@
 * No Dependencies
 * Intuitive Interfaces
 * Consistent Writers
-    - FileWriter, *rotating & robust*
+    - FileWriter, *rotating & effective*
     - ConsoleWriter, *colorful & templating*
     - MultiWriter, *multiple level dispatch*
     - AsyncWriter, *asynchronously writing*
@@ -276,17 +276,20 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
-To log to file asynchronously for maximize performance, use `AsyncWriter`.
+To log to file asynchronously for performance stability, use `AsyncWriter`.
 
 ```go
-file, _ := os.OpenFile("main.log", os.O_WRONLY, 0644)
 log.DefaultLogger.Writer = &log.AsyncWriter{
-	Writer: file,
+	BufferSize:   32 * 1024,
+	ChannelSize:  100,
+	SyncDuration: 5 * time.Second,
+	Writer:       &log.FileWriter{Filename: "main.log"},
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
 ```
+
 To log to linux systemd journald, using `JournalWriter`.
 
 ```go
@@ -440,7 +443,7 @@ BenchmarkPhusLog-2   	51170454	       233 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ### Acknowledgment
-This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [zap][zap] and [lumberjack][lumberjack].
+This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [gjson][gjson], [zap][zap] and [lumberjack][lumberjack].
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
 [pkg]: https://godoc.org/github.com/phuslu/log
@@ -472,5 +475,6 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [quicktemplate]: https://github.com/valyala/quicktemplate
+[gjson]: https://github.com/tidwall/gjson
 [zap]: https://github.com/uber-go/zap
 [lumberjack]: https://github.com/natefinch/lumberjack
