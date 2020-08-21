@@ -56,12 +56,11 @@ const (
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf      []byte
-	w        io.Writer
-	stack    bool
-	stackall bool
-	exit     bool
-	panic    bool
+	buf   []byte
+	w     io.Writer
+	stack bool
+	exit  bool
+	panic bool
 }
 
 // Trace starts a new message with trace level.
@@ -269,17 +268,14 @@ func (l *Logger) header(level Level) *Event {
 	switch level {
 	default:
 		e.stack = false
-		e.stackall = false
 		e.exit = false
 		e.panic = false
 	case FatalLevel:
 		e.stack = true
-		e.stackall = true
 		e.exit = true
 		e.panic = false
 	case PanicLevel:
 		e.stack = true
-		e.stackall = false
 		e.exit = false
 		e.panic = true
 	}
@@ -941,20 +937,17 @@ func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
 
 // Caller adds the file:line of the "caller" key.
 func (e *Event) Caller(depth int) *Event {
-	if e == nil {
-		return nil
+	if e != nil {
+		e.caller(runtime.Caller(depth))
 	}
-	e.caller(runtime.Caller(depth))
 	return e
 }
 
 // Stack enables stack trace printing for the error passed to Err().
-func (e *Event) Stack(all bool) *Event {
-	if e == nil {
-		return nil
+func (e *Event) Stack() *Event {
+	if e != nil {
+		e.stack = true
 	}
-	e.stack = true
-	e.stackall = all
 	return e
 }
 
@@ -983,7 +976,7 @@ func (e *Event) Msg(msg string) {
 	}
 	if e.stack {
 		e.buf = append(e.buf, ",\"stack\":"...)
-		e.bytes(stacks(e.stackall))
+		e.bytes(stacks(false))
 	}
 	if msg != "" {
 		e.buf = append(e.buf, ",\"message\":"...)
