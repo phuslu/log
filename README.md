@@ -378,7 +378,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-A quick and simple benchmark with logrus/zap/zerolog,
+A quick and simple benchmark with logrus/zap/zerolog, which runs on [github actions][build]:
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -431,12 +431,12 @@ func BenchmarkPhusLog(b *testing.B) {
 	}
 }
 ```
-Performance results on current [Github Actions][build] run:
+Performance results on [2020-08-20][latest-action] test
 ```
-BenchmarkLogrus-2    	 2369252	      5285 ns/op	    1832 B/op	      31 allocs/op
-BenchmarkZap-2       	 9446341	      1228 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-2   	18532412	       618 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-2   	46513542	       257 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogrus-2    	 2548255	      4737 ns/op	    1832 B/op	      31 allocs/op
+BenchmarkZap-2       	11387668	      1074 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-2   	21846039	       548 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-2   	51170454	       233 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ### Acknowledgment
@@ -468,6 +468,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
+[latest-action]: https://github.com/phuslu/log/runs/1010538032
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [quicktemplate]: https://github.com/valyala/quicktemplate
