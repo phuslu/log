@@ -124,7 +124,7 @@ func TestMultiWriterLevel(t *testing.T) {
 		}
 	}
 
-	w.ParseLevel = func(p []byte) Level { return ParseLevel(string(p[49])) }
+	w.ParseLevel = func(p []byte) Level { return ParseLevelByte(p[49]) }
 	w.StderrLevel = ErrorLevel
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
 		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","foo":"bar","n":42,"message":"hello user-defined parse level mutli writer"}`+"\n", level)

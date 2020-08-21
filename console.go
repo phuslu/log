@@ -201,22 +201,7 @@ func jsonToDot(json []byte, t *dot) error {
 		case "level":
 			t.Level = noLevel
 			if len(v) > 0 {
-				switch v[0] {
-				case 't':
-					t.Level = TraceLevel
-				case 'd':
-					t.Level = DebugLevel
-				case 'i':
-					t.Level = InfoLevel
-				case 'w':
-					t.Level = WarnLevel
-				case 'e':
-					t.Level = ErrorLevel
-				case 'f':
-					t.Level = FatalLevel
-				case 'p':
-					t.Level = PanicLevel
-				}
+				t.Level = ParseLevelByte(v[0])
 			}
 		case "goid":
 			t.Goid = b2s(v)

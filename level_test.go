@@ -4,23 +4,22 @@ import (
 	"testing"
 )
 
-func TestLevel(t *testing.T) {
+func TestLevelParse(t *testing.T) {
 	cases := []struct {
 		Level Level
 		Lower string
 		Upper string
 		Title string
 		Three string
-		First string
 	}{
-		{TraceLevel, "trace", "TRACE", "Trace", "TRC", "T"},
-		{DebugLevel, "debug", "DEBUG", "Debug", "DBG", "D"},
-		{InfoLevel, "info", "INFO", "Info", "INF", "I"},
-		{WarnLevel, "warn", "WARN", "Warn", "WRN", "W"},
-		{ErrorLevel, "error", "ERROR", "Error", "ERR", "E"},
-		{FatalLevel, "fatal", "FATAL", "Fatal", "FTL", "F"},
-		{PanicLevel, "panic", "PANIC", "Panic", "PNC", "P"},
-		{noLevel, "????", "????", "????", "???", "?"},
+		{TraceLevel, "trace", "TRACE", "Trace", "TRC"},
+		{DebugLevel, "debug", "DEBUG", "Debug", "DBG"},
+		{InfoLevel, "info", "INFO", "Info", "INF"},
+		{WarnLevel, "warn", "WARN", "Warn", "WRN"},
+		{ErrorLevel, "error", "ERROR", "Error", "ERR"},
+		{FatalLevel, "fatal", "FATAL", "Fatal", "FTL"},
+		{PanicLevel, "panic", "PANIC", "Panic", "PNC"},
+		{noLevel, "????", "????", "????", "???"},
 	}
 
 	for _, c := range cases {
@@ -39,8 +38,31 @@ func TestLevel(t *testing.T) {
 		if v := c.Level.Three(); v != c.Three {
 			t.Errorf("%T.Three() must return %#v, not %#v", c.Level, c.Three, v)
 		}
-		if v := c.Level.First(); v != c.First {
-			t.Errorf("%T.First() must return %#v, not %#v", c.Level, c.First, v)
+	}
+}
+
+func TestLevelParseByte(t *testing.T) {
+	cases := []struct {
+		Level Level
+		Byte1 byte
+		Byte2 byte
+	}{
+		{TraceLevel, 't', 'T'},
+		{DebugLevel, 'd', 'D'},
+		{InfoLevel, 'i', 'I'},
+		{WarnLevel, 'w', 'W'},
+		{ErrorLevel, 'e', 'E'},
+		{FatalLevel, 'f', 'F'},
+		{PanicLevel, 'p', 'P'},
+		{noLevel, 'x', '?'},
+	}
+
+	for _, c := range cases {
+		if v := ParseLevelByte(c.Byte1); v != c.Level {
+			t.Errorf("ParseLevel(%#v) must return %#v, not %#v", c.Byte1, c.Level, v)
+		}
+		if v := ParseLevelByte(c.Byte2); v != c.Level {
+			t.Errorf("ParseLevel(%#v) must return %#v, not %#v", c.Byte2, c.Level, v)
 		}
 	}
 }

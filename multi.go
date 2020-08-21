@@ -73,22 +73,7 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 			}
 		}
 		// convert byte to Level
-		switch l {
-		case 't':
-			level = TraceLevel
-		case 'd':
-			level = DebugLevel
-		case 'i':
-			level = InfoLevel
-		case 'w':
-			level = WarnLevel
-		case 'e':
-			level = ErrorLevel
-		case 'f':
-			level = FatalLevel
-		case 'p':
-			level = PanicLevel
-		}
+		level = ParseLevelByte(l)
 	}
 
 	var err1 error
