@@ -11,16 +11,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Test
+      - name: Build
         run: |
           git clone https://${GEOIP_TOKEN}@github.com/${GITHUB_REPOSITORY}
           cd log
+          go build -v
           go test -v
-      - name: Benchmark
-        run: |
-          cat log/README.md | awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' > log_test.go
-          go get github.com/phuslu/log
-          go get github.com/rs/zerolog
-          go get github.com/sirupsen/logrus
-          go get go.uber.org/zap
-          head -1 log_test.go | cut -b3- | sed -E 's#\r##' | bash -xe

@@ -382,7 +382,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-A quick and simple benchmark with logrus/zap/zerolog, which runs on [github actions][build]:
+A quick and simple benchmark with logrus/zap/zerolog, which runs on [github actions][benchmark]:
 
 ```go
 // go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -435,7 +435,7 @@ func BenchmarkPhusLog(b *testing.B) {
 	}
 }
 ```
-Performance results on [2020-08-20][latest-action] test
+A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
 BenchmarkLogrus-2    	 2548255	      4737 ns/op	    1832 B/op	      31 allocs/op
 BenchmarkZap-2       	11387668	      1074 ns/op	     128 B/op	       1 allocs/op
@@ -472,7 +472,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
-[latest-action]: https://github.com/phuslu/log/runs/1010538032
+[benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [quicktemplate]: https://github.com/valyala/quicktemplate

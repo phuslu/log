@@ -1,0 +1,21 @@
+name: benchmark
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Benchmark
+        run: |
+          curl -sL https://github.com/phuslu/log/raw/master/README.md | \
+          awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' | \
+          tee log_test.go
+          go get github.com/phuslu/log
+          go get github.com/rs/zerolog
+          go get github.com/sirupsen/logrus
+          go get go.uber.org/zap
+          head -1 log_test.go | cut -b3- | sed -E 's#\r##' | bash -xe
