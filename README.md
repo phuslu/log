@@ -1,4 +1,4 @@
-# Structured Logging for Humans
+# Structured Logging Made Easy
 
 [![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![build][build-img]][build] [![coverage][cov-img]][cov] ![stability-stable][stability-img]
 
