@@ -11,7 +11,7 @@
     - ConsoleWriter, *colorful & templating*
     - MultiWriter, *multiple level dispatch*
     - AsyncWriter, *asynchronously writing*
-    - SyslogWriter, *syslog logging*
+    - SyslogWriter, *syslog server logging*
     - JournalWriter, *systemd logging*
     - EventlogWriter, *windows system event*
 * Third-party(StdLog/Grpc/Logr) Logger Interceptor

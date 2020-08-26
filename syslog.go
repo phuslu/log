@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"context"
 	"net"
 	"sync"
 	"time"
@@ -14,21 +15,24 @@ type SyslogWriter struct {
 	Hostname string
 	Tag      string
 
+	// Dial specifies the dial function for creating TCP/TLS connections.
+	Dial func(ctx context.Context, network, addr string) (net.Conn, error)
+
 	mu   sync.Mutex
 	conn net.Conn
 }
 
 // Close closes a connection to the syslog daemon.
-func (w *SyslogWriter) Close() error {
+func (w *SyslogWriter) Close() (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	if w.conn != nil {
-		err := w.conn.Close()
+		err = w.conn.Close()
 		w.conn = nil
-		return err
+		return
 	}
-	return nil
+	return
 }
 
 // connect makes a connection to the syslog server.
@@ -39,10 +43,15 @@ func (w *SyslogWriter) connect() (err error) {
 		w.conn = nil
 	}
 
+	var dial = w.Dial
+	if dial != nil {
+		dial = (&net.Dialer{}).DialContext
+	}
+
 	if w.Network == "" {
 		for _, network := range []string{"unixgram", "unix"} {
 			for _, path := range []string{"/dev/log", "/var/run/syslog", "/var/run/log"} {
-				w.conn, err = net.Dial(network, path)
+				w.conn, err = dial(context.Background(), network, path)
 				if err == nil {
 					break
 				}
@@ -52,7 +61,7 @@ func (w *SyslogWriter) connect() (err error) {
 			w.Hostname = hostname
 		}
 	} else {
-		w.conn, err = net.Dial(w.Network, w.Address)
+		w.conn, err = dial(context.Background(), w.Network, w.Address)
 		if err == nil && w.Hostname == "" {
 			w.Hostname = w.conn.LocalAddr().String()
 		}
