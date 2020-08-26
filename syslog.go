@@ -101,7 +101,7 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	}
 
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 	defer bbpool.Put(b)
 
 	b.B = append(b.B, '<', pr, '>')

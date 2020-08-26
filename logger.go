@@ -539,7 +539,7 @@ func (e *Event) AnErr(key string, err error) *Event {
 	if !e.stack {
 		if _, ok := err.(fmt.Formatter); ok {
 			b := bbpool.Get().(*bb)
-			b.Reset()
+			b.B = b.B[:0]
 			fmt.Fprintf(b, "%+v", err)
 			e.key("stack")
 			e.bytes(b.B)
@@ -1124,10 +1124,6 @@ func (b *bb) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (b *bb) Reset() {
-	b.B = b.B[:0]
-}
-
 var bbpool = sync.Pool{
 	New: func() interface{} {
 		return new(bb)
@@ -1144,7 +1140,7 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	e.key(key)
 
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 
 	enc := json.NewEncoder(b)
 	enc.SetEscapeHTML(false)
@@ -1170,7 +1166,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	}
 
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 
 	fmt.Fprintf(b, format, v...)
 	e.Msg(b2s(b.B))

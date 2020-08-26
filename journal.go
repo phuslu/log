@@ -64,7 +64,7 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 
 	// buffer
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 	defer bbpool.Put(b)
 
 	print := func(w io.Writer, name, value string) {

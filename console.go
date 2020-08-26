@@ -77,7 +77,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 	defer bbpool.Put(b)
 
 	const (

@@ -292,7 +292,7 @@ func (s *SugaredLogger) Panicw(msg string, keysAndValues ...interface{}) {
 
 func print(e *Event, args []interface{}) {
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 
 	fmt.Fprint(b, args...)
 	e.Msg(b2s(b.B))

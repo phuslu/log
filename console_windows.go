@@ -50,7 +50,7 @@ func (w *ConsoleWriter) writew(out io.Writer, p []byte) (n int, err error) {
 	defer muConsole.Unlock()
 
 	b := bbpool.Get().(*bb)
-	b.Reset()
+	b.B = b.B[:0]
 	defer bbpool.Put(b)
 
 	n, err = w.write(b, p)
@@ -82,7 +82,7 @@ func (w *ConsoleWriter) writew(out io.Writer, p []byte) (n int, err error) {
 	}
 
 	b2 := bbpool.Get().(*bb)
-	b2.Reset()
+	b2.B = b2.B[:0]
 	defer bbpool.Put(b2)
 
 	var color uintptr = White
