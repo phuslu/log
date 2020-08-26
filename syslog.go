@@ -1,21 +1,21 @@
 package log
 
 import (
+	"bytes"
 	"net"
 	"sync"
 	"time"
 )
 
-// SyslogWriter is an io.WriteCloser that writes logs to journald.
+// SyslogWriter is an io.WriteCloser that writes logs to a syslog server..
 type SyslogWriter struct {
 	Network  string
 	Address  string
 	Hostname string
 	Tag      string
 
-	mu    sync.Mutex
-	conn  net.Conn
-	local bool
+	mu   sync.Mutex
+	conn net.Conn
 }
 
 // Close closes a connection to the syslog daemon.
@@ -74,64 +74,77 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		w.mu.Unlock()
 	}
 
-	var t dot
-	err = jsonToDot(p, &t)
-	if err != nil {
-		return
+	var level byte
+	// guess level by fixed offset
+	lp := len(p)
+	if lp > 49 {
+		_ = p[49]
+		switch {
+		case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
+			level = p[44]
+		case p[32] == '+' && p[47] == ':' && p[48] == '"':
+			level = p[49]
+		}
+	}
+	// guess level by "level":" beginning
+	if level == 0 {
+		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
+			level = p[i+len(levelBegin)]
+		}
 	}
 
-	var pr byte
-	switch t.Level {
-	case TraceLevel:
-		pr = '7' // LOG_DEBUG
-	case DebugLevel:
-		pr = '7' // LOG_DEBUG
-	case InfoLevel:
-		pr = '6' // LOG_INFO
-	case WarnLevel:
-		pr = '4' // LOG_WARNING
-	case ErrorLevel:
-		pr = '3' // LOG_ERR
-	case FatalLevel:
-		pr = '2' // LOG_CRIT
-	case PanicLevel:
-		pr = '1' // LOG_ALERT
+	// convert level to syslog priority
+	var priority byte
+	switch level {
+	case 't':
+		priority = '7' // LOG_DEBUG
+	case 'd':
+		priority = '7' // LOG_DEBUG
+	case 'i':
+		priority = '6' // LOG_INFO
+	case 'w':
+		priority = '4' // LOG_WARNING
+	case 'e':
+		priority = '3' // LOG_ERR
+	case 'f':
+		priority = '2' // LOG_CRIT
+	case 'p':
+		priority = '1' // LOG_ALERT
 	default:
-		pr = '6' // LOG_INFO
+		priority = '6' // LOG_INFO
 	}
 
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
-	defer bbpool.Put(b)
+	b := a1kpool.Get().([]byte)
+	defer bbpool.Put(b[:0])
 
-	b.B = append(b.B, '<', pr, '>')
+	b = append(b, '<', priority, '>')
 	if w.Network == "" {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
 		//	2. Drop the hostname field.
-		b.B = timeNow().AppendFormat(b.B, time.Stamp)
+		b = timeNow().AppendFormat(b, time.Stamp)
 	} else {
-		b.B = timeNow().AppendFormat(b.B, time.RFC3339)
-		b.B = append(b.B, ' ')
-		b.B = append(b.B, w.Hostname...)
+		b = timeNow().AppendFormat(b, time.RFC3339)
+		b = append(b, ' ')
+		b = append(b, w.Hostname...)
 	}
-	b.B = append(b.B, ' ')
-	b.B = append(b.B, w.Tag...)
-	b.B = append(b.B, '[')
-	b.B = append(b.B, pid...)
-	b.B = append(b.B, ']', ':', ' ')
-	b.B = append(b.B, p...)
+	b = append(b, ' ')
+	b = append(b, w.Tag...)
+	b = append(b, '[')
+	b = append(b, pid...)
+	b = append(b, ']', ':', ' ')
+	b = append(b, p...)
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	if w.conn != nil {
-		if n, err := w.conn.Write(b.B); err == nil {
+		if n, err := w.conn.Write(b); err == nil {
 			return n, err
 		}
 	}
 	if err := w.connect(); err != nil {
 		return 0, err
 	}
-	return w.conn.Write(b.B)
+	return w.conn.Write(b)
 }
