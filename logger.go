@@ -234,7 +234,7 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 var epool = sync.Pool{
 	New: func() interface{} {
 		return &Event{
-			buf: make([]byte, 0, 500),
+			buf: make([]byte, 0, 1024),
 		}
 	},
 }

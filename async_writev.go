@@ -52,7 +52,7 @@ func (w *AsyncWriter) writev(p []byte) (n int, err error) {
 						_, err = writevFileWriter(fw, vec)
 						_ = buf[len(buf)-1]
 						for i := 0; i < len(buf); i++ {
-							a1kpool.Put(buf[i][:0])
+							b1kpool.Put(buf[i])
 						}
 						vec = vec[:0]
 						buf = buf[:0]
@@ -75,7 +75,7 @@ func (w *AsyncWriter) writev(p []byte) (n int, err error) {
 						_, err = writevFileWriter(fw, vec)
 						_ = buf[len(buf)-1]
 						for i := 0; i < len(buf); i++ {
-							a1kpool.Put(buf[i][:0])
+							b1kpool.Put(buf[i])
 						}
 						vec = vec[:0]
 						buf = buf[:0]
@@ -89,7 +89,7 @@ func (w *AsyncWriter) writev(p []byte) (n int, err error) {
 						_, err = writevFileWriter(fw, vec)
 						_ = buf[len(buf)-1]
 						for i := 0; i < len(buf); i++ {
-							a1kpool.Put(buf[i][:0])
+							b1kpool.Put(buf[i])
 						}
 						vec = vec[:0]
 						buf = buf[:0]
@@ -103,7 +103,7 @@ func (w *AsyncWriter) writev(p []byte) (n int, err error) {
 	})
 
 	// copy and sends data
-	w.ch <- append(a1kpool.Get().([]byte), p...)
+	w.ch <- append(b1kpool.Get().([]byte)[:0], p...)
 	return len(p), nil
 }
 

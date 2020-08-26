@@ -123,10 +123,10 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		priority = '6' // LOG_INFO
 	}
 
-	b := a1kpool.Get().([]byte)
-	defer bbpool.Put(b[:0])
+	b := b1kpool.Get().([]byte)
+	defer b1kpool.Put(b)
 
-	b = append(b, '<', priority, '>')
+	b = append(b[:0], '<', priority, '>')
 	if w.Network == "" {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
