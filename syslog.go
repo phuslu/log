@@ -9,16 +9,24 @@ import (
 
 // SyslogWriter is an io.WriteCloser that writes logs to a syslog server..
 type SyslogWriter struct {
-	Network  string
-	Address  string
+	// Network specifies network of the syslog server
+	Network string
+
+	// Address specifies address of the syslog server
+	Address string
+
+	// Hostname specifies hostname of the syslog message
 	Hostname string
-	Tag      string
+
+	// Tag specifies prefix of the syslog message
+	Tag string
 
 	// Dial specifies the dial function for creating TCP/TLS connections.
 	Dial func(network, addr string) (net.Conn, error)
 
-	mu   sync.Mutex
-	conn net.Conn
+	mu    sync.Mutex
+	conn  net.Conn
+	local bool
 }
 
 // Close closes a connection to the syslog server.
@@ -42,28 +50,25 @@ func (w *SyslogWriter) connect() (err error) {
 	}
 
 	var dial = w.Dial
-	if dial != nil {
+	if dial == nil {
 		dial = net.Dial
 	}
 
-	if w.Network == "" {
-		for _, network := range []string{"unixgram", "unix"} {
-			for _, path := range []string{"/dev/log", "/var/run/syslog", "/var/run/log"} {
-				w.conn, err = dial(network, path)
-				if err == nil {
-					break
-				}
-			}
-		}
-		if w.Hostname == "" {
+	w.conn, err = dial(w.Network, w.Address)
+	if err != nil {
+		return
+	}
+
+	w.local = w.Address != "" && w.Address[0] == '/'
+
+	if w.Hostname == "" {
+		if w.local {
 			w.Hostname = hostname
-		}
-	} else {
-		w.conn, err = dial(w.Network, w.Address)
-		if err == nil && w.Hostname == "" {
+		} else {
 			w.Hostname = w.conn.LocalAddr().String()
 		}
 	}
+
 	return
 }
 
@@ -124,8 +129,9 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	b := b1kpool.Get().([]byte)
 	defer b1kpool.Put(b)
 
+	// <PRI>TIMESTAMP HOSTNAME TAG[PID]: MSG
 	b = append(b[:0], '<', priority, '>')
-	if w.Network == "" {
+	if w.local {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
 		//	2. Drop the hostname field.
