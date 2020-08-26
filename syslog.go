@@ -2,7 +2,6 @@ package log
 
 import (
 	"bytes"
-	"context"
 	"net"
 	"sync"
 	"time"
@@ -16,13 +15,13 @@ type SyslogWriter struct {
 	Tag      string
 
 	// Dial specifies the dial function for creating TCP/TLS connections.
-	Dial func(ctx context.Context, network, addr string) (net.Conn, error)
+	Dial func(network, addr string) (net.Conn, error)
 
 	mu   sync.Mutex
 	conn net.Conn
 }
 
-// Close closes a connection to the syslog daemon.
+// Close closes a connection to the syslog server.
 func (w *SyslogWriter) Close() (err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -36,7 +35,6 @@ func (w *SyslogWriter) Close() (err error) {
 }
 
 // connect makes a connection to the syslog server.
-// It must be called with w.mu held.
 func (w *SyslogWriter) connect() (err error) {
 	if w.conn != nil {
 		w.conn.Close()
@@ -45,13 +43,13 @@ func (w *SyslogWriter) connect() (err error) {
 
 	var dial = w.Dial
 	if dial != nil {
-		dial = (&net.Dialer{}).DialContext
+		dial = net.Dial
 	}
 
 	if w.Network == "" {
 		for _, network := range []string{"unixgram", "unix"} {
 			for _, path := range []string{"/dev/log", "/var/run/syslog", "/var/run/log"} {
-				w.conn, err = dial(context.Background(), network, path)
+				w.conn, err = dial(network, path)
 				if err == nil {
 					break
 				}
@@ -61,7 +59,7 @@ func (w *SyslogWriter) connect() (err error) {
 			w.Hostname = hostname
 		}
 	} else {
-		w.conn, err = dial(context.Background(), w.Network, w.Address)
+		w.conn, err = dial(w.Network, w.Address)
 		if err == nil && w.Hostname == "" {
 			w.Hostname = w.conn.LocalAddr().String()
 		}
@@ -69,7 +67,7 @@ func (w *SyslogWriter) connect() (err error) {
 	return
 }
 
-// Write implements io.Writer.
+// Write implements io.Writer, sends logs with priority to the syslog server.
 func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	if w.conn == nil {
 		w.mu.Lock()

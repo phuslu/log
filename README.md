@@ -12,7 +12,7 @@
     - MultiWriter, *multiple level dispatch*
     - AsyncWriter, *asynchronously writing*
     - SyslogWriter, *syslog server logging*
-    - JournalWriter, *systemd logging*
+    - JournalWriter, *linux systemd logging*
     - EventlogWriter, *windows system event*
 * Third-party(StdLog/Grpc/Logr) Logger Interceptor
 * High Performance
@@ -292,13 +292,14 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
 ```
 
-To log to syslog endpoint, using `SyslogWriter`.
+To log to a syslog server, using `SyslogWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.SyslogWriter{
 	Network  : "tcp",
-	Address  : "10.0.0.2",
-	Tag      : "prefix:",
+	Address  : "10.0.0.2:601",
+	Tag      : "",
+	Dial     : net.Dial,
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
