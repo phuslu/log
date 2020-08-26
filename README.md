@@ -11,6 +11,7 @@
     - ConsoleWriter, *colorful & templating*
     - MultiWriter, *multiple level dispatch*
     - AsyncWriter, *asynchronously writing*
+    - SyslogWriter, *syslog logging*
     - JournalWriter, *systemd logging*
     - EventlogWriter, *windows system event*
 * Third-party(StdLog/Grpc/Logr) Logger Interceptor
@@ -259,7 +260,7 @@ func main() {
 ```
 > Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
-### MultiWriter & AsyncWriter & JournalWriter & EventlogWriter
+### MultiWriter & AsyncWriter & SyslogWriter & JournalWriter & EventlogWriter
 
 To log to different writers by different levels, use `MultiWriter`.
 
@@ -289,6 +290,17 @@ log.DefaultLogger.Writer = &log.AsyncWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
+```
+
+To log to syslog endpoint, using `SyslogWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.SyslogWriter{
+	Network  : "tcp",
+	Address  : "10.0.0.2",
+	Tag      : "prefix:",
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
 To log to linux systemd journald, using `JournalWriter`.
