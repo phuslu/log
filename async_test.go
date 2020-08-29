@@ -87,19 +87,6 @@ func TestAsyncWriterClose(t *testing.T) {
 	fmt.Fprintf(os.Stderr, "%s, after async writer close\n", timeNow())
 }
 
-func TestAsyncWriterWritev(t *testing.T) {
-	w := &AsyncWriter{
-		UseWritev: true,
-		Writer:    &FileWriter{Filename: "file-writev.log"},
-	}
-	fmt.Fprintf(w, "%s, before async writv close 1\n", timeNow())
-	fmt.Fprintf(w, "%s, before async writv close 2\n", timeNow())
-	fmt.Fprintf(w, "%s, before async writv close 3\n", timeNow())
-	fmt.Fprintf(w, "%s, before async writv close 4\n", timeNow())
-	w.Close()
-	fmt.Fprintf(os.Stderr, "%s, after async writer close\n", timeNow())
-}
-
 func BenchmarkAsyncWriter(b *testing.B) {
 	w := &AsyncWriter{
 		Writer: ioutil.Discard,

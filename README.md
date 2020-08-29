@@ -284,7 +284,6 @@ log.DefaultLogger.Writer = &log.AsyncWriter{
 	BufferSize:   32 * 1024,
 	ChannelSize:  100,
 	SyncDuration: 5 * time.Second,
-	UseWritev:    false,
 	Writer:       &log.FileWriter{Filename: "main.log"},
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")

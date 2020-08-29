@@ -17,10 +17,6 @@ type AsyncWriter struct {
 	// SyncDuration is the duration of the writer syncs, the default duration is 5s.
 	SyncDuration time.Duration
 
-	// UseWritev determines if use writev syscall. When sets to true, the underlying
-	// Writer must be a *FileWriter
-	UseWritev bool
-
 	// Writer specifies the writer of output.
 	Writer io.Writer
 
@@ -45,23 +41,15 @@ func (w *AsyncWriter) Close() (err error) {
 	return
 }
 
-// Write implements io.Writer.  If a write would cause the log buffer to be larger
-// than Size, the buffer is written to the underlying Writer and cleared.
-func (w *AsyncWriter) Write(p []byte) (int, error) {
-	if w.UseWritev {
-		return w.writev(p)
-	}
-	return w.write(p)
-}
-
 var b1kpool = sync.Pool{
 	New: func() interface{} {
 		return make([]byte, 0, 1024)
 	},
 }
 
-// write implements io.Writer.
-func (w *AsyncWriter) write(p []byte) (n int, err error) {
+// Write implements io.Writer.  If a write would cause the log buffer to be larger
+// than Size, the buffer is written to the underlying Writer and cleared.
+func (w *AsyncWriter) Write(p []byte) (int, error) {
 	w.once.Do(func() {
 		if w.BufferSize == 0 {
 			w.BufferSize = 32 * 1024
