@@ -4,7 +4,6 @@ package log
 
 import (
 	"errors"
-	"strconv"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -80,48 +79,29 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 		EVENTLOG_AUDIT_FAILURE    = 0x0010
 	)
 
-	var etype uint16 = EVENTLOG_INFORMATION_TYPE
-	var eid uintptr = w.ID
-	var ecat uintptr = 0
-
-	if len(p) > 0 && p[0] == '{' {
-		var t dot
-		err = jsonToDot(p, &t)
-		if err == nil {
-			// level
-			switch t.Level {
-			case TraceLevel:
-				etype = EVENTLOG_INFORMATION_TYPE
-			case DebugLevel:
-				etype = EVENTLOG_INFORMATION_TYPE
-			case InfoLevel:
-				etype = EVENTLOG_INFORMATION_TYPE
-			case WarnLevel:
-				etype = EVENTLOG_WARNING_TYPE
-			case ErrorLevel:
-				etype = EVENTLOG_ERROR_TYPE
-			case FatalLevel:
-				etype = EVENTLOG_AUDIT_FAILURE
-			case PanicLevel:
-				etype = EVENTLOG_AUDIT_FAILURE
-			}
-			// eid && ecat
-			for _, kv := range t.KeyValue {
-				switch kv.Key {
-				case "eid":
-					if n, err := strconv.ParseUint(kv.Value, 10, 64); err == nil {
-						eid = uintptr(n)
-					}
-				case "ecat":
-					if n, err := strconv.ParseUint(kv.Value, 10, 64); err == nil {
-						ecat = uintptr(n)
-					}
-				}
-			}
-		}
+	var etype uint16
+	switch guessLevel(p) {
+	case TraceLevel:
+		etype = EVENTLOG_INFORMATION_TYPE
+	case DebugLevel:
+		etype = EVENTLOG_INFORMATION_TYPE
+	case InfoLevel:
+		etype = EVENTLOG_INFORMATION_TYPE
+	case WarnLevel:
+		etype = EVENTLOG_WARNING_TYPE
+	case ErrorLevel:
+		etype = EVENTLOG_ERROR_TYPE
+	case FatalLevel:
+		etype = EVENTLOG_AUDIT_FAILURE
+	case PanicLevel:
+		etype = EVENTLOG_AUDIT_FAILURE
+	default:
+		etype = EVENTLOG_INFORMATION_TYPE
 	}
 
-	ss := []*uint16{syscall.StringToUTF16Ptr(b2s(p))}
+	var ecat uintptr = 0
+	var eid = w.ID
+	var ss = []*uint16{syscall.StringToUTF16Ptr(b2s(p))}
 
 	var ret uintptr
 	ret, _, err = syscall.Syscall9(w.report.Addr(), 9, w.handle, uintptr(etype), ecat, eid, 0, 1, 0, uintptr(unsafe.Pointer(&ss[0])), 0)

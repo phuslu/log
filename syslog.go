@@ -1,7 +1,6 @@
 package log
 
 import (
-	"bytes"
 	"net"
 	"sync"
 	"time"
@@ -86,41 +85,22 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		w.mu.Unlock()
 	}
 
-	var level byte
-	// guess level by fixed offset
-	lp := len(p)
-	if lp > 49 {
-		_ = p[49]
-		switch {
-		case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
-			level = p[44]
-		case p[32] == '+' && p[47] == ':' && p[48] == '"':
-			level = p[49]
-		}
-	}
-	// guess level by "level":" beginning
-	if level == 0 {
-		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
-			level = p[i+len(levelBegin)]
-		}
-	}
-
 	// convert level to syslog priority
 	var priority byte
-	switch level {
-	case 't':
+	switch guessLevel(p) {
+	case TraceLevel:
 		priority = '7' // LOG_DEBUG
-	case 'd':
+	case DebugLevel:
 		priority = '7' // LOG_DEBUG
-	case 'i':
+	case InfoLevel:
 		priority = '6' // LOG_INFO
-	case 'w':
+	case WarnLevel:
 		priority = '4' // LOG_WARNING
-	case 'e':
+	case ErrorLevel:
 		priority = '3' // LOG_ERR
-	case 'f':
+	case FatalLevel:
 		priority = '2' // LOG_CRIT
-	case 'p':
+	case PanicLevel:
 		priority = '1' // LOG_ALERT
 	default:
 		priority = '6' // LOG_INFO

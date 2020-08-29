@@ -46,34 +46,13 @@ func (w *MultiWriter) Close() (err error) {
 	return
 }
 
-var levelBegin = []byte(`"level":"`)
-
 // Write implements io.Writer.
 func (w *MultiWriter) Write(p []byte) (n int, err error) {
-	var level = noLevel
+	var level Level
 	if w.ParseLevel != nil {
 		level = w.ParseLevel(p)
 	} else {
-		var l byte
-		// guess level by fixed offset
-		lp := len(p)
-		if lp > 49 {
-			_ = p[49]
-			switch {
-			case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
-				l = p[44]
-			case p[32] == '+' && p[47] == ':' && p[48] == '"':
-				l = p[49]
-			}
-		}
-		// guess level by "level":" beginning
-		if l == 0 {
-			if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
-				l = p[i+len(levelBegin)]
-			}
-		}
-		// convert byte to Level
-		level = ParseLevelByte(l)
+		level = guessLevel(p)
 	}
 
 	var err1 error
@@ -108,4 +87,32 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 	}
 
 	return
+}
+
+var levelBegin = []byte(`"level":"`)
+
+func guessLevel(p []byte) Level {
+	var c byte
+
+	// guess level by fixed offset
+	lp := len(p)
+	if lp > 49 {
+		_ = p[49]
+		switch {
+		case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
+			c = p[44]
+		case p[32] == '+' && p[47] == ':' && p[48] == '"':
+			c = p[49]
+		}
+	}
+
+	// guess level by "level":" beginning
+	if c == 0 {
+		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
+			c = p[i+len(levelBegin)]
+		}
+	}
+
+	// convert byte to Level
+	return ParseLevelByte(c)
 }
