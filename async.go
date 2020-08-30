@@ -65,59 +65,61 @@ func (w *AsyncWriter) Write(p []byte) (int, error) {
 		w.chDone = make(chan error)
 		w.sync = make(chan struct{})
 		w.syncDone = make(chan error)
-		// data routine
-		go func(w *AsyncWriter) {
-			var err error
-			buf := make([]byte, 0, w.BufferSize+4096)
-			ticker := time.NewTicker(w.SyncDuration)
-			for {
-				select {
-				case b := <-w.ch:
-					isNil := b == nil
-					if len(b) != 0 {
-						buf = append(buf, b...)
-						if cap(b) <= bbcap {
-							b1kpool.Put(b)
-						}
-					}
-					// full or closed
-					if len(buf) >= w.BufferSize || (isNil && len(buf) != 0) {
-						_, err = w.Writer.Write(buf)
-						buf = buf[:0]
-					}
-					if isNil {
-						// channel closed, so close writer and quit.
-						if closer, ok := w.Writer.(io.Closer); ok {
-							err1 := closer.Close()
-							if err1 != nil && err == nil {
-								err = err1
-							}
-						}
-						w.chDone <- err
-						ticker.Stop()
-						return
-					}
-				case <-w.sync:
-					if len(buf) != 0 {
-						_, err = w.Writer.Write(buf)
-						buf = buf[:0]
-					} else {
-						err = nil
-					}
-					w.syncDone <- err
-				case <-ticker.C:
-					if len(buf) != 0 {
-						_, err = w.Writer.Write(buf)
-						buf = buf[:0]
-					} else {
-						err = nil
-					}
-				}
-			}
-		}(w)
+		// data consumer
+		go w.consumer()
 	})
 
 	// copy and sends data
 	w.ch <- append(b1kpool.Get().([]byte)[:0], p...)
 	return len(p), nil
+}
+
+func (w *AsyncWriter) consumer() {
+	var err error
+	buf := make([]byte, 0, w.BufferSize+4096)
+	ticker := time.NewTicker(w.SyncDuration)
+	for {
+		select {
+		case b := <-w.ch:
+			isNil := b == nil
+			if len(b) != 0 {
+				buf = append(buf, b...)
+				if cap(b) <= bbcap {
+					b1kpool.Put(b)
+				}
+			}
+			// full or closed
+			if len(buf) >= w.BufferSize || (isNil && len(buf) != 0) {
+				_, err = w.Writer.Write(buf)
+				buf = buf[:0]
+			}
+			if isNil {
+				// channel closed, so close writer and quit.
+				if closer, ok := w.Writer.(io.Closer); ok {
+					err1 := closer.Close()
+					if err1 != nil && err == nil {
+						err = err1
+					}
+				}
+				w.chDone <- err
+				ticker.Stop()
+				return
+			}
+		case <-w.sync:
+			if len(buf) != 0 {
+				_, err = w.Writer.Write(buf)
+				buf = buf[:0]
+			} else {
+				err = nil
+			}
+			w.syncDone <- err
+		case <-ticker.C:
+			if len(buf) != 0 {
+				_, err = w.Writer.Write(buf)
+				buf = buf[:0]
+			} else {
+				err = nil
+			}
+		}
+	}
 }
