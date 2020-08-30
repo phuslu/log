@@ -20,6 +20,9 @@ type SyslogWriter struct {
 	// Tag specifies prefix of the syslog message
 	Tag string
 
+	// MessageOnly determines if output message field as syslog message only.
+	MessageOnly bool
+
 	// Dial specifies the dial function for creating TCP/TLS connections.
 	Dial func(network, addr string) (net.Conn, error)
 
@@ -85,9 +88,23 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		w.mu.Unlock()
 	}
 
+	var level Level
+	var message string
+
+	if w.MessageOnly {
+		var t dot
+		if jsonToDot(p, &t) == nil {
+			level = t.Level
+			message = t.Message
+		}
+	} else {
+		level = guessLevel(p)
+		message = b2s(p)
+	}
+
 	// convert level to syslog priority
 	var priority byte
-	switch guessLevel(p) {
+	switch level {
 	case TraceLevel:
 		priority = '7' // LOG_DEBUG
 	case DebugLevel:
@@ -126,7 +143,7 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	b = append(b, '[')
 	b = append(b, pid...)
 	b = append(b, ']', ':', ' ')
-	b = append(b, p...)
+	b = append(b, message...)
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
