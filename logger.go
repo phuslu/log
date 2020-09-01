@@ -1176,6 +1176,18 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	}
 }
 
+func (e *Event) print(args []interface{}) {
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
+
+	fmt.Fprint(b, args...)
+	e.Msg(b2s(b.B))
+
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
+}
+
 // keysAndValues sends keysAndValues to Event
 func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
 	if e == nil {

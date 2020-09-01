@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"runtime"
 )
 
@@ -43,7 +42,7 @@ func (s *SugaredLogger) Print(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
@@ -52,7 +51,7 @@ func (s *SugaredLogger) Println(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
@@ -83,7 +82,7 @@ func (s *SugaredLogger) Debug(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Debugf uses fmt.Sprintf to log a templated message.
@@ -119,7 +118,7 @@ func (s *SugaredLogger) Info(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Infof uses fmt.Sprintf to log a templated message.
@@ -155,7 +154,7 @@ func (s *SugaredLogger) Warn(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Warnf uses fmt.Sprintf to log a templated message.
@@ -191,7 +190,7 @@ func (s *SugaredLogger) Error(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Errorf uses fmt.Sprintf to log a templated message.
@@ -227,7 +226,7 @@ func (s *SugaredLogger) Fatal(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Fatalf uses fmt.Sprintf to log a templated message.
@@ -263,7 +262,7 @@ func (s *SugaredLogger) Panic(args ...interface{}) {
 	if s.logger.Caller > 0 {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
-	print(e.Context(s.context), args)
+	e.Context(s.context).print(args)
 }
 
 // Panicf uses fmt.Sprintf to log a templated message.
@@ -288,16 +287,4 @@ func (s *SugaredLogger) Panicw(msg string, keysAndValues ...interface{}) {
 		e.caller(runtime.Caller(s.logger.Caller))
 	}
 	e.Context(s.context).keysAndValues(keysAndValues...).Msg(msg)
-}
-
-func print(e *Event, args []interface{}) {
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
-
-	fmt.Fprint(b, args...)
-	e.Msg(b2s(b.B))
-
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
-	}
 }
