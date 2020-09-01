@@ -16,6 +16,7 @@ func jsonParse(json []byte) (items []jsonItem, err error) {
 	var keys bool
 	var i int
 	var key, value jsonItem
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] == '{' {
 			i++
@@ -65,6 +66,7 @@ func jsonParse(json []byte) (items []jsonItem, err error) {
 
 func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
 	var s = i
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] > '\\' {
 			continue
@@ -104,6 +106,7 @@ func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
 // jsonUnescape unescapes a string
 func jsonUnescape(json []byte) []byte {
 	var str = make([]byte, 0, len(json))
+	_ = json[len(json)-1] // remove bounds check
 	for i := 0; i < len(json); i++ {
 		switch {
 		default:
@@ -168,6 +171,7 @@ func jsonUnescape(json []byte) []byte {
 func jsonParseAny(json []byte, i int, hit bool) (int, jsonItem, bool) {
 	var res jsonItem
 	var val []byte
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] == '{' || json[i] == '[' {
 			i, val = jsonParseSquash(json, i)
@@ -230,6 +234,7 @@ func jsonParseSquash(json []byte, i int) (int, []byte) {
 	s := i
 	i++
 	depth := 1
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] >= '"' && json[i] <= '}' {
 			switch json[i] {
@@ -274,6 +279,7 @@ func jsonParseSquash(json []byte, i int) (int, []byte) {
 func jsonParseNumber(json []byte, i int) (int, []byte) {
 	var s = i
 	i++
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] <= ' ' || json[i] == ',' || json[i] == ']' ||
 			json[i] == '}' {
@@ -286,6 +292,7 @@ func jsonParseNumber(json []byte, i int) (int, []byte) {
 func jsonParseLiteral(json []byte, i int) (int, []byte) {
 	var s = i
 	i++
+	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] < 'a' || json[i] > 'z' {
 			return i, json[s:i]
