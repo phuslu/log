@@ -141,7 +141,7 @@ func jsonUnescape(json []byte) []byte {
 				if i+5 > len(json) {
 					return str
 				}
-				m, _ := strconv.ParseUint(string(json[i+1:i+5]), 16, 64)
+				m, _ := strconv.ParseUint(b2s(json[i+1:i+5]), 16, 64)
 				r := rune(m)
 				i += 5
 				if utf16.IsSurrogate(r) {
@@ -149,7 +149,7 @@ func jsonUnescape(json []byte) []byte {
 					if len(json[i:]) >= 6 && json[i] == '\\' &&
 						json[i+1] == 'u' {
 						// we expect it to be correct so just consume it
-						m, _ = strconv.ParseUint(string(json[i+2:i+6]), 16, 64)
+						m, _ = strconv.ParseUint(b2s(json[i+2:i+6]), 16, 64)
 						r = utf16.DecodeRune(r, rune(m))
 						i += 6
 					}
