@@ -54,13 +54,17 @@ const (
 	TimeFormatUnixMs = "\x02"
 )
 
+const (
+	needStack = 0x0001
+	needExit  = 0x0002
+	needPanic = 0x0004
+)
+
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf   []byte
-	w     io.Writer
-	stack bool
-	exit  bool
-	panic bool
+	buf  []byte
+	w    io.Writer
+	need uint
 }
 
 // Trace starts a new message with trace level.
@@ -266,18 +270,10 @@ func (l *Logger) header(level Level) *Event {
 	e.buf = e.buf[:0]
 
 	switch level {
-	default:
-		e.stack = false
-		e.exit = false
-		e.panic = false
 	case FatalLevel:
-		e.stack = true
-		e.exit = true
-		e.panic = false
+		e.need = needStack | needExit
 	case PanicLevel:
-		e.stack = true
-		e.exit = false
-		e.panic = true
+		e.need = needStack | needPanic
 	}
 	if l.Writer != nil {
 		e.w = l.Writer
@@ -536,7 +532,7 @@ func (e *Event) AnErr(key string, err error) *Event {
 		return e
 	}
 
-	if !e.stack {
+	if e.need&needStack == 0 {
 		if _, ok := err.(fmt.Formatter); ok {
 			b := bbpool.Get().(*bb)
 			b.B = b.B[:0]
@@ -946,7 +942,7 @@ func (e *Event) Caller(depth int) *Event {
 // Stack enables stack trace printing for the error passed to Err().
 func (e *Event) Stack() *Event {
 	if e != nil {
-		e.stack = true
+		e.need |= needStack
 	}
 	return e
 }
@@ -974,7 +970,7 @@ func (e *Event) Msg(msg string) {
 	if e == nil {
 		return
 	}
-	if e.stack {
+	if e.need&needStack != 0 {
 		e.buf = append(e.buf, ",\"stack\":"...)
 		e.bytes(stacks(false))
 	}
@@ -984,10 +980,10 @@ func (e *Event) Msg(msg string) {
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.Write(e.buf)
-	if e.exit && notTest {
+	if (e.need&needExit != 0) && notTest {
 		os.Exit(255)
 	}
-	if e.panic && notTest {
+	if (e.need&needPanic != 0) && notTest {
 		panic(msg)
 	}
 	if cap(e.buf) <= bbcap {
