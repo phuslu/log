@@ -10,10 +10,10 @@
     - FileWriter, *rotating & effective*
     - ConsoleWriter, *colorful & templating*
     - MultiWriter, *multiple level dispatch*
-    - AsyncWriter, *asynchronously writing*
     - SyslogWriter, *syslog server logging*
     - JournalWriter, *linux systemd logging*
     - EventlogWriter, *windows system event*
+    - AsyncWriter, *asynchronously writing*
 * Third-party(StdLog/Grpc/Logr) Logger Interceptor
 * High Performance
 
@@ -260,7 +260,7 @@ func main() {
 ```
 > Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
-### MultiWriter & AsyncWriter & SyslogWriter & JournalWriter & EventlogWriter
+### MultiWriter & SyslogWriter & JournalWriter & EventlogWriter
 
 To log to different writers by different levels, use `MultiWriter`.
 
@@ -275,20 +275,6 @@ log.DefaultLogger.Writer = &log.MultiWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
-```
-
-To log to file asynchronously for performance stability, use `AsyncWriter`.
-
-```go
-log.DefaultLogger.Writer = &log.AsyncWriter{
-	BufferSize:   32 * 1024,
-	ChannelSize:  100,
-	SyncDuration: 5 * time.Second,
-	Writer:       &log.FileWriter{Filename: "main.log"},
-}
-log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
-log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
-log.DefaultLogger.Writer.(io.Closer).Close()
 ```
 
 To log to a syslog server, using `SyslogWriter`.
@@ -319,6 +305,24 @@ log.DefaultLogger.Writer = &log.EventlogWriter{
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
+
+### AsyncWriter
+
+To log to file asynchronously for performance stability, use `AsyncWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.AsyncWriter{
+	BufferSize:   32 * 1024,
+	ChannelSize:  100,
+	SyncDuration: 5 * time.Second,
+	Writer:       &log.FileWriter{Filename: "main.log"},
+}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
+log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
+log.DefaultLogger.Writer.(io.Closer).Close()
+```
+
+> Note: AsyncWriter creates a seperate goroutine and holds a write-combining buffer, so it will breaks level-awared writers(e.g. MultiWriter/SyslogWriter), the recommended use case is AsyncWriter + FileWriter.
 
 ### Sugar Logger
 
