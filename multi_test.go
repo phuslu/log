@@ -54,7 +54,7 @@ type errorWriter struct {
 var errorWriterOK = errors.New("errorWriter return OK")
 
 func (ew errorWriter) Write(p []byte) (n int, err error) {
-	n, err = ew.WriteCloser.Write(p)
+	n, _ = ew.WriteCloser.Write(p)
 	err = errorWriterOK
 	return
 }

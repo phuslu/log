@@ -216,8 +216,3 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 
 	return
 }
-
-// Writer is an alias for FileWriter
-//
-// Deprecated: Use FileWriter instead.
-type Writer = FileWriter
