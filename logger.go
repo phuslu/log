@@ -270,6 +270,8 @@ func (l *Logger) header(level Level) *Event {
 	e.buf = e.buf[:0]
 
 	switch level {
+	default:
+		e.need = 0
 	case FatalLevel:
 		e.need = needStack | needExit
 	case PanicLevel:
