@@ -4,6 +4,7 @@ import (
 	"io"
 	"runtime"
 	"sync/atomic"
+	"time"
 )
 
 type RingWriter struct {
@@ -17,9 +18,11 @@ func NewRingWriter(w io.Writer, size uint32, batch uint32) (rw *RingWriter) {
 	rw.w = w
 	rw.r = newRing(size, batch)
 	go func(w io.Writer, r *ring) {
-		r.Consume(func(it *iter, b *[]byte) {
-			w.Write(*b)
-		})
+		time.Sleep(1)
+		var p []byte
+		for r.Get(&p) {
+			w.Write(p)
+		}
 	}(w, rw.r)
 	return
 }
@@ -116,38 +119,6 @@ func (r *ring) Get(i *[]byte) bool {
 	return true
 }
 
-func (r *ring) Consume(fn func(it *iter, b *[]byte)) {
-	var maxbatch = int(r.maxbatch)
-	var it iter
-	for keep := true; keep; {
-		var rc, wp = r.rc, atomic.LoadInt64(&r.wp)
-		for ; rc >= wp; wp = atomic.LoadInt64(&r.wp) {
-			if atomic.LoadInt32(&r.done) > 0 {
-				return
-			}
-			runtime.Gosched()
-		}
-
-		for i := 0; rc < wp && keep; it.inc() {
-			pos := r.mask & rc
-			data, seq := &r.data[pos], &r.seq[pos]
-			if i++; atomic.LoadInt64(seq) <= 0 || i&maxbatch == 0 {
-				r.rc = rc
-				atomic.StoreInt64(&r.rp, rc)
-				for atomic.LoadInt64(seq) <= 0 {
-					runtime.Gosched()
-				}
-			}
-			fn(&it, data)
-			*seq = -rc
-			keep = !it.stop
-			rc++
-		}
-		r.rc = rc
-		atomic.StoreInt64(&r.rp, r.rc)
-	}
-}
-
 func (r *ring) Put(b []byte) {
 	var wp = atomic.AddInt64(&r.wp, 1) - 1
 	for diff := wp - r.mask; diff >= atomic.LoadInt64(&r.rp); {
@@ -156,23 +127,6 @@ func (r *ring) Put(b []byte) {
 	var pos = wp & r.mask
 	r.data[pos] = b
 	atomic.StoreInt64(&r.seq[pos], wp)
-}
-
-type iter struct {
-	count int
-	stop  bool
-}
-
-func (i *iter) Stop() {
-	i.stop = true
-}
-
-func (i *iter) Count() int {
-	return i.count
-}
-
-func (i *iter) inc() {
-	i.count++
 }
 
 func roundUp2(v uint32) uint32 {
