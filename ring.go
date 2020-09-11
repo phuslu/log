@@ -14,9 +14,10 @@ type RingWriter struct {
 
 // NewRingWriter return a RingWriter
 func NewRingWriter(w io.Writer, size uint32, batch uint32) (rw *RingWriter) {
-	rw = new(RingWriter)
-	rw.w = w
-	rw.r = newRing(size, batch)
+	rw = &RingWriter{
+		w: w,
+		r: newRing(size, batch),
+	}
 	go func(w io.Writer, r *ring) {
 		time.Sleep(1)
 		var p []byte

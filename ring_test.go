@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestRingWriterSmallSize(t *testing.T) {
@@ -13,7 +12,6 @@ func TestRingWriterSmallSize(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		fmt.Fprintf(w, "%s, %d during ring writer 1k buff size\n", timeNow(), i)
 	}
-	time.Sleep(2)
 }
 
 func BenchmarkRingWriter(b *testing.B) {
