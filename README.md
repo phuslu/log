@@ -312,8 +312,8 @@ To log to file asynchronously for performance stability, use `AsyncWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.AsyncWriter{
-	BufferSize:   32 * 1024,
 	ChannelSize:  100,
+	BufferSize:   32 * 1024,
 	SyncDuration: 5 * time.Second,
 	Writer:       &log.FileWriter{Filename: "main.log"},
 }
@@ -322,7 +322,7 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
 ```
 
-> Note: AsyncWriter creates a seperate goroutine and holds a write-combining buffer, so it will breaks level-awared writers(e.g. MultiWriter/SyslogWriter), the recommended use case is AsyncWriter + FileWriter.
+> Note: AsyncWriter creates a write-combining buffer when BufferSize is non-zero. If the underlying writer is level-oriented(e.g. MultiWriter/SyslogWriter), the BufferSize should set to 0.
 
 ### Sugar Logger
 

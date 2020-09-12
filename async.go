@@ -8,7 +8,7 @@ import (
 
 // AsyncWriter is an io.WriteCloser that writes asynchronously.
 type AsyncWriter struct {
-	// ChannelSize is the size of the data channel, the default size is 100.
+	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize int
 
 	// BufferSize is the size in bytes of the buffer. If BufferSize is larger than zero,
