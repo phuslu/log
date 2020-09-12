@@ -30,6 +30,7 @@ func TestAsyncWriterZeroSize(t *testing.T) {
 	}
 	fmt.Fprintf(w, "%s, before async writer zero size\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
+	w.Sync()
 	fmt.Fprintf(os.Stderr, "%s, after async writer zero size\n", timeNow())
 }
 

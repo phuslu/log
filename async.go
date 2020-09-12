@@ -8,13 +8,15 @@ import (
 
 // AsyncWriter is an io.WriteCloser that writes asynchronously.
 type AsyncWriter struct {
-	// BufferSize is the size in bytes of the buffer, the default size is 32KB.
-	BufferSize int
-
 	// ChannelSize is the size of the data channel, the default size is 100.
 	ChannelSize int
 
-	// SyncDuration is the duration of the writer syncs, the default duration is 5s.
+	// BufferSize is the size in bytes of the buffer. If BufferSize is larger than zero,
+	// AsyncWriter creates a write combining buffer.
+	BufferSize int
+
+	// SyncDuration specifies the underlying writer sync duration,
+	// when BufferSize is larger than zero.
 	SyncDuration time.Duration
 
 	// Writer specifies the writer of output.
@@ -29,6 +31,9 @@ type AsyncWriter struct {
 
 // Sync syncs all pending log I/O.
 func (w *AsyncWriter) Sync() (err error) {
+	if w.sync == nil {
+		return
+	}
 	w.sync <- struct{}{}
 	err = <-w.syncDone
 	return
@@ -51,22 +56,19 @@ var b1kpool = sync.Pool{
 // than Size, the buffer is written to the underlying Writer and cleared.
 func (w *AsyncWriter) Write(p []byte) (int, error) {
 	w.once.Do(func() {
-		if w.BufferSize == 0 {
-			w.BufferSize = 32 * 1024
-		}
 		if w.ChannelSize == 0 {
-			w.ChannelSize = 100
-		}
-		if w.SyncDuration == 0 {
-			w.SyncDuration = 5 * time.Second
+			w.ChannelSize = 1
 		}
 		// channels
 		w.ch = make(chan []byte, w.ChannelSize)
 		w.chDone = make(chan error)
-		w.sync = make(chan struct{})
-		w.syncDone = make(chan error)
-		// data consumer
-		go w.consumer()
+		if w.BufferSize <= 0 {
+			go w.consumer0()
+		} else {
+			w.sync = make(chan struct{})
+			w.syncDone = make(chan error)
+			go w.consumerN()
+		}
 	})
 
 	// copy and sends data
@@ -74,10 +76,26 @@ func (w *AsyncWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (w *AsyncWriter) consumer() {
+func (w *AsyncWriter) consumer0() {
+	var err error
+	for b := range w.ch {
+		if b == nil {
+			break
+		}
+		_, err = w.Writer.Write(b)
+		b1kpool.Put(b)
+	}
+	w.chDone <- err
+}
+
+func (w *AsyncWriter) consumerN() {
 	var err error
 	buf := make([]byte, 0, w.BufferSize+4096)
-	ticker := time.NewTicker(w.SyncDuration)
+	dur := w.SyncDuration
+	if dur == 0 {
+		dur = 5 * time.Second
+	}
+	ticker := time.NewTicker(dur)
 	for {
 		select {
 		case b := <-w.ch:
