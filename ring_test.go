@@ -8,14 +8,14 @@ import (
 )
 
 func TestRingWriterSmallSize(t *testing.T) {
-	w := NewRingWriter(os.Stderr, 16, 0)
+	w := newRingWriter(os.Stderr, 16, 0)
 	for i := 0; i < 10; i++ {
 		fmt.Fprintf(w, "%s, %d during ring writer 1k buff size\n", timeNow(), i)
 	}
 }
 
 func BenchmarkRingWriter(b *testing.B) {
-	w := NewRingWriter(ioutil.Discard, 1000, 0)
+	w := newRingWriter(ioutil.Discard, 1000, 0)
 
 	b.SetParallelism(1000)
 	b.ReportAllocs()

@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-type RingWriter struct {
+type ringWriter struct {
 	w io.Writer
 	r *ring
 }
 
-// NewRingWriter return a RingWriter
-func NewRingWriter(w io.Writer, size uint32, batch uint32) (rw *RingWriter) {
-	rw = &RingWriter{
+// NewringWriter return a ringWriter
+func newRingWriter(w io.Writer, size uint32, batch uint32) (rw *ringWriter) {
+	rw = &ringWriter{
 		w: w,
 		r: newRing(size, batch),
 	}
@@ -29,7 +29,7 @@ func NewRingWriter(w io.Writer, size uint32, batch uint32) (rw *RingWriter) {
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
-func (rw *RingWriter) Close() (err error) {
+func (rw *ringWriter) Close() (err error) {
 	rw.r.Close()
 	if closer, ok := rw.w.(io.Closer); ok {
 		err = closer.Close()
@@ -38,7 +38,7 @@ func (rw *RingWriter) Close() (err error) {
 }
 
 // Write implements io.Writer.
-func (rw *RingWriter) Write(p []byte) (n int, err error) {
+func (rw *ringWriter) Write(p []byte) (n int, err error) {
 	rw.r.Put(p)
 	return len(p), nil
 }
