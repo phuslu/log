@@ -4,22 +4,20 @@ import (
 	"io"
 	"runtime"
 	"sync/atomic"
-	"time"
 )
 
-type ringWriter struct {
+type RingWriter struct {
 	w io.Writer
 	r *ring
 }
 
-// NewringWriter return a ringWriter
-func newRingWriter(w io.Writer, size uint32, batch uint32) (rw *ringWriter) {
-	rw = &ringWriter{
+// NewRingWriter return a RingWriter
+func NewRingWriter(w io.Writer, size uint32, batch uint32) (rw *RingWriter) {
+	rw = &RingWriter{
 		w: w,
 		r: newRing(size, batch),
 	}
 	go func(w io.Writer, r *ring) {
-		time.Sleep(1)
 		var p []byte
 		for r.Get(&p) {
 			w.Write(p)
@@ -29,7 +27,7 @@ func newRingWriter(w io.Writer, size uint32, batch uint32) (rw *ringWriter) {
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
-func (rw *ringWriter) Close() (err error) {
+func (rw *RingWriter) Close() (err error) {
 	rw.r.Close()
 	if closer, ok := rw.w.(io.Closer); ok {
 		err = closer.Close()
@@ -38,7 +36,7 @@ func (rw *ringWriter) Close() (err error) {
 }
 
 // Write implements io.Writer.
-func (rw *ringWriter) Write(p []byte) (n int, err error) {
+func (rw *RingWriter) Write(p []byte) (n int, err error) {
 	rw.r.Put(p)
 	return len(p), nil
 }
