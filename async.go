@@ -11,12 +11,10 @@ type AsyncWriter struct {
 	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize int
 
-	// BufferSize is the size in bytes of the buffer. If BufferSize is larger than zero,
-	// AsyncWriter creates a write combining buffer.
-	BufferSize int
+	// BatchSize is the batch size of underlying writer
+	BatchSize int
 
-	// SyncDuration specifies the underlying writer sync duration,
-	// when BufferSize is larger than zero.
+	// SyncDuration specifies the sync duration of underlying writer when BatchSize is non-zero.
 	SyncDuration time.Duration
 
 	// Writer specifies the writer of output.
@@ -62,7 +60,7 @@ func (w *AsyncWriter) Write(p []byte) (int, error) {
 		// channels
 		w.ch = make(chan []byte, w.ChannelSize)
 		w.chDone = make(chan error)
-		if w.BufferSize <= 0 {
+		if w.BatchSize <= 1 {
 			go w.consumer0()
 		} else {
 			w.sync = make(chan struct{})
@@ -90,7 +88,8 @@ func (w *AsyncWriter) consumer0() {
 
 func (w *AsyncWriter) consumerN() {
 	var err error
-	buf := make([]byte, 0, w.BufferSize+4096)
+	buf := make([]byte, 0)
+	batch := 0
 	dur := w.SyncDuration
 	if dur == 0 {
 		dur = 5 * time.Second
@@ -102,14 +101,16 @@ func (w *AsyncWriter) consumerN() {
 			isNil := b == nil
 			if len(b) != 0 {
 				buf = append(buf, b...)
+				batch++
 				if cap(b) <= bbcap {
 					b1kpool.Put(b)
 				}
 			}
 			// full or closed
-			if len(buf) >= w.BufferSize || (isNil && len(buf) != 0) {
+			if (batch >= w.BatchSize || isNil) && len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
 				buf = buf[:0]
+				batch = 0
 			}
 			if isNil {
 				// channel closed, so close writer and quit.
@@ -127,6 +128,7 @@ func (w *AsyncWriter) consumerN() {
 			if len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
 				buf = buf[:0]
+				batch = 0
 			} else {
 				err = nil
 			}
@@ -135,6 +137,7 @@ func (w *AsyncWriter) consumerN() {
 			if len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
 				buf = buf[:0]
+				batch = 0
 			} else {
 				err = nil
 			}

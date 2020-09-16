@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func TestAsyncWriterSmallSize(t *testing.T) {
+func TestAsyncWriterBatch(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   1000,
+		BatchSize:    11,
 		SyncDuration: 1100 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -22,9 +22,9 @@ func TestAsyncWriterSmallSize(t *testing.T) {
 	w.Sync()
 }
 
-func TestAsyncWriterZeroSize(t *testing.T) {
+func TestAsyncWriterNoBatch(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   0,
+		BatchSize:    0,
 		SyncDuration: 1000 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -36,7 +36,7 @@ func TestAsyncWriterZeroSize(t *testing.T) {
 
 func TestAsyncWriterDuration(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   1000,
+		BatchSize:    10,
 		SyncDuration: 10 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -46,7 +46,7 @@ func TestAsyncWriterDuration(t *testing.T) {
 
 func TestAsyncWriterSyncAuto(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   8192,
+		BatchSize:    10,
 		SyncDuration: 1000 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -57,7 +57,7 @@ func TestAsyncWriterSyncAuto(t *testing.T) {
 
 func TestAsyncWriterSyncCall(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   8192,
+		BatchSize:    10,
 		SyncDuration: 1000 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -68,7 +68,7 @@ func TestAsyncWriterSyncCall(t *testing.T) {
 
 func TestAsyncWriterSyncer(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   8192,
+		BatchSize:    10,
 		SyncDuration: 1000 * time.Millisecond,
 		Writer:       os.Stderr,
 	}
@@ -79,7 +79,7 @@ func TestAsyncWriterSyncer(t *testing.T) {
 
 func TestAsyncWriterClose(t *testing.T) {
 	w := &AsyncWriter{
-		BufferSize:   8192,
+		BatchSize:    10,
 		SyncDuration: 1000 * time.Millisecond,
 		Writer:       func() *os.File { f, _ := os.Open(os.DevNull); return f }(),
 	}
