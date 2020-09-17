@@ -20,27 +20,23 @@ type AsyncWriter struct {
 	// Writer specifies the writer of output.
 	Writer io.Writer
 
-	once     sync.Once
-	ch       chan []byte
-	chDone   chan error
-	sync     chan struct{}
-	syncDone chan error
+	once    sync.Once
+	ch      chan []byte
+	chClose chan error
+	chSync  chan error
 }
 
 // Sync syncs all pending log I/O.
 func (w *AsyncWriter) Sync() (err error) {
-	if w.sync == nil {
-		return
-	}
-	w.sync <- struct{}{}
-	err = <-w.syncDone
+	w.ch <- nil // nil is a sync trigger
+	err = <-w.chSync
 	return
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
 func (w *AsyncWriter) Close() (err error) {
-	w.ch <- nil // instead of close(w.ch) to avoid panic other goroutine
-	err = <-w.chDone
+	close(w.ch)
+	err = <-w.chClose
 	return
 }
 
@@ -59,12 +55,11 @@ func (w *AsyncWriter) Write(p []byte) (int, error) {
 		}
 		// channels
 		w.ch = make(chan []byte, w.ChannelSize)
-		w.chDone = make(chan error)
+		w.chClose = make(chan error)
+		w.chSync = make(chan error)
 		if w.BatchSize <= 1 {
 			go w.consumer0()
 		} else {
-			w.sync = make(chan struct{})
-			w.syncDone = make(chan error)
 			go w.consumerN()
 		}
 	})
@@ -78,12 +73,13 @@ func (w *AsyncWriter) consumer0() {
 	var err error
 	for b := range w.ch {
 		if b == nil {
-			break
+			w.chSync <- err
+			continue
 		}
 		_, err = w.Writer.Write(b)
 		b1kpool.Put(b)
 	}
-	w.chDone <- err
+	w.chClose <- err
 }
 
 func (w *AsyncWriter) consumerN() {
@@ -97,8 +93,9 @@ func (w *AsyncWriter) consumerN() {
 	ticker := time.NewTicker(dur)
 	for {
 		select {
-		case b := <-w.ch:
-			isNil := b == nil
+		case b, ok := <-w.ch:
+			isSync := b == nil && ok
+			isClose := !ok
 			if len(b) != 0 {
 				buf = append(buf, b...)
 				batch++
@@ -106,33 +103,26 @@ func (w *AsyncWriter) consumerN() {
 					b1kpool.Put(b)
 				}
 			}
-			// full or closed
-			if (batch >= w.BatchSize || isNil) && len(buf) != 0 {
+			// full or sync or close
+			if (batch >= w.BatchSize || isSync || isClose) && len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
 				buf = buf[:0]
 				batch = 0
 			}
-			if isNil {
-				// channel closed, so close writer and quit.
+			switch {
+			case isSync:
+				w.chSync <- err
+			case isClose:
 				if closer, ok := w.Writer.(io.Closer); ok {
 					err1 := closer.Close()
 					if err1 != nil && err == nil {
 						err = err1
 					}
 				}
-				w.chDone <- err
+				w.chClose <- err
 				ticker.Stop()
 				return
 			}
-		case <-w.sync:
-			if len(buf) != 0 {
-				_, err = w.Writer.Write(buf)
-				buf = buf[:0]
-				batch = 0
-			} else {
-				err = nil
-			}
-			w.syncDone <- err
 		case <-ticker.C:
 			if len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
