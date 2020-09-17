@@ -308,7 +308,7 @@ log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 
 ### AsyncWriter
 
-To log to file asynchronously for performance stability, use `AsyncWriter`.
+To logging asynchronously for performance stability, use `AsyncWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.AsyncWriter{

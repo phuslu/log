@@ -90,7 +90,8 @@ func TestAsyncWriterClose(t *testing.T) {
 
 func BenchmarkAsyncWriter(b *testing.B) {
 	w := &AsyncWriter{
-		Writer: ioutil.Discard,
+		ChannelSize: 100,
+		Writer:      ioutil.Discard,
 	}
 
 	b.SetParallelism(1000)

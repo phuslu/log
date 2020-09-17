@@ -11,10 +11,12 @@ type AsyncWriter struct {
 	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize int
 
-	// BatchSize is the batch size of underlying writer
+	// BatchSize is the batch writing size of underlying writer, if BatchSize set
+	// to 0 or 1, the data received from channel will be sent immediately.
 	BatchSize int
 
-	// SyncDuration specifies the sync duration of underlying writer when BatchSize is non-zero.
+	// SyncDuration specifies the sync duration of underlying writer
+	// when batch writing enabled, the default duration is 5s.
 	SyncDuration time.Duration
 
 	// Writer specifies the writer of output.
@@ -94,8 +96,7 @@ func (w *AsyncWriter) consumerN() {
 	for {
 		select {
 		case b, ok := <-w.ch:
-			isSync := b == nil && ok
-			isClose := !ok
+			// batch
 			if len(b) != 0 {
 				buf = append(buf, b...)
 				batch++
@@ -103,16 +104,14 @@ func (w *AsyncWriter) consumerN() {
 					b1kpool.Put(b)
 				}
 			}
-			// full or sync or close
-			if (batch >= w.BatchSize || isSync || isClose) && len(buf) != 0 {
+			// write
+			if (batch >= w.BatchSize || b == nil) && len(buf) != 0 {
 				_, err = w.Writer.Write(buf)
 				buf = buf[:0]
 				batch = 0
 			}
-			switch {
-			case isSync:
-				w.chSync <- err
-			case isClose:
+			// close
+			if !ok {
 				if closer, ok := w.Writer.(io.Closer); ok {
 					err1 := closer.Close()
 					if err1 != nil && err == nil {
@@ -122,6 +121,10 @@ func (w *AsyncWriter) consumerN() {
 				w.chClose <- err
 				ticker.Stop()
 				return
+			}
+			// sync
+			if b == nil {
+				w.chSync <- err
 			}
 		case <-ticker.C:
 			if len(buf) != 0 {
