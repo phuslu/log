@@ -8,24 +8,36 @@ import (
 
 // AsyncWriter is an io.WriteCloser that writes asynchronously.
 type AsyncWriter struct {
-	// ChannelSize is the size of the data channel, the default size is 1.
-	ChannelSize int
-
-	// BatchSize is the batch writing size of underlying writer, if BatchSize set
-	// to 0 or 1, the data received from channel will be sent immediately.
-	BatchSize int
-
-	// SyncDuration specifies the sync duration of underlying writer
-	// when batch writing enabled, the default duration is 5s.
-	SyncDuration time.Duration
-
-	// Writer specifies the writer of output.
-	Writer io.Writer
+	writer       io.Writer
+	channelSize  int
+	batchSize    int
+	syncDuration time.Duration
 
 	once    sync.Once
 	ch      chan []byte
 	chClose chan error
 	chSync  chan error
+}
+
+func NewAsyncWriter(writer io.Writer, channelSize int, batchSize int, syncDuation time.Duration) (w *AsyncWriter) {
+	w = &AsyncWriter{
+		writer:       writer,
+		channelSize:  channelSize,
+		batchSize:    batchSize,
+		syncDuration: syncDuation,
+		ch:           make(chan []byte, channelSize),
+		chClose:      make(chan error),
+		chSync:       make(chan error),
+	}
+	if syncDuation == 0 && batchSize > 0 {
+		w.syncDuration = 5 * time.Second
+	}
+	if batchSize <= 1 {
+		go w.consumer0()
+	} else {
+		go w.consumerN()
+	}
+	return
 }
 
 // Sync syncs all pending log I/O.
@@ -51,22 +63,6 @@ var b1kpool = sync.Pool{
 // Write implements io.Writer.  If a write would cause the log buffer to be larger
 // than Size, the buffer is written to the underlying Writer and cleared.
 func (w *AsyncWriter) Write(p []byte) (int, error) {
-	w.once.Do(func() {
-		if w.ChannelSize == 0 {
-			w.ChannelSize = 1
-		}
-		// channels
-		w.ch = make(chan []byte, w.ChannelSize)
-		w.chClose = make(chan error)
-		w.chSync = make(chan error)
-		if w.BatchSize <= 1 {
-			go w.consumer0()
-		} else {
-			go w.consumerN()
-		}
-	})
-
-	// copy and sends data
 	w.ch <- append(b1kpool.Get().([]byte)[:0], p...)
 	return len(p), nil
 }
@@ -78,7 +74,7 @@ func (w *AsyncWriter) consumer0() {
 			w.chSync <- err
 			continue
 		}
-		_, err = w.Writer.Write(b)
+		_, err = w.writer.Write(b)
 		b1kpool.Put(b)
 	}
 	w.chClose <- err
@@ -88,11 +84,7 @@ func (w *AsyncWriter) consumerN() {
 	var err error
 	buf := make([]byte, 0)
 	batch := 0
-	dur := w.SyncDuration
-	if dur == 0 {
-		dur = 5 * time.Second
-	}
-	ticker := time.NewTicker(dur)
+	ticker := time.NewTicker(w.syncDuration)
 	for {
 		select {
 		case b, ok := <-w.ch:
@@ -105,14 +97,14 @@ func (w *AsyncWriter) consumerN() {
 				}
 			}
 			// write
-			if (batch >= w.BatchSize || b == nil) && len(buf) != 0 {
-				_, err = w.Writer.Write(buf)
+			if (batch >= w.batchSize || b == nil) && len(buf) != 0 {
+				_, err = w.writer.Write(buf)
 				buf = buf[:0]
 				batch = 0
 			}
 			// close
 			if !ok {
-				if closer, ok := w.Writer.(io.Closer); ok {
+				if closer, ok := w.writer.(io.Closer); ok {
 					err1 := closer.Close()
 					if err1 != nil && err == nil {
 						err = err1
@@ -128,7 +120,7 @@ func (w *AsyncWriter) consumerN() {
 			}
 		case <-ticker.C:
 			if len(buf) != 0 {
-				_, err = w.Writer.Write(buf)
+				_, err = w.writer.Write(buf)
 				buf = buf[:0]
 				batch = 0
 			} else {

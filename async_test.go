@@ -9,11 +9,7 @@ import (
 )
 
 func TestAsyncWriterBatch(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    11,
-		SyncDuration: 1100 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 11, 1100*time.Millisecond)
 	for i := 0; i < 20; i++ {
 		fmt.Fprintf(w, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
@@ -23,11 +19,7 @@ func TestAsyncWriterBatch(t *testing.T) {
 }
 
 func TestAsyncWriterNoBatch(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    0,
-		SyncDuration: 1000 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 0, 1000*time.Millisecond)
 	fmt.Fprintf(w, "%s, before async writer zero size\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
 	w.Sync()
@@ -35,64 +27,42 @@ func TestAsyncWriterNoBatch(t *testing.T) {
 }
 
 func TestAsyncWriterDuration(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    10,
-		SyncDuration: 10 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 10, 10*time.Millisecond)
 	fmt.Fprintf(w, "%s, during async writer tiny duration\n", timeNow())
 	time.Sleep(200 * time.Millisecond)
 }
 
 func TestAsyncWriterSyncAuto(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    10,
-		SyncDuration: 1000 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 10, 1000*time.Millisecond)
 	fmt.Fprintf(w, "%s, before async writer auto sync\n", timeNow())
 	time.Sleep(1100 * time.Millisecond)
 	fmt.Fprintf(os.Stderr, "%s, after async writer auto sync\n", timeNow())
 }
 
 func TestAsyncWriterSyncCall(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    10,
-		SyncDuration: 1000 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 10, 1000*time.Millisecond)
 	fmt.Fprintf(w, "%s, before async writer sync\n", timeNow())
 	w.Sync()
 	fmt.Fprintf(os.Stderr, "%s, after async writer sync\n", timeNow())
 }
 
 func TestAsyncWriterSyncer(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    10,
-		SyncDuration: 1000 * time.Millisecond,
-		Writer:       os.Stderr,
-	}
+	w := NewAsyncWriter(os.Stderr, 100, 10, 1000*time.Millisecond)
 	fmt.Fprintf(w, "%s, before async writer sync\n", timeNow())
 
 	w.Sync()
 }
 
 func TestAsyncWriterClose(t *testing.T) {
-	w := &AsyncWriter{
-		BatchSize:    10,
-		SyncDuration: 1000 * time.Millisecond,
-		Writer:       func() *os.File { f, _ := os.Open(os.DevNull); return f }(),
-	}
+	f, _ := os.Open(os.DevNull)
+	w := NewAsyncWriter(f, 100, 10, 1000*time.Millisecond)
 	fmt.Fprintf(w, "%s, before async writer close\n", timeNow())
 	w.Close()
 	fmt.Fprintf(os.Stderr, "%s, after async writer close\n", timeNow())
 }
 
 func BenchmarkAsyncWriter(b *testing.B) {
-	w := &AsyncWriter{
-		ChannelSize: 100,
-		Writer:      ioutil.Discard,
-	}
+	w := NewAsyncWriter(ioutil.Discard, 100, 0, 0)
 
 	b.SetParallelism(1000)
 	b.ReportAllocs()
