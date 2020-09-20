@@ -62,9 +62,10 @@ const (
 
 // Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Event struct {
-	buf  []byte
-	w    io.Writer
-	need uint
+	buf   []byte
+	Level Level
+	need  uint32
+	w     io.Writer
 }
 
 // Trace starts a new message with trace level.
@@ -268,7 +269,7 @@ func (l *Logger) header(level Level) *Event {
 	}
 	e := epool.Get().(*Event)
 	e.buf = e.buf[:0]
-
+	e.Level = level
 	switch level {
 	default:
 		e.need = 0
