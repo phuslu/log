@@ -21,9 +21,6 @@ type MultiWriter struct {
 
 	// StderrLevel specifies the minimal level logs it will be writes to stderr
 	StderrLevel Level
-
-	// ParseLevel specifies an optional callback for parse log level from JSON input
-	ParseLevel func([]byte) Level
 }
 
 // Close implements io.Closer, and closes the underlying LeveledWriter.
@@ -48,13 +45,17 @@ func (w *MultiWriter) Close() (err error) {
 
 // Write implements io.Writer.
 func (w *MultiWriter) Write(p []byte) (n int, err error) {
-	var level Level
-	if w.ParseLevel != nil {
-		level = w.ParseLevel(p)
-	} else {
-		level = guessLevel(p)
-	}
+	return w.writeAtLevel(guessLevel(p), p)
+}
 
+// WriteEvent implements eventWriter.
+func (w *MultiWriter) WriteEvent(e *Event) (n int, err error) {
+	n, err = w.writeAtLevel(e.Level, e.buf)
+	e.Discard()
+	return
+}
+
+func (w *MultiWriter) writeAtLevel(level Level, p []byte) (n int, err error) {
 	var err1 error
 	switch level {
 	case noLevel, PanicLevel, FatalLevel, ErrorLevel:

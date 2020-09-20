@@ -45,7 +45,7 @@ func (w *AsyncWriter) WriteEvent(e *Event) (int, error) {
 					break
 				}
 				_, err = w.Writer.Write(e.buf)
-				epool.Put(e)
+				e.Discard()
 			}
 			w.chClose <- err
 		}()
