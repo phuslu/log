@@ -313,8 +313,6 @@ To logging asynchronously for performance stability, use `AsyncWriter`.
 ```go
 log.DefaultLogger.Writer = &log.AsyncWriter{
 	ChannelSize:  100,
-	BatchSize:    10,
-	SyncDuration: 5 * time.Second,
 	Writer:       &log.FileWriter{Filename: "main.log"},
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
@@ -322,7 +320,7 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 log.DefaultLogger.Writer.(io.Closer).Close()
 ```
 
-> Note: AsyncWriter creates a write-combining buffer when BatchSize is non-zero. If the underlying writer is level-oriented(e.g. MultiWriter/SyslogWriter), the BatchSize should set to 0.
+> Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
 
 ### Sugar Logger
 

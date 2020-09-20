@@ -74,6 +74,12 @@ func (w *SyslogWriter) connect() (err error) {
 	return
 }
 
+var b1kpool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 0, 1024)
+	},
+}
+
 // Write implements io.Writer, sends logs with priority to the syslog server.
 func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	if w.conn == nil {
