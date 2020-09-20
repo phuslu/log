@@ -74,12 +74,6 @@ func (w *SyslogWriter) connect() (err error) {
 	return
 }
 
-var b1kpool = sync.Pool{
-	New: func() interface{} {
-		return make([]byte, 0, 1024)
-	},
-}
-
 // Write implements io.Writer, sends logs with priority to the syslog server.
 func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	if w.conn == nil {
@@ -129,11 +123,11 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		priority = '6' // LOG_INFO
 	}
 
-	b := b1kpool.Get().([]byte)
-	defer b1kpool.Put(b)
+	e := epool.Get().(*Event)
+	defer epool.Put(e)
 
 	// <PRI>TIMESTAMP HOSTNAME TAG[PID]: MSG
-	b = append(b[:0], '<', priority, '>')
+	b := append(e.buf[:0], '<', priority, '>')
 	if w.local {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
