@@ -68,6 +68,11 @@ type Event struct {
 	w     io.Writer
 }
 
+// eventWriter defines an advanced writer interface.
+type eventWriter interface {
+	WriteEvent(*Event) (int, error)
+}
+
 // Trace starts a new message with trace level.
 func Trace() (e *Event) {
 	e = DefaultLogger.header(TraceLevel)
@@ -982,14 +987,19 @@ func (e *Event) Msg(msg string) {
 		e.string(msg)
 	}
 	e.buf = append(e.buf, '}', '\n')
-	e.w.Write(e.buf)
+	ew, ok := e.w.(eventWriter)
+	if ok {
+		ew.WriteEvent(e)
+	} else {
+		e.w.Write(e.buf)
+	}
 	if (e.need&needExit != 0) && notTest {
 		os.Exit(255)
 	}
 	if (e.need&needPanic != 0) && notTest {
 		panic(msg)
 	}
-	if cap(e.buf) <= bbcap {
+	if !ok && cap(e.buf) <= bbcap {
 		epool.Put(e)
 	}
 }
