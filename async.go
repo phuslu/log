@@ -32,7 +32,7 @@ func (w *AsyncWriter) Write(p []byte) (int, error) {
 	return w.WriteEvent(e)
 }
 
-// Write implements eventWriter.
+// WriteEvent implements eventWriter.
 func (w *AsyncWriter) WriteEvent(e *Event) (int, error) {
 	w.once.Do(func() {
 		// channels

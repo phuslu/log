@@ -84,7 +84,7 @@ type FileWriter struct {
 // (optionally) colorized, human-friendly format to output Writer.
 //
 // Default output format:
-//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
+//     {{.Time}} {{.Level}} {{.Goid}} {{.Caller}} > {{.Message}} {{.Key}}={{.Value}}
 //
 // Note: ConsoleWriter performance is not good, it will parses JSON input into
 // structured records, then outputs them in a specific order.
@@ -311,13 +311,23 @@ log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 To logging asynchronously for performance stability, use `AsyncWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.AsyncWriter{
-	ChannelSize:  100,
-	Writer:       &log.FileWriter{Filename: "main.log"},
+logger := log.Logger{
+	Level:  log.InfoLevel,
+	Writer: &log.AsyncWriter{
+		ChannelSize: 100,
+		Writer:      &log.FileWriter{
+			Filename:   "main.log",
+			FileMode:   0600,
+			MaxSize:    50*1024*1024,
+			MaxBackups: 7,
+			LocalTime:  false,
+		},
+	},
 }
-log.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
-log.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
-log.DefaultLogger.Writer.(io.Closer).Close()
+
+logger.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
+logger.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
+logger.Writer.(io.Closer).Close()
 ```
 
 > Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
