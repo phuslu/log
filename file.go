@@ -140,13 +140,15 @@ func (w *FileWriter) rotate() (err error) {
 	}
 	w.size = 0
 
-	go func(oldfile *os.File, newname, filename string, backups int) {
+	go func(oldfile *os.File, newname, filename string, backups int, processID bool) {
 		if oldfile != nil {
 			oldfile.Close()
 		}
 
 		os.Remove(filename)
-		os.Symlink(filepath.Base(newname), filename)
+		if !processID {
+			os.Symlink(filepath.Base(newname), filename)
+		}
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
@@ -163,7 +165,7 @@ func (w *FileWriter) rotate() (err error) {
 				os.Remove(names[i])
 			}
 		}
-	}(oldfile, w.file.Name(), w.Filename, w.MaxBackups)
+	}(oldfile, w.file.Name(), w.Filename, w.MaxBackups, w.ProcessID)
 
 	return
 }
@@ -176,7 +178,9 @@ func (w *FileWriter) create() (err error) {
 	w.size = 0
 
 	os.Remove(w.Filename)
-	os.Symlink(filepath.Base(w.file.Name()), w.Filename)
+	if !w.ProcessID {
+		os.Symlink(filepath.Base(w.file.Name()), w.Filename)
+	}
 
 	return
 }
