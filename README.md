@@ -389,7 +389,7 @@ func main() {
 
 ### Contextual Fields
 
-To add preserved `key:value` pairs to each event, use `NewContext`. [![playground][play-context-img]][play-context]
+To add preserved `key:value` pairs to each entry, use `NewContext`. [![playground][play-context-img]][play-context]
 
 ```go
 ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()

@@ -48,8 +48,8 @@ func (w *MultiWriter) Write(p []byte) (n int, err error) {
 	return w.writeAtLevel(guessLevel(p), p)
 }
 
-// WriteEvent implements eventWriter.
-func (w *MultiWriter) WriteEvent(e *Event) (n int, err error) {
+// WriteEntry implements entryWriter.
+func (w *MultiWriter) WriteEntry(e *Entry) (n int, err error) {
 	n, err = w.writeAtLevel(e.Level, e.buf)
 	e.Discard()
 	return

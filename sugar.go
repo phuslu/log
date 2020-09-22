@@ -36,7 +36,7 @@ func (s *SugaredLogger) Level(level Level) *SugaredLogger {
 	return &sl
 }
 
-// Print sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
+// Print sends a log entry without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Print(args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
 	if s.logger.Caller > 0 {
@@ -45,7 +45,7 @@ func (s *SugaredLogger) Print(args ...interface{}) {
 	e.Context(s.context).print(args)
 }
 
-// Println sends a log event without extra field. Arguments are handled in the manner of fmt.Print.
+// Println sends a log entry without extra field. Arguments are handled in the manner of fmt.Print.
 func (s *SugaredLogger) Println(args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
 	if s.logger.Caller > 0 {
@@ -54,7 +54,7 @@ func (s *SugaredLogger) Println(args ...interface{}) {
 	e.Context(s.context).print(args)
 }
 
-// Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
+// Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func (s *SugaredLogger) Printf(format string, args ...interface{}) {
 	e := s.logger.header(s.logger.Level)
 	if s.logger.Caller > 0 {
@@ -63,7 +63,7 @@ func (s *SugaredLogger) Printf(format string, args ...interface{}) {
 	e.Context(s.context).Msgf(format, args...)
 }
 
-// Log sends a log event with extra fields.
+// Log sends a log entry with extra fields.
 func (s *SugaredLogger) Log(keysAndValues ...interface{}) error {
 	e := s.logger.header(s.logger.Level)
 	if s.logger.Caller > 0 {

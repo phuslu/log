@@ -60,21 +60,21 @@ const (
 	needPanic = 0x0004
 )
 
-// Event represents a log event. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
-type Event struct {
+// Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
+type Entry struct {
 	buf   []byte
 	Level Level
 	need  uint32
 	w     io.Writer
 }
 
-// eventWriter defines an advanced writer interface.
-type eventWriter interface {
-	WriteEvent(*Event) (int, error)
+// entryWriter defines an advanced writer interface.
+type entryWriter interface {
+	WriteEntry(*Entry) (int, error)
 }
 
 // Trace starts a new message with trace level.
-func Trace() (e *Event) {
+func Trace() (e *Entry) {
 	e = DefaultLogger.header(TraceLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -83,7 +83,7 @@ func Trace() (e *Event) {
 }
 
 // Debug starts a new message with debug level.
-func Debug() (e *Event) {
+func Debug() (e *Entry) {
 	e = DefaultLogger.header(DebugLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -92,7 +92,7 @@ func Debug() (e *Event) {
 }
 
 // Info starts a new message with info level.
-func Info() (e *Event) {
+func Info() (e *Entry) {
 	e = DefaultLogger.header(InfoLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -101,7 +101,7 @@ func Info() (e *Event) {
 }
 
 // Warn starts a new message with warning level.
-func Warn() (e *Event) {
+func Warn() (e *Entry) {
 	e = DefaultLogger.header(WarnLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -110,7 +110,7 @@ func Warn() (e *Event) {
 }
 
 // Error starts a new message with error level.
-func Error() (e *Event) {
+func Error() (e *Entry) {
 	e = DefaultLogger.header(ErrorLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -119,7 +119,7 @@ func Error() (e *Event) {
 }
 
 // Fatal starts a new message with fatal level.
-func Fatal() (e *Event) {
+func Fatal() (e *Entry) {
 	e = DefaultLogger.header(FatalLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -128,7 +128,7 @@ func Fatal() (e *Event) {
 }
 
 // Panic starts a new message with panic level.
-func Panic() (e *Event) {
+func Panic() (e *Entry) {
 	e = DefaultLogger.header(PanicLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
@@ -136,7 +136,7 @@ func Panic() (e *Event) {
 	return
 }
 
-// Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
+// Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
 	if e != nil && DefaultLogger.Caller > 0 {
@@ -146,7 +146,7 @@ func Printf(format string, v ...interface{}) {
 }
 
 // Trace starts a new message with trace level.
-func (l *Logger) Trace() (e *Event) {
+func (l *Logger) Trace() (e *Entry) {
 	e = l.header(TraceLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -155,7 +155,7 @@ func (l *Logger) Trace() (e *Event) {
 }
 
 // Debug starts a new message with debug level.
-func (l *Logger) Debug() (e *Event) {
+func (l *Logger) Debug() (e *Entry) {
 	e = l.header(DebugLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -164,7 +164,7 @@ func (l *Logger) Debug() (e *Event) {
 }
 
 // Info starts a new message with info level.
-func (l *Logger) Info() (e *Event) {
+func (l *Logger) Info() (e *Entry) {
 	e = l.header(InfoLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -173,7 +173,7 @@ func (l *Logger) Info() (e *Event) {
 }
 
 // Warn starts a new message with warning level.
-func (l *Logger) Warn() (e *Event) {
+func (l *Logger) Warn() (e *Entry) {
 	e = l.header(WarnLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -182,7 +182,7 @@ func (l *Logger) Warn() (e *Event) {
 }
 
 // Error starts a new message with error level.
-func (l *Logger) Error() (e *Event) {
+func (l *Logger) Error() (e *Entry) {
 	e = l.header(ErrorLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -191,7 +191,7 @@ func (l *Logger) Error() (e *Event) {
 }
 
 // Fatal starts a new message with fatal level.
-func (l *Logger) Fatal() (e *Event) {
+func (l *Logger) Fatal() (e *Entry) {
 	e = l.header(FatalLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -200,7 +200,7 @@ func (l *Logger) Fatal() (e *Event) {
 }
 
 // Panic starts a new message with panic level.
-func (l *Logger) Panic() (e *Event) {
+func (l *Logger) Panic() (e *Entry) {
 	e = l.header(PanicLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -209,7 +209,7 @@ func (l *Logger) Panic() (e *Event) {
 }
 
 // Log starts a new message with no level.
-func (l *Logger) Log() (e *Event) {
+func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -218,7 +218,7 @@ func (l *Logger) Log() (e *Event) {
 }
 
 // WithLevel starts a new message with level.
-func (l *Logger) WithLevel(level Level) (e *Event) {
+func (l *Logger) WithLevel(level Level) (e *Entry) {
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -232,7 +232,7 @@ func (l *Logger) SetLevel(level Level) {
 	return
 }
 
-// Printf sends a log event without extra field. Arguments are handled in the manner of fmt.Printf.
+// Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(noLevel)
 	if e != nil && l.Caller > 0 {
@@ -243,7 +243,7 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 
 var epool = sync.Pool{
 	New: func() interface{} {
-		return &Event{
+		return &Entry{
 			buf: make([]byte, 0, 1024),
 		}
 	},
@@ -268,11 +268,11 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
-func (l *Logger) header(level Level) *Event {
+func (l *Logger) header(level Level) *Entry {
 	if int32(level) < atomic.LoadInt32((*int32)(&l.Level)) {
 		return nil
 	}
-	e := epool.Get().(*Event)
+	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 	e.Level = level
 	switch level {
@@ -442,7 +442,7 @@ func (l *Logger) header(level Level) *Event {
 }
 
 // Time append append t formated as string using time.RFC3339Nano.
-func (e *Event) Time(key string, t time.Time) *Event {
+func (e *Entry) Time(key string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -454,7 +454,7 @@ func (e *Event) Time(key string, t time.Time) *Event {
 }
 
 // TimeFormat append append t formated as string using timefmt.
-func (e *Event) TimeFormat(key string, timefmt string, t time.Time) *Event {
+func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -465,8 +465,8 @@ func (e *Event) TimeFormat(key string, timefmt string, t time.Time) *Event {
 	return e
 }
 
-// Bool append append the val as a bool to the event.
-func (e *Event) Bool(key string, b bool) *Event {
+// Bool append append the val as a bool to the entry.
+func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -475,8 +475,8 @@ func (e *Event) Bool(key string, b bool) *Event {
 	return e
 }
 
-// Bools adds the field key with val as a []bool to the event.
-func (e *Event) Bools(key string, b []bool) *Event {
+// Bools adds the field key with val as a []bool to the entry.
+func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -492,8 +492,8 @@ func (e *Event) Bools(key string, b []bool) *Event {
 	return e
 }
 
-// Dur adds the field key with duration d to the event.
-func (e *Event) Dur(key string, d time.Duration) *Event {
+// Dur adds the field key with duration d to the entry.
+func (e *Entry) Dur(key string, d time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -504,8 +504,8 @@ func (e *Event) Dur(key string, d time.Duration) *Event {
 	return e
 }
 
-// Durs adds the field key with val as a []time.Duration to the event.
-func (e *Event) Durs(key string, d []time.Duration) *Event {
+// Durs adds the field key with val as a []time.Duration to the entry.
+func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -523,13 +523,13 @@ func (e *Event) Durs(key string, d []time.Duration) *Event {
 	return e
 }
 
-// Err adds the field "error" with serialized err to the event.
-func (e *Event) Err(err error) *Event {
+// Err adds the field "error" with serialized err to the entry.
+func (e *Entry) Err(err error) *Entry {
 	return e.AnErr("error", err)
 }
 
 // AnErr adds the field key with serialized err to the logger context.
-func (e *Event) AnErr(key string, err error) *Event {
+func (e *Entry) AnErr(key string, err error) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -558,8 +558,8 @@ func (e *Event) AnErr(key string, err error) *Event {
 	return e
 }
 
-// Errs adds the field key with errs as an array of serialized errors to the event.
-func (e *Event) Errs(key string, errs []error) *Event {
+// Errs adds the field key with errs as an array of serialized errors to the entry.
+func (e *Entry) Errs(key string, errs []error) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -580,8 +580,8 @@ func (e *Event) Errs(key string, errs []error) *Event {
 	return e
 }
 
-// Float64 adds the field key with f as a float64 to the event.
-func (e *Event) Float64(key string, f float64) *Event {
+// Float64 adds the field key with f as a float64 to the entry.
+func (e *Entry) Float64(key string, f float64) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -590,8 +590,8 @@ func (e *Event) Float64(key string, f float64) *Event {
 	return e
 }
 
-// Floats64 adds the field key with f as a []float64 to the event.
-func (e *Event) Floats64(key string, f []float64) *Event {
+// Floats64 adds the field key with f as a []float64 to the entry.
+func (e *Entry) Floats64(key string, f []float64) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -607,8 +607,8 @@ func (e *Event) Floats64(key string, f []float64) *Event {
 	return e
 }
 
-// Floats32 adds the field key with f as a []float32 to the event.
-func (e *Event) Floats32(key string, f []float32) *Event {
+// Floats32 adds the field key with f as a []float32 to the entry.
+func (e *Entry) Floats32(key string, f []float32) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -624,8 +624,8 @@ func (e *Event) Floats32(key string, f []float32) *Event {
 	return e
 }
 
-// Int64 adds the field key with i as a int64 to the event.
-func (e *Event) Int64(key string, i int64) *Event {
+// Int64 adds the field key with i as a int64 to the entry.
+func (e *Entry) Int64(key string, i int64) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -634,8 +634,8 @@ func (e *Event) Int64(key string, i int64) *Event {
 	return e
 }
 
-// Uint64 adds the field key with i as a uint64 to the event.
-func (e *Event) Uint64(key string, i uint64) *Event {
+// Uint64 adds the field key with i as a uint64 to the entry.
+func (e *Entry) Uint64(key string, i uint64) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -644,48 +644,48 @@ func (e *Event) Uint64(key string, i uint64) *Event {
 	return e
 }
 
-// Float32 adds the field key with f as a float32 to the event.
-func (e *Event) Float32(key string, f float32) *Event {
+// Float32 adds the field key with f as a float32 to the entry.
+func (e *Entry) Float32(key string, f float32) *Entry {
 	return e.Float64(key, float64(f))
 }
 
-// Int adds the field key with i as a int to the event.
-func (e *Event) Int(key string, i int) *Event {
+// Int adds the field key with i as a int to the entry.
+func (e *Entry) Int(key string, i int) *Entry {
 	return e.Int64(key, int64(i))
 }
 
-// Int32 adds the field key with i as a int32 to the event.
-func (e *Event) Int32(key string, i int32) *Event {
+// Int32 adds the field key with i as a int32 to the entry.
+func (e *Entry) Int32(key string, i int32) *Entry {
 	return e.Int64(key, int64(i))
 }
 
-// Int16 adds the field key with i as a int16 to the event.
-func (e *Event) Int16(key string, i int16) *Event {
+// Int16 adds the field key with i as a int16 to the entry.
+func (e *Entry) Int16(key string, i int16) *Entry {
 	return e.Int64(key, int64(i))
 }
 
-// Int8 adds the field key with i as a int8 to the event.
-func (e *Event) Int8(key string, i int8) *Event {
+// Int8 adds the field key with i as a int8 to the entry.
+func (e *Entry) Int8(key string, i int8) *Entry {
 	return e.Int64(key, int64(i))
 }
 
-// Uint32 adds the field key with i as a uint32 to the event.
-func (e *Event) Uint32(key string, i uint32) *Event {
+// Uint32 adds the field key with i as a uint32 to the entry.
+func (e *Entry) Uint32(key string, i uint32) *Entry {
 	return e.Uint64(key, uint64(i))
 }
 
-// Uint16 adds the field key with i as a uint16 to the event.
-func (e *Event) Uint16(key string, i uint16) *Event {
+// Uint16 adds the field key with i as a uint16 to the entry.
+func (e *Entry) Uint16(key string, i uint16) *Entry {
 	return e.Uint64(key, uint64(i))
 }
 
-// Uint8 adds the field key with i as a uint8 to the event.
-func (e *Event) Uint8(key string, i uint8) *Event {
+// Uint8 adds the field key with i as a uint8 to the entry.
+func (e *Entry) Uint8(key string, i uint8) *Entry {
 	return e.Uint64(key, uint64(i))
 }
 
 // RawJSON adds already encoded JSON to the log line under key.
-func (e *Event) RawJSON(key string, b []byte) *Event {
+func (e *Entry) RawJSON(key string, b []byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -695,7 +695,7 @@ func (e *Event) RawJSON(key string, b []byte) *Event {
 }
 
 // RawJSONStr adds already encoded JSON String to the log line under key.
-func (e *Event) RawJSONStr(key string, s string) *Event {
+func (e *Entry) RawJSONStr(key string, s string) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -704,8 +704,8 @@ func (e *Event) RawJSONStr(key string, s string) *Event {
 	return e
 }
 
-// Str adds the field key with val as a string to the event.
-func (e *Event) Str(key string, val string) *Event {
+// Str adds the field key with val as a string to the entry.
+func (e *Entry) Str(key string, val string) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -714,8 +714,8 @@ func (e *Event) Str(key string, val string) *Event {
 	return e
 }
 
-// Stringer adds the field key with val.String() to the event.
-func (e *Event) Stringer(key string, val fmt.Stringer) *Event {
+// Stringer adds the field key with val.String() to the entry.
+func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -728,8 +728,8 @@ func (e *Event) Stringer(key string, val fmt.Stringer) *Event {
 	return e
 }
 
-// GoStringer adds the field key with val.GoStringer() to the event.
-func (e *Event) GoStringer(key string, val fmt.GoStringer) *Event {
+// GoStringer adds the field key with val.GoStringer() to the entry.
+func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -742,8 +742,8 @@ func (e *Event) GoStringer(key string, val fmt.GoStringer) *Event {
 	return e
 }
 
-// Strs adds the field key with vals as a []string to the event.
-func (e *Event) Strs(key string, vals []string) *Event {
+// Strs adds the field key with vals as a []string to the entry.
+func (e *Entry) Strs(key string, vals []string) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -759,8 +759,8 @@ func (e *Event) Strs(key string, vals []string) *Event {
 	return e
 }
 
-// Byte adds the field key with val as a byte to the event.
-func (e *Event) Byte(key string, val byte) *Event {
+// Byte adds the field key with val as a byte to the entry.
+func (e *Entry) Byte(key string, val byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -792,8 +792,8 @@ func (e *Event) Byte(key string, val byte) *Event {
 	return e
 }
 
-// Bytes adds the field key with val as a string to the event.
-func (e *Event) Bytes(key string, val []byte) *Event {
+// Bytes adds the field key with val as a string to the entry.
+func (e *Entry) Bytes(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -802,8 +802,8 @@ func (e *Event) Bytes(key string, val []byte) *Event {
 	return e
 }
 
-// BytesOrNil adds the field key with val as a string or nil to the event.
-func (e *Event) BytesOrNil(key string, val []byte) *Event {
+// BytesOrNil adds the field key with val as a string or nil to the entry.
+func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -818,8 +818,8 @@ func (e *Event) BytesOrNil(key string, val []byte) *Event {
 
 const hex = "0123456789abcdef"
 
-// Hex adds the field key with val as a hex string to the event.
-func (e *Event) Hex(key string, val []byte) *Event {
+// Hex adds the field key with val as a hex string to the entry.
+func (e *Entry) Hex(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -834,8 +834,8 @@ func (e *Event) Hex(key string, val []byte) *Event {
 
 const base32 = "0123456789abcdefghijklmnopqrstuv"
 
-// Xid adds the field key with xid.ID as a base32 string to the event.
-func (e *Event) Xid(key string, xid [12]byte) *Event {
+// Xid adds the field key with xid.ID as a base32 string to the entry.
+func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -869,8 +869,8 @@ func (e *Event) Xid(key string, xid [12]byte) *Event {
 	return e
 }
 
-// IPAddr adds IPv4 or IPv6 Address to the event
-func (e *Event) IPAddr(key string, ip net.IP) *Event {
+// IPAddr adds IPv4 or IPv6 Address to the entry.
+func (e *Entry) IPAddr(key string, ip net.IP) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -891,8 +891,8 @@ func (e *Event) IPAddr(key string, ip net.IP) *Event {
 	return e
 }
 
-// IPPrefix adds IPv4 or IPv6 Prefix (address and mask) to the event
-func (e *Event) IPPrefix(key string, pfx net.IPNet) *Event {
+// IPPrefix adds IPv4 or IPv6 Prefix (address and mask) to the entry.
+func (e *Entry) IPPrefix(key string, pfx net.IPNet) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -903,8 +903,8 @@ func (e *Event) IPPrefix(key string, pfx net.IPNet) *Event {
 	return e
 }
 
-// MACAddr adds MAC address to the event
-func (e *Event) MACAddr(key string, ha net.HardwareAddr) *Event {
+// MACAddr adds MAC address to the entry.
+func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -924,7 +924,7 @@ func (e *Event) MACAddr(key string, ha net.HardwareAddr) *Event {
 // TimeDiff adds the field key with positive duration between time t and start.
 // If time t is not greater than start, duration will be 0.
 // Duration format follows the same principle as Dur().
-func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
+func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
 	if e == nil {
 		return e
 	}
@@ -940,7 +940,7 @@ func (e *Event) TimeDiff(key string, t time.Time, start time.Time) *Event {
 }
 
 // Caller adds the file:line of the "caller" key.
-func (e *Event) Caller(depth int) *Event {
+func (e *Entry) Caller(depth int) *Entry {
 	if e != nil {
 		e.caller(runtime.Caller(depth))
 	}
@@ -948,20 +948,20 @@ func (e *Event) Caller(depth int) *Event {
 }
 
 // Stack enables stack trace printing for the error passed to Err().
-func (e *Event) Stack() *Event {
+func (e *Entry) Stack() *Entry {
 	if e != nil {
 		e.need |= needStack
 	}
 	return e
 }
 
-// Enabled return false if the event is going to be filtered out by log level.
-func (e *Event) Enabled() bool {
+// Enabled return false if the entry is going to be filtered out by log level.
+func (e *Entry) Enabled() bool {
 	return e != nil
 }
 
-// Discard disables the event so Msg(f) won't print it.
-func (e *Event) Discard() *Event {
+// Discard disables the entry so Msg(f) won't print it.
+func (e *Entry) Discard() *Entry {
 	if e == nil {
 		return e
 	}
@@ -973,8 +973,8 @@ func (e *Event) Discard() *Event {
 
 var notTest = true
 
-// Msg sends the event with msg added as the message field if not empty.
-func (e *Event) Msg(msg string) {
+// Msg sends the entry with msg added as the message field if not empty.
+func (e *Entry) Msg(msg string) {
 	if e == nil {
 		return
 	}
@@ -987,9 +987,9 @@ func (e *Event) Msg(msg string) {
 		e.string(msg)
 	}
 	e.buf = append(e.buf, '}', '\n')
-	ew, ok := e.w.(eventWriter)
+	ew, ok := e.w.(entryWriter)
 	if ok {
-		ew.WriteEvent(e)
+		ew.WriteEntry(e)
 	} else {
 		e.w.Write(e.buf)
 	}
@@ -1004,13 +1004,13 @@ func (e *Event) Msg(msg string) {
 	}
 }
 
-func (e *Event) key(key string) {
+func (e *Entry) key(key string) {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
 }
 
-func (e *Event) caller(_ uintptr, file string, line int, _ bool) {
+func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
 	if i := strings.LastIndex(file, "/"); i >= 0 {
 		file = file[i+1:]
 	}
@@ -1034,7 +1034,7 @@ var escapes = [256]bool{
 	'\t': true,
 }
 
-func (e *Event) escape(b []byte) {
+func (e *Entry) escape(b []byte) {
 	e.buf = append(e.buf, '"')
 	n := len(b)
 	j := 0
@@ -1090,7 +1090,7 @@ func (e *Event) escape(b []byte) {
 	e.buf = append(e.buf, '"')
 }
 
-func (e *Event) string(s string) {
+func (e *Entry) string(s string) {
 	for _, c := range []byte(s) {
 		if escapes[c] {
 			sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
@@ -1109,7 +1109,7 @@ func (e *Event) string(s string) {
 	return
 }
 
-func (e *Event) bytes(b []byte) {
+func (e *Entry) bytes(b []byte) {
 	for _, c := range b {
 		if escapes[c] {
 			e.escape(b)
@@ -1142,7 +1142,7 @@ var bbpool = sync.Pool{
 const bbcap = 1 << 16
 
 // Interface adds the field key with i marshaled using reflection.
-func (e *Event) Interface(key string, i interface{}) *Event {
+func (e *Entry) Interface(key string, i interface{}) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1168,8 +1168,8 @@ func (e *Event) Interface(key string, i interface{}) *Event {
 	return e
 }
 
-// Msgf sends the event with formatted msg added as the message field if not empty.
-func (e *Event) Msgf(format string, v ...interface{}) {
+// Msgf sends the entry with formatted msg added as the message field if not empty.
+func (e *Entry) Msgf(format string, v ...interface{}) {
 	if e == nil {
 		return
 	}
@@ -1185,7 +1185,7 @@ func (e *Event) Msgf(format string, v ...interface{}) {
 	}
 }
 
-func (e *Event) print(args []interface{}) {
+func (e *Entry) print(args []interface{}) {
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 
@@ -1197,8 +1197,8 @@ func (e *Event) print(args []interface{}) {
 	}
 }
 
-// keysAndValues sends keysAndValues to Event
-func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
+// keysAndValues sends keysAndValues to Entry
+func (e *Entry) keysAndValues(keysAndValues ...interface{}) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1280,7 +1280,7 @@ func (e *Event) keysAndValues(keysAndValues ...interface{}) *Event {
 }
 
 // Fields is a helper function to use a map to set fields using type assertion.
-func (e *Event) Fields(fields map[string]interface{}) *Event {
+func (e *Entry) Fields(fields map[string]interface{}) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1359,20 +1359,20 @@ func (e *Event) Fields(fields map[string]interface{}) *Event {
 // Context represents contextual fields.
 type Context []byte
 
-// NewContext starts a new contextual event.
-func NewContext(dst []byte) (e *Event) {
-	e = new(Event)
+// NewContext starts a new contextual entry.
+func NewContext(dst []byte) (e *Entry) {
+	e = new(Entry)
 	e.buf = dst
 	return
 }
 
 // Value builds the contextual fields.
-func (e *Event) Value() Context {
+func (e *Entry) Value() Context {
 	return e.buf
 }
 
-// Context sends the contextual fields to event.
-func (e *Event) Context(ctx Context) *Event {
+// Context sends the contextual fields to entry.
+func (e *Entry) Context(ctx Context) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1382,8 +1382,8 @@ func (e *Event) Context(ctx Context) *Event {
 	return e
 }
 
-// Dict sends the contextual fields with key to event.
-func (e *Event) Dict(key string, ctx Context) *Event {
+// Dict sends the contextual fields with key to entry.
+func (e *Entry) Dict(key string, ctx Context) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1435,3 +1435,8 @@ func Fastrandn(x uint32) uint32
 // Goid returns the current goroutine id.
 // It exactly matches goroutine id of the stack trace.
 func Goid() int64 { return goid() }
+
+// Event is an alias for Entry
+//
+// Deprecated: Use Entry instead.
+type Event = Entry

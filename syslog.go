@@ -123,7 +123,7 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		priority = '6' // LOG_INFO
 	}
 
-	e := epool.Get().(*Event)
+	e := epool.Get().(*Entry)
 	defer epool.Put(e)
 
 	// <PRI>TIMESTAMP HOSTNAME TAG[PID]: MSG

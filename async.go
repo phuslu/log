@@ -14,7 +14,7 @@ type AsyncWriter struct {
 	Writer io.Writer
 
 	once    sync.Once
-	ch      chan *Event
+	ch      chan *Entry
 	chClose chan error
 }
 
@@ -27,16 +27,16 @@ func (w *AsyncWriter) Close() (err error) {
 
 // Write implements io.Writer.
 func (w *AsyncWriter) Write(p []byte) (int, error) {
-	e := epool.Get().(*Event)
+	e := epool.Get().(*Entry)
 	e.buf = append(e.buf[:0], p...)
-	return w.WriteEvent(e)
+	return w.WriteEntry(e)
 }
 
-// WriteEvent implements eventWriter.
-func (w *AsyncWriter) WriteEvent(e *Event) (int, error) {
+// WriteEntry implements entryWriter.
+func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 	w.once.Do(func() {
 		// channels
-		w.ch = make(chan *Event, w.ChannelSize)
+		w.ch = make(chan *Entry, w.ChannelSize)
 		w.chClose = make(chan error)
 		go func() {
 			var err error

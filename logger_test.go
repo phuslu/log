@@ -93,7 +93,7 @@ func TestLoggerInfo(t *testing.T) {
 
 func TestLoggerNil(t *testing.T) {
 	e := Info()
-	e.Caller(1).Str("foo", "bar").Int("num", 42).Msgf("this is a nil event test")
+	e.Caller(1).Str("foo", "bar").Int("num", 42).Msgf("this is a nil entry test")
 
 	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
 	if err != nil {
@@ -216,7 +216,7 @@ func TestLoggerSetLevel(t *testing.T) {
 }
 
 func TestLoggerStack(t *testing.T) {
-	Info().Stack().Msg("this is single stack log event")
+	Info().Stack().Msg("this is single stack log entry")
 }
 
 func TestLoggerEnabled(t *testing.T) {
@@ -234,9 +234,9 @@ func TestLoggerDiscard(t *testing.T) {
 }
 
 func TestLoggerWithLevel(t *testing.T) {
-	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level log event")
+	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level log entry")
 	DefaultLogger.Caller = 1
-	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level caller log event")
+	DefaultLogger.WithLevel(InfoLevel).Msg("this is with level caller log entry")
 }
 
 func TestLoggerCaller(t *testing.T) {
@@ -278,13 +278,13 @@ func TestLoggerTimeFormat(t *testing.T) {
 	logger := Logger{}
 
 	logger.TimeFormat = TimeFormatUnix
-	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix time log event")
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix time log entry")
 
 	logger.TimeFormat = TimeFormatUnixMs
-	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix_ms time log event")
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix_ms time log entry")
 
 	logger.TimeFormat = time.RFC3339Nano
-	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is rfc3339 time log event")
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is rfc3339 time log entry")
 }
 
 func TestLoggerTimeOffset(t *testing.T) {
@@ -293,26 +293,26 @@ func TestLoggerTimeOffset(t *testing.T) {
 	timeOffset = -7 * 3600
 	timeZone = "-07:00"
 
-	logger.Info().Msg("this is -7:00 timezone time log event")
+	logger.Info().Msg("this is -7:00 timezone time log entry")
 }
 
 func TestLoggerContext(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel}
-	logger.Trace().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
-	logger.Debug().Context(ctx).Int("no0", 0).Msg("this is zero context log event")
-	logger.Info().Context(ctx).Int("no1", 1).Msg("this is first context log event")
-	logger.Info().Context(ctx).Int("no2", 2).Msg("this is second context log event")
+	logger.Trace().Context(ctx).Int("no0", 0).Msg("this is zero context log entry")
+	logger.Debug().Context(ctx).Int("no0", 0).Msg("this is zero context log entry")
+	logger.Info().Context(ctx).Int("no1", 1).Msg("this is first context log entry")
+	logger.Info().Context(ctx).Int("no2", 2).Msg("this is second context log entry")
 }
 
 func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 
 	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
-	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
-	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
-	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
+	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
+	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
+	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log entry")
 	logger.Info().
 		Dict("a", NewContext(nil).
 			Bool("b", true).
@@ -324,9 +324,9 @@ func TestLoggerContextDict(t *testing.T) {
 		Msg("")
 
 	ctx = NewContext(nil).Value()
-	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
-	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log event")
-	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log event")
+	logger.Trace().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
+	logger.Debug().Dict("akey", ctx).Int("no0", 0).Msg("this is zero dict log entry")
+	logger.Info().Dict("akey", ctx).Int("no1", 1).Msg("this is first dict log entry")
 }
 
 func TestLoggerFields(t *testing.T) {

@@ -90,7 +90,7 @@ func TestMultiWriterError(t *testing.T) {
 	}
 }
 
-func TestMultiWriterEvent(t *testing.T) {
+func TestMultiWriterEntry(t *testing.T) {
 	w := &MultiWriter{
 		StderrWriter: &ConsoleWriter{
 			ColorOutput: true,
@@ -100,11 +100,11 @@ func TestMultiWriterEvent(t *testing.T) {
 
 	var err error
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		e := &Event{
+		e := &Entry{
 			buf:   []byte(fmt.Sprintf(`{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)),
 			Level: ParseLevel(level),
 		}
-		_, err = w.WriteEvent(e)
+		_, err = w.WriteEntry(e)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}

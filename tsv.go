@@ -14,8 +14,8 @@ type TSVLogger struct {
 	Writer    io.Writer
 }
 
-// TSVEvent represents a tsv log event. It is instanced by one of TSVLogger and finalized by the Msg method.
-type TSVEvent struct {
+// TSVEntry represents a tsv log entry. It is instanced by one of TSVLogger and finalized by the Msg method.
+type TSVEntry struct {
 	buf []byte
 	w   io.Writer
 	sep byte
@@ -23,13 +23,13 @@ type TSVEvent struct {
 
 var tepool = sync.Pool{
 	New: func() interface{} {
-		return new(TSVEvent)
+		return new(TSVEntry)
 	},
 }
 
 // New starts a new tsv message.
-func (l *TSVLogger) New() (e *TSVEvent) {
-	e = tepool.Get().(*TSVEvent)
+func (l *TSVLogger) New() (e *TSVEntry) {
+	e = tepool.Get().(*TSVEntry)
 	e.sep = l.Separator
 	if l.Writer != nil {
 		e.w = l.Writer
@@ -44,7 +44,7 @@ func (l *TSVLogger) New() (e *TSVEvent) {
 }
 
 // Timestamp adds the current time as UNIX timestamp
-func (e *TSVEvent) Timestamp() *TSVEvent {
+func (e *TSVEntry) Timestamp() *TSVEntry {
 	i := len(e.buf)
 	e.buf = append(e.buf, "0123456789\t"...)
 	sec, _ := walltime()
@@ -74,7 +74,7 @@ func (e *TSVEvent) Timestamp() *TSVEvent {
 }
 
 // TimestampMS adds the current time with milliseconds as UNIX timestamp
-func (e *TSVEvent) TimestampMS() *TSVEvent {
+func (e *TSVEntry) TimestampMS() *TSVEntry {
 	i := len(e.buf)
 	e.buf = append(e.buf, "0123456789000\t"...)
 	sec, nsec := walltime()
@@ -109,8 +109,8 @@ func (e *TSVEvent) TimestampMS() *TSVEvent {
 	return e
 }
 
-// Bool append the b as a bool to the event.
-func (e *TSVEvent) Bool(b bool) *TSVEvent {
+// Bool append the b as a bool to the entry.
+func (e *TSVEntry) Bool(b bool) *TSVEntry {
 	if b {
 		e.buf = append(e.buf, '1', e.sep)
 	} else {
@@ -119,89 +119,89 @@ func (e *TSVEvent) Bool(b bool) *TSVEvent {
 	return e
 }
 
-// Byte append the b as a byte to the event.
-func (e *TSVEvent) Byte(b byte) *TSVEvent {
+// Byte append the b as a byte to the entry.
+func (e *TSVEntry) Byte(b byte) *TSVEntry {
 	e.buf = append(e.buf, b, e.sep)
 	return e
 }
 
-// Float64 adds a float64 to the event.
-func (e *TSVEvent) Float64(f float64) *TSVEvent {
+// Float64 adds a float64 to the entry.
+func (e *TSVEntry) Float64(f float64) *TSVEntry {
 	e.buf = strconv.AppendFloat(e.buf, f, 'f', -1, 64)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
-// Int64 adds a int64 to the event.
-func (e *TSVEvent) Int64(i int64) *TSVEvent {
+// Int64 adds a int64 to the entry.
+func (e *TSVEntry) Int64(i int64) *TSVEntry {
 	e.buf = strconv.AppendInt(e.buf, i, 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
-// Uint64 adds a uint64 to the event.
-func (e *TSVEvent) Uint64(i uint64) *TSVEvent {
+// Uint64 adds a uint64 to the entry.
+func (e *TSVEntry) Uint64(i uint64) *TSVEntry {
 	e.buf = strconv.AppendUint(e.buf, i, 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
-// Float32 adds a float32 to the event.
-func (e *TSVEvent) Float32(f float32) *TSVEvent {
+// Float32 adds a float32 to the entry.
+func (e *TSVEntry) Float32(f float32) *TSVEntry {
 	return e.Float64(float64(f))
 }
 
-// Int adds a int to the event.
-func (e *TSVEvent) Int(i int) *TSVEvent {
+// Int adds a int to the entry.
+func (e *TSVEntry) Int(i int) *TSVEntry {
 	return e.Int64(int64(i))
 }
 
-// Int32 adds a int32 to the event.
-func (e *TSVEvent) Int32(i int32) *TSVEvent {
+// Int32 adds a int32 to the entry.
+func (e *TSVEntry) Int32(i int32) *TSVEntry {
 	return e.Int64(int64(i))
 }
 
-// Int16 adds a int16 to the event.
-func (e *TSVEvent) Int16(i int16) *TSVEvent {
+// Int16 adds a int16 to the entry.
+func (e *TSVEntry) Int16(i int16) *TSVEntry {
 	return e.Int64(int64(i))
 }
 
-// Int8 adds a int8 to the event.
-func (e *TSVEvent) Int8(i int8) *TSVEvent {
+// Int8 adds a int8 to the entry.
+func (e *TSVEntry) Int8(i int8) *TSVEntry {
 	return e.Int64(int64(i))
 }
 
-// Uint32 adds a uint32 to the event.
-func (e *TSVEvent) Uint32(i uint32) *TSVEvent {
+// Uint32 adds a uint32 to the entry.
+func (e *TSVEntry) Uint32(i uint32) *TSVEntry {
 	return e.Uint64(uint64(i))
 }
 
-// Uint16 adds a uint16 to the event.
-func (e *TSVEvent) Uint16(i uint16) *TSVEvent {
+// Uint16 adds a uint16 to the entry.
+func (e *TSVEntry) Uint16(i uint16) *TSVEntry {
 	return e.Uint64(uint64(i))
 }
 
-// Uint8 adds a uint8 to the event.
-func (e *TSVEvent) Uint8(i uint8) *TSVEvent {
+// Uint8 adds a uint8 to the entry.
+func (e *TSVEntry) Uint8(i uint8) *TSVEntry {
 	return e.Uint64(uint64(i))
 }
 
-// Str adds a string to the event.
-func (e *TSVEvent) Str(val string) *TSVEvent {
+// Str adds a string to the entry.
+func (e *TSVEntry) Str(val string) *TSVEntry {
 	e.buf = append(e.buf, val...)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
-// Bytes adds a bytes as string to the event.
-func (e *TSVEvent) Bytes(val []byte) *TSVEvent {
+// Bytes adds a bytes as string to the entry.
+func (e *TSVEntry) Bytes(val []byte) *TSVEntry {
 	e.buf = append(e.buf, val...)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
 
-// IPAddr adds IPv4 or IPv6 Address to the event
-func (e *TSVEvent) IPAddr(ip net.IP) *TSVEvent {
+// IPAddr adds IPv4 or IPv6 Address to the entry.
+func (e *TSVEntry) IPAddr(ip net.IP) *TSVEntry {
 	if ip4 := ip.To4(); ip4 != nil {
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[0]), 10)
 		e.buf = append(e.buf, '.')
@@ -217,8 +217,8 @@ func (e *TSVEvent) IPAddr(ip net.IP) *TSVEvent {
 	return e
 }
 
-// Msg sends the event.
-func (e *TSVEvent) Msg() {
+// Msg sends the entry.
+func (e *TSVEntry) Msg() {
 	if len(e.buf) != 0 {
 		e.buf[len(e.buf)-1] = '\n'
 	}
