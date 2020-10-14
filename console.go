@@ -276,3 +276,5 @@ var ColorFuncMap = template.FuncMap{
 	"title":      strings.ToTitle,
 	"upper":      strings.ToUpper,
 }
+
+var _ Writer = (*ConsoleWriter)(nil)

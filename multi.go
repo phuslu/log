@@ -1,35 +1,34 @@
 package log
 
 import (
-	"bytes"
 	"io"
 )
 
-// MultiWriter is an io.WriteCloser that log to different writers by different levels
+// MultiWriter is an Writer that log to different writers by different levels
 type MultiWriter struct {
 	// InfoWriter specifies all the level logs writes to
-	InfoWriter io.Writer
+	InfoWriter Writer
 
 	// WarnWriter specifies the level large than warn logs writes to
-	WarnWriter io.Writer
+	WarnWriter Writer
 
 	// WarnWriter specifies the level large than error logs writes to
-	ErrorWriter io.Writer
+	ErrorWriter Writer
 
-	// StderrWriter specifies the stderr writer
-	StderrWriter io.Writer
+	// ConsoleWriter specifies the console writer
+	ConsoleWriter Writer
 
-	// StderrLevel specifies the minimal level logs it will be writes to stderr
-	StderrLevel Level
+	// ConsoleLevel specifies the minimal level logs it will be writes to console
+	ConsoleLevel Level
 }
 
 // Close implements io.Closer, and closes the underlying LeveledWriter.
 func (w *MultiWriter) Close() (err error) {
-	for _, writer := range []io.Writer{
+	for _, writer := range []Writer{
 		w.InfoWriter,
 		w.WarnWriter,
 		w.ErrorWriter,
-		w.StderrWriter,
+		w.ConsoleWriter,
 	} {
 		if writer == nil {
 			continue
@@ -43,24 +42,13 @@ func (w *MultiWriter) Close() (err error) {
 	return
 }
 
-// Write implements io.Writer.
-func (w *MultiWriter) Write(p []byte) (n int, err error) {
-	return w.writeAtLevel(guessLevel(p), p)
-}
-
 // WriteEntry implements entryWriter.
 func (w *MultiWriter) WriteEntry(e *Entry) (n int, err error) {
-	n, err = w.writeAtLevel(e.Level, e.buf)
-	e.Discard()
-	return
-}
-
-func (w *MultiWriter) writeAtLevel(level Level, p []byte) (n int, err error) {
 	var err1 error
-	switch level {
+	switch e.Level {
 	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
 		if w.ErrorWriter != nil {
-			n, err1 = w.ErrorWriter.Write(p)
+			n, err1 = w.ErrorWriter.WriteEntry(e)
 			if err1 != nil && err == nil {
 				err = err1
 			}
@@ -68,7 +56,7 @@ func (w *MultiWriter) writeAtLevel(level Level, p []byte) (n int, err error) {
 		fallthrough
 	case WarnLevel:
 		if w.WarnWriter != nil {
-			n, err1 = w.WarnWriter.Write(p)
+			n, err1 = w.WarnWriter.WriteEntry(e)
 			if err1 != nil && err == nil {
 				err = err1
 			}
@@ -76,44 +64,18 @@ func (w *MultiWriter) writeAtLevel(level Level, p []byte) (n int, err error) {
 		fallthrough
 	default:
 		if w.InfoWriter != nil {
-			n, err1 = w.InfoWriter.Write(p)
+			n, err1 = w.InfoWriter.WriteEntry(e)
 			if err1 != nil && err == nil {
 				err = err1
 			}
 		}
 	}
 
-	if w.StderrWriter != nil && level >= w.StderrLevel {
-		w.StderrWriter.Write(p)
+	if w.ConsoleWriter != nil && e.Level >= w.ConsoleLevel {
+		w.ConsoleWriter.WriteEntry(e)
 	}
 
 	return
 }
 
-var levelBegin = []byte(`"level":"`)
-
-func guessLevel(p []byte) Level {
-	var c byte
-
-	// guess level by fixed offset
-	lp := len(p)
-	if lp > 49 {
-		_ = p[49]
-		switch {
-		case p[32] == 'Z' && p[42] == ':' && p[43] == '"':
-			c = p[44]
-		case p[32] == '+' && p[47] == ':' && p[48] == '"':
-			c = p[49]
-		}
-	}
-
-	// guess level by "level":" beginning
-	if c == 0 {
-		if i := bytes.Index(p, levelBegin); i > 0 && i+len(levelBegin)+1 < lp {
-			c = p[i+len(levelBegin)]
-		}
-	}
-
-	// convert byte to Level
-	return ParseLevelByte(c)
-}
+var _ Writer = (*MultiWriter)(nil)

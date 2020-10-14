@@ -14,7 +14,7 @@ import (
 	"syscall"
 )
 
-// JournalWriter is an io.WriteCloser that writes logs to journald.
+// JournalWriter is an Writer that writes logs to journald.
 type JournalWriter struct {
 	// JournalSocket specifies socket name, using `/run/systemd/journal/socket` if empty.
 	JournalSocket string
@@ -32,8 +32,8 @@ func (w *JournalWriter) Close() (err error) {
 	return
 }
 
-// Write implements io.Writer.
-func (w *JournalWriter) Write(p []byte) (n int, err error) {
+// WriteEntry implements Writer.
+func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	w.once.Do(func() {
 		// unix addr
 		w.addr = &net.UnixAddr{
@@ -57,7 +57,7 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 	}
 
 	var t dot
-	err = jsonToDot(p, &t)
+	err = jsonToDot(e.buf, &t)
 	if err != nil {
 		return
 	}
@@ -107,7 +107,7 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 		print(b, strings.ToUpper(kv.Key), kv.Value)
 	}
 
-	print(b, "JSON", b2s(p))
+	print(b, "JSON", b2s(e.buf))
 
 	// write
 	n, _, err = w.conn.WriteMsgUnix(b.B, nil, w.addr)
@@ -146,8 +146,10 @@ func (w *JournalWriter) Write(p []byte) (n int, err error) {
 	rights := syscall.UnixRights(int(file.Fd()))
 	_, _, err = w.conn.WriteMsgUnix([]byte{}, rights, w.addr)
 	if err == nil {
-		n = len(p)
+		n = len(e.buf)
 	}
 
 	return
 }
+
+var _ Writer = (*JournalWriter)(nil)

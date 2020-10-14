@@ -7,6 +7,7 @@
 * No Dependencies
 * Intuitive Interfaces
 * Consistent Writers
+    - IOWriter, *io.Writer wrapper*
     - FileWriter, *rotating & effective*
     - ConsoleWriter, *colorful & templating*
     - MultiWriter, *multiple level dispatch*
@@ -27,7 +28,7 @@ var DefaultLogger = Logger{
 	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
-	Writer:     os.Stderr,
+	Writer:     &IOWriter{os.Stderr},
 }
 
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
@@ -45,14 +46,14 @@ type Logger struct {
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
-	// Writer specifies the writer of output. It uses os.Stderr in if empty.
-	Writer io.Writer
+	// Writer specifies the writer of output. It uses stderr in if empty.
+	Writer Writer
 }
 ```
 
 ### FileWriter & ConsoleWriter
 ```go
-// FileWriter is an io.WriteCloser that writes to the specified filename.
+// FileWriter is an Writer that writes to the specified filename.
 type FileWriter struct {
 	// Filename is the file to write logs to.  Backup log files will be retained
 	// in the same directory.
@@ -156,7 +157,7 @@ log.DefaultLogger = log.Logger{
 	Caller:     1,
 	TimeField:  "date",
 	TimeFormat: "2006-01-02",
-	Writer:     os.Stderr,
+	Writer:     &log.IOWriter{os.Stdout},
 }
 log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
@@ -266,11 +267,11 @@ To log to different writers by different levels, use `MultiWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.MultiWriter{
-	InfoWriter:   &log.FileWriter{Filename: "main.INFO"},
-	WarnWriter:   &log.FileWriter{Filename: "main.WARNING"},
-	ErrorWriter:  &log.FileWriter{Filename: "main.ERROR"},
-	StderrWriter: &log.ConsoleWriter{ColorOutput: true},
-	StderrLevel:  log.ErrorLevel,
+	InfoWriter:    &log.FileWriter{Filename: "main.INFO"},
+	WarnWriter:    &log.FileWriter{Filename: "main.WARNING"},
+	ErrorWriter:   &log.FileWriter{Filename: "main.ERROR"},
+	ConsoleWriter: &log.ConsoleWriter{ColorOutput: true},
+	ConsoleLevel:  log.ErrorLevel,
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
@@ -409,7 +410,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 A quick and simple benchmark with logrus/zap/zerolog, which runs on [github actions][benchmark]:
 
 ```go
-// go test -v -run=none -bench=. -benchtime=10s -benchmem log_test.go
+// go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
 package main
 
 import (
@@ -453,7 +454,7 @@ func BenchmarkZeroLog(b *testing.B) {
 }
 
 func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: ioutil.Discard}
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
@@ -461,10 +462,10 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkLogrus-2    	 2548255	      4737 ns/op	    1832 B/op	      31 allocs/op
-BenchmarkZap-2       	11387668	      1074 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-2   	21846039	       548 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-2   	51170454	       233 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogrus-4    	 1839408	      6310 ns/op	    1833 B/op	      31 allocs/op
+BenchmarkZap-4       	 8219152	      1475 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-4   	18773811	       633 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-4   	43098765	       266 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ### Acknowledgment

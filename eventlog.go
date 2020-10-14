@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// EventlogWriter is an io.WriteCloser that writes logs to windows event log.
+// EventlogWriter is an Writer that writes logs to windows event log.
 type EventlogWriter struct {
 	// Event Source, must not be empty
 	Source string
@@ -37,8 +37,8 @@ func (w *EventlogWriter) Close() (err error) {
 	return
 }
 
-// Write implements io.Writer.
-func (w *EventlogWriter) Write(p []byte) (n int, err error) {
+// WriteEntry implements Writer.
+func (w *EventlogWriter) WriteEntry(e *Entry) (n int, err error) {
 	w.once.Do(func() {
 		if w.ID == 0 {
 			err = errors.New("Specify eventlog default id")
@@ -80,7 +80,7 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 	)
 
 	var etype uint16
-	switch guessLevel(p) {
+	switch e.Level {
 	case TraceLevel:
 		etype = EVENTLOG_INFORMATION_TYPE
 	case DebugLevel:
@@ -101,7 +101,7 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 
 	var ecat uintptr = 0
 	var eid = w.ID
-	var ss = []*uint16{syscall.StringToUTF16Ptr(b2s(p))}
+	var ss = []*uint16{syscall.StringToUTF16Ptr(b2s(e.buf))}
 
 	var ret uintptr
 	ret, _, err = syscall.Syscall9(w.report.Addr(), 9, w.handle, uintptr(etype), ecat, eid, 0, 1, 0, uintptr(unsafe.Pointer(&ss[0])), 0)
@@ -109,8 +109,10 @@ func (w *EventlogWriter) Write(p []byte) (n int, err error) {
 		err = nil
 	}
 	if err == nil {
-		n = len(p)
+		n = len(e.buf)
 	}
 
 	return
 }
+
+var _ Writer = (*EventlogWriter)(nil)

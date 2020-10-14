@@ -22,7 +22,30 @@ var DefaultLogger = Logger{
 	Caller:     0,
 	TimeField:  "",
 	TimeFormat: "",
-	Writer:     os.Stderr,
+	Writer:     IOWriter{os.Stderr},
+}
+
+// Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
+type Entry struct {
+	buf   []byte
+	Level Level
+	need  uint32
+	w     Writer
+}
+
+// Writer defines an entry writer interface.
+type Writer interface {
+	WriteEntry(*Entry) (int, error)
+}
+
+// IOWriter wraps an io.Writer to Writer.
+type IOWriter struct {
+	io.Writer
+}
+
+// WriteEntry implements Writer.
+func (w IOWriter) WriteEntry(e *Entry) (n int, err error) {
+	return w.Writer.Write(e.buf)
 }
 
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
@@ -41,7 +64,7 @@ type Logger struct {
 	TimeFormat string
 
 	// Writer specifies the writer of output. It uses os.Stderr in if empty.
-	Writer io.Writer
+	Writer Writer
 }
 
 const (
@@ -59,19 +82,6 @@ const (
 	needExit  = 0x0002
 	needPanic = 0x0004
 )
-
-// Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
-type Entry struct {
-	buf   []byte
-	Level Level
-	need  uint32
-	w     io.Writer
-}
-
-// entryWriter defines an advanced writer interface.
-type entryWriter interface {
-	WriteEntry(*Entry) (int, error)
-}
 
 // Trace starts a new message with trace level.
 func Trace() (e *Entry) {
@@ -286,7 +296,7 @@ func (l *Logger) header(level Level) *Entry {
 	if l.Writer != nil {
 		e.w = l.Writer
 	} else {
-		e.w = os.Stderr
+		e.w = IOWriter{os.Stderr}
 	}
 	// time
 	if l.TimeField == "" {
@@ -987,19 +997,14 @@ func (e *Entry) Msg(msg string) {
 		e.string(msg)
 	}
 	e.buf = append(e.buf, '}', '\n')
-	ew, ok := e.w.(entryWriter)
-	if ok {
-		ew.WriteEntry(e)
-	} else {
-		e.w.Write(e.buf)
-	}
+	e.w.WriteEntry(e)
 	if (e.need&needExit != 0) && notTest {
 		os.Exit(255)
 	}
 	if (e.need&needPanic != 0) && notTest {
 		panic(msg)
 	}
-	if !ok && cap(e.buf) <= bbcap {
+	if cap(e.buf) <= bbcap {
 		epool.Put(e)
 	}
 }
@@ -1414,6 +1419,14 @@ func stacks(all bool) (trace []byte) {
 		n *= 2
 	}
 	return
+}
+
+// wprintf is a helper function for tests
+func wprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {
+	return w.WriteEntry(&Event{
+		Level: level,
+		buf:   []byte(fmt.Sprintf(format, args...)),
+	})
 }
 
 func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

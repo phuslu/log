@@ -11,7 +11,7 @@ func TestStdWriter(t *testing.T) {
 	w := &stdLogWriter{
 		logger: Logger{
 			Level:  InfoLevel,
-			Writer: os.Stderr,
+			Writer: IOWriter{os.Stderr},
 		},
 		level: DebugLevel,
 	}

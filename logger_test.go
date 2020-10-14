@@ -421,7 +421,7 @@ func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		TimeFormat: TimeFormatUnix,
 		Level:      DebugLevel,
-		Writer:     ioutil.Discard,
+		Writer:     IOWriter{ioutil.Discard},
 	}
 
 	b.ReportAllocs()

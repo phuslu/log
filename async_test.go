@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -10,10 +9,10 @@ import (
 func TestAsyncWriterZero(t *testing.T) {
 	w := &AsyncWriter{
 		ChannelSize: 0,
-		Writer:      os.Stderr,
+		Writer:      IOWriter{os.Stderr},
 	}
 	for i := 0; i < 10; i++ {
-		fmt.Fprintf(w, "%s, %d during async writer 1k buff size\n", timeNow(), i)
+		wprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
 		t.Errorf("async close error: %+v", err)
@@ -23,10 +22,10 @@ func TestAsyncWriterZero(t *testing.T) {
 func TestAsyncWriterSmall(t *testing.T) {
 	w := &AsyncWriter{
 		ChannelSize: 5,
-		Writer:      os.Stderr,
+		Writer:      IOWriter{os.Stderr},
 	}
 	for i := 0; i < 10; i++ {
-		fmt.Fprintf(w, "%s, %d during async writer 1k buff size\n", timeNow(), i)
+		wprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
 		t.Errorf("async close error: %+v", err)
@@ -37,7 +36,7 @@ func BenchmarkAsyncWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
 			ChannelSize: 100,
-			Writer:      ioutil.Discard,
+			Writer:      IOWriter{ioutil.Discard},
 		},
 	}
 	b.SetParallelism(1000)

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// SyslogWriter is an io.WriteCloser that writes logs to a syslog server..
+// SyslogWriter is an Writer that writes logs to a syslog server..
 type SyslogWriter struct {
 	// Network specifies network of the syslog server
 	Network string
@@ -19,9 +19,6 @@ type SyslogWriter struct {
 
 	// Tag specifies prefix of the syslog message
 	Tag string
-
-	// MessageOnly determines if output message field as syslog message only.
-	MessageOnly bool
 
 	// Dial specifies the dial function for creating TCP/TLS connections.
 	Dial func(network, addr string) (net.Conn, error)
@@ -74,8 +71,8 @@ func (w *SyslogWriter) connect() (err error) {
 	return
 }
 
-// Write implements io.Writer, sends logs with priority to the syslog server.
-func (w *SyslogWriter) Write(p []byte) (n int, err error) {
+// WriteEntry implements Writer, sends logs with priority to the syslog server.
+func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	if w.conn == nil {
 		w.mu.Lock()
 		if w.conn == nil {
@@ -88,23 +85,9 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		w.mu.Unlock()
 	}
 
-	var level Level
-	var message string
-
-	if w.MessageOnly {
-		var t dot
-		if jsonToDot(p, &t) == nil {
-			level = t.Level
-			message = t.Message
-		}
-	} else {
-		level = guessLevel(p)
-		message = b2s(p)
-	}
-
 	// convert level to syslog priority
 	var priority byte
-	switch level {
+	switch e.Level {
 	case TraceLevel:
 		priority = '7' // LOG_DEBUG
 	case DebugLevel:
@@ -123,11 +106,11 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 		priority = '6' // LOG_INFO
 	}
 
-	e := epool.Get().(*Entry)
-	defer epool.Put(e)
+	e1 := epool.Get().(*Entry)
+	defer epool.Put(e1)
 
 	// <PRI>TIMESTAMP HOSTNAME TAG[PID]: MSG
-	b := append(e.buf[:0], '<', priority, '>')
+	b := append(e1.buf[:0], '<', priority, '>')
 	if w.local {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
@@ -143,7 +126,8 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	b = append(b, '[')
 	b = append(b, pid...)
 	b = append(b, ']', ':', ' ')
-	b = append(b, message...)
+	b = append(b, e.buf...)
+	e1.buf = b
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -158,3 +142,5 @@ func (w *SyslogWriter) Write(p []byte) (n int, err error) {
 	}
 	return w.conn.Write(b)
 }
+
+var _ Writer = (*SyslogWriter)(nil)

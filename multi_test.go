@@ -2,7 +2,6 @@ package log
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,23 +10,23 @@ import (
 
 func TestMultiWriter(t *testing.T) {
 	w := &MultiWriter{
-		InfoWriter:   &FileWriter{Filename: "file-info.log"},
-		WarnWriter:   &FileWriter{Filename: "file-warn.log"},
-		ErrorWriter:  &FileWriter{Filename: "file-error.log"},
-		StderrWriter: &ConsoleWriter{ColorOutput: true},
-		StderrLevel:  ErrorLevel,
+		InfoWriter:    &FileWriter{Filename: "file-info.log"},
+		WarnWriter:    &FileWriter{Filename: "file-warn.log"},
+		ErrorWriter:   &FileWriter{Filename: "file-error.log"},
+		ConsoleWriter: &ConsoleWriter{ColorOutput: true},
+		ConsoleLevel:  ErrorLevel,
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		_, err := fmt.Fprintf(w, `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		_, err := wprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
-		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		_, err = wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
-		_, err = fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		_, err = wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}
@@ -71,40 +70,36 @@ func TestMultiWriterError(t *testing.T) {
 	}
 
 	w := &MultiWriter{
-		InfoWriter:   file,
-		WarnWriter:   file,
-		ErrorWriter:  file,
-		StderrWriter: &ConsoleWriter{ColorOutput: true},
-		StderrLevel:  TraceLevel,
+		InfoWriter:    IOWriter{errorWriter{file}},
+		WarnWriter:    IOWriter{errorWriter{file}},
+		ErrorWriter:   IOWriter{errorWriter{file}},
+		ConsoleWriter: &ConsoleWriter{ColorOutput: true},
+		ConsoleLevel:  TraceLevel,
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		_, err := fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
-		if err != nil {
+		_, err := wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
+		if err == nil {
 			t.Errorf("test json error writer error: %+v", err)
 		}
 	}
 
-	if err := w.Close(); err == nil {
+	if err := w.Close(); err != nil {
 		t.Errorf("test close error writer error: %+v", err)
 	}
 }
 
 func TestMultiWriterEntry(t *testing.T) {
 	w := &MultiWriter{
-		StderrWriter: &ConsoleWriter{
+		ConsoleWriter: &ConsoleWriter{
 			ColorOutput: true,
 		},
-		StderrLevel: InfoLevel,
+		ConsoleLevel: InfoLevel,
 	}
 
 	var err error
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		e := &Entry{
-			buf:   []byte(fmt.Sprintf(`{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)),
-			Level: ParseLevel(level),
-		}
-		_, err = w.WriteEntry(e)
+		_, err = wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello json mutli writer"}`+"\n", level)
 		if err != nil {
 			t.Errorf("test json mutli writer error: %+v", err)
 		}

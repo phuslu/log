@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// FileWriter is an io.WriteCloser that writes to the specified filename.
+// FileWriter is an Writer that writes to the specified filename.
 //
 // Backups use the log file name given to FileWriter, in the form
 // `name.timestamp.ext` where name is the filename without the extension,
@@ -60,16 +60,16 @@ type FileWriter struct {
 	ProcessID bool
 }
 
-// Write implements io.Writer.  If a write would cause the log file to be larger
+// WriteEntry implements Writer.  If a write would cause the log file to be larger
 // than MaxSize, the file is closed, renamed to include a timestamp of the
 // current time, and a new log file is created using the original log file name.
 // If the length of the write is greater than MaxSize, an error is returned.
-func (w *FileWriter) Write(p []byte) (n int, err error) {
+func (w *FileWriter) WriteEntry(e *Entry) (n int, err error) {
 	w.mu.Lock()
 
 	if w.file == nil {
 		if w.Filename == "" {
-			n, err = os.Stderr.Write(p)
+			n, err = os.Stderr.Write(e.buf)
 			w.mu.Unlock()
 			return
 		}
@@ -80,7 +80,7 @@ func (w *FileWriter) Write(p []byte) (n int, err error) {
 		}
 	}
 
-	n, err = w.file.Write(p)
+	n, err = w.file.Write(e.buf)
 	if err != nil {
 		w.mu.Unlock()
 		return
@@ -220,3 +220,5 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 
 	return
 }
+
+var _ Writer = (*FileWriter)(nil)

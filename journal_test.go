@@ -3,7 +3,6 @@
 package log
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"testing"
@@ -15,11 +14,11 @@ func TestJournalWriter(t *testing.T) {
 	w := &JournalWriter{}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
-	fmt.Fprint(w, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
-	fmt.Fprint(w, "a long long long long message.\n")
+	wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	wprintf(w, InfoLevel, "a long long long long message.\n")
 	w.Close()
 }
 
@@ -51,10 +50,10 @@ func TestJournalWriterError(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		fmt.Fprintf(w, `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
-	fmt.Fprint(w, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
-	fmt.Fprint(w, "a long long long long message.\n")
+	wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	wprintf(w, InfoLevel, "a long long long long message.\n")
 	w.Close()
 }
