@@ -17,8 +17,11 @@ type SyslogWriter struct {
 	// Hostname specifies hostname of the syslog message
 	Hostname string
 
-	// Tag specifies prefix of the syslog message
+	// Tag specifies tag of the syslog message
 	Tag string
+
+	// Marker specifies prefix of the syslog message, e.g. `@cee:`
+	Marker string
 
 	// Dial specifies the dial function for creating TCP/TLS connections.
 	Dial func(network, addr string) (net.Conn, error)
@@ -126,6 +129,9 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	b = append(b, '[')
 	b = append(b, pid...)
 	b = append(b, ']', ':', ' ')
+	if w.Marker != "" {
+		b = append(b, w.Marker...)
+	}
 	b = append(b, e.buf...)
 	e1.buf = b
 

@@ -282,10 +282,11 @@ To log to a syslog server, using `SyslogWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.SyslogWriter{
-	Network  : "unixgram",                     // "tcp"
-	Address  : "/run/systemd/journal/syslog",  // "192.168.0.2:601"
-	Tag      : "",
-	Dial     : net.Dial,
+	Network : "unixgram",                     // "tcp"
+	Address : "/run/systemd/journal/syslog",  // "192.168.0.2:601"
+	Tag     : "",
+	Marker  : "@cee:",
+	Dial    : net.Dial,
 }
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
