@@ -477,6 +477,114 @@ BenchmarkZeroLog-4   	18773811	       633 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLog-4   	43098765	       266 ns/op	       0 B/op	       0 allocs/op
 ```
 
+## A Real World Example
+
+```go
+package main
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+
+	"github.com/naoina/toml"
+	"github.com/phuslu/iploc"
+	"github.com/phuslu/log"
+)
+
+type Config struct {
+	Listen struct {
+		Tcp string
+	}
+	Log struct {
+		Level   string
+		Maxsize int64
+		Backups int
+	}
+}
+
+type Handler struct {
+	Config       *Config
+	AccessLogger log.Logger
+}
+
+func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	remoteIP, _, _ := net.SplitHostPort(req.RemoteAddr)
+	geo := iploc.Country(net.ParseIP(remoteIP))
+
+	fmt.Fprintf(rw, `{"ip":"%s","geo":"%s"}`, remoteIP, geo)
+
+	h.AccessLogger.Info().
+		Str("host", req.Host).
+		Bytes("geo", geo).
+		Str("remote_ip", remoteIP).
+		Str("request_uri", req.RequestURI).
+		Str("user_agent", req.UserAgent()).
+		Str("referer", req.Referer()).
+		Msg("access log")
+}
+
+func main() {
+	config := new(Config)
+	err := toml.Unmarshal([]byte(`
+[listen]
+tcp = ":8080"
+
+[log]
+level = "debug"
+backups = 5
+maxsize = 1073741824
+        `), config)
+	if err != nil {
+		log.Fatal().Msgf("toml.Unmarshal error: %+v", err)
+	}
+
+	handler := &Handler{
+		Config: config,
+		AccessLogger: log.Logger{
+			Writer: &log.FileWriter{
+				Filename:   "access.log",
+				MaxSize:    config.Log.Maxsize,
+				MaxBackups: config.Log.Backups,
+				LocalTime:  true,
+			},
+		},
+	}
+
+	if log.IsTerminal(os.Stderr.Fd()) {
+		log.DefaultLogger = log.Logger{
+			Level:      log.ParseLevel(config.Log.Level),
+			Caller:     1,
+			TimeFormat: "15:04:05",
+			Writer: &log.ConsoleWriter{
+				ColorOutput: true,
+			},
+		}
+		handler.AccessLogger = log.DefaultLogger
+	} else {
+		log.DefaultLogger = log.Logger{
+			Level: log.ParseLevel(config.Log.Level),
+			Writer: &log.FileWriter{
+				Filename:   "main.log",
+				MaxSize:    config.Log.Maxsize,
+				MaxBackups: 1,
+				LocalTime:  false,
+			},
+		}
+	}
+
+	server := &http.Server{
+		Addr:           config.Listen.Tcp,
+		MaxHeaderBytes: 8192,
+		ErrorLog:       log.DefaultLogger.Std(log.ErrorLevel, nil, "", 0),
+		Handler:        handler,
+	}
+
+	log.Fatal().Err(server.ListenAndServe()).Msg("listen failed")
+}
+```
+
 ### Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [gjson][gjson], [zap][zap] and [lumberjack][lumberjack].
 
