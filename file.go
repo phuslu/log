@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -65,11 +66,19 @@ type FileWriter struct {
 // current time, and a new log file is created using the original log file name.
 // If the length of the write is greater than MaxSize, an error is returned.
 func (w *FileWriter) WriteEntry(e *Entry) (n int, err error) {
+	return w.Write(e.buf)
+}
+
+// Write implements io.Writer.  If a write would cause the log file to be larger
+// than MaxSize, the file is closed, renamed to include a timestamp of the
+// current time, and a new log file is created using the original log file name.
+// If the length of the write is greater than MaxSize, an error is returned.
+func (w *FileWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
 
 	if w.file == nil {
 		if w.Filename == "" {
-			n, err = os.Stderr.Write(e.buf)
+			n, err = os.Stderr.Write(p)
 			w.mu.Unlock()
 			return
 		}
@@ -80,7 +89,7 @@ func (w *FileWriter) WriteEntry(e *Entry) (n int, err error) {
 		}
 	}
 
-	n, err = w.file.Write(e.buf)
+	n, err = w.file.Write(p)
 	if err != nil {
 		w.mu.Unlock()
 		return
@@ -222,3 +231,4 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 }
 
 var _ Writer = (*FileWriter)(nil)
+var _ io.Writer = (*FileWriter)(nil)
