@@ -91,29 +91,6 @@ func (l Level) Title() (s string) {
 	return
 }
 
-// Three return three letters of Level
-func (l Level) Three() (s string) {
-	switch l {
-	case TraceLevel:
-		s = "TRC"
-	case DebugLevel:
-		s = "DBG"
-	case InfoLevel:
-		s = "INF"
-	case WarnLevel:
-		s = "WRN"
-	case ErrorLevel:
-		s = "ERR"
-	case FatalLevel:
-		s = "FTL"
-	case PanicLevel:
-		s = "PNC"
-	default:
-		s = "???"
-	}
-	return
-}
-
 // ParseLevel converts a level string into a log Level value.
 func ParseLevel(s string) (level Level) {
 	switch s {

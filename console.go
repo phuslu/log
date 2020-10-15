@@ -82,28 +82,31 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		return out.Write(b.B)
 	}
 
+	// colorful level string
+	var color, three string
+	switch args.Level {
+	case TraceLevel:
+		color, three = Magenta, "TRC"
+	case DebugLevel:
+		color, three = Yellow, "DBG"
+	case InfoLevel:
+		color, three = Green, "INF"
+	case WarnLevel:
+		color, three = Red, "WRN"
+	case ErrorLevel:
+		color, three = Red, "ERR"
+	case FatalLevel:
+		color, three = Red, "FTL"
+	case PanicLevel:
+		color, three = Red, "PNC"
+	default:
+		color, three = Red, "???"
+	}
+
 	// pretty console writer
 	if w.ColorOutput {
-		// colorful level string
-		var levelColor = Gray
-		switch args.Level {
-		case TraceLevel:
-			levelColor = Magenta
-		case DebugLevel:
-			levelColor = Yellow
-		case InfoLevel:
-			levelColor = Green
-		case WarnLevel:
-			levelColor = Red
-		case ErrorLevel:
-			levelColor = Red
-		case FatalLevel:
-			levelColor = Red
-		case PanicLevel:
-			levelColor = Red
-		}
 		// header
-		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, args.Time, Reset, levelColor, args.Level.Three(), Reset)
+		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, args.Time, Reset, color, three, Reset)
 		if args.Caller != "" {
 			fmt.Fprintf(b, "%s %s %s>%s", args.Goid, args.Caller, Cyan, Reset)
 		} else {
@@ -129,7 +132,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 	} else {
 		// header
-		fmt.Fprintf(b, "%s %s ", args.Time, args.Level.Three())
+		fmt.Fprintf(b, "%s %s ", args.Time, three)
 		if args.Caller != "" {
 			fmt.Fprintf(b, "%s %s >", args.Goid, args.Caller)
 		} else {

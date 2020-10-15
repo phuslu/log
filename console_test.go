@@ -159,7 +159,7 @@ func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
 		Formatter: func(a *FormatterArgs) string {
 			var sb strings.Builder
-			fmt.Fprintf(&sb, "%c%s %s %s] %s", a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+			fmt.Fprintf(&sb, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
 			for _, kv := range a.KeyValues {
 				fmt.Fprintf(&sb, " %s=%s", kv.Key, kv.Value)
 			}
@@ -220,7 +220,7 @@ func TestConsoleWriterGlog(t *testing.T) {
 		Writer: &ConsoleWriter{
 			Formatter: func(a *FormatterArgs) string {
 				return fmt.Sprintf("%c%s %s %s] %s",
-					a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+					a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
 			},
 		},
 	}).Sugar(nil)

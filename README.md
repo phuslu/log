@@ -246,7 +246,7 @@ var glog = (&log.Logger{
 	Writer: &log.ConsoleWriter{
 		Formatter: func (a *FormatterArgs) string {
 			return fmt.Sprintf("%c%s %s %s] %s",
-				a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+				a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
 		},
 	},
 }).Sugar(nil)

@@ -35,8 +35,5 @@ func TestLevelParse(t *testing.T) {
 		if v := c.Level.Title(); v != c.Title {
 			t.Errorf("%T.Title() must return %#v, not %#v", c.Level, c.Title, v)
 		}
-		if v := c.Level.Three(); v != c.Three {
-			t.Errorf("%T.Three() must return %#v, not %#v", c.Level, c.Three, v)
-		}
 	}
 }
