@@ -33,7 +33,7 @@ type ConsoleWriter struct {
 
 	// Formatter specifies an optional text formatter for creating a customized output,
 	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
-	Formatter func(args *FormatterArgs) string
+	Formatter func(w io.Writer, args *FormatterArgs)
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
@@ -77,8 +77,10 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 
 	// formatting console writer
 	if w.Formatter != nil {
-		b.B = append(b.B, w.Formatter(&args)...)
-		b.B = append(b.B, '\n')
+		w.Formatter(b, &args)
+		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
+			b.B = append(b.B, '\n')
+		}
 		return out.Write(b.B)
 	}
 
