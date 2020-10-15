@@ -288,7 +288,9 @@ log.DefaultLogger.Writer = &log.SyslogWriter{
 	Marker  : "@cee:",
 	Dial    : net.Dial,
 }
-log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
+log.Info().Msg("hi")
+
+// Output: <6>Oct 5 16:25:38 [237]: @cee:{"time":"2020-10-05T16:25:38.026Z","level":"info","message":"hi"}
 ```
 
 To log to linux systemd journald, using `JournalWriter`.
