@@ -56,8 +56,8 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 		return
 	}
 
-	var t dot
-	err = jsonToDot(e.buf, &t)
+	var args FormatterArgs
+	err = parseFormatterArgs(e.buf, &args)
 	if err != nil {
 		return
 	}
@@ -79,7 +79,7 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 
 	// level
 	var priority string
-	switch t.Level {
+	switch e.Level {
 	case TraceLevel:
 		priority = "7" // Debug
 	case DebugLevel:
@@ -100,10 +100,10 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	print(b, "PRIORITY", priority)
 
 	// message
-	print(b, "MESSAGE", t.Message)
+	print(b, "MESSAGE", args.Message)
 
 	// fields
-	for _, kv := range t.KeyValue {
+	for _, kv := range args.KeyValues {
 		print(b, strings.ToUpper(kv.Key), kv.Value)
 	}
 

@@ -9,7 +9,7 @@
 * Consistent Writers
     - IOWriter, *io.Writer wrapper*
     - FileWriter, *rotating & effective*
-    - ConsoleWriter, *colorful & templating*
+    - ConsoleWriter, *colorful & formatting*
     - MultiWriter, *multiple level dispatch*
     - SyslogWriter, *syslog server logging*
     - JournalWriter, *linux systemd logging*
@@ -82,10 +82,10 @@ type FileWriter struct {
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to output Writer.
+// (optionally) colorized, human-friendly format to Writer.
 //
 // Default output format:
-//     {{.Time}} {{.Level}} {{.Goid}} {{.Caller}} > {{.Message}} {{.Key}}={{.Value}}
+//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 //
 // Note: ConsoleWriter performance is not good, it will parses JSON input into
 // structured records, then outputs them in a specific order.
@@ -99,24 +99,9 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
-	// Template specifies an optional text/template for creating a
-	// user-defined output format, available arguments are:
-	//    type . struct {
-	//        Time     string    // "2019-07-10T05:35:54.277Z"
-	//        Level    Level     // log.InfoLevel
-	//        Caller   string    // "prog.go:42"
-	//        Goid     string    // "123"
-	//        Message  string    // "a structure message"
-	//        Stack    string    // "<stack string>"
-	//        KeyValue []struct {
-	//            Key   string       // "foo"
-	//            Value string       // "bar"
-	//        }
-	//    }
-	// See https://github.com/phuslu/log#template-console-writer for example.
-	//
-	// If Template is not nil, ColorOutput, QuoteString and EndWithMessage are override.
-	Template *template.Template
+	// Formatter specifies an optional text formatter for creating a customized output,
+	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
+	Formatter func(args *FormatterArgs) string
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
@@ -242,15 +227,15 @@ log.Error().Err(errors.New("an error")).Msg("hello world")
 ![Pretty logging][pretty-img]
 > Note: pretty logging also works on windows console
 
-### Template Console Writer
+### Formatting Console Writer
 
-To log with user-defined format(e.g. glog), using `ConsoleWriter.Template`. [![playground][play-template-img]][play-template]
+To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-formatting-img]][play-formatting]
 
 ```go
 package main
 
 import (
-	"text/template"
+	"fmt"
 	"github.com/phuslu/log"
 )
 
@@ -259,8 +244,10 @@ var glog = (&log.Logger{
 	Caller:     1,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
-		Template: template.Must(template.New("").Parse(
-			`{{.Level.First}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
+		Formatter: func (a *FormatterArgs) string {
+			return fmt.Sprintf("%c%s %s %s] %s",
+				a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+		},
 	},
 }).Sugar(nil)
 
@@ -277,7 +264,6 @@ func main() {
 // E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 // F0725 09:59:57.504247 19 console_test.go:186] hello glog Fatal
 ```
-> Note: refer to [ColorTemplate](https://github.com/phuslu/log/blob/master/console.go#L355) and [sprig](https://github.com/Masterminds/sprig) to make it functional.
 
 ### Multiple Dispatching Writer
 
@@ -512,8 +498,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [pretty-img]: https://user-images.githubusercontent.com/195836/90043818-37d99900-dcff-11ea-9f93-7de9ce8b7316.png
-[play-template-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
-[play-template]: https://play.golang.org/p/0sQ03po5N3X
+[play-formatting-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
+[play-formatting]: https://play.golang.org/p/0sQ03po5N3X
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
 [play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go

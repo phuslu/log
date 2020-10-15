@@ -40,29 +40,3 @@ func TestLevelParse(t *testing.T) {
 		}
 	}
 }
-
-func TestLevelParseByte(t *testing.T) {
-	cases := []struct {
-		Level Level
-		Byte1 byte
-		Byte2 byte
-	}{
-		{TraceLevel, 't', 'T'},
-		{DebugLevel, 'd', 'D'},
-		{InfoLevel, 'i', 'I'},
-		{WarnLevel, 'w', 'W'},
-		{ErrorLevel, 'e', 'E'},
-		{FatalLevel, 'f', 'F'},
-		{PanicLevel, 'p', 'P'},
-		{noLevel, 'x', '?'},
-	}
-
-	for _, c := range cases {
-		if v := ParseLevelByte(c.Byte1); v != c.Level {
-			t.Errorf("ParseLevel(%#v) must return %#v, not %#v", c.Byte1, c.Level, v)
-		}
-		if v := ParseLevelByte(c.Byte2); v != c.Level {
-			t.Errorf("ParseLevel(%#v) must return %#v, not %#v", c.Byte2, c.Level, v)
-		}
-	}
-}

@@ -4,11 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path"
 	"runtime"
 	"strconv"
-	"strings"
-	"text/template"
 )
 
 // IsTerminal returns whether the given file descriptor is a terminal.
@@ -34,24 +31,9 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end.
 	EndWithMessage bool
 
-	// Template specifies an optional text/template for creating a
-	// user-defined output format, available arguments are:
-	//    type . struct {
-	//        Time     string    // "2019-07-10T05:35:54.277Z"
-	//        Level    Level     // InfoLevel
-	//        Caller   string    // "prog.go:42"
-	//        Goid     string    // "123"
-	//        Message  string    // "a structure message"
-	//        Stack    string    // "<stack string>"
-	//        KeyValue []struct {
-	//            Key   string       // "foo"
-	//            Value string       // "bar"
-	//        }
-	//    }
-	// See https://github.com/phuslu/log#template-console-writer for example.
-	//
-	// If Template is not nil, ColorOutput, QuoteString and EndWithMessage are override.
-	Template *template.Template
+	// Formatter specifies an optional text formatter for creating a customized output,
+	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
+	Formatter func(args *FormatterArgs) string
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
@@ -68,9 +50,9 @@ func (w *ConsoleWriter) Close() (err error) {
 }
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
-	var t dot
+	var args FormatterArgs
 
-	err = jsonToDot(p, &t)
+	err = parseFormatterArgs(p, &args)
 	if err != nil {
 		n, err = out.Write(p)
 		return
@@ -93,12 +75,10 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		Gray    = "\x1b[90m"
 	)
 
-	// template console writer
-	if w.Template != nil {
-		w.Template.Execute(b, &t)
-		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
-			b.B = append(b.B, '\n')
-		}
+	// formatting console writer
+	if w.Formatter != nil {
+		b.B = append(b.B, w.Formatter(&args)...)
+		b.B = append(b.B, '\n')
 		return out.Write(b.B)
 	}
 
@@ -106,7 +86,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	if w.ColorOutput {
 		// colorful level string
 		var levelColor = Gray
-		switch t.Level {
+		switch args.Level {
 		case TraceLevel:
 			levelColor = Magenta
 		case DebugLevel:
@@ -123,17 +103,17 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 			levelColor = Red
 		}
 		// header
-		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, t.Time, Reset, levelColor, t.Level.Three(), Reset)
-		if t.Caller != "" {
-			fmt.Fprintf(b, "%s %s %s>%s", t.Goid, t.Caller, Cyan, Reset)
+		fmt.Fprintf(b, "%s%s%s %s%s%s ", Gray, args.Time, Reset, levelColor, args.Level.Three(), Reset)
+		if args.Caller != "" {
+			fmt.Fprintf(b, "%s %s %s>%s", args.Goid, args.Caller, Cyan, Reset)
 		} else {
 			fmt.Fprintf(b, "%s>%s", Cyan, Reset)
 		}
 		if !w.EndWithMessage {
-			fmt.Fprintf(b, " %s", t.Message)
+			fmt.Fprintf(b, " %s", args.Message)
 		}
 		// key and values
-		for _, kv := range t.KeyValue {
+		for _, kv := range args.KeyValues {
 			if w.QuoteString {
 				kv.Value = strconv.Quote(kv.Value)
 			}
@@ -145,21 +125,21 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 		// message
 		if w.EndWithMessage {
-			fmt.Fprintf(b, "%s %s", Reset, t.Message)
+			fmt.Fprintf(b, "%s %s", Reset, args.Message)
 		}
 	} else {
 		// header
-		fmt.Fprintf(b, "%s %s ", t.Time, t.Level.Three())
-		if t.Caller != "" {
-			fmt.Fprintf(b, "%s %s >", t.Goid, t.Caller)
+		fmt.Fprintf(b, "%s %s ", args.Time, args.Level.Three())
+		if args.Caller != "" {
+			fmt.Fprintf(b, "%s %s >", args.Goid, args.Caller)
 		} else {
 			fmt.Fprint(b, ">")
 		}
 		if !w.EndWithMessage {
-			fmt.Fprintf(b, " %s", t.Message)
+			fmt.Fprintf(b, " %s", args.Message)
 		}
 		// key and values
-		for _, kv := range t.KeyValue {
+		for _, kv := range args.KeyValues {
 			if w.QuoteString {
 				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
 			} else {
@@ -168,14 +148,14 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 		// message
 		if w.EndWithMessage {
-			fmt.Fprintf(b, " %s", t.Message)
+			fmt.Fprintf(b, " %s", args.Message)
 		}
 	}
 
 	// stack
-	if t.Stack != "" {
+	if args.Stack != "" {
 		b.B = append(b.B, '\n')
-		b.B = append(b.B, t.Stack...)
+		b.B = append(b.B, args.Stack...)
 	}
 
 	b.B = append(b.B, '\n')
@@ -183,9 +163,23 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	return out.Write(b.B)
 }
 
+// FormatterArgs is a parsed sturct from json input
+type FormatterArgs struct {
+	Time      string // "2019-07-10T05:35:54.277Z"
+	Level     Level  // InfoLevel
+	Caller    string // "prog.go:42"
+	Goid      string // "123"
+	Message   string // "a structure message"
+	Stack     string // "<stack string>"
+	KeyValues []struct {
+		Key   string // "foo"
+		Value string // "bar"
+	}
+}
+
 var errInvalidJson = errors.New("invalid json object")
 
-func jsonToDot(json []byte, t *dot) error {
+func parseFormatterArgs(json []byte, e *FormatterArgs) error {
 	items, err := jsonParse(json)
 	if err != nil {
 		return err
@@ -194,87 +188,33 @@ func jsonToDot(json []byte, t *dot) error {
 		return errInvalidJson
 	}
 
-	t.Time = b2s(items[1].Value)
+	e.Time = b2s(items[1].Value)
 	for i := 2; i < len(items); i += 2 {
 		k, v := items[i].Value, items[i+1].Value
 		switch b2s(k) {
 		case "level":
-			t.Level = noLevel
-			if len(v) > 0 {
-				t.Level = ParseLevelByte(v[0])
-			}
+			e.Level = ParseLevel(b2s(v))
 		case "goid":
-			t.Goid = b2s(v)
+			e.Goid = b2s(v)
 		case "caller":
-			t.Caller = b2s(v)
+			e.Caller = b2s(v)
 		case "message", "msg":
 			if len(v) != 0 && v[len(v)-1] == '\n' {
-				t.Message = b2s(v[:len(v)-1])
+				e.Message = b2s(v[:len(v)-1])
 			} else {
-				t.Message = b2s(v)
+				e.Message = b2s(v)
 			}
 		case "stack":
-			t.Stack = b2s(v)
+			e.Stack = b2s(v)
 		default:
-			t.KeyValue = append(t.KeyValue, dotkv{b2s(k), b2s(v)})
+			e.KeyValues = append(e.KeyValues, struct {
+				Key   string
+				Value string
+			}{b2s(k), b2s(v)})
 		}
 	}
 
 	return nil
-}
-
-type dot struct {
-	Time     string
-	Level    Level
-	Caller   string
-	Goid     string
-	Message  string
-	Stack    string
-	KeyValue []dotkv
-}
-
-type dotkv struct {
-	Key   string
-	Value string
-}
-
-// ColorTemplate provides a pre-defined text/template for console color output
-// Note: use [sprig](https://github.com/Masterminds/sprig) to introduce more template functions.
-const ColorTemplate = `{{gray .Time -}}
-{{if eq .Level -1 }}{{magenta " TRC " -}}
-{{else if eq .Level 0 }}{{yellow " DBG " -}}
-{{else if eq .Level 1}}{{green " INF " -}}
-{{else if eq .Level 2}}{{red " WRN " -}}
-{{else if eq .Level 3}}{{red " ERR " -}}
-{{else if eq .Level 4}}{{red " FTL " -}}
-{{else if eq .Level 5}}{{red " PNC " -}}
-{{else}}{{red " ??? "}}{{end -}}
-{{.Goid}} {{.Caller}}{{cyan " >" -}}
-{{range .KeyValue -}}
-{{if eq .Key "error" }} {{red (printf "%s%s%s" .Key "=" .Value) -}}
-{{else}} {{cyan .Key}}={{gray .Value}}{{end -}}
-{{end}} {{.Message}}
-{{.Stack}}`
-
-// ColorFuncMap provides a pre-defined template functions for color string
-var ColorFuncMap = template.FuncMap{
-	"black":      func(s string) string { return "\x1b[30m" + s + "\x1b[0m" },
-	"red":        func(s string) string { return "\x1b[31m" + s + "\x1b[0m" },
-	"green":      func(s string) string { return "\x1b[32m" + s + "\x1b[0m" },
-	"yellow":     func(s string) string { return "\x1b[33m" + s + "\x1b[0m" },
-	"blue":       func(s string) string { return "\x1b[34m" + s + "\x1b[0m" },
-	"magenta":    func(s string) string { return "\x1b[35m" + s + "\x1b[0m" },
-	"cyan":       func(s string) string { return "\x1b[36m" + s + "\x1b[0m" },
-	"white":      func(s string) string { return "\x1b[37m" + s + "\x1b[0m" },
-	"gray":       func(s string) string { return "\x1b[90m" + s + "\x1b[0m" },
-	"contains":   strings.Contains,
-	"endswith":   strings.HasSuffix,
-	"lower":      strings.ToLower,
-	"match":      path.Match,
-	"quote":      strconv.Quote,
-	"startswith": strings.HasPrefix,
-	"title":      strings.ToTitle,
-	"upper":      strings.ToUpper,
 }
 
 var _ Writer = (*ConsoleWriter)(nil)

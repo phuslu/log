@@ -114,68 +114,22 @@ func (l Level) Three() (s string) {
 	return
 }
 
-// First return first upper letter of Level
-func (l Level) First() (s string) {
-	switch l {
-	case TraceLevel:
-		s = "T"
-	case DebugLevel:
-		s = "D"
-	case InfoLevel:
-		s = "I"
-	case WarnLevel:
-		s = "W"
-	case ErrorLevel:
-		s = "E"
-	case FatalLevel:
-		s = "F"
-	case PanicLevel:
-		s = "P"
-	default:
-		s = "?"
-	}
-	return
-}
-
 // ParseLevel converts a level string into a log Level value.
 func ParseLevel(s string) (level Level) {
 	switch s {
-	case "trace", "Trace", "TRACE", "T", "TRC":
+	case "trace", "Trace", "TRACE", "TRC":
 		level = TraceLevel
-	case "debug", "Debug", "DEBUG", "D", "DBG":
+	case "debug", "Debug", "DEBUG", "DBG":
 		level = DebugLevel
-	case "info", "Info", "INFO", "I", "INF":
+	case "info", "Info", "INFO", "INF":
 		level = InfoLevel
-	case "warn", "Warn", "WARN", "warning", "Warning", "WARNING", "W", "WRN":
+	case "warn", "Warn", "WARN", "warning", "Warning", "WARNING", "WRN":
 		level = WarnLevel
-	case "error", "Error", "ERROR", "E", "ERR":
+	case "error", "Error", "ERROR", "ERR":
 		level = ErrorLevel
-	case "fatal", "Fatal", "FATAL", "F", "FTL":
+	case "fatal", "Fatal", "FATAL", "FTL":
 		level = FatalLevel
-	case "panic", "Panic", "PANIC", "P", "PNC":
-		level = PanicLevel
-	default:
-		level = noLevel
-	}
-	return
-}
-
-// ParseLevelByte converts a level byte into a log Level value.
-func ParseLevelByte(b byte) (level Level) {
-	switch b {
-	case 't', 'T':
-		level = TraceLevel
-	case 'd', 'D':
-		level = DebugLevel
-	case 'i', 'I':
-		level = InfoLevel
-	case 'w', 'W':
-		level = WarnLevel
-	case 'e', 'E':
-		level = ErrorLevel
-	case 'f', 'F':
-		level = FatalLevel
-	case 'p', 'P':
+	case "panic", "Panic", "PANIC", "PNC":
 		level = PanicLevel
 	default:
 		level = noLevel

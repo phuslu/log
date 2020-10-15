@@ -1,10 +1,11 @@
 package log
 
 import (
+	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"testing"
-	"text/template"
 )
 
 func TestIsTerminal(t *testing.T) {
@@ -154,9 +155,16 @@ func TestConsoleWriterStack(t *testing.T) {
 	}
 }
 
-func TestConsoleWriterTemplate(t *testing.T) {
+func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
-		Template: template.Must(template.New("").Funcs(ColorFuncMap).Parse(ColorTemplate)),
+		Formatter: func(a *FormatterArgs) string {
+			var sb strings.Builder
+			fmt.Fprintf(&sb, "%c%s %s %s] %s", a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+			for _, kv := range a.KeyValues {
+				fmt.Fprintf(&sb, " %s=%s", kv.Key, kv.Value)
+			}
+			return sb.String()
+		},
 	}
 
 	_, err := wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"info","caller":"pretty.go:42","goid":123,"error":"i am test error","stack":"stack1\n\tstack2\n\t\tstack3\n","message":"hello console stack writer"}`)
@@ -202,27 +210,6 @@ func TestConsoleWriterTemplate(t *testing.T) {
 	}
 }
 
-func TestConsoleWriterTemplateColor(t *testing.T) {
-	w := &ConsoleWriter{
-		Template: template.Must(template.New("").Funcs(ColorFuncMap).Parse(`
-			black {{black .Message}}
-			red {{red .Message}}
-			green {{green .Message}}
-			yellow {{yellow .Message}}
-			blue {{blue .Message}}
-			magenta {{magenta .Message}}
-			cyan {{cyan .Message}}
-			white {{white .Message}}
-			gray {{gray .Message}}
-		`)),
-	}
-
-	_, err := wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"info","message":"hello console stack writer"}`)
-	if err != nil {
-		t.Errorf("test plain text console writer error: %+v", err)
-	}
-}
-
 func TestConsoleWriterGlog(t *testing.T) {
 	notTest = false
 
@@ -231,8 +218,10 @@ func TestConsoleWriterGlog(t *testing.T) {
 		Caller:     1,
 		TimeFormat: "0102 15:04:05.999999",
 		Writer: &ConsoleWriter{
-			Template: template.Must(template.New("").Parse(
-				`{{.Level.First}}{{.Time}} {{.Goid}} {{.Caller}}] {{.Message}}`)),
+			Formatter: func(a *FormatterArgs) string {
+				return fmt.Sprintf("%c%s %s %s] %s",
+					a.Level.Upper()[0], a.Time, a.Goid, a.Caller, a.Message)
+			},
 		},
 	}).Sugar(nil)
 
