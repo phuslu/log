@@ -9,16 +9,16 @@ type MultiWriter struct {
 	// InfoWriter specifies all the level logs writes to
 	InfoWriter Writer
 
-	// WarnWriter specifies the level large than warn logs writes to
+	// WarnWriter specifies the level greater than or equal to WarnLevel writes to
 	WarnWriter Writer
 
-	// WarnWriter specifies the level large than error logs writes to
+	// WarnWriter specifies the level greater than or equal to ErrorLevel writes to
 	ErrorWriter Writer
 
 	// ConsoleWriter specifies the console writer
 	ConsoleWriter Writer
 
-	// ConsoleLevel specifies the minimal level logs it will be writes to console
+	// ConsoleLevel specifies the level greater than or equal to it also writes to
 	ConsoleLevel Level
 }
 
