@@ -468,6 +468,7 @@ BenchmarkPhusLog-4   	43098765	       266 ns/op	       0 B/op	       0 allocs/op
 
 ## A Real World Example
 
+The example starts a geoip http server which supports change log level dynamically
 ```go
 package main
 
@@ -502,9 +503,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	remoteIP, _, _ := net.SplitHostPort(req.RemoteAddr)
 	geo := iploc.Country(net.ParseIP(remoteIP))
 
-	fmt.Fprintf(rw, `{"ip":"%s","geo":"%s"}`, remoteIP, geo)
-
-	h.AccessLogger.Info().
+	h.AccessLogger.Log().
 		Str("host", req.Host).
 		Bytes("geo", geo).
 		Str("remote_ip", remoteIP).
@@ -512,6 +511,13 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		Str("user_agent", req.UserAgent()).
 		Str("referer", req.Referer()).
 		Msg("access log")
+
+	switch req.RequestURI {
+	case "/debug", "/info", "/warn", "/error":
+		log.DefaultLogger.SetLevel(log.ParseLevel(req.RequestURI[1:]))
+	default:
+		fmt.Fprintf(rw, `{"ip":"%s","geo":"%s"}`, remoteIP, geo)
+	}
 }
 
 func main() {
@@ -547,7 +553,8 @@ maxsize = 1073741824
 			Caller:     1,
 			TimeFormat: "15:04:05",
 			Writer: &log.ConsoleWriter{
-				ColorOutput: true,
+				ColorOutput:    true,
+				EndWithMessage: true,
 			},
 		}
 		handler.AccessLogger = log.DefaultLogger
@@ -557,17 +564,16 @@ maxsize = 1073741824
 			Writer: &log.FileWriter{
 				Filename:   "main.log",
 				MaxSize:    config.Log.Maxsize,
-				MaxBackups: 1,
-				LocalTime:  false,
+				MaxBackups: config.Log.Backups,
+				LocalTime:  true,
 			},
 		}
 	}
 
 	server := &http.Server{
-		Addr:           config.Listen.Tcp,
-		MaxHeaderBytes: 8192,
-		ErrorLog:       log.DefaultLogger.Std(log.ErrorLevel, nil, "", 0),
-		Handler:        handler,
+		Addr:     config.Listen.Tcp,
+		ErrorLog: log.DefaultLogger.Std(log.ErrorLevel, nil, "", 0),
+		Handler:  handler,
 	}
 
 	log.Fatal().Err(server.ListenAndServe()).Msg("listen failed")
