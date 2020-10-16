@@ -92,10 +92,10 @@ type FileWriter struct {
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 //
-// Note: ConsoleWriter performance is not good, it will parses JSON input into
-// structured records, then outputs them in a specific order. it's faster 5x than
-// zerolog.ConsoleWriter and 2x than logrus.TextFormatter, but slower 50% than
-// zap.ConsoleEncoder. It's recommended to use ConsoleWriter for development.
+// Note: The performance of ConsoleWriter is not good enough, because it will
+// parses JSON input into structured records, then output in a specific order.
+// It's faster 2x than logrus.TextFormatter and 4x than zerolog.ConsoleWriter,
+// but slower 0.5x than zap.ConsoleEncoder. Recommended for development scenarios.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -455,40 +455,6 @@ func BenchmarkZeroLog(b *testing.B) {
 
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
-	}
-}
-
-func BenchmarkLogrusConsole(b *testing.B) {
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.TextFormatter{})
-	logger.SetOutput(ioutil.Discard)
-	for i := 0; i < b.N; i++ {
-		logger.WithFields(logrus.Fields{"foo": "bar", "int": 42}).Info(fakeMessage)
-	}
-}
-
-func BenchmarkZapConsole(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(ioutil.Discard),
-		zapcore.InfoLevel,
-	))
-	for i := 0; i < b.N; i++ {
-		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 42))
-	}
-}
-
-func BenchmarkZeroLogConsole(b *testing.B) {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: ioutil.Discard}).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
-	}
-}
-
-func BenchmarkPhusLogConsole(b *testing.B) {
-	logger := log.Logger{Writer: &log.ConsoleWriter{Writer: ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
