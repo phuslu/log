@@ -49,9 +49,14 @@ type Logger struct {
 	// Writer specifies the writer of output. It uses stderr in if empty.
 	Writer Writer
 }
+
+// Writer defines an entry writer interface.
+type Writer interface {
+	WriteEntry(*Entry) (int, error)
+}
 ```
 
-### FileWriter & ConsoleWriter & MultiWriter
+### FileWriter & ConsoleWriter
 ```go
 // FileWriter is an Writer that writes to the specified filename.
 type FileWriter struct {
@@ -106,25 +111,8 @@ type ConsoleWriter struct {
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
 }
-
-// MultiWriter is an Writer that log to different writers by different levels
-type MultiWriter struct {
-	// InfoWriter specifies all the level logs writes to
-	InfoWriter Writer
-
-	// WarnWriter specifies the level greater than or equal to WarnLevel writes to
-	WarnWriter Writer
-
-	// WarnWriter specifies the level greater than or equal to ErrorLevel writes to
-	ErrorWriter Writer
-
-	// ConsoleWriter specifies the console writer
-	ConsoleWriter Writer
-
-	// ConsoleLevel specifies the level greater than or equal to it also writes to
-	ConsoleLevel Level
-}
 ```
+> Note: FileWriter/ConsoleWriter implements log.Writer and io.Writer interfaces both.
 
 ## Getting Started
 
