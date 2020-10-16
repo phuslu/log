@@ -20,7 +20,9 @@ func IsTerminal(fd uintptr) bool {
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 //
 // Note: ConsoleWriter performance is not good, it will parses JSON input into
-// structured records, then outputs them in a specific order.
+// structured records, then outputs them in a specific order. it's faster 5x than
+// zerolog.ConsoleWriter and 2x than logrus.TextFormatter, but slower 50% than
+// zap.ConsoleEncoder. It's recommended to use ConsoleWriter for development.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
