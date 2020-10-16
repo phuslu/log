@@ -58,11 +58,11 @@ func isTerminal(fd uintptr, os, arch string) bool {
 	return err == 0
 }
 
-// WriteEntry implements Writer.
-func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
+// Write implements io.Writer
+func (w *ConsoleWriter) Write(p []byte) (int, error) {
 	out := w.Writer
 	if out == nil {
 		out = os.Stderr
 	}
-	return w.write(out, e.buf)
+	return w.write(out, p)
 }

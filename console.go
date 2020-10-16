@@ -49,6 +49,11 @@ func (w *ConsoleWriter) Close() (err error) {
 	return
 }
 
+// WriteEntry implements Writer.
+func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
+	return w.Write(e.buf)
+}
+
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	var args FormatterArgs
 
@@ -223,3 +228,4 @@ func parseFormatterArgs(json []byte, e *FormatterArgs) error {
 }
 
 var _ Writer = (*ConsoleWriter)(nil)
+var _ io.Writer = (*ConsoleWriter)(nil)
