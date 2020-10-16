@@ -236,24 +236,22 @@ var glog = (&log.Logger{
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
 		Formatter: func (w io.Writer, a *FormatterArgs) {
-			fmt.Fprintf(w, "%c%s %s %s] %s",
-				a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
+			fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
+				a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},
 }).Sugar(nil)
 
 func main() {
 	glog.Infof("hello glog %s", "Info")
-	glog.Warnf("hello glog %s", "Earn")
+	glog.Warnf("hello glog %s", "Warn")
 	glog.Errorf("hello glog %s", "Error")
-	glog.Fatalf("hello glog %s", "Fatal")
 }
 
 // Output:
 // I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
-// W0725 09:59:57.504247 19 console_test.go:184] hello glog Earn
+// W0725 09:59:57.504247 19 console_test.go:184] hello glog Warn
 // E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
-// F0725 09:59:57.504247 19 console_test.go:186] hello glog Fatal
 ```
 
 ### Multiple Dispatching Writer
