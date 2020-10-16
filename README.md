@@ -457,6 +457,40 @@ func BenchmarkPhusLog(b *testing.B) {
 		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
 }
+
+func BenchmarkLogrusConsole(b *testing.B) {
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.TextFormatter{})
+	logger.SetOutput(ioutil.Discard)
+	for i := 0; i < b.N; i++ {
+		logger.WithFields(logrus.Fields{"foo": "bar", "int": 42}).Info(fakeMessage)
+	}
+}
+
+func BenchmarkZapConsole(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.InfoLevel,
+	))
+	for i := 0; i < b.N; i++ {
+		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 42))
+	}
+}
+
+func BenchmarkZeroLogConsole(b *testing.B) {
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: ioutil.Discard}).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
+	}
+}
+
+func BenchmarkPhusLogConsole(b *testing.B) {
+	logger := log.Logger{Writer: &log.ConsoleWriter{Writer: ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
+	}
+}
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
