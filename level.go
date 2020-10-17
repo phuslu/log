@@ -22,8 +22,8 @@ const (
 	noLevel Level = 6
 )
 
-// Lower return lowe case string of Level
-func (l Level) Lower() (s string) {
+// String return lowe case string of Level
+func (l Level) String() (s string) {
 	switch l {
 	case TraceLevel:
 		s = "trace"
@@ -39,52 +39,6 @@ func (l Level) Lower() (s string) {
 		s = "fatal"
 	case PanicLevel:
 		s = "panic"
-	default:
-		s = "????"
-	}
-	return
-}
-
-// Upper return upper case string of Level
-func (l Level) Upper() (s string) {
-	switch l {
-	case TraceLevel:
-		s = "TRACE"
-	case DebugLevel:
-		s = "DEBUG"
-	case InfoLevel:
-		s = "INFO"
-	case WarnLevel:
-		s = "WARN"
-	case ErrorLevel:
-		s = "ERROR"
-	case FatalLevel:
-		s = "FATAL"
-	case PanicLevel:
-		s = "PANIC"
-	default:
-		s = "????"
-	}
-	return
-}
-
-// Title return title case string of Level
-func (l Level) Title() (s string) {
-	switch l {
-	case TraceLevel:
-		s = "Trace"
-	case DebugLevel:
-		s = "Debug"
-	case InfoLevel:
-		s = "Info"
-	case WarnLevel:
-		s = "Warn"
-	case ErrorLevel:
-		s = "Error"
-	case FatalLevel:
-		s = "Fatal"
-	case PanicLevel:
-		s = "Panic"
 	default:
 		s = "????"
 	}
