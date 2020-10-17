@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -158,7 +159,11 @@ func TestConsoleWriterStack(t *testing.T) {
 func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
 		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
-			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
+			var level byte = '?'
+			if a.Level != "" {
+				level = a.Level[0] - 32
+			}
+			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", level, a.Time, a.Goid, a.Caller, a.Message)
 			for _, kv := range a.KeyValues {
 				i, _ := fmt.Fprintf(w, " %s=%s", kv.Key, kv.Value)
 				n += i
@@ -219,7 +224,7 @@ func TestConsoleWriterGlog(t *testing.T) {
 		TimeFormat: "0102 15:04:05.999999",
 		Writer: &ConsoleWriter{
 			Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
-				return fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
+				return fmt.Fprintf(w, "%c%s %s %s] %s", strings.ToTitle(a.Level)[0], a.Time, a.Goid, a.Caller, a.Message)
 			},
 		},
 	}).Sugar(nil)

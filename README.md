@@ -227,6 +227,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strings"
 	"github.com/phuslu/log"
 )
 
@@ -237,7 +238,7 @@ var glog = (&log.Logger{
 	Writer: &log.ConsoleWriter{
 		Formatter: func (w io.Writer, a *FormatterArgs) (int, error) {
 			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
-				a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message, a.Stack)
+				a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},
 }).Sugar(nil)

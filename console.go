@@ -90,19 +90,19 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	// colorful level string
 	var color, three string
 	switch args.Level {
-	case TraceLevel:
+	case "trace":
 		color, three = Magenta, "TRC"
-	case DebugLevel:
+	case "debug":
 		color, three = Yellow, "DBG"
-	case InfoLevel:
+	case "info":
 		color, three = Green, "INF"
-	case WarnLevel:
+	case "warn":
 		color, three = Red, "WRN"
-	case ErrorLevel:
+	case "error":
 		color, three = Red, "ERR"
-	case FatalLevel:
+	case "fatal":
 		color, three = Red, "FTL"
-	case PanicLevel:
+	case "panic":
 		color, three = Red, "PNC"
 	default:
 		color, three = Red, "???"
@@ -174,7 +174,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 // FormatterArgs is a parsed sturct from json input
 type FormatterArgs struct {
 	Time      string // "2019-07-10T05:35:54.277Z"
-	Level     Level  // InfoLevel
+	Level     string // "info"
 	Caller    string // "prog.go:42"
 	Goid      string // "123"
 	Message   string // "a structure message"
@@ -201,19 +201,19 @@ func parseFormatterArgs(json []byte, e *FormatterArgs) error {
 		k, v := items[i].Value, items[i+1].Value
 		switch b2s(k) {
 		case "level":
-			e.Level = ParseLevel(b2s(v))
+			e.Level = b2s(v)
 		case "goid":
 			e.Goid = b2s(v)
 		case "caller":
 			e.Caller = b2s(v)
-		case "message", "msg":
+		case "stack":
+			e.Stack = b2s(v)
+		case "message":
 			if len(v) != 0 && v[len(v)-1] == '\n' {
 				e.Message = b2s(v[:len(v)-1])
 			} else {
 				e.Message = b2s(v)
 			}
-		case "stack":
-			e.Stack = b2s(v)
 		default:
 			e.KeyValues = append(e.KeyValues, struct {
 				Key   string
