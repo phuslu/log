@@ -238,7 +238,7 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 
 // SetLevel changes logger default level.
 func (l *Logger) SetLevel(level Level) {
-	atomic.StoreInt32((*int32)(&l.Level), int32(level))
+	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
 	return
 }
 
@@ -279,7 +279,7 @@ var timeOffset, timeZone = func() (int64, string) {
 }()
 
 func (l *Logger) header(level Level) *Entry {
-	if int32(level) < atomic.LoadInt32((*int32)(&l.Level)) {
+	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
 		return nil
 	}
 	e := epool.Get().(*Entry)

@@ -1,25 +1,25 @@
 package log
 
 // Level defines log levels.
-type Level int32
+type Level uint32
 
 const (
 	// TraceLevel defines trace log level.
-	TraceLevel Level = -1
+	TraceLevel Level = 1
 	// DebugLevel defines debug log level.
-	DebugLevel Level = 0
+	DebugLevel Level = 2
 	// InfoLevel defines info log level.
-	InfoLevel Level = 1
+	InfoLevel Level = 3
 	// WarnLevel defines warn log level.
-	WarnLevel Level = 2
+	WarnLevel Level = 4
 	// ErrorLevel defines error log level.
-	ErrorLevel Level = 3
+	ErrorLevel Level = 5
 	// FatalLevel defines fatal log level.
-	FatalLevel Level = 4
+	FatalLevel Level = 6
 	// PanicLevel defines panic log level.
-	PanicLevel Level = 5
+	PanicLevel Level = 7
 	// NoLevel defines an absent log level.
-	noLevel Level = 6
+	noLevel Level = 8
 )
 
 // String return lowe case string of Level
