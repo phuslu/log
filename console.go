@@ -187,7 +187,7 @@ type FormatterArgs struct {
 
 var errInvalidJson = errors.New("invalid json object")
 
-func parseFormatterArgs(json []byte, e *FormatterArgs) error {
+func parseFormatterArgs(json []byte, args *FormatterArgs) error {
 	items, err := jsonParse(json)
 	if err != nil {
 		return err
@@ -196,30 +196,34 @@ func parseFormatterArgs(json []byte, e *FormatterArgs) error {
 		return errInvalidJson
 	}
 
-	e.Time = b2s(items[1].Value)
+	args.Time = b2s(items[1].Value)
 	for i := 2; i < len(items); i += 2 {
 		k, v := items[i].Value, items[i+1].Value
 		switch b2s(k) {
 		case "level":
-			e.Level = b2s(v)
+			args.Level = b2s(v)
 		case "goid":
-			e.Goid = b2s(v)
+			args.Goid = b2s(v)
 		case "caller":
-			e.Caller = b2s(v)
+			args.Caller = b2s(v)
 		case "stack":
-			e.Stack = b2s(v)
+			args.Stack = b2s(v)
 		case "message":
 			if len(v) != 0 && v[len(v)-1] == '\n' {
-				e.Message = b2s(v[:len(v)-1])
+				args.Message = b2s(v[:len(v)-1])
 			} else {
-				e.Message = b2s(v)
+				args.Message = b2s(v)
 			}
 		default:
-			e.KeyValues = append(e.KeyValues, struct {
+			args.KeyValues = append(args.KeyValues, struct {
 				Key   string
 				Value string
 			}{b2s(k), b2s(v)})
 		}
+	}
+
+	if args.Level == "" {
+		args.Level = "????"
 	}
 
 	return nil

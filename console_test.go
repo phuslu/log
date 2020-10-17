@@ -159,11 +159,7 @@ func TestConsoleWriterStack(t *testing.T) {
 func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
 		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
-			var level byte = '?'
-			if a.Level != "" {
-				level = a.Level[0] - 32
-			}
-			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", level, a.Time, a.Goid, a.Caller, a.Message)
+			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", strings.ToTitle(a.Level)[0], a.Time, a.Goid, a.Caller, a.Message)
 			for _, kv := range a.KeyValues {
 				i, _ := fmt.Fprintf(w, " %s=%s", kv.Key, kv.Value)
 				n += i
