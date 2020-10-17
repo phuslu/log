@@ -108,7 +108,7 @@ type ConsoleWriter struct {
 
 	// Formatter specifies an optional text formatter for creating a customized output,
 	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
-	Formatter func(w io.Writer, args *FormatterArgs)
+	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
@@ -235,8 +235,8 @@ var glog = (&log.Logger{
 	Caller:     1,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
-		Formatter: func (w io.Writer, a *FormatterArgs) {
-			fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
+		Formatter: func (w io.Writer, a *FormatterArgs) (int, error) {
+			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
 				a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},

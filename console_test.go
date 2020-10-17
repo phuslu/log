@@ -157,11 +157,13 @@ func TestConsoleWriterStack(t *testing.T) {
 
 func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
-		Formatter: func(w io.Writer, a *FormatterArgs) {
-			fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
+		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
+			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
 			for _, kv := range a.KeyValues {
-				fmt.Fprintf(w, " %s=%s", kv.Key, kv.Value)
+				i, _ := fmt.Fprintf(w, " %s=%s", kv.Key, kv.Value)
+				n += i
 			}
+			return n, err
 		},
 	}
 
@@ -216,8 +218,8 @@ func TestConsoleWriterGlog(t *testing.T) {
 		Caller:     1,
 		TimeFormat: "0102 15:04:05.999999",
 		Writer: &ConsoleWriter{
-			Formatter: func(w io.Writer, a *FormatterArgs) {
-				fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
+			Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
+				return fmt.Fprintf(w, "%c%s %s %s] %s", a.Level.Title()[0], a.Time, a.Goid, a.Caller, a.Message)
 			},
 		},
 	}).Sugar(nil)

@@ -35,7 +35,7 @@ type ConsoleWriter struct {
 
 	// Formatter specifies an optional text formatter for creating a customized output,
 	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
-	Formatter func(w io.Writer, args *FormatterArgs)
+	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 
 	// Writer is the output destination. using os.Stderr if empty.
 	Writer io.Writer
@@ -65,6 +65,11 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		return
 	}
 
+	// formatting console writer
+	if w.Formatter != nil {
+		return w.Formatter(out, &args)
+	}
+
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 	defer bbpool.Put(b)
@@ -81,15 +86,6 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		White   = "\x1b[37m"
 		Gray    = "\x1b[90m"
 	)
-
-	// formatting console writer
-	if w.Formatter != nil {
-		w.Formatter(b, &args)
-		if len(b.B) > 0 && b.B[len(b.B)-1] != '\n' {
-			b.B = append(b.B, '\n')
-		}
-		return out.Write(b.B)
-	}
 
 	// colorful level string
 	var color, three string
