@@ -225,9 +225,8 @@ To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![
 package main
 
 import (
-	"fmt"
 	"io"
-	"strings"
+	"fmt"
 	"github.com/phuslu/log"
 )
 
@@ -236,7 +235,7 @@ var glog = (&log.Logger{
 	Caller:     1,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
-		Formatter: func (w io.Writer, a *FormatterArgs) (int, error) {
+		Formatter: func (w io.Writer, a *log.FormatterArgs) (int, error) {
 			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
 				a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
@@ -247,6 +246,7 @@ func main() {
 	glog.Infof("hello glog %s", "Info")
 	glog.Warnf("hello glog %s", "Warn")
 	glog.Errorf("hello glog %s", "Error")
+	glog.Fatalf("hello glog %s", "Fatal")
 }
 
 // Output:
@@ -595,15 +595,15 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [stability-img]: https://img.shields.io/badge/stability-stable-green.svg
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
-[play-customize-img]: https://img.shields.io/badge/playground-U2TYAgV7VCR-29BEB0?style=flat&logo=go
-[play-customize]: https://play.golang.org/p/U2TYAgV7VCR
+[play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
+[play-customize]: https://play.golang.org/p/emTsJJKUGXZ
 [play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
 [play-file]: https://play.golang.org/p/nS-ILxFyhHM
 [play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/CD1LClgEvS4
 [pretty-img]: https://user-images.githubusercontent.com/195836/90043818-37d99900-dcff-11ea-9f93-7de9ce8b7316.png
-[play-formatting-img]: https://img.shields.io/badge/playground-0sQ03po5N3X-29BEB0?style=flat&logo=go
-[play-formatting]: https://play.golang.org/p/0sQ03po5N3X
+[play-formatting-img]: https://img.shields.io/badge/playground-8ScRKLIrehG-29BEB0?style=flat&logo=go
+[play-formatting]: https://play.golang.org/p/8ScRKLIrehG
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
 [play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go
