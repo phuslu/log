@@ -844,39 +844,15 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	return e
 }
 
-const base32 = "0123456789abcdefghijklmnopqrstuv"
-
 // Xid adds the field key with xid.ID as a base32 string to the entry.
 func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 	if e == nil {
 		return nil
 	}
 	e.key(key)
-	_ = xid[11]
-	e.buf = append(e.buf,
-		'"',
-		base32[xid[0]>>3],
-		base32[(xid[1]>>6)&0x1F|(xid[0]<<2)&0x1F],
-		base32[(xid[1]>>1)&0x1F],
-		base32[(xid[2]>>4)&0x1F|(xid[1]<<4)&0x1F],
-		base32[xid[3]>>7|(xid[2]<<1)&0x1F],
-		base32[(xid[3]>>2)&0x1F],
-		base32[xid[4]>>5|(xid[3]<<3)&0x1F],
-		base32[xid[4]&0x1F],
-		base32[xid[5]>>3],
-		base32[(xid[6]>>6)&0x1F|(xid[5]<<2)&0x1F],
-		base32[(xid[6]>>1)&0x1F],
-		base32[(xid[7]>>4)&0x1F|(xid[6]<<4)&0x1F],
-		base32[xid[8]>>7|(xid[7]<<1)&0x1F],
-		base32[(xid[8]>>2)&0x1F],
-		base32[(xid[9]>>5)|(xid[8]<<3)&0x1F],
-		base32[xid[9]&0x1F],
-		base32[xid[10]>>3],
-		base32[(xid[11]>>6)&0x1F|(xid[10]<<2)&0x1F],
-		base32[(xid[11]>>1)&0x1F],
-		base32[(xid[11]<<4)&0x1F],
-		'"',
-	)
+	e.buf = append(e.buf, '"')
+	e.buf = (XID(xid)).Encode(e.buf)
+	e.buf = append(e.buf, '"')
 
 	return e
 }
