@@ -1,14 +1,19 @@
 package log
 
 import (
+	"errors"
 	"sync/atomic"
 	"time"
 )
 
 var counter = Fastrandn(4294967295)
 
+// XID represents a unique request id
 type XID [12]byte
 
+var nilXID XID
+
+// NewXID generates a globally unique XID
 func NewXID() (x XID) {
 	// timestamp
 	sec, _ := walltime()
@@ -31,8 +36,14 @@ func NewXID() (x XID) {
 	return
 }
 
+// Time returns the timestamp part of the id.
 func (x XID) Time() time.Time {
 	return time.Unix(int64(x[0])<<32|int64(x[1])<<16|int64(x[2])<<8|int64(x[3]), 0)
+}
+
+// Machine returns the 3-byte machine id part of the id.
+func (x XID) Machine() []byte {
+	return x[4:7]
 }
 
 // Pid returns the process id part of the id.
@@ -79,6 +90,39 @@ func (x XID) String() string {
 	return b2s(x.Encode(nil))
 }
 
+// MarshalText implements encoding/text TextMarshaler interface
+func (x XID) MarshalText() ([]byte, error) {
+	return x.Encode(nil), nil
+}
+
+// MarshalJSON implements encoding/json Marshaler interface
+func (x XID) MarshalJSON() (dst []byte, err error) {
+	if x == nilXID {
+		dst = []byte("null")
+	} else {
+		dst = append(dst, '"')
+		dst = x.Encode(dst)
+		dst = append(dst, '"')
+	}
+	return
+}
+
+// UnmarshalText implements encoding/text TextUnmarshaler interface
+func (x *XID) UnmarshalText(text []byte) (err error) {
+	*x, err = ParseXID(b2s(text))
+	return
+}
+
+// UnmarshalJSON implements encoding/json Unmarshaler interface
+func (x *XID) UnmarshalJSON(b []byte) (err error) {
+	if string(b) == "null" {
+		*x = nilXID
+		return
+	}
+	*x, err = ParseXID(b2s(b[1 : len(b)-1]))
+	return
+}
+
 const base32r = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" +
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" +
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" +
@@ -96,18 +140,33 @@ const base32r = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xf
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" +
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 
-func ParseXID(s string) (x XID) {
-	x[11] = base32r[s[17]]<<6 | base32r[s[18]]<<1 | base32r[s[19]]>>4
-	x[10] = base32r[s[16]]<<3 | base32r[s[17]]>>2
-	x[9] = base32r[s[14]]<<5 | base32r[s[15]]
-	x[8] = base32r[s[12]]<<7 | base32r[s[13]]<<2 | base32r[s[14]]>>3
-	x[7] = base32r[s[11]]<<4 | base32r[s[12]]>>1
-	x[6] = base32r[s[9]]<<6 | base32r[s[10]]<<1 | base32r[s[11]]>>4
-	x[5] = base32r[s[8]]<<3 | base32r[s[9]]>>2
-	x[4] = base32r[s[6]]<<5 | base32r[s[7]]
-	x[3] = base32r[s[4]]<<7 | base32r[s[5]]<<2 | base32r[s[6]]>>3
-	x[2] = base32r[s[3]]<<4 | base32r[s[4]]>>1
-	x[1] = base32r[s[1]]<<6 | base32r[s[2]]<<1 | base32r[s[3]]>>4
+// ErrInvalidXID is returned when trying to parse an invalid XID
+var ErrInvalidXID = errors.New("xid: invalid XID")
+
+// ParseXID parses an XID from its string representation
+func ParseXID(s string) (x XID, err error) {
+	if len(s) != 20 {
+		err = ErrInvalidXID
+		return
+	}
+	_ = s[19]
+	for i := 0; i < 20; i++ {
+		if base32r[s[i]] == 0xff {
+			err = ErrInvalidXID
+			return
+		}
+	}
 	x[0] = base32r[s[0]]<<3 | base32r[s[1]]>>2
+	x[1] = base32r[s[1]]<<6 | base32r[s[2]]<<1 | base32r[s[3]]>>4
+	x[2] = base32r[s[3]]<<4 | base32r[s[4]]>>1
+	x[3] = base32r[s[4]]<<7 | base32r[s[5]]<<2 | base32r[s[6]]>>3
+	x[4] = base32r[s[6]]<<5 | base32r[s[7]]
+	x[5] = base32r[s[8]]<<3 | base32r[s[9]]>>2
+	x[6] = base32r[s[9]]<<6 | base32r[s[10]]<<1 | base32r[s[11]]>>4
+	x[7] = base32r[s[11]]<<4 | base32r[s[12]]>>1
+	x[8] = base32r[s[12]]<<7 | base32r[s[13]]<<2 | base32r[s[14]]>>3
+	x[9] = base32r[s[14]]<<5 | base32r[s[15]]
+	x[10] = base32r[s[16]]<<3 | base32r[s[17]]>>2
+	x[11] = base32r[s[17]]<<6 | base32r[s[18]]<<1 | base32r[s[19]]>>4
 	return
 }
