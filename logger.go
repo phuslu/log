@@ -1433,16 +1433,17 @@ var hostname = func() string {
 
 var pid = os.Getpid()
 
-var machine = func() (id []byte) {
-	id = make([]byte, 3)
+var machine = func() (id [3]byte) {
 	b, err := ioutil.ReadFile("/etc/machine-id")
 	if err != nil || len(b) == 0 {
 		b, err = []byte(hostname), nil
 	}
 	hex := md5.Sum(b)
-	copy(id, hex[:])
+	id[0] = hex[0]
+	id[1] = hex[1]
+	id[2] = hex[2]
 	return id
-}
+}()
 
 // wprintf is a helper function for tests
 func wprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {

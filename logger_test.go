@@ -83,7 +83,7 @@ func TestLoggerInfo(t *testing.T) {
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
-		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
+		Xid("xid", NewXID()).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
@@ -149,7 +149,7 @@ func TestLoggerNil(t *testing.T) {
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
-		Xid("xid", [12]byte{0x4d, 0x88, 0xe1, 0x5b, 0x60, 0xf4, 0x86, 0xe4, 0x28, 0x41, 0x2d, 0xc9}).
+		Xid("xid", NewXID()).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
