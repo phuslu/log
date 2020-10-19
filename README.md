@@ -512,10 +512,12 @@ type Handler struct {
 }
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	reqID := log.NewXID()
 	remoteIP, _, _ := net.SplitHostPort(req.RemoteAddr)
 	geo := iploc.Country(net.ParseIP(remoteIP))
 
 	h.AccessLogger.Log().
+		Xid("req_id", reqID).
 		Str("host", req.Host).
 		Bytes("geo", geo).
 		Str("remote_ip", remoteIP).
@@ -528,7 +530,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	case "/debug", "/info", "/warn", "/error":
 		log.DefaultLogger.SetLevel(log.ParseLevel(req.RequestURI[1:]))
 	default:
-		fmt.Fprintf(rw, `{"ip":"%s","geo":"%s"}`, remoteIP, geo)
+		fmt.Fprintf(rw, `{"req_id":"%s","ip":"%s","geo":"%s"}`, reqID, remoteIP, geo)
 	}
 }
 
