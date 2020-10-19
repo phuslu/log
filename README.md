@@ -7,16 +7,27 @@
 * No Dependencies
 * Intuitive Interfaces
 * Consistent Writers
-    - IOWriter, *io.Writer wrapper*
-    - FileWriter, *rotating & effective*
-    - ConsoleWriter, *colorful & formatting*
-    - MultiWriter, *multiple level dispatch*
-    - SyslogWriter, *syslog server logging*
-    - JournalWriter, *linux systemd logging*
-    - EventlogWriter, *windows system event*
-    - AsyncWriter, *asynchronously writing*
-* Third-party(StdLog/Grpc/Logr) Logger Interceptor
+    - `IOWriter`, *io.Writer wrapper*
+    - `FileWriter`, *rotating & effective*
+    - `ConsoleWriter`, *colorful & formatting*
+    - `MultiWriter`, *multiple level dispatch*
+    - `SyslogWriter`, *syslog server logging*
+    - `JournalWriter`, *linux systemd logging*
+    - `EventlogWriter`, *windows system event*
+    - `AsyncWriter`, *asynchronously writing*
+* Third-party Logger Interceptor
+    - `Logger.Std`, *(std)log*
+    - `Logger.Grpc`, *grpclog.LoggerV2*
+    - `Logger.Logr`, *logr.Logger*
+    - `Logger.Sugar`, *zap.SugaredLogger*
+* Useful utility functions
+    - `Goid()`, *current goroutine id*
+    - `NewXID()`, *create a tracing id*
+    - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
+    - `IsTerminal(fd uintptr)`, *isatty for golang*
+    - `Printf(fmt string, a ...interface{})`, *printf logging*
 * High Performance
+    - Outperforms all others json loggers.
 
 ## Interfaces
 
