@@ -303,7 +303,7 @@ func TestFileWriterFileinfo(t *testing.T) {
 		hostname = "shire"
 		defer func() { hostname = origHost }()
 		origPid := pid
-		pid = "198400"
+		pid = 198400
 		defer func() { pid = origPid }()
 
 		w := &FileWriter{Filename: filename, HostName: true}

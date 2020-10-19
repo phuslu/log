@@ -1,9 +1,11 @@
 package log
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
@@ -1419,6 +1421,27 @@ func stacks(all bool) (trace []byte) {
 		n *= 2
 	}
 	return
+}
+
+var hostname = func() string {
+	s, err := os.Hostname()
+	if err != nil || strings.HasPrefix(s, "localhost") {
+		s = "localhost-" + strconv.FormatInt(int64(Fastrandn(1000000)), 10)
+	}
+	return s
+}()
+
+var pid = os.Getpid()
+
+var machine = func() (id []byte) {
+	id = make([]byte, 3)
+	b, err := ioutil.ReadFile("/etc/machine-id")
+	if err != nil || len(b) == 0 {
+		b, err = []byte(hostname), nil
+	}
+	hex := md5.Sum(b)
+	copy(id, hex[:])
+	return id
 }
 
 // wprintf is a helper function for tests

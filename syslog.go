@@ -2,6 +2,7 @@ package log
 
 import (
 	"net"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -127,7 +128,7 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	b = append(b, ' ')
 	b = append(b, w.Tag...)
 	b = append(b, '[')
-	b = append(b, pid...)
+	b = strconv.AppendInt(b, int64(pid), 10)
 	b = append(b, ']', ':', ' ')
 	if w.Marker != "" {
 		b = append(b, w.Marker...)

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -128,18 +127,6 @@ func (w *FileWriter) Rotate() (err error) {
 	return
 }
 
-var hostname = func() string {
-	s, _ := os.Hostname()
-	if strings.HasPrefix(s, "localhost") {
-		sec, nsec := walltime()
-		ts := sec*1000000 + int64(nsec)/1000
-		s = "localhost-" + strconv.FormatInt(ts, 10)
-	}
-	return s
-}()
-
-var pid = strconv.Itoa(os.Getpid())
-
 func (w *FileWriter) rotate() (err error) {
 	oldfile := w.file
 
@@ -206,13 +193,13 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 	filename = prefix + now.Format(".2006-01-02T15-04-05")
 	if w.HostName {
 		if w.ProcessID {
-			filename += "." + hostname + "-" + pid + ext
+			filename += "." + hostname + "-" + strconv.Itoa(pid) + ext
 		} else {
 			filename += "." + hostname + ext
 		}
 	} else {
 		if w.ProcessID {
-			filename += "." + pid + ext
+			filename += "." + strconv.Itoa(pid) + ext
 		} else {
 			filename += ext
 		}
