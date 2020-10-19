@@ -1434,15 +1434,27 @@ var hostname = func() string {
 var pid = os.Getpid()
 
 var machine = func() (id [3]byte) {
-	b, err := ioutil.ReadFile("/etc/machine-id")
-	if err != nil || len(b) == 0 {
-		b, err = []byte(hostname), nil
+	// seed files
+	var files []string
+	switch runtime.GOOS {
+	case "linux":
+		files = []string{"/etc/machine-id", "/proc/self/cpuset"}
+	case "freebsd":
+		files = []string{"/etc/hostid"}
 	}
-	hex := md5.Sum(b)
+	// append seed to hostname
+	data := []byte(hostname)
+	for _, file := range files {
+		if b, err := ioutil.ReadFile(file); err == nil {
+			data = append(data, b...)
+		}
+	}
+	// md5 bytes
+	hex := md5.Sum(data)
 	id[0] = hex[0]
 	id[1] = hex[1]
 	id[2] = hex[2]
-	return id
+	return
 }()
 
 // wprintf is a helper function for tests
