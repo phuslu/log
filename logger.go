@@ -1,11 +1,9 @@
 package log
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
@@ -1398,40 +1396,6 @@ func stacks(all bool) (trace []byte) {
 	}
 	return
 }
-
-var hostname = func() string {
-	s, err := os.Hostname()
-	if err != nil || strings.HasPrefix(s, "localhost") {
-		s = "localhost-" + strconv.FormatInt(int64(Fastrandn(1000000)), 10)
-	}
-	return s
-}()
-
-var pid = os.Getpid()
-
-var machine = func() (id [3]byte) {
-	// seed files
-	var files []string
-	switch runtime.GOOS {
-	case "linux":
-		files = []string{"/etc/machine-id", "/proc/self/cpuset"}
-	case "freebsd":
-		files = []string{"/etc/hostid"}
-	}
-	// append seed to hostname
-	data := []byte(hostname)
-	for _, file := range files {
-		if b, err := ioutil.ReadFile(file); err == nil {
-			data = append(data, b...)
-		}
-	}
-	// md5 bytes
-	hex := md5.Sum(data)
-	id[0] = hex[0]
-	id[1] = hex[1]
-	id[2] = hex[2]
-	return
-}()
 
 // wprintf is a helper function for tests
 func wprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {

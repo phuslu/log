@@ -1,11 +1,15 @@
 package log
 
 import (
+	"crypto/md5"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -216,6 +220,35 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 
 	return
 }
+
+var hostname, machine = func() (string, [16]byte) {
+	// host
+	host, err := os.Hostname()
+	if err != nil || strings.HasPrefix(host, "localhost") {
+		host = "localhost-" + strconv.FormatInt(int64(Fastrandn(1000000)), 10)
+	}
+	// seed files
+	var files []string
+	switch runtime.GOOS {
+	case "linux":
+		files = []string{"/etc/machine-id", "/proc/self/cpuset"}
+	case "freebsd":
+		files = []string{"/etc/hostid"}
+	}
+	// append seed to hostname
+	data := []byte(host)
+	for _, file := range files {
+		if b, err := ioutil.ReadFile(file); err == nil {
+			data = append(data, b...)
+		}
+	}
+	// md5 digest
+	hex := md5.Sum(data)
+
+	return host, hex
+}()
+
+var pid = os.Getpid()
 
 var _ Writer = (*FileWriter)(nil)
 var _ io.Writer = (*FileWriter)(nil)
