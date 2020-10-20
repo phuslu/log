@@ -53,11 +53,11 @@ type Logger struct {
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the time format in output. It uses time.RFC3389 in if empty.
+	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
-	// Writer specifies the writer of output. It uses stderr in if empty.
+	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
 }
 
