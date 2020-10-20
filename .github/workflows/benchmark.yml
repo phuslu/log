@@ -16,6 +16,5 @@ jobs:
           tee log_test.go
           go get github.com/phuslu/log
           go get github.com/rs/zerolog
-          go get github.com/sirupsen/logrus
           go get go.uber.org/zap
           head -1 log_test.go | cut -b3- | sed -E 's#\r##' | bash -xe

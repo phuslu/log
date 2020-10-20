@@ -417,7 +417,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-A quick and simple benchmark with logrus/zap/zerolog, which runs on [github actions][benchmark]:
+A quick and simple benchmark with zap/zerolog, which runs on [github actions][benchmark]:
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -429,21 +429,11 @@ import (
 
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 var fakeMessage = "Test logging, but use a somewhat realistic message length. "
-
-func BenchmarkLogrus(b *testing.B) {
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.SetOutput(ioutil.Discard)
-	for i := 0; i < b.N; i++ {
-		logger.WithFields(logrus.Fields{"foo": "bar", "int": 42}).Info(fakeMessage)
-	}
-}
 
 func BenchmarkZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -472,7 +462,6 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkLogrus-4    	 1839408	      6310 ns/op	    1833 B/op	      31 allocs/op
 BenchmarkZap-4       	 8219152	      1475 ns/op	     128 B/op	       1 allocs/op
 BenchmarkZeroLog-4   	18773811	       633 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLog-4   	43098765	       266 ns/op	       0 B/op	       0 allocs/op
