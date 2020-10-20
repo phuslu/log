@@ -848,8 +848,9 @@ func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 		return nil
 	}
 	e.key(key)
+
 	e.buf = append(e.buf, '"')
-	e.buf = (XID(xid)).Encode(e.buf)
+	e.buf = append(e.buf, (XID(xid)).String()...)
 	e.buf = append(e.buf, '"')
 
 	return e

@@ -58,41 +58,41 @@ func (x XID) Counter() uint32 {
 
 const base32 = "0123456789abcdefghijklmnopqrstuv"
 
-// Encode encodes the id using base32 encoding, writing 20 bytes to dst and return it.
-func (x XID) Encode(dst []byte) []byte {
-	dst = append(dst,
-		base32[x[0]>>3],
-		base32[(x[1]>>6)&0x1F|(x[0]<<2)&0x1F],
-		base32[(x[1]>>1)&0x1F],
-		base32[(x[2]>>4)&0x1F|(x[1]<<4)&0x1F],
-		base32[x[3]>>7|(x[2]<<1)&0x1F],
-		base32[(x[3]>>2)&0x1F],
-		base32[x[4]>>5|(x[3]<<3)&0x1F],
-		base32[x[4]&0x1F],
-		base32[x[5]>>3],
-		base32[(x[6]>>6)&0x1F|(x[5]<<2)&0x1F],
-		base32[(x[6]>>1)&0x1F],
-		base32[(x[7]>>4)&0x1F|(x[6]<<4)&0x1F],
-		base32[x[8]>>7|(x[7]<<1)&0x1F],
-		base32[(x[8]>>2)&0x1F],
-		base32[(x[9]>>5)|(x[8]<<3)&0x1F],
-		base32[x[9]&0x1F],
-		base32[x[10]>>3],
-		base32[(x[11]>>6)&0x1F|(x[10]<<2)&0x1F],
-		base32[(x[11]>>1)&0x1F],
-		base32[(x[11]<<4)&0x1F],
-	)
-	return dst
+func (x XID) encode(dst []byte) {
+	dst[19] = base32[(x[11]<<4)&0x1F]
+	dst[18] = base32[(x[11]>>1)&0x1F]
+	dst[17] = base32[(x[11]>>6)&0x1F|(x[10]<<2)&0x1F]
+	dst[16] = base32[x[10]>>3]
+	dst[15] = base32[x[9]&0x1F]
+	dst[14] = base32[(x[9]>>5)|(x[8]<<3)&0x1F]
+	dst[13] = base32[(x[8]>>2)&0x1F]
+	dst[12] = base32[x[8]>>7|(x[7]<<1)&0x1F]
+	dst[11] = base32[(x[7]>>4)&0x1F|(x[6]<<4)&0x1F]
+	dst[10] = base32[(x[6]>>1)&0x1F]
+	dst[9] = base32[(x[6]>>6)&0x1F|(x[5]<<2)&0x1F]
+	dst[8] = base32[x[5]>>3]
+	dst[7] = base32[x[4]&0x1F]
+	dst[6] = base32[x[4]>>5|(x[3]<<3)&0x1F]
+	dst[5] = base32[(x[3]>>2)&0x1F]
+	dst[4] = base32[x[3]>>7|(x[2]<<1)&0x1F]
+	dst[3] = base32[(x[2]>>4)&0x1F|(x[1]<<4)&0x1F]
+	dst[2] = base32[(x[1]>>1)&0x1F]
+	dst[1] = base32[(x[1]>>6)&0x1F|(x[0]<<2)&0x1F]
+	dst[0] = base32[x[0]>>3]
 }
 
 // String returns a base32 hex lowercased representation of the id.
 func (x XID) String() string {
-	return b2s(x.Encode(nil))
+	dst := make([]byte, 20)
+	x.encode(dst)
+	return b2s(dst)
 }
 
 // MarshalText implements encoding/text TextMarshaler interface
-func (x XID) MarshalText() ([]byte, error) {
-	return x.Encode(nil), nil
+func (x XID) MarshalText() (dst []byte, err error) {
+	dst = make([]byte, 20)
+	x.encode(dst)
+	return
 }
 
 // MarshalJSON implements encoding/json Marshaler interface
@@ -100,9 +100,10 @@ func (x XID) MarshalJSON() (dst []byte, err error) {
 	if x == nilXID {
 		dst = []byte("null")
 	} else {
-		dst = append(dst, '"')
-		dst = x.Encode(dst)
-		dst = append(dst, '"')
+		dst = make([]byte, 22)
+		dst[0] = '"'
+		x.encode(dst[1:21])
+		dst[21] = '"'
 	}
 	return
 }
