@@ -454,7 +454,10 @@ func BenchmarkZeroLog(b *testing.B) {
 }
 
 func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+	logger := log.Logger{
+		TimeFormat: log.TimeFormatRFC3339Milli,
+		Writer:     log.IOWriter{ioutil.Discard},
+	}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
 	}
