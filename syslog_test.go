@@ -64,8 +64,9 @@ func TestSyslogWriterUnix(t *testing.T) {
 	defer os.Remove(sockname)
 
 	go func() {
+		var data [512]byte
 		for {
-			buf := make([]byte, 2048)
+			buf := data[:]
 			n, uaddr, err := conn.ReadFromUnix(buf)
 			if err != nil {
 				t.Logf("listen: error: %v\n", err)
