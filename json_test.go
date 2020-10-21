@@ -11,13 +11,9 @@ func TestJsonParse(t *testing.T) {
 	}
 
 	for _, s := range jsons {
-		results, err := jsonParse([]byte(s))
-		if err != nil {
-			t.Errorf("jsonParse error: %+v", err)
-		}
-
+		results := appendJsonItems(nil, []byte(s))
 		for _, v := range results {
-			t.Logf("%c %s", v.Type, v.Value)
+			t.Logf("%c [%s]", v.Type, v.Value)
 		}
 	}
 }

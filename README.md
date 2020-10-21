@@ -105,8 +105,8 @@ type FileWriter struct {
 //
 // Note: The performance of ConsoleWriter is not good enough, because it will
 // parses JSON input into structured records, then output in a specific order.
-// It's faster 2x than logrus.TextFormatter and 4x than zerolog.ConsoleWriter,
-// but slower 0.5x than zap.ConsoleEncoder. Recommended for development scenarios.
+// Roughly 2x faster than logrus.TextFormatter, 0.8x fast as zap.ConsoleEncoder,
+// and 5x faster than zerolog.ConsoleWriter.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool

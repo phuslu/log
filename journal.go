@@ -56,8 +56,9 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 		return
 	}
 
+	var items [32]jsonItem
 	var args FormatterArgs
-	err = parseFormatterArgs(e.buf, &args)
+	err = parseFormatterArgs(e.buf, items[:0], &args)
 	if err != nil {
 		return
 	}

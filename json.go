@@ -11,8 +11,8 @@ type jsonItem struct {
 	Value []byte
 }
 
-// jsonParse extracts from https://github.com/tidwall/gjson
-func jsonParse(json []byte) (items []jsonItem, err error) {
+// jsonToItems extracts json string to json items
+func appendJsonItems(items []jsonItem, json []byte) []jsonItem {
 	var keys bool
 	var i int
 	var key, value jsonItem
@@ -28,7 +28,7 @@ func jsonParse(json []byte) (items []jsonItem, err error) {
 			break
 		}
 		if json[i] > ' ' {
-			return
+			return items
 		}
 	}
 	var str []byte
@@ -41,12 +41,11 @@ func jsonParse(json []byte) (items []jsonItem, err error) {
 			}
 			i, str, vesc, ok = jsonParseString(json, i+1)
 			if !ok {
-				return
+				return items
 			}
+			key.Value = str[1 : len(str)-1]
 			if vesc {
-				key.Value = jsonUnescape(str[1 : len(str)-1])
-			} else {
-				key.Value = str[1 : len(str)-1]
+				key.Type = 'S'
 			}
 		}
 		for ; i < len(json); i++ {
@@ -57,11 +56,15 @@ func jsonParse(json []byte) (items []jsonItem, err error) {
 		}
 		i, value, ok = jsonParseAny(json, i, true)
 		if !ok {
-			return
+			return items
+		}
+		if value.Type == 'S' {
+			value.Value = jsonUnescape(value.Value, value.Value[:0])
+			value.Type = 's'
 		}
 		items = append(items, key, value)
 	}
-	return
+	return items
 }
 
 func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
@@ -104,8 +107,7 @@ func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
 }
 
 // jsonUnescape unescapes a string
-func jsonUnescape(json []byte) []byte {
-	var str = make([]byte, 0, len(json))
+func jsonUnescape(json, str []byte) []byte {
 	_ = json[len(json)-1] // remove bounds check
 	for i := 0; i < len(json); i++ {
 		switch {
@@ -194,11 +196,10 @@ func jsonParseAny(json []byte, i int, hit bool) (int, jsonItem, bool) {
 				return i, res, false
 			}
 			if hit {
+				res.Value = val[1 : len(val)-1]
 				res.Type = 's'
 				if vesc {
-					res.Value = jsonUnescape(val[1 : len(val)-1])
-				} else {
-					res.Value = val[1 : len(val)-1]
+					res.Type = 'S'
 				}
 			}
 			return i, res, true

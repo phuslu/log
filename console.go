@@ -21,8 +21,8 @@ func IsTerminal(fd uintptr) bool {
 //
 // Note: The performance of ConsoleWriter is not good enough, because it will
 // parses JSON input into structured records, then output in a specific order.
-// It's faster 2x than logrus.TextFormatter and 4x than zerolog.ConsoleWriter,
-// but slower 0.5x than zap.ConsoleEncoder. Recommended for development scenarios.
+// Roughly 2x faster than logrus.TextFormatter, 0.8x fast as zap.ConsoleEncoder,
+// and 5x faster than zerolog.ConsoleWriter.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -57,9 +57,10 @@ func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
 }
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
+	var items [32]jsonItem
 	var args FormatterArgs
 
-	err = parseFormatterArgs(p, &args)
+	err = parseFormatterArgs(p, items[:0], &args)
 	if err != nil {
 		n, err = out.Write(p)
 		return
@@ -187,11 +188,8 @@ type FormatterArgs struct {
 
 var errInvalidJson = errors.New("invalid json object")
 
-func parseFormatterArgs(json []byte, args *FormatterArgs) error {
-	items, err := jsonParse(json)
-	if err != nil {
-		return err
-	}
+func parseFormatterArgs(json []byte, items []jsonItem, args *FormatterArgs) error {
+	items = appendJsonItems(items, json)
 	if len(items) <= 1 {
 		return errInvalidJson
 	}
