@@ -14,13 +14,18 @@ type XID [12]byte
 var nilXID XID
 
 // NewXID generates a globally unique XID
-func NewXID() (x XID) {
-	// timestamp
+func NewXID() XID {
 	sec, _ := walltime()
-	x[0] = byte(sec >> 24)
-	x[1] = byte(sec >> 16)
-	x[2] = byte(sec >> 8)
-	x[3] = byte(sec)
+	return NewXIDWithTime(sec)
+}
+
+// NewXIDWithTime generates a globally unique XID with unix timestamp
+func NewXIDWithTime(unix int64) (x XID) {
+	// timestamp
+	x[0] = byte(unix >> 24)
+	x[1] = byte(unix >> 16)
+	x[2] = byte(unix >> 8)
+	x[3] = byte(unix)
 	// machine
 	x[4] = machine[0]
 	x[5] = machine[1]
