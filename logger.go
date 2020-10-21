@@ -68,6 +68,9 @@ type Logger struct {
 }
 
 const (
+	// TimeFormatRFC3339Milli is RFC3339 with millisecond precision.
+	TimeFormatRFC3339Milli = ""
+
 	// TimeFormatUnix defines a time format that makes time fields to be
 	// serialized as Unix timestamp integers.
 	TimeFormatUnix = "\x01"

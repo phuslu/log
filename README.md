@@ -27,7 +27,7 @@
     - `IsTerminal(fd uintptr)`, *isatty for golang*
     - `Printf(fmt string, a ...interface{})`, *printf logging*
 * High Performance
-    - Outperforms all others json loggers.
+    - [Significantly faster][high-performance] than all other json loggers.
 
 ## Interfaces
 
@@ -53,7 +53,7 @@ type Logger struct {
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
+	// TimeFormat specifies the time format in output. It uses `TimeFormatRFC3339Milli` if empty.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
@@ -595,6 +595,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [cov-img]: http://gocover.io/_badge/github.com/phuslu/log
 [cov]: https://gocover.io/github.com/phuslu/log
 [stability-img]: https://img.shields.io/badge/stability-stable-green.svg
+[high-performance]: https://github.com/phuslu/log#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
