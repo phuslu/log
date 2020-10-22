@@ -1,7 +1,6 @@
 package log
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"runtime"
@@ -57,11 +56,14 @@ func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
 }
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
-	var items [32]jsonItem
-	var args FormatterArgs
+	b0 := bbpool.Get().(*bb)
+	defer bbpool.Put(b0)
+	b0.B = append(b0.B[:0], p...)
 
-	err = parseFormatterArgs(p, items[:0], &args)
-	if err != nil {
+	var args FormatterArgs
+	parseFormatterArgs(b0.B, &args)
+
+	if len(args.Time) == 0 {
 		n, err = out.Write(p)
 		return
 	}
@@ -165,66 +167,13 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	if args.Stack != "" {
 		b.B = append(b.B, '\n')
 		b.B = append(b.B, args.Stack...)
-	}
-
-	b.B = append(b.B, '\n')
-
-	return out.Write(b.B)
-}
-
-// FormatterArgs is a parsed sturct from json input
-type FormatterArgs struct {
-	Time      string // "2019-07-10T05:35:54.277Z"
-	Level     string // "info"
-	Caller    string // "prog.go:42"
-	Goid      string // "123"
-	Message   string // "a structure message"
-	Stack     string // "<stack string>"
-	KeyValues []struct {
-		Key   string // "foo"
-		Value string // "bar"
-	}
-}
-
-var errInvalidJson = errors.New("invalid json object")
-
-func parseFormatterArgs(json []byte, items []jsonItem, args *FormatterArgs) error {
-	items = appendJsonItems(items, json)
-	if len(items) <= 1 {
-		return errInvalidJson
-	}
-
-	args.Time = b2s(items[1].Value)
-	for i := 2; i < len(items); i += 2 {
-		k, v := items[i].Value, items[i+1].Value
-		switch b2s(k) {
-		case "level":
-			args.Level = b2s(v)
-		case "goid":
-			args.Goid = b2s(v)
-		case "caller":
-			args.Caller = b2s(v)
-		case "stack":
-			args.Stack = b2s(v)
-		case "message":
-			if len(v) != 0 && v[len(v)-1] == '\n' {
-				args.Message = b2s(v[:len(v)-1])
-			} else {
-				args.Message = b2s(v)
-			}
-		default:
-			args.KeyValues = append(args.KeyValues, struct {
-				Key   string
-				Value string
-			}{b2s(k), b2s(v)})
+		if args.Stack[len(args.Stack)-1] != '\n' {
+			b.B = append(b.B, '\n')
 		}
+	} else {
+		b.B = append(b.B, '\n')
 	}
-
-	if args.Level == "" {
-		args.Level = "????"
-	}
-
-	return nil
+	return out.Write(b.B)
 }
 
 var _ Writer = (*ConsoleWriter)(nil)

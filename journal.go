@@ -56,10 +56,13 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 		return
 	}
 
-	var items [32]jsonItem
+	b0 := bbpool.Get().(*bb)
+	b0.B = append(b0.B[:0], e.buf...)
+	defer bbpool.Put(b0)
+
 	var args FormatterArgs
-	err = parseFormatterArgs(e.buf, items[:0], &args)
-	if err != nil {
+	parseFormatterArgs(b0.B, &args)
+	if args.Time == "" {
 		return
 	}
 

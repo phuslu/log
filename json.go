@@ -6,21 +6,29 @@ import (
 	"unicode/utf8"
 )
 
-type jsonItem struct {
-	Type  byte
-	Value []byte
+// FormatterArgs is a parsed sturct from json input
+type FormatterArgs struct {
+	Time      string // "2019-07-10T05:35:54.277Z"
+	Level     string // "info"
+	Caller    string // "prog.go:42"
+	Goid      string // "123"
+	Message   string // "a structure message"
+	Stack     string // "<stack string>"
+	KeyValues []struct {
+		Key   string // "foo"
+		Value string // "bar"
+	}
 }
 
-// jsonToItems extracts json string to json items
-func appendJsonItems(items []jsonItem, json []byte) []jsonItem {
+// parseFormatterArgs extracts json string to json items
+func parseFormatterArgs(json []byte, args *FormatterArgs) {
 	var keys bool
 	var i int
-	var key, value jsonItem
+	var key, value []byte
 	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] == '{' {
 			i++
-			key.Type = 's'
 			keys = true
 			break
 		} else if json[i] == '[' {
@@ -28,25 +36,22 @@ func appendJsonItems(items []jsonItem, json []byte) []jsonItem {
 			break
 		}
 		if json[i] > ' ' {
-			return items
+			return
 		}
 	}
 	var str []byte
-	var vesc bool
+	var typ byte
 	var ok bool
 	for ; i < len(json); i++ {
 		if keys {
 			if json[i] != '"' {
 				continue
 			}
-			i, str, vesc, ok = jsonParseString(json, i+1)
+			i, str, _, ok = jsonParseString(json, i+1)
 			if !ok {
-				return items
+				return
 			}
-			key.Value = str[1 : len(str)-1]
-			if vesc {
-				key.Type = 'S'
-			}
+			key = str[1 : len(str)-1]
 		}
 		for ; i < len(json); i++ {
 			if json[i] <= ' ' || json[i] == ',' || json[i] == ':' {
@@ -54,17 +59,80 @@ func appendJsonItems(items []jsonItem, json []byte) []jsonItem {
 			}
 			break
 		}
-		i, value, ok = jsonParseAny(json, i, true)
+		i, typ, value, ok = jsonParseAny(json, i, true)
 		if !ok {
-			return items
+			return
 		}
-		if value.Type == 'S' {
-			value.Value = jsonUnescape(value.Value, value.Value[:0])
-			value.Type = 's'
+		if args.Time == "" {
+			switch typ {
+			case 's', 'S':
+				args.Time = b2s(value[1 : len(value)-1])
+			default:
+				args.Time = b2s(value)
+			}
+			continue
 		}
-		items = append(items, key, value)
+		switch b2s(key) {
+		case "level":
+			switch typ {
+			case 's', 'S':
+				args.Level = b2s(value[1 : len(value)-1])
+			default:
+				args.Level = b2s(value)
+			}
+		case "goid":
+			switch typ {
+			case 's', 'S':
+				args.Goid = b2s(value[1 : len(value)-1])
+			default:
+				args.Goid = b2s(value)
+			}
+		case "caller":
+			switch typ {
+			case 's', 'S':
+				args.Caller = b2s(value[1 : len(value)-1])
+			default:
+				args.Caller = b2s(value)
+			}
+		case "stack":
+			switch typ {
+			case 'S':
+				args.Stack = b2s(jsonUnescape(value[1:len(value)-1], value[:0]))
+			case 's':
+				args.Stack = b2s(value[1 : len(value)-1])
+			default:
+				args.Stack = b2s(value)
+			}
+		case "message", "msg":
+			switch typ {
+			case 'S':
+				value = jsonUnescape(value[1:len(value)-1], value[:0])
+				if len(value) > 0 && value[len(value)-1] == '\n' {
+					args.Message = b2s(value[1 : len(value)-1])
+				} else {
+					args.Message = b2s(value)
+				}
+			case 's':
+				args.Message = b2s(value[1 : len(value)-1])
+			default:
+				args.Message = b2s(value)
+			}
+		default:
+			switch typ {
+			case 'S':
+				value = jsonUnescape(value[1:len(value)-1], value[:0])
+			case 's':
+				value = value[1 : len(value)-1]
+			}
+			args.KeyValues = append(args.KeyValues, struct {
+				Key, Value string
+			}{b2s(key), b2s(value)})
+		}
 	}
-	return items
+
+	if len(args.Level) == 0 {
+		args.Level = "????"
+	}
 }
 
 func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
@@ -106,82 +174,20 @@ func jsonParseString(json []byte, i int) (int, []byte, bool, bool) {
 	return i, json[s-1:], false, false
 }
 
-// jsonUnescape unescapes a string
-func jsonUnescape(json, str []byte) []byte {
-	_ = json[len(json)-1] // remove bounds check
-	for i := 0; i < len(json); i++ {
-		switch {
-		default:
-			str = append(str, json[i])
-		case json[i] < ' ':
-			return str
-		case json[i] == '\\':
-			i++
-			if i >= len(json) {
-				return str
-			}
-			switch json[i] {
-			default:
-				return str
-			case '\\':
-				str = append(str, '\\')
-			case '/':
-				str = append(str, '/')
-			case 'b':
-				str = append(str, '\b')
-			case 'f':
-				str = append(str, '\f')
-			case 'n':
-				str = append(str, '\n')
-			case 'r':
-				str = append(str, '\r')
-			case 't':
-				str = append(str, '\t')
-			case '"':
-				str = append(str, '"')
-			case 'u':
-				if i+5 > len(json) {
-					return str
-				}
-				m, _ := strconv.ParseUint(b2s(json[i+1:i+5]), 16, 64)
-				r := rune(m)
-				i += 5
-				if utf16.IsSurrogate(r) {
-					// need another code
-					if len(json[i:]) >= 6 && json[i] == '\\' &&
-						json[i+1] == 'u' {
-						// we expect it to be correct so just consume it
-						m, _ = strconv.ParseUint(b2s(json[i+2:i+6]), 16, 64)
-						r = utf16.DecodeRune(r, rune(m))
-						i += 6
-					}
-				}
-				// provide enough space to encode the largest utf8 possible
-				str = append(str, 0, 0, 0, 0, 0, 0, 0, 0)
-				n := utf8.EncodeRune(str[len(str)-8:], r)
-				str = str[:len(str)-8+n]
-				i-- // backtrack index by one
-			}
-		}
-	}
-	return str
-}
-
 // jsonParseAny parses the next value from a json string.
 // A Result is returned when the hit param is set.
 // The return values are (i int, res Result, ok bool)
-func jsonParseAny(json []byte, i int, hit bool) (int, jsonItem, bool) {
-	var res jsonItem
+func jsonParseAny(json []byte, i int, hit bool) (int, byte, []byte, bool) {
+	var typ byte
 	var val []byte
 	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] == '{' || json[i] == '[' {
 			i, val = jsonParseSquash(json, i)
 			if hit {
-				res.Value = val
-				res.Type = 'o'
+				typ = 'o'
 			}
-			return i, res, true
+			return i, typ, val, true
 		}
 		if json[i] <= ' ' {
 			continue
@@ -192,40 +198,35 @@ func jsonParseAny(json []byte, i int, hit bool) (int, jsonItem, bool) {
 			var vesc bool
 			var ok bool
 			i, val, vesc, ok = jsonParseString(json, i)
+			typ = 's'
 			if !ok {
-				return i, res, false
+				return i, typ, val, false
 			}
-			if hit {
-				res.Value = val[1 : len(val)-1]
-				res.Type = 's'
-				if vesc {
-					res.Type = 'S'
-				}
+			if hit && vesc {
+				typ = 'S'
 			}
-			return i, res, true
+			return i, typ, val, true
 		case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			i, val = jsonParseNumber(json, i)
 			if hit {
-				res.Type = 'n'
-				res.Value = val
+				typ = 'n'
 			}
-			return i, res, true
+			return i, typ, val, true
 		case 't', 'f', 'n':
 			vc := json[i]
 			i, val = jsonParseLiteral(json, i)
 			if hit {
-				res.Value = val
 				switch vc {
 				case 't':
-					res.Type = 't'
+					typ = 't'
 				case 'f':
-					res.Type = 'f'
+					typ = 'f'
 				}
-				return i, res, true
+				return i, typ, val, true
 			}
 		}
 	}
-	return i, res, false
+	return i, typ, val, false
 }
 
 func jsonParseSquash(json []byte, i int) (int, []byte) {
@@ -300,4 +301,65 @@ func jsonParseLiteral(json []byte, i int) (int, []byte) {
 		}
 	}
 	return i, json[s:]
+}
+
+// jsonUnescape unescapes a string
+func jsonUnescape(json, str []byte) []byte {
+	_ = json[len(json)-1] // remove bounds check
+	for i := 0; i < len(json); i++ {
+		switch {
+		default:
+			str = append(str, json[i])
+		case json[i] < ' ':
+			return str
+		case json[i] == '\\':
+			i++
+			if i >= len(json) {
+				return str
+			}
+			switch json[i] {
+			default:
+				return str
+			case '\\':
+				str = append(str, '\\')
+			case '/':
+				str = append(str, '/')
+			case 'b':
+				str = append(str, '\b')
+			case 'f':
+				str = append(str, '\f')
+			case 'n':
+				str = append(str, '\n')
+			case 'r':
+				str = append(str, '\r')
+			case 't':
+				str = append(str, '\t')
+			case '"':
+				str = append(str, '"')
+			case 'u':
+				if i+5 > len(json) {
+					return str
+				}
+				m, _ := strconv.ParseUint(b2s(json[i+1:i+5]), 16, 64)
+				r := rune(m)
+				i += 5
+				if utf16.IsSurrogate(r) {
+					// need another code
+					if len(json[i:]) >= 6 && json[i] == '\\' &&
+						json[i+1] == 'u' {
+						// we expect it to be correct so just consume it
+						m, _ = strconv.ParseUint(b2s(json[i+2:i+6]), 16, 64)
+						r = utf16.DecodeRune(r, rune(m))
+						i += 6
+					}
+				}
+				// provide enough space to encode the largest utf8 possible
+				str = append(str, 0, 0, 0, 0, 0, 0, 0, 0)
+				n := utf8.EncodeRune(str[len(str)-8:], r)
+				str = str[:len(str)-8+n]
+				i-- // backtrack index by one
+			}
+		}
+	}
+	return str
 }

@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"testing"
 )
 
@@ -159,12 +158,13 @@ func TestConsoleWriterStack(t *testing.T) {
 func TestConsoleWriterFormatter(t *testing.T) {
 	w := &ConsoleWriter{
 		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
-			n, err := fmt.Fprintf(w, "%c%s %s %s] %s", strings.ToTitle(a.Level)[0], a.Time, a.Goid, a.Caller, a.Message)
+			n, _ := fmt.Fprintf(w, "%c%s %s %s] %s", a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message)
 			for _, kv := range a.KeyValues {
 				i, _ := fmt.Fprintf(w, " %s=%s", kv.Key, kv.Value)
 				n += i
 			}
-			return n, err
+			i, err := fmt.Fprintf(w, "\n")
+			return n + i, err
 		},
 	}
 
@@ -200,11 +200,6 @@ func TestConsoleWriterFormatter(t *testing.T) {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
 
-	_, err = wprintf(w, InfoLevel, "{\"msg\":\"hello world\\n\"}\n")
-	if err != nil {
-		t.Errorf("test plain text console writer error: %+v", err)
-	}
-
 	_, err = wprintf(w, InfoLevel, "a long long message not a json format\n")
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
@@ -220,7 +215,7 @@ func TestConsoleWriterGlog(t *testing.T) {
 		TimeFormat: "0102 15:04:05.999999",
 		Writer: &ConsoleWriter{
 			Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
-				return fmt.Fprintf(w, "%c%s %s %s] %s", strings.ToTitle(a.Level)[0], a.Time, a.Goid, a.Caller, a.Message)
+				return fmt.Fprintf(w, "%c%s %s %s] %s\n", a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message)
 			},
 		},
 	}).Sugar(nil)
