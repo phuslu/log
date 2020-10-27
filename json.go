@@ -1,18 +1,21 @@
 package log
 
 import (
+	"reflect"
 	"strconv"
 	"unicode/utf16"
 	"unicode/utf8"
+	"unsafe"
 )
 
 // FormatterArgs is a parsed sturct from json input
 type FormatterArgs struct {
 	Time      string // "2019-07-10T05:35:54.277Z"
+	Message   string // "a structure message"
 	Level     string // "info"
 	Caller    string // "prog.go:42"
 	Goid      string // "123"
-	Message   string // "a structure message"
+	Error     string // ""
 	Stack     string // "<stack string>"
 	KeyValues []struct {
 		Key   string // "foo"
@@ -20,11 +23,22 @@ type FormatterArgs struct {
 	}
 }
 
+var formatterArgsPos = map[string]int{
+	"time":    1,
+	"message": 2,
+	"msg":     2,
+	"level":   3,
+	"caller":  4,
+	"goid":    5,
+	"error":   6,
+	"stack":   7,
+}
+
 // parseFormatterArgs extracts json string to json items
 func parseFormatterArgs(json []byte, args *FormatterArgs) {
 	var keys bool
 	var i int
-	var key, value []byte
+	var key, val []byte
 	_ = json[len(json)-1] // remove bounds check
 	for ; i < len(json); i++ {
 		if json[i] == '{' {
@@ -59,74 +73,33 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			}
 			break
 		}
-		i, typ, value, ok = jsonParseAny(json, i, true)
+		i, typ, val, ok = jsonParseAny(json, i, true)
 		if !ok {
 			return
 		}
-		if args.Time == "" {
-			switch typ {
-			case 's', 'S':
-				args.Time = b2s(value[1 : len(value)-1])
-			default:
-				args.Time = b2s(value)
-			}
-			continue
+		switch typ {
+		case 'S':
+			val = jsonUnescape(val[1:len(val)-1], val[:0])
+		case 's':
+			val = val[1 : len(val)-1]
 		}
-		switch b2s(key) {
-		case "level":
-			switch typ {
-			case 's', 'S':
-				args.Level = b2s(value[1 : len(value)-1])
-			default:
-				args.Level = b2s(value)
+		// set to formatter args
+		data := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
+			Data: uintptr(unsafe.Pointer(args)), Len: 7, Cap: 7,
+		}))
+		pos, _ := formatterArgsPos[string(key)]
+		if pos == 0 && args.Time == "" {
+			pos = 1
+		}
+		if pos != 0 {
+			if pos == 2 && len(val) != 0 && val[len(val)-1] == '\n' {
+				val = val[:len(val)-1]
 			}
-		case "goid":
-			switch typ {
-			case 's', 'S':
-				args.Goid = b2s(value[1 : len(value)-1])
-			default:
-				args.Goid = b2s(value)
-			}
-		case "caller":
-			switch typ {
-			case 's', 'S':
-				args.Caller = b2s(value[1 : len(value)-1])
-			default:
-				args.Caller = b2s(value)
-			}
-		case "stack":
-			switch typ {
-			case 'S':
-				args.Stack = b2s(jsonUnescape(value[1:len(value)-1], value[:0]))
-			case 's':
-				args.Stack = b2s(value[1 : len(value)-1])
-			default:
-				args.Stack = b2s(value)
-			}
-		case "message", "msg":
-			switch typ {
-			case 'S':
-				value = jsonUnescape(value[1:len(value)-1], value[:0])
-				if len(value) > 0 && value[len(value)-1] == '\n' {
-					args.Message = b2s(value[1 : len(value)-1])
-				} else {
-					args.Message = b2s(value)
-				}
-			case 's':
-				args.Message = b2s(value[1 : len(value)-1])
-			default:
-				args.Message = b2s(value)
-			}
-		default:
-			switch typ {
-			case 'S':
-				value = jsonUnescape(value[1:len(value)-1], value[:0])
-			case 's':
-				value = value[1 : len(value)-1]
-			}
+			data[pos-1] = b2s(val)
+		} else {
 			args.KeyValues = append(args.KeyValues, struct {
 				Key, Value string
-			}{b2s(key), b2s(value)})
+			}{b2s(key), b2s(val)})
 		}
 	}
 
