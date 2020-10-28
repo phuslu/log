@@ -631,7 +631,7 @@ func (e *Entry) Floats32(key string, f []float32) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.buf = strconv.AppendFloat(e.buf, float64(a), 'f', -1, 64)
+		e.buf = strconv.AppendFloat(e.buf, float64(a), 'f', -1, 32)
 	}
 	e.buf = append(e.buf, ']')
 	return e
