@@ -37,32 +37,16 @@ var formatterArgsPos = map[string]int{
 
 // parseFormatterArgs extracts json string to json items
 func parseFormatterArgs(json []byte, args *FormatterArgs) {
-	var keys bool
-	var i int
-	var key, val []byte
-	_ = json[len(json)-1] // remove bounds check
-	for ; i < len(json); i++ {
-		if json[i] == '{' {
-			i++
-			keys = true
-			break
-		} else if json[i] == '[' {
-			i++
-			break
-		}
-		if json[i] > ' ' {
-			return
-		}
-	}
 	// treat formatter args as []string
 	slice := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(args)), Len: 7, Cap: 7,
 	}))
-	// iterate json input
-	var str []byte
-	var typ byte
+	var keys = true
+	var key, str []byte
 	var ok bool
-	for ; i < len(json); i++ {
+	var typ byte
+	_ = json[len(json)-1] // remove bounds check
+	for i := 1; i < len(json); i++ {
 		if keys {
 			if json[i] != '"' {
 				continue
@@ -79,15 +63,15 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			}
 			break
 		}
-		i, typ, val, ok = jsonParseAny(json, i, true)
+		i, typ, str, ok = jsonParseAny(json, i, true)
 		if !ok {
 			return
 		}
 		switch typ {
 		case 's':
-			val = val[1 : len(val)-1]
+			str = str[1 : len(str)-1]
 		case 'S':
-			val = jsonUnescape(val[1:len(val)-1], val[:0])
+			str = jsonUnescape(str[1:len(str)-1], str[:0])
 			typ = 's'
 		}
 		pos, _ := formatterArgsPos[string(key)]
@@ -95,15 +79,15 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			pos = 1
 		}
 		if pos != 0 {
-			if pos == 2 && len(val) != 0 && val[len(val)-1] == '\n' {
-				val = val[:len(val)-1]
+			if pos == 2 && len(str) != 0 && str[len(str)-1] == '\n' {
+				str = str[:len(str)-1]
 			}
-			slice[pos-1] = b2s(val)
+			slice[pos-1] = b2s(str)
 		} else {
 			args.KeyValues = append(args.KeyValues, struct {
 				Key, Value string
 				ValueType  byte
-			}{b2s(key), b2s(val), typ})
+			}{b2s(key), b2s(str), typ})
 		}
 	}
 
