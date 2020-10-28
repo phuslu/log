@@ -18,8 +18,9 @@ type FormatterArgs struct {
 	Error     string // ""
 	Stack     string // "<stack string>"
 	KeyValues []struct {
-		Key   string // "foo"
-		Value string // "bar"
+		Key       string // "foo"
+		Value     string // "bar"
+		ValueType byte   // 's'
 	}
 }
 
@@ -78,10 +79,11 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			return
 		}
 		switch typ {
-		case 'S':
-			val = jsonUnescape(val[1:len(val)-1], val[:0])
 		case 's':
 			val = val[1 : len(val)-1]
+		case 'S':
+			val = jsonUnescape(val[1:len(val)-1], val[:0])
+			typ = 's'
 		}
 		// set to formatter args
 		data := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
@@ -99,7 +101,8 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 		} else {
 			args.KeyValues = append(args.KeyValues, struct {
 				Key, Value string
-			}{b2s(key), b2s(val)})
+				ValueType  byte
+			}{b2s(key), b2s(val), typ})
 		}
 	}
 

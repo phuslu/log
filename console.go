@@ -125,7 +125,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 		// key and values
 		for _, kv := range args.KeyValues {
-			if w.QuoteString {
+			if w.QuoteString && kv.ValueType == 's' {
 				kv.Value = strconv.Quote(kv.Value)
 			}
 			if kv.Key == "error" {
@@ -151,7 +151,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 		}
 		// key and values
 		for _, kv := range args.KeyValues {
-			if w.QuoteString {
+			if w.QuoteString && kv.ValueType == 's' {
 				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
 			} else {
 				fmt.Fprintf(b, " %s=%s", kv.Key, kv.Value)
