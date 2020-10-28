@@ -54,6 +54,11 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			return
 		}
 	}
+	// treat formatter args as []string
+	slice := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
+		Data: uintptr(unsafe.Pointer(args)), Len: 7, Cap: 7,
+	}))
+	// iterate json input
 	var str []byte
 	var typ byte
 	var ok bool
@@ -85,10 +90,6 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			val = jsonUnescape(val[1:len(val)-1], val[:0])
 			typ = 's'
 		}
-		// set to formatter args
-		data := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
-			Data: uintptr(unsafe.Pointer(args)), Len: 7, Cap: 7,
-		}))
 		pos, _ := formatterArgsPos[string(key)]
 		if pos == 0 && args.Time == "" {
 			pos = 1
@@ -97,7 +98,7 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			if pos == 2 && len(val) != 0 && val[len(val)-1] == '\n' {
 				val = val[:len(val)-1]
 			}
-			data[pos-1] = b2s(val)
+			slice[pos-1] = b2s(val)
 		} else {
 			args.KeyValues = append(args.KeyValues, struct {
 				Key, Value string
@@ -106,7 +107,7 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 		}
 	}
 
-	if len(args.Level) == 0 {
+	if args.Level == "" {
 		args.Level = "????"
 	}
 }
