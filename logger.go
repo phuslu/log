@@ -1401,9 +1401,9 @@ func stacks(all bool) (trace []byte) {
 	return
 }
 
-// wprintf is a helper function for tests
-func wprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {
-	return w.WriteEntry(&Event{
+// wlprintf is a helper function for tests
+func wlprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {
+	return w.WriteEntry(&Entry{
 		Level: level,
 		buf:   []byte(fmt.Sprintf(format, args...)),
 	})

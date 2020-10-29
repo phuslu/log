@@ -16,17 +16,17 @@ func TestSyslogWriterTCP(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
-	_, err := wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	_, err := wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
 
-	_, err = wprintf(w, InfoLevel, "a long long long long message.\n")
+	_, err = wlprintf(w, InfoLevel, "a long long long long message.\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
@@ -34,7 +34,7 @@ func TestSyslogWriterTCP(t *testing.T) {
 	w.Close()
 	w.Close()
 
-	_, err = wprintf(w, InfoLevel, "a long long long long message again.\n")
+	_, err = wlprintf(w, InfoLevel, "a long long long long message again.\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
@@ -48,9 +48,9 @@ func TestSyslogWriterTCPError(t *testing.T) {
 		Dial:    net.Dial,
 	}
 
-	wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	w.Close()
-	wprintf(w, InfoLevel, "a long long long long message again.\n")
+	wlprintf(w, InfoLevel, "a long long long long message again.\n")
 }
 
 func TestSyslogWriterUnix(t *testing.T) {
@@ -83,17 +83,17 @@ func TestSyslogWriterUnix(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
-	_, err = wprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	_, err = wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
 
-	_, err = wprintf(w, InfoLevel, "a long long long long message.\n")
+	_, err = wlprintf(w, InfoLevel, "a long long long long message.\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
@@ -101,13 +101,13 @@ func TestSyslogWriterUnix(t *testing.T) {
 	w.Close()
 	w.Close()
 
-	_, err = wprintf(w, InfoLevel, "a long long long long message again.\n")
+	_, err = wlprintf(w, InfoLevel, "a long long long long message again.\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
 
 	os.Remove(sockname)
 
-	_, err = wprintf(w, InfoLevel, "a long long long long message again.\n")
+	_, err = wlprintf(w, InfoLevel, "a long long long long message again.\n")
 	t.Logf("write syslog writer error: %+v", err)
 }

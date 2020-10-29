@@ -12,7 +12,7 @@ func TestAsyncWriterZero(t *testing.T) {
 		Writer:      IOWriter{os.Stderr},
 	}
 	for i := 0; i < 10; i++ {
-		wprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
+		wlprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
 		t.Errorf("async close error: %+v", err)
@@ -25,7 +25,7 @@ func TestAsyncWriterSmall(t *testing.T) {
 		Writer:      IOWriter{os.Stderr},
 	}
 	for i := 0; i < 10; i++ {
-		wprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
+		wlprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
 		t.Errorf("async close error: %+v", err)

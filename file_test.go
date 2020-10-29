@@ -15,7 +15,7 @@ func TestFileWriter(t *testing.T) {
 	w := &FileWriter{
 		Filename: filename,
 	}
-	_, err := wprintf(w, InfoLevel, text)
+	_, err := wlprintf(w, InfoLevel, text)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -53,7 +53,7 @@ func TestFileWriterStderr(t *testing.T) {
 
 	w := &FileWriter{}
 
-	_, err := wprintf(w, InfoLevel, text1)
+	_, err := wlprintf(w, InfoLevel, text1)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -66,7 +66,7 @@ func TestFileWriterCreate(t *testing.T) {
 		Filename: "/nonexists/output.log",
 	}
 
-	_, err := wprintf(w, InfoLevel, text1)
+	_, err := wlprintf(w, InfoLevel, text1)
 	if err == nil {
 		t.Fatalf("file writer should not write")
 	}
@@ -87,7 +87,7 @@ func TestFileWriterHostname(t *testing.T) {
 				ProcessID: pid,
 			}
 
-			_, err := wprintf(w, InfoLevel, text1)
+			_, err := wlprintf(w, InfoLevel, text1)
 			if err != nil {
 				t.Logf("file writer return error: %+v", err)
 			}
@@ -97,7 +97,7 @@ func TestFileWriterHostname(t *testing.T) {
 			w.Rotate()
 			w.Close()
 
-			_, err = wprintf(w, InfoLevel, text2)
+			_, err = wlprintf(w, InfoLevel, text2)
 			if err != nil {
 				t.Logf("file writer return error: %+v", err)
 			}
@@ -128,7 +128,7 @@ func TestFileWriterRotate(t *testing.T) {
 	}
 
 	// text 1
-	_, err := wprintf(w, InfoLevel, text1)
+	_, err := wlprintf(w, InfoLevel, text1)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -137,7 +137,7 @@ func TestFileWriterRotate(t *testing.T) {
 	w.Rotate()
 
 	// text 2
-	_, err = wprintf(w, InfoLevel, text2)
+	_, err = wlprintf(w, InfoLevel, text2)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -191,7 +191,7 @@ func TestFileWriterRotateBySize(t *testing.T) {
 	}
 
 	// text 1
-	_, err := wprintf(w, InfoLevel, text)
+	_, err := wlprintf(w, InfoLevel, text)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -207,7 +207,7 @@ func TestFileWriterRotateBySize(t *testing.T) {
 	time.Sleep(time.Second)
 
 	// text 2
-	_, err = wprintf(w, InfoLevel, text)
+	_, err = wlprintf(w, InfoLevel, text)
 	if err != nil {
 		t.Fatalf("file writer error: %+v", err)
 	}
@@ -226,7 +226,7 @@ func TestFileWriterRotateBySize(t *testing.T) {
 
 	// text 3 ~ 6
 	for i := 3; i <= 6; i++ {
-		_, err = wprintf(w, InfoLevel, text)
+		_, err = wlprintf(w, InfoLevel, text)
 		time.Sleep(time.Second)
 		if err != nil {
 			t.Fatalf("file writer error: %+v", err)
