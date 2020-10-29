@@ -46,6 +46,9 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 	var ok bool
 	var typ byte
 	_ = json[len(json)-1] // remove bounds check
+	if json[0] != '{' {
+		return
+	}
 	for i := 1; i < len(json); i++ {
 		if keys {
 			if json[i] != '"' {

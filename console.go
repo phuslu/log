@@ -63,7 +63,7 @@ func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
 	var args FormatterArgs
 	parseFormatterArgs(b0.B, &args)
 
-	if len(args.Time) == 0 {
+	if args.Time == "" {
 		n, err = out.Write(p)
 		return
 	}
