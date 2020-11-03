@@ -20,12 +20,12 @@ func NewXID() XID {
 }
 
 // NewXIDWithTime generates a globally unique XID with unix timestamp
-func NewXIDWithTime(unix int64) (x XID) {
+func NewXIDWithTime(timestamp int64) (x XID) {
 	// timestamp
-	x[0] = byte(unix >> 24)
-	x[1] = byte(unix >> 16)
-	x[2] = byte(unix >> 8)
-	x[3] = byte(unix)
+	x[0] = byte(timestamp >> 24)
+	x[1] = byte(timestamp >> 16)
+	x[2] = byte(timestamp >> 8)
+	x[3] = byte(timestamp)
 	// machine
 	x[4] = machine[0]
 	x[5] = machine[1]
