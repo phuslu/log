@@ -45,67 +45,69 @@ func (l *TSVLogger) New() (e *TSVEntry) {
 
 // Timestamp adds the current time as UNIX timestamp
 func (e *TSVEntry) Timestamp() *TSVEntry {
-	i := len(e.buf)
-	e.buf = append(e.buf, "0123456789\t"...)
+	var tmp [11]byte
 	sec, _ := walltime()
 	// separator
-	e.buf[i+10] = e.sep
+	tmp[10] = e.sep
 	// seconds
 	is := sec % 100 * 2
 	sec /= 100
-	e.buf[i+9] = smallsString[is+1]
-	e.buf[i+8] = smallsString[is]
+	tmp[9] = smallsString[is+1]
+	tmp[8] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+7] = smallsString[is+1]
-	e.buf[i+6] = smallsString[is]
+	tmp[7] = smallsString[is+1]
+	tmp[6] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+5] = smallsString[is+1]
-	e.buf[i+4] = smallsString[is]
+	tmp[5] = smallsString[is+1]
+	tmp[4] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+3] = smallsString[is+1]
-	e.buf[i+2] = smallsString[is]
+	tmp[3] = smallsString[is+1]
+	tmp[2] = smallsString[is]
 	is = sec % 100 * 2
-	e.buf[i+1] = smallsString[is+1]
-	e.buf[i] = smallsString[is]
+	tmp[1] = smallsString[is+1]
+	tmp[0] = smallsString[is]
+	// append to buf
+	e.buf = append(e.buf, tmp[:]...)
 	return e
 }
 
 // TimestampMS adds the current time with milliseconds as UNIX timestamp
 func (e *TSVEntry) TimestampMS() *TSVEntry {
-	i := len(e.buf)
-	e.buf = append(e.buf, "0123456789000\t"...)
+	var tmp [14]byte
 	sec, nsec := walltime()
 	// separator
-	e.buf[i+13] = e.sep
+	tmp[13] = e.sep
 	// milli seconds
 	a := int64(nsec) / 1000000
 	is := a % 100 * 2
-	e.buf[i+12] = smallsString[is+1]
-	e.buf[i+11] = smallsString[is]
-	e.buf[i+10] = byte('0' + a/100)
+	tmp[12] = smallsString[is+1]
+	tmp[11] = smallsString[is]
+	tmp[10] = byte('0' + a/100)
 	// seconds
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+9] = smallsString[is+1]
-	e.buf[i+8] = smallsString[is]
+	tmp[9] = smallsString[is+1]
+	tmp[8] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+7] = smallsString[is+1]
-	e.buf[i+6] = smallsString[is]
+	tmp[7] = smallsString[is+1]
+	tmp[6] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+5] = smallsString[is+1]
-	e.buf[i+4] = smallsString[is]
+	tmp[5] = smallsString[is+1]
+	tmp[4] = smallsString[is]
 	is = sec % 100 * 2
 	sec /= 100
-	e.buf[i+3] = smallsString[is+1]
-	e.buf[i+2] = smallsString[is]
+	tmp[3] = smallsString[is+1]
+	tmp[2] = smallsString[is]
 	is = sec % 100 * 2
-	e.buf[i+1] = smallsString[is+1]
-	e.buf[i] = smallsString[is]
+	tmp[1] = smallsString[is+1]
+	tmp[0] = smallsString[is]
+	// append to buf
+	e.buf = append(e.buf, tmp[:]...)
 	return e
 }
 
