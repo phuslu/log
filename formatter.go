@@ -24,22 +24,32 @@ type FormatterArgs struct {
 	}
 }
 
-var formatterArgsPos = map[string]int{
-	"time":    1,
-	"message": 2,
-	"msg":     2,
-	"level":   3,
-	"caller":  4,
-	"goid":    5,
-	"error":   6,
-	"stack":   7,
+func formatterArgsPos(key string) (pos int) {
+	switch key {
+	case "time":
+		pos = 1
+	case "message", "msg":
+		pos = 2
+	case "level":
+		pos = 3
+	case "caller":
+		pos = 4
+	case "goid":
+		pos = 5
+	case "error":
+		pos = 6
+	case "stack":
+		pos = 7
+	}
+	return
 }
 
 // parseFormatterArgs extracts json string to json items
 func parseFormatterArgs(json []byte, args *FormatterArgs) {
 	// treat formatter args as []string
+	const size = int(unsafe.Sizeof(FormatterArgs{}) / unsafe.Sizeof(""))
 	slice := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(args)), Len: 7, Cap: 7,
+		Data: uintptr(unsafe.Pointer(args)), Len: size, Cap: size,
 	}))
 	var keys = true
 	var key, str []byte
@@ -77,7 +87,7 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			str = jsonUnescape(str[1:len(str)-1], str[:0])
 			typ = 's'
 		}
-		pos, _ := formatterArgsPos[string(key)]
+		pos := formatterArgsPos(b2s(key))
 		if pos == 0 && args.Time == "" {
 			pos = 1
 		}
