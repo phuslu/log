@@ -130,9 +130,7 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	b = append(b, '[')
 	b = strconv.AppendInt(b, int64(pid), 10)
 	b = append(b, ']', ':', ' ')
-	if w.Marker != "" {
-		b = append(b, w.Marker...)
-	}
+	b = append(b, w.Marker...)
 	b = append(b, e.buf...)
 	e1.buf = b
 
