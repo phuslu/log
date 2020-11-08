@@ -55,24 +55,25 @@ func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
 	return w.Write(e.buf)
 }
 
-func (w *ConsoleWriter) write(out io.Writer, p []byte) (n int, err error) {
-	b0 := bbpool.Get().(*bb)
-	defer bbpool.Put(b0)
-	b0.B = append(b0.B[:0], p...)
+func (w *ConsoleWriter) write(out io.Writer, p []byte) (int, error) {
+	b := bbpool.Get().(*bb)
+	defer bbpool.Put(b)
+	b.B = append(b.B[:0], p...)
 
 	var args FormatterArgs
-	parseFormatterArgs(b0.B, &args)
+	parseFormatterArgs(b.B, &args)
 
-	if args.Time == "" {
-		n, err = out.Write(p)
-		return
-	}
-
-	// formatting console writer
-	if w.Formatter != nil {
+	switch {
+	case args.Time == "":
+		return out.Write(p)
+	case w.Formatter != nil:
 		return w.Formatter(out, &args)
+	default:
+		return w.format(out, &args)
 	}
+}
 
+func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err error) {
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 	defer bbpool.Put(b)
