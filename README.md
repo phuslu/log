@@ -102,11 +102,6 @@ type FileWriter struct {
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
-//
-// Note: The performance of ConsoleWriter is not good enough, because it will
-// parses JSON input into structured records, then output in a specific order.
-// Roughly 2x faster than logrus.TextFormatter, 0.8x fast as zap.ConsoleEncoder,
-// and 5x faster than zerolog.ConsoleWriter.
 type ConsoleWriter struct {
 	// ColorOutput determines if used colorized output.
 	ColorOutput bool
@@ -114,11 +109,11 @@ type ConsoleWriter struct {
 	// QuoteString determines if quoting string values.
 	QuoteString bool
 
-	// EndWithMessage determines if output message in the end.
+	// EndWithMessage determines if output message in the end of line.
 	EndWithMessage bool
 
 	// Formatter specifies an optional text formatter for creating a customized output,
-	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignore.
+	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignored.
 	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 
 	// Writer is the output destination. using os.Stderr if empty.
