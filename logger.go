@@ -81,9 +81,9 @@ const (
 )
 
 const (
-	needStack = 0x0001
-	needExit  = 0x0002
-	needPanic = 0x0004
+	needStack = 0b0001
+	needExit  = 0b0010
+	needPanic = 0b0100
 )
 
 // Trace starts a new message with trace level.
