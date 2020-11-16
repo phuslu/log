@@ -68,44 +68,46 @@ type FileWriter struct {
 	ProcessID bool
 }
 
-// WriteEntry implements Writer.  If a write would cause the log file to be larger
-// than MaxSize, the file is closed, renamed to include a timestamp of the
-// current time, and a new log file is created using the original log file name.
-// If the length of the write is greater than MaxSize, an error is returned.
+// Write implements io.Writer.  If a write would cause the log file to be larger
+// than MaxSize, the file is closed, rotate to include a timestamp of the
+// current time, and update symlink with log name file to the new file.
 func (w *FileWriter) WriteEntry(e *Entry) (n int, err error) {
-	return w.Write(e.buf)
+	w.mu.Lock()
+	n, err = w.write(e.buf)
+	w.mu.Unlock()
+	return
 }
 
 // Write implements io.Writer.  If a write would cause the log file to be larger
-// than MaxSize, the file is closed, renamed to include a timestamp of the
-// current time, and a new log file is created using the original log file name.
-// If the length of the write is greater than MaxSize, an error is returned.
+// than MaxSize, the file is closed, rotate to include a timestamp of the
+// current time, and update symlink with log name file to the new file.
 func (w *FileWriter) Write(p []byte) (n int, err error) {
 	w.mu.Lock()
+	n, err = w.write(p)
+	w.mu.Unlock()
+	return
+}
 
+func (w *FileWriter) write(p []byte) (n int, err error) {
 	if w.file == nil {
 		if w.Filename == "" {
 			n, err = os.Stderr.Write(p)
-			w.mu.Unlock()
 			return
 		}
 		if w.EnsureDir {
 			err = os.MkdirAll(filepath.Dir(w.Filename), 0755)
 			if err != nil {
-				w.mu.Unlock()
 				return
 			}
 		}
 		err = w.create()
 		if err != nil {
-			w.mu.Unlock()
 			return
 		}
 	}
 
 	n, err = w.file.Write(p)
 	if err != nil {
-		w.mu.Unlock()
 		return
 	}
 
@@ -114,19 +116,18 @@ func (w *FileWriter) Write(p []byte) (n int, err error) {
 		err = w.rotate()
 	}
 
-	w.mu.Unlock()
 	return
 }
 
 // Close implements io.Closer, and closes the current logfile.
 func (w *FileWriter) Close() (err error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	if w.file != nil {
 		err = w.file.Close()
 		w.file = nil
 		w.size = 0
 	}
+	w.mu.Unlock()
 	return
 }
 
