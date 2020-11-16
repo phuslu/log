@@ -53,9 +53,8 @@ type FileWriter struct {
 	// mode is 0644
 	FileMode os.FileMode
 
-	// EnsureDir determines if the time used for formatting the timestamps in
-	// log files is the computer's local time.  The default is to use UTC time.
-	EnsureDir bool
+	// EnsureFolder ensures the file directory creation before writing.
+	EnsureFolder bool
 
 	// LocalTime determines if the time used for formatting the timestamps in
 	// log files is the computer's local time.  The default is to use UTC time.
@@ -94,7 +93,7 @@ func (w *FileWriter) write(p []byte) (n int, err error) {
 			n, err = os.Stderr.Write(p)
 			return
 		}
-		if w.EnsureDir {
+		if w.EnsureFolder {
 			err = os.MkdirAll(filepath.Dir(w.Filename), 0755)
 			if err != nil {
 				return

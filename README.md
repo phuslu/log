@@ -86,6 +86,9 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
+	// EnsureFolder ensures the file directory creation before writing.
+	EnsureFolder bool
+
 	// LocalTime determines if the time used for formatting the timestamps in
 	// log files is the computer's local time.  The default is to use UTC time.
 	LocalTime bool
@@ -180,11 +183,12 @@ func main() {
 	logger := log.Logger{
 		Level:      log.ParseLevel("info"),
 		Writer:     &log.FileWriter{
-			Filename:   "main.log",
-			FileMode:   0600,
-			MaxSize:    50*1024*1024,
-			MaxBackups: 7,
-			LocalTime:  false,
+			Filename:     "logs/main.log",
+			FileMode:     0600,
+			MaxSize:      50*1024*1024,
+			MaxBackups:   7,
+			EnsureFolder: true,
+			LocalTime:    false,
 		},
 	}
 
