@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -72,6 +73,43 @@ func TestFileWriterCreate(t *testing.T) {
 	}
 
 	t.Logf("file writer return error: %+v", err)
+}
+
+func TestFileWriterEnsureFolder(t *testing.T) {
+	var remove = func(dirname string) {
+		matches, _ := filepath.Glob(dirname + "/*")
+		for i := range matches {
+			os.Remove(matches[i])
+		}
+		os.Remove(dirname)
+	}
+
+	filename := "logs/file-hostname.log"
+	text1 := "1. hello file writer!\n"
+	text2 := "2. hello file writer!\n"
+	w := &FileWriter{
+		Filename:     filename,
+		EnsureFolder: true,
+	}
+
+	remove(filepath.Dir(filename))
+
+	_, err := fmt.Fprintf(w, text1)
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	_, err = fmt.Fprintf(w, text2)
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	err = w.Close()
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	remove(filepath.Dir(filename))
 }
 
 func TestFileWriterHostname(t *testing.T) {
