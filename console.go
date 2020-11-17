@@ -109,7 +109,7 @@ func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err e
 	case "panic":
 		color, three = Red, "PNC"
 	default:
-		color, three = Red, "???"
+		color, three = Gray, "???"
 	}
 
 	// pretty console writer
