@@ -53,8 +53,9 @@ type FileWriter struct {
 	// mode is 0644
 	FileMode os.FileMode
 
-	// EnsureFolder ensures the file directory creation before writing.
-	EnsureFolder bool
+	// TimeFormat specifies the time format of filename. It uses `%Y-%m-%dT%H-%M-%S` if empty.
+	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
+	TimeFormat string
 
 	// LocalTime determines if the time used for formatting the timestamps in
 	// log files is the computer's local time.  The default is to use UTC time.
@@ -65,6 +66,9 @@ type FileWriter struct {
 
 	// ProcessID determines if the pid used for formatting in log files.
 	ProcessID bool
+
+	// EnsureFolder ensures the file directory creation before writing.
+	EnsureFolder bool
 }
 
 // Write implements io.Writer.  If a write would cause the log file to be larger
@@ -205,7 +209,16 @@ func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os
 	// filename
 	ext := filepath.Ext(w.Filename)
 	prefix := w.Filename[0 : len(w.Filename)-len(ext)]
-	filename = prefix + now.Format(".2006-01-02T15-04-05")
+	switch w.TimeFormat {
+	case "":
+		filename = prefix + now.Format(".2006-01-02T15-04-05")
+	case TimeFormatUnix:
+		filename = prefix + "." + strconv.FormatInt(now.Unix(), 10)
+	case TimeFormatUnixMs:
+		filename = prefix + "." + strconv.FormatInt(now.UnixNano()/1000000, 10)
+	default:
+		filename = prefix + "." + now.Format(w.TimeFormat)
+	}
 	if w.HostName {
 		if w.ProcessID {
 			filename += "." + hostname + "-" + strconv.Itoa(pid) + ext

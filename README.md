@@ -86,8 +86,9 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
-	// EnsureFolder ensures the file directory creation before writing.
-	EnsureFolder bool
+	// TimeFormat specifies the time format of filename. It uses `%Y-%m-%dT%H-%M-%S` if empty.
+	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
+	TimeFormat string
 
 	// LocalTime determines if the time used for formatting the timestamps in
 	// log files is the computer's local time.  The default is to use UTC time.
@@ -98,6 +99,9 @@ type FileWriter struct {
 
 	// ProcessID determines if the pid used for formatting in log files.
 	ProcessID bool
+
+	// EnsureFolder ensures the file directory creation before writing.
+	EnsureFolder bool
 }
 
 // ConsoleWriter parses the JSON input and writes it in an
