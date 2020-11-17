@@ -71,7 +71,7 @@ type FileWriter struct {
 	EnsureFolder bool
 }
 
-// Write implements io.Writer.  If a write would cause the log file to be larger
+// WriteEntry implements Writer.  If a write would cause the log file to be larger
 // than MaxSize, the file is closed, rotate to include a timestamp of the
 // current time, and update symlink with log name file to the new file.
 func (w *FileWriter) WriteEntry(e *Entry) (n int, err error) {
