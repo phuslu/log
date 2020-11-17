@@ -53,7 +53,7 @@ type Logger struct {
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the time format in output. It uses `TimeFormatRFC3339Milli` if empty.
+	// TimeFormat specifies the time format in output. It uses RFC3339 with millisecond if empty.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
@@ -454,7 +454,7 @@ func BenchmarkZeroLog(b *testing.B) {
 
 func BenchmarkPhusLog(b *testing.B) {
 	logger := log.Logger{
-		TimeFormat: log.TimeFormatRFC3339Milli,
+		TimeFormat: "", // uses rfc3339 by default
 		Writer:     log.IOWriter{ioutil.Discard},
 	}
 	for i := 0; i < b.N; i++ {
