@@ -1200,65 +1200,65 @@ func (e *Entry) keysAndValues(keysAndValues ...interface{}) *Entry {
 			e.buf = append(e.buf, "null"...)
 			continue
 		}
-		switch v.(type) {
+		switch v := v.(type) {
 		case Context:
-			e.Dict(key, v.(Context))
+			e.Dict(key, v)
 		case []time.Duration:
-			e.Durs(key, v.([]time.Duration))
+			e.Durs(key, v)
 		case time.Duration:
-			e.Dur(key, v.(time.Duration))
+			e.Dur(key, v)
 		case time.Time:
-			e.Time(key, v.(time.Time))
+			e.Time(key, v)
 		case net.HardwareAddr:
-			e.MACAddr(key, v.(net.HardwareAddr))
+			e.MACAddr(key, v)
 		case net.IP:
-			e.IPAddr(key, v.(net.IP))
+			e.IPAddr(key, v)
 		case net.IPNet:
-			e.IPPrefix(key, v.(net.IPNet))
+			e.IPPrefix(key, v)
 		case []bool:
-			e.Bools(key, v.([]bool))
+			e.Bools(key, v)
 		case []byte:
-			e.Bytes(key, v.([]byte))
+			e.Bytes(key, v)
 		case []error:
-			e.Errs(key, v.([]error))
+			e.Errs(key, v)
 		case []float32:
-			e.Floats32(key, v.([]float32))
+			e.Floats32(key, v)
 		case []float64:
-			e.Floats64(key, v.([]float64))
+			e.Floats64(key, v)
 		case []string:
-			e.Strs(key, v.([]string))
+			e.Strs(key, v)
 		case string:
-			e.Str(key, v.(string))
+			e.Str(key, v)
 		case bool:
-			e.Bool(key, v.(bool))
+			e.Bool(key, v)
 		case error:
-			e.AnErr(key, v.(error))
+			e.AnErr(key, v)
 		case float32:
-			e.Float32(key, v.(float32))
+			e.Float32(key, v)
 		case float64:
-			e.Float64(key, v.(float64))
+			e.Float64(key, v)
 		case int16:
-			e.Int16(key, v.(int16))
+			e.Int16(key, v)
 		case int32:
-			e.Int32(key, v.(int32))
+			e.Int32(key, v)
 		case int64:
-			e.Int64(key, v.(int64))
+			e.Int64(key, v)
 		case int8:
-			e.Int8(key, v.(int8))
+			e.Int8(key, v)
 		case int:
-			e.Int(key, v.(int))
+			e.Int(key, v)
 		case uint16:
-			e.Uint16(key, v.(uint16))
+			e.Uint16(key, v)
 		case uint32:
-			e.Uint32(key, v.(uint32))
+			e.Uint32(key, v)
 		case uint64:
-			e.Uint64(key, v.(uint64))
+			e.Uint64(key, v)
 		case uint8:
-			e.Uint8(key, v.(uint8))
+			e.Uint8(key, v)
 		case fmt.GoStringer:
-			e.GoStringer(key, v.(fmt.GoStringer))
+			e.GoStringer(key, v)
 		case fmt.Stringer:
-			e.Stringer(key, v.(fmt.Stringer))
+			e.Stringer(key, v)
 		default:
 			e.Interface(key, v)
 		}
@@ -1277,65 +1277,65 @@ func (e *Entry) Fields(fields map[string]interface{}) *Entry {
 			e.buf = append(e.buf, "null"...)
 			continue
 		}
-		switch v.(type) {
+		switch v := v.(type) {
 		case Context:
-			e.Dict(k, v.(Context))
+			e.Dict(k, v)
 		case []time.Duration:
-			e.Durs(k, v.([]time.Duration))
+			e.Durs(k, v)
 		case time.Duration:
-			e.Dur(k, v.(time.Duration))
+			e.Dur(k, v)
 		case time.Time:
-			e.Time(k, v.(time.Time))
+			e.Time(k, v)
 		case net.HardwareAddr:
-			e.MACAddr(k, v.(net.HardwareAddr))
+			e.MACAddr(k, v)
 		case net.IP:
-			e.IPAddr(k, v.(net.IP))
+			e.IPAddr(k, v)
 		case net.IPNet:
-			e.IPPrefix(k, v.(net.IPNet))
+			e.IPPrefix(k, v)
 		case []bool:
-			e.Bools(k, v.([]bool))
+			e.Bools(k, v)
 		case []byte:
-			e.Bytes(k, v.([]byte))
+			e.Bytes(k, v)
 		case []error:
-			e.Errs(k, v.([]error))
+			e.Errs(k, v)
 		case []float32:
-			e.Floats32(k, v.([]float32))
+			e.Floats32(k, v)
 		case []float64:
-			e.Floats64(k, v.([]float64))
+			e.Floats64(k, v)
 		case []string:
-			e.Strs(k, v.([]string))
+			e.Strs(k, v)
 		case string:
-			e.Str(k, v.(string))
+			e.Str(k, v)
 		case bool:
-			e.Bool(k, v.(bool))
+			e.Bool(k, v)
 		case error:
-			e.AnErr(k, v.(error))
+			e.AnErr(k, v)
 		case float32:
-			e.Float32(k, v.(float32))
+			e.Float32(k, v)
 		case float64:
-			e.Float64(k, v.(float64))
+			e.Float64(k, v)
 		case int16:
-			e.Int16(k, v.(int16))
+			e.Int16(k, v)
 		case int32:
-			e.Int32(k, v.(int32))
+			e.Int32(k, v)
 		case int64:
-			e.Int64(k, v.(int64))
+			e.Int64(k, v)
 		case int8:
-			e.Int8(k, v.(int8))
+			e.Int8(k, v)
 		case int:
-			e.Int(k, v.(int))
+			e.Int(k, v)
 		case uint16:
-			e.Uint16(k, v.(uint16))
+			e.Uint16(k, v)
 		case uint32:
-			e.Uint32(k, v.(uint32))
+			e.Uint32(k, v)
 		case uint64:
-			e.Uint64(k, v.(uint64))
+			e.Uint64(k, v)
 		case uint8:
-			e.Uint8(k, v.(uint8))
+			e.Uint8(k, v)
 		case fmt.GoStringer:
-			e.GoStringer(k, v.(fmt.GoStringer))
+			e.GoStringer(k, v)
 		case fmt.Stringer:
-			e.Stringer(k, v.(fmt.Stringer))
+			e.Stringer(k, v)
 		default:
 			e.Interface(k, v)
 		}
