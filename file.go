@@ -173,7 +173,7 @@ func (w *FileWriter) rotate() (err error) {
 		}
 
 		ext := filepath.Ext(filename)
-		pattern := filename[0:len(filename)-len(ext)] + ".20*" + ext
+		pattern := filename[0:len(filename)-len(ext)] + ".*" + ext
 		if names, _ := filepath.Glob(pattern); len(names) > 0 {
 			sort.Strings(names)
 			for i := 0; i < len(names)-backups-1; i++ {
