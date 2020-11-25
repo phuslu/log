@@ -172,13 +172,43 @@ func (w *FileWriter) rotate() (err error) {
 			os.Chown(newname, uid, gid)
 		}
 
-		ext := filepath.Ext(filename)
-		pattern := filename[0:len(filename)-len(ext)] + ".*" + ext
-		if names, _ := filepath.Glob(pattern); len(names) > 0 {
-			sort.Strings(names)
-			for i := 0; i < len(names)-backups-1; i++ {
-				os.Remove(names[i])
+		dir := filepath.Dir(filename)
+		dirfile, err := os.Open(dir)
+		if err != nil {
+			return
+		}
+		infos, err := dirfile.Readdir(-1)
+		dirfile.Close()
+		if err != nil {
+			return
+		}
+
+		base, ext := filepath.Base(filename), filepath.Ext(filename)
+		prefix := base[:len(base)-len(ext)] + "."
+		exclude := prefix + "error" + ext
+
+		type Item struct {
+			Name    string
+			ModTime int64
+		}
+		items := make([]Item, 0)
+		for _, info := range infos {
+			name := info.Name()
+			if name != base && name != exclude &&
+				strings.HasPrefix(name, prefix) &&
+				strings.HasSuffix(name, ext) {
+				items = append(items, Item{
+					Name:    name,
+					ModTime: info.ModTime().Unix(),
+				})
 			}
+		}
+
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].ModTime < items[j].ModTime
+		})
+		for i := 0; i < len(items)-backups-1; i++ {
+			os.Remove(filepath.Join(dir, items[i].Name))
 		}
 	}(oldfile, w.file.Name(), w.Filename, w.MaxBackups, w.ProcessID)
 
