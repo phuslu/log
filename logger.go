@@ -729,6 +729,18 @@ func (e *Entry) Str(key string, val string) *Entry {
 	return e
 }
 
+// StrInt adds the field key with integer val as a string to the entry.
+func (e *Entry) StrInt(key string, val int64) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = append(e.buf, '"')
+	e.buf = strconv.AppendInt(e.buf, val, 10)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // Stringer adds the field key with val.String() to the entry.
 func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	if e == nil {
