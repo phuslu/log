@@ -27,7 +27,7 @@ import (
 // Cleaning Up Old Log Files
 //
 // Whenever a new logfile gets created, old log files may be deleted.  The most
-// recent files according to the encoded timestamp will be retained, up to a
+// recent files according to filesystem modified time will be retained, up to a
 // number equal to MaxBackups (or all of them if MaxBackups is 0).  Any files
 // with an encoded timestamp older than MaxAge days are deleted, regardless of
 // MaxBackups.  Note that the time encoded in the timestamp is the rotation
@@ -43,6 +43,10 @@ type FileWriter struct {
 	// MaxBackups is the maximum number of old log files to retain.  The default
 	// is to retain all old log files
 	MaxBackups int
+
+	// CleanBackups specifies an optional cleanup function of log backups after rotation,
+	// if not set, the default behavior is to delete more than MaxBackups log files.
+	CleanBackups func(filename string, maxBackups int, matches []os.FileInfo)
 
 	// make aligncheck happy
 	mu   sync.Mutex
@@ -147,32 +151,31 @@ func (w *FileWriter) Rotate() (err error) {
 }
 
 func (w *FileWriter) rotate() (err error) {
-	oldfile := w.file
-
-	w.file, err = os.OpenFile(w.fileinfo(timeNow()))
+	var file *os.File
+	file, err = os.OpenFile(w.fileinfo(timeNow()))
 	if err != nil {
 		return err
 	}
+	if w.file != nil {
+		w.file.Close()
+	}
+	w.file = file
 	w.size = 0
 
-	go func(oldfile *os.File, newname, filename string, backups int, processID bool) {
-		if oldfile != nil {
-			oldfile.Close()
-		}
-
-		os.Remove(filename)
-		if !processID {
-			os.Symlink(filepath.Base(newname), filename)
+	go func(newname string) {
+		os.Remove(w.Filename)
+		if !w.ProcessID {
+			os.Symlink(filepath.Base(newname), w.Filename)
 		}
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
 		if uid != 0 && gid != 0 && os.Geteuid() == 0 {
-			os.Lchown(filename, uid, gid)
+			os.Lchown(w.Filename, uid, gid)
 			os.Chown(newname, uid, gid)
 		}
 
-		dir := filepath.Dir(filename)
+		dir := filepath.Dir(w.Filename)
 		dirfile, err := os.Open(dir)
 		if err != nil {
 			return
@@ -183,34 +186,31 @@ func (w *FileWriter) rotate() (err error) {
 			return
 		}
 
-		base, ext := filepath.Base(filename), filepath.Ext(filename)
-		prefix := base[:len(base)-len(ext)] + "."
+		base, ext := filepath.Base(w.Filename), filepath.Ext(w.Filename)
+		prefix, extgz := base[:len(base)-len(ext)]+".", ext+".gz"
 		exclude := prefix + "error" + ext
 
-		type Item struct {
-			Name    string
-			ModTime int64
-		}
-		items := make([]Item, 0)
+		matches := make([]os.FileInfo, 0)
 		for _, info := range infos {
 			name := info.Name()
 			if name != base && name != exclude &&
 				strings.HasPrefix(name, prefix) &&
-				strings.HasSuffix(name, ext) {
-				items = append(items, Item{
-					Name:    name,
-					ModTime: info.ModTime().Unix(),
-				})
+				(strings.HasSuffix(name, ext) || strings.HasSuffix(name, extgz)) {
+				matches = append(matches, info)
 			}
 		}
-
-		sort.Slice(items, func(i, j int) bool {
-			return items[i].ModTime < items[j].ModTime
+		sort.Slice(matches, func(i, j int) bool {
+			return matches[i].ModTime().Unix() < matches[j].ModTime().Unix()
 		})
-		for i := 0; i < len(items)-backups-1; i++ {
-			os.Remove(filepath.Join(dir, items[i].Name))
+
+		if w.CleanBackups != nil {
+			w.CleanBackups(w.Filename, w.MaxBackups, matches)
+		} else {
+			for i := 0; i < len(matches)-w.MaxBackups-1; i++ {
+				os.Remove(filepath.Join(dir, matches[i].Name()))
+			}
 		}
-	}(oldfile, w.file.Name(), w.Filename, w.MaxBackups, w.ProcessID)
+	}(w.file.Name())
 
 	return
 }

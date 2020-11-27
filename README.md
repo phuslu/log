@@ -86,7 +86,11 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
-	// TimeFormat specifies the time format of filename. It uses `%Y-%m-%dT%H-%M-%S` if empty.
+	// CleanBackups specifies an optional cleanup function of log backups after rotation,
+	// if not set, the default behavior is to delete more than MaxBackups log files.
+	CleanBackups func(filename string, maxBackups int, matches []os.FileInfo)
+
+	// TimeFormat specifies the time format of filename. It uses `2006-01-02T15-04-05` as default format.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
