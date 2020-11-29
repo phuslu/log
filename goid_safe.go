@@ -1,4 +1,4 @@
-// +build !amd64,!arm64
+// +build !amd64,!arm64,!arm
 
 package log
 
@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-func goid() (n int64) {
+func Goid() (n int64) {
 	const offset = len("goroutine ")
 	var data [32]byte
 	b := data[:runtime.Stack(data[:], false)]
