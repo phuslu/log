@@ -15,7 +15,6 @@ type FormatterArgs struct {
 	Level     string // "info"
 	Caller    string // "prog.go:42"
 	Goid      string // "123"
-	Error     string // ""
 	Stack     string // "<stack string>"
 	KeyValues []struct {
 		Key       string // "foo"
@@ -36,10 +35,8 @@ func formatterArgsPos(key string) (pos int) {
 		pos = 4
 	case "goid":
 		pos = 5
-	case "error":
-		pos = 6
 	case "stack":
-		pos = 7
+		pos = 6
 	}
 	return
 }
