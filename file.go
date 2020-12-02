@@ -152,7 +152,7 @@ func (w *FileWriter) Rotate() (err error) {
 
 func (w *FileWriter) rotate() (err error) {
 	var file *os.File
-	file, err = os.OpenFile(w.fileinfo(timeNow()))
+	file, err = os.OpenFile(w.fileargs(timeNow()))
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (w *FileWriter) rotate() (err error) {
 }
 
 func (w *FileWriter) create() (err error) {
-	w.file, err = os.OpenFile(w.fileinfo(timeNow()))
+	w.file, err = os.OpenFile(w.fileargs(timeNow()))
 	if err != nil {
 		return err
 	}
@@ -230,8 +230,8 @@ func (w *FileWriter) create() (err error) {
 	return
 }
 
-// fileinfo returns a new filename, flag, perm based on the original name and the given time.
-func (w *FileWriter) fileinfo(now time.Time) (filename string, flag int, perm os.FileMode) {
+// fileargs returns a new filename, flag, perm based on the original name and the given time.
+func (w *FileWriter) fileargs(now time.Time) (filename string, flag int, perm os.FileMode) {
 	if !w.LocalTime {
 		now = now.UTC()
 	}

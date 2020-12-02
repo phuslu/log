@@ -325,14 +325,14 @@ func TestFileWriterBackups(t *testing.T) {
 	os.Remove(filename)
 }
 
-func TestFileWriterFileinfo(t *testing.T) {
+func TestFileWriterFileargs(t *testing.T) {
 	filename := "file-output.log"
 	d := time.Date(2020, 8, 12, 16, 7, 0, 0, time.UTC)
 
 	t.Run("neither hostname nor pid appears", func(t *testing.T) {
 		w := &FileWriter{Filename: filename}
 		expected := "file-output.2020-08-12T16-07-00.log"
-		if name, _, _ := w.fileinfo(d); name != expected {
+		if name, _, _ := w.fileargs(d); name != expected {
 			t.Fatalf("expected: %q, actual: %q", expected, name)
 		}
 	})
@@ -358,7 +358,7 @@ func TestFileWriterFileinfo(t *testing.T) {
 		for _, c := range cases {
 			w.HostName = c.hostName
 			w.ProcessID = c.processID
-			if name, _, _ := w.fileinfo(d); name != c.expected {
+			if name, _, _ := w.fileargs(d); name != c.expected {
 				t.Fatalf("expected: %q, actual: %q", c.expected, name)
 			}
 		}
