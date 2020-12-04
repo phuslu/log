@@ -57,7 +57,7 @@ type FileWriter struct {
 	// mode is 0644
 	FileMode os.FileMode
 
-	// TimeFormat specifies the time format of filename. It uses `%Y-%m-%dT%H-%M-%S` if empty.
+	// TimeFormat specifies the time format of filename, uses `2006-01-02T15-04-05` as default format.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 

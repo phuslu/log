@@ -90,7 +90,7 @@ type FileWriter struct {
 	// if not set, the default behavior is to delete more than MaxBackups log files.
 	CleanBackups func(filename string, maxBackups int, matches []os.FileInfo)
 
-	// TimeFormat specifies the time format of filename. It uses `2006-01-02T15-04-05` as default format.
+	// TimeFormat specifies the time format of filename, uses `2006-01-02T15-04-05` as default format.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
@@ -108,8 +108,8 @@ type FileWriter struct {
 	EnsureFolder bool
 }
 
-// ConsoleWriter parses the JSON input and writes it in an
-// (optionally) colorized, human-friendly format to Writer.
+// ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
+// For low latency and high concurrency app, please dont use ConsoleWriter in critical path.
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
@@ -472,10 +472,9 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-
-BenchmarkZap-4       	 9126241	      1293 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-4   	18187580	       638 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-4   	42004888	       287 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-4       	 8265870	      1434 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-4   	17836096	       672 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-4   	46640523	       255 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ## A Real World Example
