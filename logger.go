@@ -1018,7 +1018,7 @@ func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
 	e.buf = append(e.buf, "\",\"goid\":"...)
-	e.buf = strconv.AppendInt(e.buf, Goid(), 10)
+	e.buf = strconv.AppendInt(e.buf, goid(), 10)
 }
 
 var escapes = [256]bool{

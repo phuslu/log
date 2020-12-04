@@ -1,4 +1,4 @@
-// +build !amd64,!arm64,!arm
+// +build !amd64,!arm64
 
 package log
 
