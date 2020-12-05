@@ -13,7 +13,7 @@ func IsTerminal(fd uintptr) bool {
 }
 
 // ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
-// For low latency and high concurrency app, please dont use ConsoleWriter in critical path.
+// IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}

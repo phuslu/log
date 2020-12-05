@@ -109,7 +109,7 @@ type FileWriter struct {
 }
 
 // ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
-// For low latency and high concurrency app, please dont use ConsoleWriter in critical path.
+// IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
 //
 // Default output format:
 //     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
@@ -181,6 +181,8 @@ To log to a rotating file, use `FileWriter`. [![playground][play-file-img]][play
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/phuslu/log"
@@ -189,12 +191,21 @@ import (
 
 func main() {
 	logger := log.Logger{
-		Level:      log.ParseLevel("info"),
-		Writer:     &log.FileWriter{
-			Filename:     "logs/main.log",
-			FileMode:     0600,
-			MaxSize:      50*1024*1024,
-			MaxBackups:   7,
+		Level: log.ParseLevel("info"),
+		Writer: &log.FileWriter{
+			Filename: "logs/main.log",
+			FileMode: 0600,
+			MaxSize:  50 * 1024 * 1024,
+			CleanBackups: func(filename string, maxBackups int, matches []os.FileInfo) {
+				var dir = filepath.Dir(filename)
+				var total int64
+				for i := len(matches) - 1; i >= 0; i-- {
+					total += matches[i].Size()
+					if total > 10*1024*1024*1024 {
+						os.Remove(filepath.Join(dir, matches[i].Name()))
+					}
+				}
+			},
 			EnsureFolder: true,
 			LocalTime:    false,
 		},
