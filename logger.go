@@ -67,15 +67,13 @@ type Logger struct {
 	Writer Writer
 }
 
-const (
-	// TimeFormatUnix defines a time format that makes time fields to be
-	// serialized as Unix timestamp integers.
-	TimeFormatUnix = "\x01"
+// TimeFormatUnix defines a time format that makes time fields to be
+// serialized as Unix timestamp integers.
+const TimeFormatUnix = "\x01"
 
-	// TimeFormatUnixMs defines a time format that makes time fields to be
-	// serialized as Unix timestamp integers in milliseconds.
-	TimeFormatUnixMs = "\x02"
-)
+// TimeFormatUnixMs defines a time format that makes time fields to be
+// serialized as Unix timestamp integers in milliseconds.
+const TimeFormatUnixMs = "\x02"
 
 const (
 	needStack = 0b0001

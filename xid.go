@@ -1,7 +1,6 @@
 package log
 
 import (
-	"errors"
 	"sync/atomic"
 	"time"
 )
@@ -146,8 +145,12 @@ const base32r = "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xf
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff" +
 	"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 
+type xidError string
+
+func (e xidError) Error() string { return string(e) }
+
 // ErrInvalidXID is returned when trying to parse an invalid XID
-var ErrInvalidXID = errors.New("xid: invalid XID")
+const ErrInvalidXID = xidError("xid: invalid XID")
 
 // ParseXID parses an XID from its string representation
 func ParseXID(s string) (x XID, err error) {
