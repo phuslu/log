@@ -4,9 +4,9 @@
 
 ## Features
 
-* No Dependencies
-* Intuitive Interfaces
-* Consistent Writers
+* No Dependency
+* Simple and Clean Interface
+* Consistent Writer
     - `IOWriter`, *io.Writer wrapper*
     - `FileWriter`, *rotating & effective*
     - `ConsoleWriter`, *colorful & formatting*
@@ -20,7 +20,7 @@
     - `Logger.Grpc`, *grpclog.LoggerV2*
     - `Logger.Logr`, *logr.Logger*
     - `Logger.Sugar`, *zap.SugaredLogger*
-* Useful utility functions
+* Useful utility function
     - `Goid()`, *current goroutine id*
     - `NewXID()`, *create a tracing id*
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
@@ -123,12 +123,12 @@ type ConsoleWriter struct {
 	// EndWithMessage determines if output message in the end of line.
 	EndWithMessage bool
 
+	// Writer is the output destination. using os.Stderr if empty.
+	Writer io.Writer
+
 	// Formatter specifies an optional text formatter for creating a customized output,
 	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignored.
 	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
-
-	// Writer is the output destination. using os.Stderr if empty.
-	Writer io.Writer
 }
 ```
 > Note: FileWriter/ConsoleWriter implements log.Writer and io.Writer interfaces both.
@@ -146,15 +146,13 @@ import (
 )
 
 func main() {
-	log.Printf("Hello, %s", "世界")
 	log.Info().Str("foo", "bar").Int("number", 42).Msg("hi, phuslog")
-	log.Error().Str("foo", "bar").Int("number", 42).Msgf("oops, %s", "phuslog")
+	log.Info().Msgf("foo=%s number=%d error=%+v", "bar", 42, "an error")
 }
 
 // Output:
-//   {"time":"2020-03-22T09:58:41.828Z","message":"Hello, 世界"}
 //   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","number":42,"message":"hi, phuslog"}
-//   {"time":"2020-03-22T09:58:41.828Z","level":"error","foo":"bar","number":42,"message":"oops, phuslog"}
+//   {"time":"2020-03-22T09:58:41.828Z","level":"info","message":"foo=bar number=42 error=an error"}
 ```
 > Note: By default log writes to `os.Stderr`
 
@@ -256,6 +254,7 @@ package main
 import (
 	"io"
 	"fmt"
+	"strings"
 	"github.com/phuslu/log"
 )
 
@@ -265,8 +264,8 @@ var glog = (&log.Logger{
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
 		Formatter: func (w io.Writer, a *log.FormatterArgs) (int, error) {
-			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s",
-				a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message, a.Stack)
+			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", strings.ToUpper(a.Level)[0],
+				a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},
 }).Sugar(nil)
@@ -275,7 +274,6 @@ func main() {
 	glog.Infof("hello glog %s", "Info")
 	glog.Warnf("hello glog %s", "Warn")
 	glog.Errorf("hello glog %s", "Error")
-	glog.Fatalf("hello glog %s", "Fatal")
 }
 
 // Output:
