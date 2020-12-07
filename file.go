@@ -44,10 +44,6 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
-	// CleanBackups specifies an optional cleanup function of log backups after rotation,
-	// if not set, the default behavior is to delete more than MaxBackups log files.
-	CleanBackups func(filename string, maxBackups int, matches []os.FileInfo)
-
 	// make aligncheck happy
 	mu   sync.Mutex
 	size int64
@@ -73,6 +69,10 @@ type FileWriter struct {
 
 	// EnsureFolder ensures the file directory creation before writing.
 	EnsureFolder bool
+
+	// Cleaner specifies an optional cleanup function of log backups after rotation,
+	// if not set, the default behavior is to delete more than MaxBackups log files.
+	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
 }
 
 // WriteEntry implements Writer.  If a write would cause the log file to be larger
@@ -203,8 +203,8 @@ func (w *FileWriter) rotate() (err error) {
 			return matches[i].ModTime().Unix() < matches[j].ModTime().Unix()
 		})
 
-		if w.CleanBackups != nil {
-			w.CleanBackups(w.Filename, w.MaxBackups, matches)
+		if w.Cleaner != nil {
+			w.Cleaner(w.Filename, w.MaxBackups, matches)
 		} else {
 			for i := 0; i < len(matches)-w.MaxBackups-1; i++ {
 				os.Remove(filepath.Join(dir, matches[i].Name()))

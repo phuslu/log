@@ -86,10 +86,6 @@ type FileWriter struct {
 	// is to retain all old log files
 	MaxBackups int
 
-	// CleanBackups specifies an optional cleanup function of log backups after rotation,
-	// if not set, the default behavior is to delete more than MaxBackups log files.
-	CleanBackups func(filename string, maxBackups int, matches []os.FileInfo)
-
 	// TimeFormat specifies the time format of filename, uses `2006-01-02T15-04-05` as default format.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
@@ -106,6 +102,10 @@ type FileWriter struct {
 
 	// EnsureFolder ensures the file directory creation before writing.
 	EnsureFolder bool
+
+	// Cleaner specifies an optional cleanup function of log backups after rotation,
+	// if not set, the default behavior is to delete more than MaxBackups log files.
+	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
 }
 
 // ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
@@ -196,7 +196,7 @@ func main() {
 			Filename: "logs/main.log",
 			FileMode: 0600,
 			MaxSize:  50 * 1024 * 1024,
-			CleanBackups: func(filename string, maxBackups int, matches []os.FileInfo) {
+			Cleaner:  func(filename string, maxBackups int, matches []os.FileInfo) {
 				var dir = filepath.Dir(filename)
 				var total int64
 				for i := len(matches) - 1; i >= 0; i-- {
