@@ -1165,6 +1165,37 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	return e
 }
 
+// Jsonify adds the object's fields as plain json text.
+func (e *Entry) Jsonify(i interface{}) *Entry {
+	if e == nil {
+		return nil
+	}
+
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
+
+	enc := json.NewEncoder(b)
+	enc.SetEscapeHTML(false)
+
+	err := enc.Encode(i)
+	if err != nil {
+		e.buf = append(e.buf, ",\"error\":\"marshaling error: "...)
+		e.string(err.Error())
+		e.buf = append(e.buf, '"')
+	} else if b.B[0] == '{' {
+		b.B[0] = ','
+		e.buf = append(e.buf, b.B[:len(b.B)-2]...)
+	} else {
+		e.buf = append(e.buf, ",\"error\":\"marshaling error: jsonify expects struct\""...)
+	}
+
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
+
+	return e
+}
+
 // Msgf sends the entry with formatted msg added as the message field if not empty.
 func (e *Entry) Msgf(format string, v ...interface{}) {
 	if e == nil {

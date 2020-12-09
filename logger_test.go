@@ -174,6 +174,30 @@ func TestLoggerInterface(t *testing.T) {
 		Msgf("this is a cyclic struct test")
 }
 
+func TestLoggerJsonify(t *testing.T) {
+	logger := Logger{
+		Level: ParseLevel("debug"),
+	}
+
+	var v = struct {
+		I int    `json:"id"`
+		N string `json:"name"`
+	}{
+		I: 999,
+		N: "john smith",
+	}
+
+	logger.Info().
+		Caller(1).
+		Jsonify(v).
+		Msgf("this is a jsonify struct test")
+
+	logger.Info().
+		Caller(1).
+		Jsonify([]int{1, 2, 3}).
+		Msgf("this is a jsonify error test")
+}
+
 func TestLoggerLog(t *testing.T) {
 	logger := Logger{
 		Level: ParseLevel("debug"),
