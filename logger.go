@@ -48,6 +48,12 @@ func (w IOWriter) WriteEntry(e *Entry) (n int, err error) {
 	return w.Writer.Write(e.buf)
 }
 
+// LogObjectMarshaler provides a strongly-typed and encoding-agnostic interface
+// to be implemented by types used with Entry's Object methods.
+type LogObjectMarshaler interface {
+	MarshalLogObject(e *Entry)
+}
+
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
 	// Level defines log levels.
@@ -1165,34 +1171,39 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	return e
 }
 
-// Jsonify adds the object's fields as plain json text.
-func (e *Entry) Jsonify(i interface{}) *Entry {
+// Object marshals an object that implement the LogObjectMarshaler interface.
+func (e *Entry) Object(key string, obj LogObjectMarshaler) *Entry {
 	if e == nil {
 		return nil
 	}
 
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
+	e.key(key)
+	if obj == nil {
+		e.buf = append(e.buf, "null"...)
+		return e
+	}
 
-	enc := json.NewEncoder(b)
-	enc.SetEscapeHTML(false)
-
-	err := enc.Encode(i)
-	if err != nil {
-		e.buf = append(e.buf, ",\"error\":\"marshaling error: "...)
-		e.string(err.Error())
-		e.buf = append(e.buf, '"')
-	} else if b.B[0] == '{' {
-		b.B[0] = ','
-		e.buf = append(e.buf, b.B[:len(b.B)-2]...)
+	n := len(e.buf)
+	obj.MarshalLogObject(e)
+	if n < len(e.buf) {
+		e.buf[n] = '{'
+		e.buf = append(e.buf, '}')
 	} else {
-		e.buf = append(e.buf, ",\"error\":\"marshaling error: jsonify expects struct\""...)
+		e.buf = append(e.buf, "null"...)
 	}
 
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
+	return e
+}
+
+// EmbedObject marshals and Embeds an object that implement the LogObjectMarshaler interface.
+func (e *Entry) EmbedObject(obj LogObjectMarshaler) *Entry {
+	if e == nil {
+		return nil
 	}
 
+	if obj != nil {
+		obj.MarshalLogObject(e)
+	}
 	return e
 }
 
