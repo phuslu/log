@@ -511,9 +511,9 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkZap-4       	 8265870	      1434 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-4   	17836096	       672 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-4   	46640523	       255 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-4       	12432787	       996 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-4   	24231926	       496 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-4   	62495569	       194 ns/op	       0 B/op	       0 allocs/op
 ```
 
 ## A Real World Example
