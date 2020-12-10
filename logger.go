@@ -573,7 +573,11 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 	}
 
 	e.key(key)
-	e.string(err.Error())
+	if o, ok := err.(LogObjectMarshaler); ok {
+		o.MarshalLogObject(e)
+	} else {
+		e.string(err.Error())
+	}
 	return e
 }
 
@@ -1151,6 +1155,11 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	}
 	e.key(key)
 
+	if o, ok := i.(LogObjectMarshaler); ok {
+		o.MarshalLogObject(e)
+		return e
+	}
+
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 
@@ -1253,6 +1262,9 @@ func (e *Entry) keysAndValues(keysAndValues ...interface{}) *Entry {
 			continue
 		}
 		switch v := v.(type) {
+		case LogObjectMarshaler:
+			e.key(key)
+			v.MarshalLogObject(e)
 		case Context:
 			e.Dict(key, v)
 		case []time.Duration:
@@ -1330,6 +1342,9 @@ func (e *Entry) Fields(fields map[string]interface{}) *Entry {
 			continue
 		}
 		switch v := v.(type) {
+		case LogObjectMarshaler:
+			e.key(k)
+			v.MarshalLogObject(e)
 		case Context:
 			e.Dict(k, v)
 		case []time.Duration:
