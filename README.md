@@ -431,6 +431,36 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
 ```
 
+### Object Marshaller
+
+To be implemented by types used with Entry's Object methods, use `MarshalLogObject`. [![playground][play-marshal-img]][play-marshal]
+
+```go
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+type TestObject struct {
+	ID int
+	Name string
+}
+
+func (o *TestObject) MarshalLogObject(e *log.Entry) {
+	e.Int("id", o.ID).Str("name", o.Name)
+}
+
+func main() {
+	log.Info().Object("object", &TestObject{1, "john"}).Msg("object")
+	log.Info().EmbedObject(&TestObject{2, "foobar"}).Msg("embed object")
+}
+
+// Output:
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","object":{"id":1,"name":"john"},"message":"object"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","id":2,"name":"john","message":"embed object"}
+```
+
 ### High Performance
 
 A quick and simple benchmark with zap/zerolog, which runs on [github actions][benchmark]:
@@ -628,6 +658,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-formatting]: https://play.golang.org/p/8ScRKLIrehG
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
+[play-marshal-img]: https://img.shields.io/badge/playground-eg3_-VzN9wY-29BEB0?style=flat&logo=go
+[play-marshal]: https://play.golang.org/p/eg3_-VzN9wY
 [play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go
 [play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
