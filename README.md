@@ -227,7 +227,8 @@ To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][p
 ```go
 if log.IsTerminal(os.Stderr.Fd()) {
 	log.DefaultLogger = log.Logger{
-		Caller: 1,
+		TimeFormat: "15:04:05",
+		Caller:     1,
 		Writer: &log.ConsoleWriter{
 			ColorOutput:    true,
 			QuoteString:    true,
@@ -425,23 +426,24 @@ import (
 	"github.com/phuslu/log"
 )
 
-type MyObject struct {
+type User struct {
 	ID   int
 	Name string
+	Pass string
 }
 
-func (o *MyObject) MarshalLogObject(e *log.Entry) {
-	e.Int("id", o.ID).Str("name", o.Name)
+func (u *User) MarshalLogObject(e *log.Entry) {
+	e.Int("id", u.ID).Str("name", u.Name).Str("password", "***")
 }
 
 func main() {
-	log.Info().Object("my_obj", &MyObject{100, "john"}).Msg("")
-	log.Info().EmbedObject(&MyObject{101, "foobar"}).Msg("")
+	log.Info().Object("user", &User{1, "neo", "123456"}).Msg("")
+	log.Info().EmbedObject(&User{2, "john", "abc"}).Msg("")
 }
 
 // Output:
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","my_obj":{"id":100,"name":"john"}}
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","id":101,"name":"foobar"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","user":{"id":1,"name":"neo","password":"***"}}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","id":2,"name":"john","password":"***"}
 ```
 
 ### Contextual Fields
@@ -651,15 +653,15 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-customize]: https://play.golang.org/p/emTsJJKUGXZ
 [play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
 [play-file]: https://play.golang.org/p/nS-ILxFyhHM
-[play-pretty-img]: https://img.shields.io/badge/playground-CD1LClgEvS4-29BEB0?style=flat&logo=go
-[play-pretty]: https://play.golang.org/p/CD1LClgEvS4
-[pretty-img]: https://user-images.githubusercontent.com/195836/90043818-37d99900-dcff-11ea-9f93-7de9ce8b7316.png
+[play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
+[play-pretty]: https://play.golang.org/p/SCcXG33esvI
+[pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
 [play-formatting-img]: https://img.shields.io/badge/playground-8ScRKLIrehG-29BEB0?style=flat&logo=go
 [play-formatting]: https://play.golang.org/p/8ScRKLIrehG
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
-[play-marshal-img]: https://img.shields.io/badge/playground-JE6xq--l5Ywo-29BEB0?style=flat&logo=go
-[play-marshal]: https://play.golang.org/p/JE6xq-l5Ywo
+[play-marshal-img]: https://img.shields.io/badge/playground-NxMoqaiVxHM-29BEB0?style=flat&logo=go
+[play-marshal]: https://play.golang.org/p/NxMoqaiVxHM
 [play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go
 [play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
