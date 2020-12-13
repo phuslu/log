@@ -1041,6 +1041,40 @@ func (e *Entry) Msg(msg string) {
 	}
 }
 
+// Msgf sends the entry with formatted msg added as the message field if not empty.
+func (e *Entry) Msgf(format string, v ...interface{}) {
+	if e == nil {
+		return
+	}
+	if e.need&needStack != 0 {
+		e.buf = append(e.buf, ",\"stack\":\""...)
+		e.bytes(stacks(false))
+		e.buf = append(e.buf, '"')
+	}
+	e.buf = append(e.buf, ",\"message\":\""...)
+	fmt.Fprintf(escapeWriter{e}, format, v...)
+	e.buf = append(e.buf, '"', '}', '\n')
+	e.w.WriteEntry(e)
+	if (e.need&needExit != 0) && notTest {
+		os.Exit(255)
+	}
+	if (e.need&needPanic != 0) && notTest {
+		panic(fmt.Sprintf(format, v...))
+	}
+	if cap(e.buf) <= bbcap {
+		epool.Put(e)
+	}
+}
+
+type escapeWriter struct {
+	e *Entry
+}
+
+func (w escapeWriter) Write(p []byte) (int, error) {
+	w.e.bytes(p)
+	return len(p), nil
+}
+
 func (e *Entry) key(key string) {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
@@ -1236,23 +1270,6 @@ func (e *Entry) EmbedObject(obj LogObjectMarshaler) *Entry {
 		obj.MarshalLogObject(e)
 	}
 	return e
-}
-
-// Msgf sends the entry with formatted msg added as the message field if not empty.
-func (e *Entry) Msgf(format string, v ...interface{}) {
-	if e == nil {
-		return
-	}
-
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
-
-	fmt.Fprintf(b, format, v...)
-	e.Msg(b2s(b.B))
-
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
-	}
 }
 
 func (e *Entry) print(args []interface{}) {
