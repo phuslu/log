@@ -4,7 +4,7 @@
 
 ## Features
 
-* No Dependency
+* Dependency Free
 * Simple and Clean Interface
 * Consistent Writer
     - `IOWriter`, *io.Writer wrapper*
