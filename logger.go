@@ -657,6 +657,16 @@ func (e *Entry) Int64(key string, i int64) *Entry {
 	return e
 }
 
+// Uint adds the field key with i as a uint to the entry.
+func (e *Entry) Uint(key string, i uint) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.buf = strconv.AppendUint(e.buf, uint64(i), 10)
+	return e
+}
+
 // Uint64 adds the field key with i as a uint64 to the entry.
 func (e *Entry) Uint64(key string, i uint64) *Entry {
 	if e == nil {
