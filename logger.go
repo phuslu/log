@@ -565,7 +565,9 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 			b.B = b.B[:0]
 			fmt.Fprintf(b, "%+v", err)
 			e.key("stack")
+			e.buf = append(e.buf, '"')
 			e.bytes(b.B)
+			e.buf = append(e.buf, '"')
 			if cap(b.B) <= bbcap {
 				bbpool.Put(b)
 			}
@@ -576,7 +578,9 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 	if o, ok := err.(LogObjectMarshaler); ok {
 		o.MarshalLogObject(e)
 	} else {
+		e.buf = append(e.buf, '"')
 		e.string(err.Error())
+		e.buf = append(e.buf, '"')
 	}
 	return e
 }
@@ -596,7 +600,9 @@ func (e *Entry) Errs(key string, errs []error) *Entry {
 		if err == nil {
 			e.buf = append(e.buf, "null"...)
 		} else {
+			e.buf = append(e.buf, '"')
 			e.string(err.Error())
+			e.buf = append(e.buf, '"')
 		}
 	}
 	e.buf = append(e.buf, ']')
@@ -743,7 +749,9 @@ func (e *Entry) Str(key string, val string) *Entry {
 		return nil
 	}
 	e.key(key)
+	e.buf = append(e.buf, '"')
 	e.string(val)
+	e.buf = append(e.buf, '"')
 	return e
 }
 
@@ -766,7 +774,9 @@ func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	}
 	e.key(key)
 	if val != nil {
+		e.buf = append(e.buf, '"')
 		e.string(val.String())
+		e.buf = append(e.buf, '"')
 	} else {
 		e.buf = append(e.buf, "null"...)
 	}
@@ -780,7 +790,9 @@ func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 	}
 	e.key(key)
 	if val != nil {
+		e.buf = append(e.buf, '"')
 		e.string(val.GoString())
+		e.buf = append(e.buf, '"')
 	} else {
 		e.buf = append(e.buf, "null"...)
 	}
@@ -798,7 +810,9 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
+		e.buf = append(e.buf, '"')
 		e.string(val)
+		e.buf = append(e.buf, '"')
 	}
 	e.buf = append(e.buf, ']')
 	return e
@@ -843,7 +857,9 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 		return nil
 	}
 	e.key(key)
+	e.buf = append(e.buf, '"')
 	e.bytes(val)
+	e.buf = append(e.buf, '"')
 	return e
 }
 
@@ -856,7 +872,9 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	if val == nil {
 		e.buf = append(e.buf, "null"...)
 	} else {
+		e.buf = append(e.buf, '"')
 		e.bytes(val)
+		e.buf = append(e.buf, '"')
 	}
 	return e
 }
@@ -1001,12 +1019,14 @@ func (e *Entry) Msg(msg string) {
 		return
 	}
 	if e.need&needStack != 0 {
-		e.buf = append(e.buf, ",\"stack\":"...)
+		e.buf = append(e.buf, ",\"stack\":\""...)
 		e.bytes(stacks(false))
+		e.buf = append(e.buf, '"')
 	}
 	if msg != "" {
-		e.buf = append(e.buf, ",\"message\":"...)
+		e.buf = append(e.buf, ",\"message\":\""...)
 		e.string(msg)
+		e.buf = append(e.buf, '"')
 	}
 	e.buf = append(e.buf, '}', '\n')
 	e.w.WriteEntry(e)
@@ -1052,7 +1072,6 @@ var escapes = [256]bool{
 }
 
 func (e *Entry) escape(b []byte) {
-	e.buf = append(e.buf, '"')
 	n := len(b)
 	j := 0
 	if n > 0 {
@@ -1104,7 +1123,6 @@ func (e *Entry) escape(b []byte) {
 		}
 	}
 	e.buf = append(e.buf, b[j:]...)
-	e.buf = append(e.buf, '"')
 }
 
 func (e *Entry) string(s string) {
@@ -1118,11 +1136,7 @@ func (e *Entry) string(s string) {
 			return
 		}
 	}
-
-	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, s...)
-	e.buf = append(e.buf, '"')
-
 	return
 }
 
@@ -1133,11 +1147,7 @@ func (e *Entry) bytes(b []byte) {
 			return
 		}
 	}
-
-	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, b...)
-	e.buf = append(e.buf, '"')
-
 	return
 }
 
@@ -1176,12 +1186,14 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	enc := json.NewEncoder(b)
 	enc.SetEscapeHTML(false)
 
+	e.buf = append(e.buf, '"')
 	err := enc.Encode(i)
 	if err != nil {
 		e.string("marshaling error: " + err.Error())
 	} else {
 		e.bytes(b.B[:len(b.B)-1])
 	}
+	e.buf = append(e.buf, '"')
 
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
