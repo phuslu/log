@@ -5,6 +5,7 @@ import (
 	"io"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
 // IsTerminal returns whether the given file descriptor is a terminal.
@@ -54,6 +55,23 @@ func (w *ConsoleWriter) Close() (err error) {
 func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
 	return w.Write(e.buf)
 }
+
+type bb struct {
+	B []byte
+}
+
+func (b *bb) Write(p []byte) (int, error) {
+	b.B = append(b.B, p...)
+	return len(p), nil
+}
+
+var bbpool = sync.Pool{
+	New: func() interface{} {
+		return new(bb)
+	},
+}
+
+const bbcap = 1 << 16
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (int, error) {
 	b := bbpool.Get().(*bb)
