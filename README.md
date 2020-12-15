@@ -19,7 +19,6 @@
     - `Logger.Std`, *(std)log*
     - `Logger.Grpc`, *grpclog.LoggerV2*
     - `Logger.Logr`, *logr.Logger*
-    - `Logger.Sugar`, *zap.SugaredLogger*
 * Useful utility function
     - `Goid()`, *current goroutine id*
     - `NewXID()`, *create a tracing id*
@@ -250,16 +249,7 @@ log.Error().Err(errors.New("an error")).Msg("hello world")
 To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-formatting-img]][play-formatting]
 
 ```go
-package main
-
-import (
-	"io"
-	"fmt"
-	"strings"
-	"github.com/phuslu/log"
-)
-
-var glog = (&log.Logger{
+log.DefaultLogger = log.Logger{
 	Level:      log.InfoLevel,
 	Caller:     1,
 	TimeFormat: "0102 15:04:05.999999",
@@ -269,13 +259,11 @@ var glog = (&log.Logger{
 				a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},
-}).Sugar(nil)
-
-func main() {
-	glog.Infof("hello glog %s", "Info")
-	glog.Warnf("hello glog %s", "Warn")
-	glog.Errorf("hello glog %s", "Error")
 }
+
+log.Info().Msgf("hello glog %s", "Info")
+log.Warn().Msgf("hello glog %s", "Warn")
+log.Error().Msgf("hello glog %s", "Error")
 
 // Output:
 // I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
@@ -359,28 +347,6 @@ logger.Writer.(io.Closer).Close()
 ```
 
 > Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
-
-### Sugar Logger
-
-In contexts where performance is nice, but not critical, use the `SugaredLogger`. It's 20% slower than `Logger` but still faster than other structured logging packages [![playground][play-sugar-img]][play-sugar]
-
-```go
-package main
-
-import (
-	"github.com/phuslu/log"
-)
-
-func main() {
-	sugar := log.DefaultLogger.Sugar(log.NewContext(nil).Str("tag", "hi suagr").Value())
-	sugar.Infof("hello %s", "世界")
-	sugar.Infow("i am a leading message", "foo", "bar", "number", 42)
-
-	sugar = sugar.Level(log.ErrorLevel)
-	sugar.Printf("hello %s", "世界")
-	sugar.Log("number", 42, "a_key", "a_value", "message", "a suagr message")
-}
-```
 
 ### StdLog & Logr & Grpc Interceptor
 
@@ -657,14 +623,12 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
 [play-pretty]: https://play.golang.org/p/SCcXG33esvI
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
-[play-formatting-img]: https://img.shields.io/badge/playground-8ScRKLIrehG-29BEB0?style=flat&logo=go
-[play-formatting]: https://play.golang.org/p/8ScRKLIrehG
+[play-formatting-img]: https://img.shields.io/badge/playground-UmJmLxYXwRO-29BEB0?style=flat&logo=go
+[play-formatting]: https://play.golang.org/p/UmJmLxYXwRO
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
 [play-marshal-img]: https://img.shields.io/badge/playground-NxMoqaiVxHM-29BEB0?style=flat&logo=go
 [play-marshal]: https://play.golang.org/p/NxMoqaiVxHM
-[play-sugar-img]: https://img.shields.io/badge/playground-iGfD_wOcA6c-29BEB0?style=flat&logo=go
-[play-sugar]: https://play.golang.org/p/iGfD_wOcA6c
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark

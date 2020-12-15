@@ -218,12 +218,12 @@ func TestConsoleWriterGlog(t *testing.T) {
 				return fmt.Fprintf(w, "%c%s %s %s] %s\n", a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message)
 			},
 		},
-	}).Sugar(nil)
+	})
 
-	glog.Infof("hello glog %s", "Info")
-	glog.Warnf("hello glog %s", "Earn")
-	glog.Errorf("hello glog %s", "Error")
-	glog.Fatalf("hello glog %s", "Fatal")
+	glog.Info().Msgf("hello glog %s", "Info")
+	glog.Warn().Msgf("hello glog %s", "Earn")
+	glog.Error().Msgf("hello glog %s", "Error")
+	glog.Fatal().Msgf("hello glog %s", "Fatal")
 }
 
 func TestConsoleWriterTime(t *testing.T) {
