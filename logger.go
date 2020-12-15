@@ -1240,8 +1240,8 @@ func (e *Entry) EmbedObject(obj LogObjectMarshaler) *Entry {
 	return e
 }
 
-// keysAndValues sends keysAndValues to Entry
-func (e *Entry) keysAndValues(keysAndValues ...interface{}) *Entry {
+// KeysAndValues sends keysAndValues to Entry
+func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 	if e == nil {
 		return nil
 	}

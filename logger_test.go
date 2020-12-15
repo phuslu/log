@@ -87,7 +87,7 @@ func TestLoggerInfo(t *testing.T) {
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
-		keysAndValues("foo", "bar", "number", 42).
+		KeysAndValues("foo", "bar", "number", 42).
 		Msgf("this is a \"%s\"", "test")
 }
 
@@ -153,7 +153,7 @@ func TestLoggerNil(t *testing.T) {
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
 		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
 		Interface("time.Time", timeNow()).
-		keysAndValues("foo", "bar", "number", 42).
+		KeysAndValues("foo", "bar", "number", 42).
 		Msgf("this is a \"%s\"", "test")
 }
 
