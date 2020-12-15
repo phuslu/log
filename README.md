@@ -525,12 +525,12 @@ The example starts a geoip http server which supports change log level dynamical
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 
-	"github.com/naoina/toml"
 	"github.com/phuslu/iploc"
 	"github.com/phuslu/log"
 )
@@ -576,17 +576,18 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 func main() {
 	config := new(Config)
-	err := toml.Unmarshal([]byte(`
-[listen]
-tcp = ":8080"
-
-[log]
-level = "debug"
-backups = 5
-maxsize = 1073741824
-        `), config)
+	err := json.Unmarshal([]byte(`{
+		"listen": {
+			"tcp": ":8080"
+		},
+		"log": {
+			"level": "debug",
+			"maxsize": 1073741824,
+			"backups": 5
+		}
+	}`), config)
 	if err != nil {
-		log.Fatal().Msgf("toml.Unmarshal error: %+v", err)
+		log.Fatal().Msgf("json.Unmarshal error: %+v", err)
 	}
 
 	handler := &Handler{
