@@ -29,7 +29,7 @@ func (g *GrpcLogger) Info(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Infoln logs to INFO log. Arguments are handled in the manner of fmt.Println.
@@ -41,7 +41,7 @@ func (g *GrpcLogger) Infoln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Infof logs to INFO log. Arguments are handled in the manner of fmt.Printf.
@@ -65,7 +65,7 @@ func (g *GrpcLogger) Warning(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Warningln logs to WARNING log. Arguments are handled in the manner of fmt.Println.
@@ -77,7 +77,7 @@ func (g *GrpcLogger) Warningln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Warningf logs to WARNING log. Arguments are handled in the manner of fmt.Printf.
@@ -101,7 +101,7 @@ func (g *GrpcLogger) Error(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Errorln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -113,7 +113,7 @@ func (g *GrpcLogger) Errorln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Errorf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
@@ -139,7 +139,7 @@ func (g *GrpcLogger) Fatal(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Fatalln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
@@ -153,7 +153,7 @@ func (g *GrpcLogger) Fatalln(args ...interface{}) {
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
-	e.Context(g.context).print(args)
+	e.Context(g.context).Msgs(args...)
 }
 
 // Fatalf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.

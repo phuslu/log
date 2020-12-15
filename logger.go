@@ -1046,6 +1046,17 @@ func (e *Entry) Msgf(format string, v ...interface{}) {
 	e.Msg("")
 }
 
+// Msgv sends the entry with msgs added as the message field if not empty.
+func (e *Entry) Msgs(args ...interface{}) {
+	if e == nil {
+		return
+	}
+	e.buf = append(e.buf, ",\"message\":\""...)
+	fmt.Fprint(escapeWriter{e}, args...)
+	e.buf = append(e.buf, '"')
+	e.Msg("")
+}
+
 type escapeWriter struct {
 	e *Entry
 }
@@ -1227,13 +1238,6 @@ func (e *Entry) EmbedObject(obj LogObjectMarshaler) *Entry {
 		obj.MarshalLogObject(e)
 	}
 	return e
-}
-
-func (e *Entry) print(args []interface{}) {
-	e.buf = append(e.buf, ",\"message\":\""...)
-	fmt.Fprint(escapeWriter{e}, args...)
-	e.buf = append(e.buf, '"')
-	e.Msg("")
 }
 
 // keysAndValues sends keysAndValues to Entry
