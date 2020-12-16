@@ -4,7 +4,9 @@ import (
 	"io"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -108,6 +110,18 @@ func (e *TSVEntry) TimestampMS() *TSVEntry {
 	tmp[0] = smallsString[is]
 	// append to buf
 	e.buf = append(e.buf, tmp[:]...)
+	return e
+}
+
+func (e *TSVEntry) Caller(depth int) *TSVEntry {
+	_, file, line, _ := runtime.Caller(depth)
+	if i := strings.LastIndex(file, "/"); i >= 0 {
+		file = file[i+1:]
+	}
+	e.buf = append(e.buf, file...)
+	e.buf = append(e.buf, ':')
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = append(e.buf, e.sep)
 	return e
 }
 
