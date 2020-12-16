@@ -188,6 +188,11 @@ func (e *TSVEntry) Uint8(i uint8) *TSVEntry {
 	return e.Uint64(uint64(i))
 }
 
+// Uint adds a uint to the entry.
+func (e *TSVEntry) Uint(i uint) *TSVEntry {
+	return e.Uint64(uint64(i))
+}
+
 // Str adds a string to the entry.
 func (e *TSVEntry) Str(val string) *TSVEntry {
 	e.buf = append(e.buf, val...)
