@@ -23,6 +23,16 @@ type FormatterArgs struct {
 	}
 }
 
+func (args *FormatterArgs) Get(key string) (value string) {
+	for _, kv := range args.KeyValues {
+		if kv.Key == key {
+			value = kv.Value
+			break
+		}
+	}
+	return
+}
+
 func formatterArgsPos(key string) (pos int) {
 	switch key {
 	case "time":
