@@ -1155,17 +1155,16 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
 
 	if o, ok := i.(LogObjectMarshaler); ok {
-		o.MarshalLogObject(e)
-		return e
+		return e.Object(key, o)
 	}
+
+	e.key(key)
+	e.buf = append(e.buf, '"')
 
 	enc := json.NewEncoder(escapeWriter{e})
 	enc.SetEscapeHTML(false)
-
-	e.buf = append(e.buf, '"')
 	err := enc.Encode(i)
 	if err != nil {
 		e.string("marshaling error: " + err.Error())
