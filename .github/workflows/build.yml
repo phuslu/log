@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Build
         run: |
-          git clone https://github.com/${GITHUB_REPOSITORY}
+          git clone --depth=1 https://github.com/${GITHUB_REPOSITORY}
           cd $(basename ${GITHUB_REPOSITORY})
           go build -v
           go test -v
