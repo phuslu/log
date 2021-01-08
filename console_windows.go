@@ -50,9 +50,8 @@ func (w *ConsoleWriter) writew(out io.Writer, p []byte) (n int, err error) {
 	muConsole.Lock()
 	defer muConsole.Unlock()
 
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
-	defer bbpool.Put(b)
+	b := bbget()
+	defer bbput(b)
 
 	n, err = w.write(b, p)
 	if err != nil {
@@ -82,9 +81,8 @@ func (w *ConsoleWriter) writew(out io.Writer, p []byte) (n int, err error) {
 		n += i
 	}
 
-	b2 := bbpool.Get().(*bb)
-	b2.B = b2.B[:0]
-	defer bbpool.Put(b2)
+	b2 := bbget()
+	defer bbput(b2)
 
 	var color uintptr = White
 	var length = len(b.B)

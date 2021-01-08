@@ -1009,14 +1009,44 @@ func (e *Entry) Msg(msg string) {
 	}
 }
 
+type bb struct {
+	B []byte
+}
+
+func (b *bb) Write(p []byte) (int, error) {
+	b.B = append(b.B, p...)
+	return len(p), nil
+}
+
+var bbpool = sync.Pool{
+	New: func() interface{} {
+		return new(bb)
+	},
+}
+
+func bbget() *bb {
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
+	return b
+}
+
+func bbput(b *bb) {
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
+}
+
 // Msgf sends the entry with formatted msg added as the message field if not empty.
 func (e *Entry) Msgf(format string, v ...interface{}) {
 	if e == nil {
 		return
 	}
+	b := bbget()
 	e.buf = append(e.buf, ",\"message\":\""...)
-	fmt.Fprintf(escapeWriter{e}, format, v...)
+	fmt.Fprintf(b, format, v...)
+	e.buf = append(e.buf, b.B...)
 	e.buf = append(e.buf, '"')
+	bbput(b)
 	e.Msg("")
 }
 
@@ -1025,19 +1055,13 @@ func (e *Entry) Msgs(args ...interface{}) {
 	if e == nil {
 		return
 	}
+	b := bbget()
 	e.buf = append(e.buf, ",\"message\":\""...)
-	fmt.Fprint(escapeWriter{e}, args...)
+	fmt.Fprint(b, args...)
+	e.buf = append(e.buf, b.B...)
 	e.buf = append(e.buf, '"')
+	bbput(b)
 	e.Msg("")
-}
-
-type escapeWriter struct {
-	e *Entry
-}
-
-func (w escapeWriter) Write(p []byte) (int, error) {
-	w.e.bytes(p)
-	return len(p), nil
 }
 
 func (e *Entry) key(key string) {
@@ -1162,17 +1186,18 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 
 	e.key(key)
 	e.buf = append(e.buf, '"')
-
-	enc := json.NewEncoder(escapeWriter{e})
+	b := bbget()
+	enc := json.NewEncoder(b)
 	enc.SetEscapeHTML(false)
 	err := enc.Encode(i)
 	if err != nil {
 		e.string("marshaling error: " + err.Error())
 		e.buf = append(e.buf, '"')
 	} else {
-		e.buf[len(e.buf)-2] = '"'
-		e.buf = e.buf[:len(e.buf)-1]
+		e.buf = append(e.buf, b.B...)
+		e.buf[len(e.buf)-1] = '"'
 	}
+	bbput(b)
 
 	return e
 }
