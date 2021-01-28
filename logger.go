@@ -197,6 +197,19 @@ func (l *Logger) Error() (e *Entry) {
 	return
 }
 
+// Err starts a new message with error level with err as a field if not nil or with info level if err is nil.
+func (l *Logger) Err(err error) (e *Entry) {
+	if err != nil {
+		e = l.header(ErrorLevel)
+	} else {
+		e = l.header(InfoLevel)
+	}
+	if e != nil && l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
+}
+
 // Fatal starts a new message with fatal level.
 func (l *Logger) Fatal() (e *Entry) {
 	e = l.header(FatalLevel)
