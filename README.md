@@ -20,7 +20,7 @@
     - `Logger.Grpc`, *grpclog.LoggerV2*
     - `Logger.Logr`, *logr.Logger*
 * Useful utility function
-    - `Goid()`, *current goroutine id*
+    - `Goid()`, *the goroutine id matches stack trace*
     - `NewXID()`, *create a tracing id*
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
