@@ -1499,8 +1499,3 @@ func absClock(abs uint64) (hour, min, sec int)
 //go:noescape
 //go:linkname Fastrandn runtime.fastrandn
 func Fastrandn(x uint32) uint32
-
-// Event is an alias for Entry
-//
-// Deprecated: Use Entry instead.
-type Event = Entry
