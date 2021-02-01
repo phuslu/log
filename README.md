@@ -602,7 +602,7 @@ func main() {
 ```
 
 ### Acknowledgment
-This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate][quicktemplate], [gjson][gjson], [zap][zap] and [lumberjack][lumberjack].
+This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
 [pkg]: https://godoc.org/github.com/phuslu/log
@@ -634,7 +634,5 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [quicktemplate
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
-[quicktemplate]: https://github.com/valyala/quicktemplate
 [gjson]: https://github.com/tidwall/gjson
-[zap]: https://github.com/uber-go/zap
 [lumberjack]: https://github.com/natefinch/lumberjack
