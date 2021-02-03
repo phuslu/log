@@ -1063,7 +1063,7 @@ func (e *Entry) Msgf(format string, v ...interface{}) {
 	e.Msg("")
 }
 
-// Msgv sends the entry with msgs added as the message field if not empty.
+// Msgs sends the entry with msgs added as the message field if not empty.
 func (e *Entry) Msgs(args ...interface{}) {
 	if e == nil {
 		return

@@ -23,6 +23,7 @@ type FormatterArgs struct {
 	}
 }
 
+// Get gets the value associated with the given key.
 func (args *FormatterArgs) Get(key string) (value string) {
 	for _, kv := range args.KeyValues {
 		if kv.Key == key {

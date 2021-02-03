@@ -113,6 +113,7 @@ func (e *TSVEntry) TimestampMS() *TSVEntry {
 	return e
 }
 
+// Caller adds the file:line of to the entry.
 func (e *TSVEntry) Caller(depth int) *TSVEntry {
 	_, file, line, _ := runtime.Caller(depth)
 	if i := strings.LastIndex(file, "/"); i >= 0 {
