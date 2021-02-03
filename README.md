@@ -288,6 +288,56 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
+### Multiple Combined Logger:
+
+To logging to different logger as you want, use below idiom. [![playground][play-combined-img]][play-combined]
+```go
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+var logger = struct {
+	Console log.Logger
+	Access  log.Logger
+	Data    log.Logger
+}{
+	Console: log.Logger{
+		TimeFormat: "15:04:05",
+		Caller:     1,
+		Writer: &log.ConsoleWriter{
+			ColorOutput:    true,
+			EndWithMessage: true,
+		},
+	},
+	Access: log.Logger{
+		Level: log.InfoLevel,
+		Writer: &log.FileWriter{
+			Filename:   "access.log",
+			MaxSize:    50 * 1024 * 1024,
+			MaxBackups: 7,
+			LocalTime:  false,
+		},
+	},
+	Data: log.Logger{
+		Level: log.InfoLevel,
+		Writer: &log.FileWriter{
+			Filename:   "data.log",
+			MaxSize:    50 * 1024 * 1024,
+			MaxBackups: 7,
+			LocalTime:  false,
+		},
+	},
+}
+
+func main() {
+	logger.Console.Info().Msgf("hello world")
+	logger.Access.Log().Msgf("handle request")
+	logger.Data.Log().Msgf("some data")
+}
+```
+
 ### SyslogWriter & JournalWriter & EventlogWriter
 
 To log to a syslog server, using `SyslogWriter`.
@@ -618,6 +668,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/emTsJJKUGXZ
+[play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
+[play-combined]: https://play.golang.org/p/24d4eDIpDeR
 [play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
 [play-file]: https://play.golang.org/p/nS-ILxFyhHM
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
