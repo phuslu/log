@@ -84,7 +84,9 @@ func TestLoggerInfo(t *testing.T) {
 		GoStringer("gostringer", nil).
 		GoStringer("gostringer", binary.BigEndian).
 		Time("now_1", timeNow()).
-		TimeFormat("now_2", time.RFC3339, timeNow()).
+		Times("now_2", []time.Time{timeNow(), timeNow()}).
+		TimeFormat("now_3", time.RFC3339, timeNow()).
+		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
 		Stringer("ip_str", ipv4Addr).
@@ -162,7 +164,9 @@ func TestLoggerNil(t *testing.T) {
 		GoStringer("gostringer", nil).
 		GoStringer("gostringer", binary.BigEndian).
 		Time("now_1", timeNow()).
-		TimeFormat("now_2", time.RFC3339, timeNow()).
+		Times("now_2", []time.Time{timeNow(), timeNow()}).
+		TimeFormat("now_3", time.RFC3339, timeNow()).
+		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).

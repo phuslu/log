@@ -482,6 +482,48 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 	return e
 }
 
+// Times append append a formated as string array using time.RFC3339Nano.
+func (e *Entry) Times(key string, a []time.Time) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+
+	e.buf = append(e.buf, '[')
+	for i, t := range a {
+		if i != 0 {
+			e.buf = append(e.buf, ',')
+		}
+		e.buf = append(e.buf, '"')
+		e.buf = t.AppendFormat(e.buf, time.RFC3339Nano)
+		e.buf = append(e.buf, '"')
+	}
+	e.buf = append(e.buf, ']')
+
+	return e
+}
+
+// TimesFormat append append a formated as string array using timefmt.
+func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+
+	e.buf = append(e.buf, '[')
+	for i, t := range a {
+		if i != 0 {
+			e.buf = append(e.buf, ',')
+		}
+		e.buf = append(e.buf, '"')
+		e.buf = t.AppendFormat(e.buf, timefmt)
+		e.buf = append(e.buf, '"')
+	}
+	e.buf = append(e.buf, ']')
+
+	return e
+}
+
 // Bool append append the val as a bool to the entry.
 func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
