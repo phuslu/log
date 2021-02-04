@@ -50,15 +50,25 @@ func TestLoggerInfo(t *testing.T) {
 		Floats32("float32", []float32{1.111, 2.222}).
 		Float64("float64", 1.111).
 		Floats64("float64", []float64{1.111, 2.222}).
-		Uint64("int64", 1234567890).
-		Uint32("int32", 123).
-		Uint16("int16", 123).
-		Uint8("int16", 123).
+		Uint64("uint64", 1234567890).
+		Uint32("uint32", 123).
+		Uint16("uint16", 123).
+		Uint8("uint8", 123).
 		Int64("int64", 1234567890).
 		Int32("int32", 123).
 		Int16("int16", 123).
-		Int8("int16", 123).
+		Int8("int8", 123).
 		Int("int", 123).
+		Uints64("uints64", []uint64{1234567890, 1234567890}).
+		Uints32("uints32", []uint32{123, 123}).
+		Uints16("uints16", []uint16{123, 123}).
+		Uints8("uints8", []uint8{123, 123}).
+		Uints("uints", []uint{123, 123}).
+		Ints64("ints64", []int64{1234567890, 1234567890}).
+		Ints32("ints32", []int32{123, 123}).
+		Ints16("ints16", []int16{123, 123}).
+		Ints8("ints8", []int8{123, 123}).
+		Ints("ints", []int{123, 123}).
 		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
 		RawJSONStr("raw_json", "{\"c\":1,\"d\":2}").
 		Hex("hex", []byte("\"<>?'")).
@@ -118,15 +128,25 @@ func TestLoggerNil(t *testing.T) {
 		Float64("float64", 1.111).
 		Floats64("float64", []float64{1.111}).
 		Floats64("float64", []float64{1.111}).
-		Uint64("int64", 1234567890).
-		Uint32("int32", 123).
-		Uint16("int16", 123).
-		Uint8("int16", 123).
+		Uint64("uint64", 1234567890).
+		Uint32("uint32", 123).
+		Uint16("uint16", 123).
+		Uint8("uint8", 123).
 		Int64("int64", 1234567890).
 		Int32("int32", 123).
 		Int16("int16", 123).
-		Int8("int16", 123).
+		Int8("int8", 123).
 		Int("int", 123).
+		Uints64("uints64", []uint64{1234567890, 1234567890}).
+		Uints32("uints32", []uint32{123, 123}).
+		Uints16("uints16", []uint16{123, 123}).
+		Uints8("uints8", []uint8{123, 123}).
+		Uints("uints", []uint{123, 123}).
+		Ints64("ints64", []int64{1234567890, 1234567890}).
+		Ints32("ints32", []int32{123, 123}).
+		Ints16("ints16", []int16{123, 123}).
+		Ints8("ints8", []int8{123, 123}).
+		Ints("ints", []int{123, 123}).
 		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
 		RawJSONStr("raw_json", "{\"c\":1,\"d\":2}").
 		Hex("hex", []byte("\"<>?'")).
