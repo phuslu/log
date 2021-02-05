@@ -833,7 +833,7 @@ func (e *Entry) Ints(key string, a []int) *Entry {
 	return e
 }
 
-// Uint64 adds the field key with i as a []uint64 to the entry.
+// Uints64 adds the field key with i as a []uint64 to the entry.
 func (e *Entry) Uints64(key string, a []uint64) *Entry {
 	if e == nil {
 		return nil

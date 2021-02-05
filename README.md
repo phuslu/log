@@ -1,6 +1,10 @@
 # Structured Logging Made Easy
 
-[![go.dev][pkg-img]][pkg] [![goreport][report-img]][report] [![build][build-img]][build] [![coverage][cov-img]][cov] ![stability-stable][stability-img]
+[![go.dev][pkg-img]][pkg]
+[![goreport][report-img]][report]
+[![build][build-img]][build]
+[![coverage][cov-img]][cov]
+![stability-stable][stability-img]
 
 ## Features
 
@@ -533,6 +537,10 @@ BenchmarkZap-4       	12432787	       996 ns/op	     128 B/op	       1 allocs/op
 BenchmarkZeroLog-4   	24231926	       496 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLog-4   	62495569	       194 ns/op	       0 B/op	       0 allocs/op
 ```
+This library uses the following special techniques to achieve better performance,
+1. handwriting time formatting
+1. manual inlining
+1. unrolled functions
 
 ## A Real World Example
 
