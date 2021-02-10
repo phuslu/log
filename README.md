@@ -437,7 +437,7 @@ func main() {
 
 ### User-defined Data Structure
 
-To log with user-defined struct effectively, implements `MarshalLogObject`. [![playground][play-marshal-img]][play-marshal]
+To log with user-defined struct effectively, implements `MarshalObject`. [![playground][play-marshal-img]][play-marshal]
 
 ```go
 package main
@@ -452,7 +452,7 @@ type User struct {
 	Pass string
 }
 
-func (u *User) MarshalLogObject(e *log.Entry) {
+func (u *User) MarshalObject(e *log.Entry) {
 	e.Int("id", u.ID).Str("name", u.Name).Str("password", "***")
 }
 

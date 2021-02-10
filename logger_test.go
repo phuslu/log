@@ -203,7 +203,7 @@ type testMarshalObject struct {
 	N string
 }
 
-func (o *testMarshalObject) MarshalLogObject(e *Entry) {
+func (o *testMarshalObject) MarshalObject(e *Entry) {
 	e.Int("id", o.I).Str("name", o.N)
 }
 
@@ -212,7 +212,7 @@ type nullMarshalObject struct {
 	N string
 }
 
-func (o *nullMarshalObject) MarshalLogObject(e *Entry) {
+func (o *nullMarshalObject) MarshalObject(e *Entry) {
 }
 
 func TestLoggerObject(t *testing.T) {
