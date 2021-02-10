@@ -687,8 +687,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-formatting]: https://play.golang.org/p/UmJmLxYXwRO
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
-[play-marshal-img]: https://img.shields.io/badge/playground-NxMoqaiVxHM-29BEB0?style=flat&logo=go
-[play-marshal]: https://play.golang.org/p/NxMoqaiVxHM
+[play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
+[play-marshal]: https://play.golang.org/p/SoQdwQOaQR2
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
