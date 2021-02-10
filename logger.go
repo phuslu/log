@@ -47,10 +47,10 @@ func (w IOWriter) WriteEntry(e *Entry) (n int, err error) {
 	return w.Writer.Write(e.buf)
 }
 
-// LogObjectMarshaler provides a strongly-typed and encoding-agnostic interface
+// ObjectMarshaler provides a strongly-typed and encoding-agnostic interface
 // to be implemented by types used with Entry's Object methods.
-type LogObjectMarshaler interface {
-	MarshalLogObject(e *Entry)
+type ObjectMarshaler interface {
+	MarshalObject(e *Entry)
 }
 
 // A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
@@ -600,8 +600,8 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 	}
 
 	e.key(key)
-	if o, ok := err.(LogObjectMarshaler); ok {
-		o.MarshalLogObject(e)
+	if o, ok := err.(ObjectMarshaler); ok {
+		o.MarshalObject(e)
 	} else {
 		e.buf = append(e.buf, '"')
 		e.string(err.Error())
@@ -1405,7 +1405,7 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 		return nil
 	}
 
-	if o, ok := i.(LogObjectMarshaler); ok {
+	if o, ok := i.(ObjectMarshaler); ok {
 		return e.Object(key, o)
 	}
 
@@ -1427,8 +1427,8 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	return e
 }
 
-// Object marshals an object that implement the LogObjectMarshaler interface.
-func (e *Entry) Object(key string, obj LogObjectMarshaler) *Entry {
+// Object marshals an object that implement the ObjectMarshaler interface.
+func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1440,7 +1440,7 @@ func (e *Entry) Object(key string, obj LogObjectMarshaler) *Entry {
 	}
 
 	n := len(e.buf)
-	obj.MarshalLogObject(e)
+	obj.MarshalObject(e)
 	if n < len(e.buf) {
 		e.buf[n] = '{'
 		e.buf = append(e.buf, '}')
@@ -1451,14 +1451,14 @@ func (e *Entry) Object(key string, obj LogObjectMarshaler) *Entry {
 	return e
 }
 
-// EmbedObject marshals and Embeds an object that implement the LogObjectMarshaler interface.
-func (e *Entry) EmbedObject(obj LogObjectMarshaler) *Entry {
+// EmbedObject marshals and Embeds an object that implement the ObjectMarshaler interface.
+func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 	if e == nil {
 		return nil
 	}
 
 	if obj != nil {
-		obj.MarshalLogObject(e)
+		obj.MarshalObject(e)
 	}
 	return e
 }
@@ -1480,9 +1480,9 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			continue
 		}
 		switch v := v.(type) {
-		case LogObjectMarshaler:
+		case ObjectMarshaler:
 			e.key(key)
-			v.MarshalLogObject(e)
+			v.MarshalObject(e)
 		case Context:
 			e.Dict(key, v)
 		case []time.Duration:
@@ -1560,9 +1560,9 @@ func (e *Entry) Fields(fields map[string]interface{}) *Entry {
 			continue
 		}
 		switch v := v.(type) {
-		case LogObjectMarshaler:
+		case ObjectMarshaler:
 			e.key(k)
-			v.MarshalLogObject(e)
+			v.MarshalObject(e)
 		case Context:
 			e.Dict(k, v)
 		case []time.Duration:
