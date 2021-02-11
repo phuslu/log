@@ -1,4 +1,4 @@
-name: build
+name: lint
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
       - master
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Build
+      - name: Lint
         run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.36.0
           git clone --depth=1 https://github.com/${GITHUB_REPOSITORY}
           cd $(basename ${GITHUB_REPOSITORY})
-          go build -v
-          go test -v
+          ../bin/golangci-lint run
