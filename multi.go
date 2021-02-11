@@ -72,7 +72,7 @@ func (w *MultiWriter) WriteEntry(e *Entry) (n int, err error) {
 	}
 
 	if w.ConsoleWriter != nil && e.Level >= w.ConsoleLevel {
-		w.ConsoleWriter.WriteEntry(e)
+		_, _ = w.ConsoleWriter.WriteEntry(e)
 	}
 
 	return

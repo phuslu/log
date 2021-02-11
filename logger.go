@@ -249,7 +249,6 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 // SetLevel changes logger default level.
 func (l *Logger) SetLevel(level Level) {
 	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
-	return
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
@@ -1222,7 +1221,7 @@ func (e *Entry) Msg(msg string) {
 	} else {
 		e.buf = append(e.buf, '}', '\n')
 	}
-	e.w.WriteEntry(e)
+	_, _ = e.w.WriteEntry(e)
 	if (e.Level == FatalLevel) && notTest {
 		os.Exit(255)
 	}
@@ -1377,6 +1376,7 @@ func (e *Entry) string(s string) {
 	for _, c := range []byte(s) {
 		if escapes[c] {
 			sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+			// nolint
 			b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 				Data: sh.Data, Len: sh.Len, Cap: sh.Len,
 			}))
@@ -1385,7 +1385,6 @@ func (e *Entry) string(s string) {
 		}
 	}
 	e.buf = append(e.buf, s...)
-	return
 }
 
 func (e *Entry) bytes(b []byte) {
@@ -1396,7 +1395,6 @@ func (e *Entry) bytes(b []byte) {
 		}
 	}
 	e.buf = append(e.buf, b...)
-	return
 }
 
 // Interface adds the field key with i marshaled using reflection.

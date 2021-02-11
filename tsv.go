@@ -244,7 +244,7 @@ func (e *TSVEntry) Msg() {
 	if len(e.buf) != 0 {
 		e.buf[len(e.buf)-1] = '\n'
 	}
-	e.w.Write(e.buf)
+	_, _ = e.w.Write(e.buf)
 	if cap(e.buf) <= bbcap {
 		tepool.Put(e)
 	}

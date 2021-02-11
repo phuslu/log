@@ -73,7 +73,7 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	print := func(w io.Writer, name, value string) {
 		if strings.ContainsRune(value, '\n') {
 			fmt.Fprintln(w, name)
-			binary.Write(w, binary.LittleEndian, uint64(len(value)))
+			_ = binary.Write(w, binary.LittleEndian, uint64(len(value)))
 			fmt.Fprintln(w, value)
 		} else {
 			fmt.Fprintf(w, "%s=%s\n", name, value)

@@ -152,7 +152,8 @@ func (w *FileWriter) Rotate() (err error) {
 
 func (w *FileWriter) rotate() (err error) {
 	var file *os.File
-	file, err = os.OpenFile(w.fileargs(timeNow()))
+	name, flag, perm := w.fileargs(timeNow())
+	file, err = os.OpenFile(name, flag, perm)
 	if err != nil {
 		return err
 	}
@@ -165,14 +166,14 @@ func (w *FileWriter) rotate() (err error) {
 	go func(newname string) {
 		os.Remove(w.Filename)
 		if !w.ProcessID {
-			os.Symlink(filepath.Base(newname), w.Filename)
+			_ = os.Symlink(filepath.Base(newname), w.Filename)
 		}
 
 		uid, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
 		gid, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
 		if uid != 0 && gid != 0 && os.Geteuid() == 0 {
-			os.Lchown(w.Filename, uid, gid)
-			os.Chown(newname, uid, gid)
+			_ = os.Lchown(w.Filename, uid, gid)
+			_ = os.Chown(newname, uid, gid)
 		}
 
 		dir := filepath.Dir(w.Filename)
@@ -216,7 +217,8 @@ func (w *FileWriter) rotate() (err error) {
 }
 
 func (w *FileWriter) create() (err error) {
-	w.file, err = os.OpenFile(w.fileargs(timeNow()))
+	name, flag, perm := w.fileargs(timeNow())
+	w.file, err = os.OpenFile(name, flag, perm)
 	if err != nil {
 		return err
 	}
@@ -224,7 +226,7 @@ func (w *FileWriter) create() (err error) {
 
 	os.Remove(w.Filename)
 	if !w.ProcessID {
-		os.Symlink(filepath.Base(w.file.Name()), w.Filename)
+		_ = os.Symlink(filepath.Base(w.file.Name()), w.Filename)
 	}
 
 	return

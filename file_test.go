@@ -21,7 +21,7 @@ func TestFileWriter(t *testing.T) {
 		t.Fatalf("file writer error: %+v", err)
 	}
 
-	// w.Rotate()
+	// _ = w.Rotate()
 	w.Close()
 
 	matches, err := filepath.Glob("file-output.*.log")
@@ -94,12 +94,12 @@ func TestFileWriterEnsureFolder(t *testing.T) {
 
 	remove(filepath.Dir(filename))
 
-	_, err := fmt.Fprintf(w, text1)
+	_, err := fmt.Fprint(w, text1)
 	if err != nil {
 		t.Logf("file writer return error: %+v", err)
 	}
 
-	_, err = fmt.Fprintf(w, text2)
+	_, err = fmt.Fprint(w, text2)
 	if err != nil {
 		t.Logf("file writer return error: %+v", err)
 	}
@@ -132,7 +132,7 @@ func TestFileWriterHostname(t *testing.T) {
 
 			time.Sleep(time.Second)
 			os.Setenv("USER", "root")
-			w.Rotate()
+			_ = w.Rotate()
 			w.Close()
 
 			_, err = wlprintf(w, InfoLevel, text2)
@@ -172,7 +172,7 @@ func TestFileWriterRotate(t *testing.T) {
 	}
 
 	time.Sleep(time.Second)
-	w.Rotate()
+	_ = w.Rotate()
 
 	// text 2
 	_, err = wlprintf(w, InfoLevel, text2)
@@ -300,10 +300,10 @@ func TestFileWriterBackups(t *testing.T) {
 	}
 
 	time.Sleep(time.Second)
-	w.Rotate()
+	_ = w.Rotate()
 
 	time.Sleep(time.Second)
-	w.Rotate()
+	_ = w.Rotate()
 	w.Close()
 
 	matches, err := filepath.Glob("file-backup.*.log")
