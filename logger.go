@@ -556,6 +556,10 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 		return nil
 	}
 	e.key(key)
+	if d < 0 {
+		d = -d
+		e.buf = append(e.buf, '-')
+	}
 	e.buf = strconv.AppendInt(e.buf, int64(d/time.Millisecond), 10)
 	if n := (d % time.Millisecond); n != 0 {
 		var tmp [7]byte
@@ -587,6 +591,10 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	for i, a := range d {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
+		}
+		if a < 0 {
+			a = -a
+			e.buf = append(e.buf, '-')
 		}
 		e.buf = strconv.AppendInt(e.buf, int64(a/time.Millisecond), 10)
 		if n := a % time.Millisecond; n != 0 {
