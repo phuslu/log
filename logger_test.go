@@ -38,7 +38,7 @@ func TestLoggerInfo(t *testing.T) {
 		Bool("bool", true).
 		Bools("bools", []bool{false}).
 		Bools("bools", []bool{true, false}).
-		Dur("1_hour", time.Hour).
+		Dur("1_sec", time.Second+2*time.Millisecond+30*time.Microsecond+400*time.Nanosecond).
 		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second}).
 		Err(errors.New("test error")).
 		Err(nil).

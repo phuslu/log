@@ -556,9 +556,23 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 		return nil
 	}
 	e.key(key)
-	e.buf = append(e.buf, '"')
-	e.buf = append(e.buf, d.String()...)
-	e.buf = append(e.buf, '"')
+	e.buf = strconv.AppendInt(e.buf, int64(d/time.Millisecond), 10)
+	if n := (d % time.Millisecond); n != 0 {
+		var tmp [7]byte
+		b := n % 100 * 2
+		n /= 100
+		tmp[6] = smallsString[b+1]
+		tmp[5] = smallsString[b]
+		b = n % 100 * 2
+		n /= 100
+		tmp[4] = smallsString[b+1]
+		tmp[3] = smallsString[b]
+		b = n % 100 * 2
+		tmp[2] = smallsString[b+1]
+		tmp[1] = smallsString[b]
+		tmp[0] = '.'
+		e.buf = append(e.buf, tmp[:]...)
+	}
 	return e
 }
 
@@ -569,13 +583,27 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	}
 	e.key(key)
 	e.buf = append(e.buf, '[')
+	var tmp [7]byte
 	for i, a := range d {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, a.String()...)
-		e.buf = append(e.buf, '"')
+		e.buf = strconv.AppendInt(e.buf, int64(a/time.Millisecond), 10)
+		if n := a % time.Millisecond; n != 0 {
+			b := n % 100 * 2
+			n /= 100
+			tmp[6] = smallsString[b+1]
+			tmp[5] = smallsString[b]
+			b = n % 100 * 2
+			n /= 100
+			tmp[4] = smallsString[b+1]
+			tmp[3] = smallsString[b]
+			b = n % 100 * 2
+			tmp[2] = smallsString[b+1]
+			tmp[1] = smallsString[b]
+			tmp[0] = '.'
+			e.buf = append(e.buf, tmp[:]...)
+		}
 	}
 	e.buf = append(e.buf, ']')
 	return e
