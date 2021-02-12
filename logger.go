@@ -475,9 +475,68 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 		return nil
 	}
 	e.key(key)
-	e.buf = append(e.buf, '"')
-	e.buf = t.AppendFormat(e.buf, timefmt)
-	e.buf = append(e.buf, '"')
+	switch timefmt {
+	case TimeFormatUnix:
+		// 1595759807
+		var tmp [10]byte
+		sec := t.Unix()
+		// seconds
+		b := sec % 100 * 2
+		sec /= 100
+		tmp[9] = smallsString[b+1]
+		tmp[8] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[7] = smallsString[b+1]
+		tmp[6] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[5] = smallsString[b+1]
+		tmp[4] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[3] = smallsString[b+1]
+		tmp[2] = smallsString[b]
+		b = sec % 100 * 2
+		tmp[1] = smallsString[b+1]
+		tmp[0] = smallsString[b]
+		// append to e.buf
+		e.buf = append(e.buf, tmp[:]...)
+	case TimeFormatUnixMs:
+		// 1595759807105
+		var tmp [13]byte
+		a := t.UnixNano() / 1000000
+		b := a % 100 * 2
+		a /= 100
+		tmp[12] = smallsString[b+1]
+		tmp[11] = smallsString[b]
+		b = a % 100 * 2
+		a /= 100
+		tmp[10] = smallsString[b+1]
+		tmp[9] = smallsString[b]
+		b = a % 100 * 2
+		a /= 100
+		tmp[8] = smallsString[b+1]
+		tmp[7] = smallsString[b]
+		b = a % 100 * 2
+		a /= 100
+		tmp[6] = smallsString[b+1]
+		tmp[5] = smallsString[b]
+		b = a % 100 * 2
+		a /= 100
+		tmp[4] = smallsString[b+1]
+		tmp[3] = smallsString[b]
+		b = a % 100 * 2
+		tmp[2] = smallsString[b+1]
+		tmp[1] = smallsString[b]
+		tmp[0] = byte('0' + a/100)
+		// append to e.buf
+		e.buf = append(e.buf, tmp[:]...)
+	default:
+		e.buf = append(e.buf, '"')
+		e.buf = t.AppendFormat(e.buf, timefmt)
+		e.buf = append(e.buf, '"')
+	}
 	return e
 }
 

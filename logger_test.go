@@ -87,6 +87,8 @@ func TestLoggerInfo(t *testing.T) {
 		Time("now_1", timeNow()).
 		Times("now_2", []time.Time{timeNow(), timeNow()}).
 		TimeFormat("now_3", time.RFC3339, timeNow()).
+		TimeFormat("now_3_1", TimeFormatUnix, timeNow()).
+		TimeFormat("now_3_2", TimeFormatUnixMs, timeNow()).
 		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
