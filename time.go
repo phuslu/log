@@ -1,14 +1,11 @@
-// +build !linux
-
 package log
 
 import (
 	"time"
 )
 
-func walltime() (sec int64, nsec int32) {
-	now := time.Now()
-	sec = now.Unix()
-	nsec = int32(now.Nanosecond())
+func timewall(t time.Time) (sec int64, nsec int32) {
+	sec = t.Unix()
+	nsec = int32(t.Nanosecond())
 	return
 }
