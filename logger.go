@@ -526,9 +526,16 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.buf = append(e.buf, '"')
-		e.buf = t.AppendFormat(e.buf, timefmt)
-		e.buf = append(e.buf, '"')
+		switch timefmt {
+		case TimeFormatUnix:
+			e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
+		case TimeFormatUnixMs:
+			e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000, 10)
+		default:
+			e.buf = append(e.buf, '"')
+			e.buf = t.AppendFormat(e.buf, timefmt)
+			e.buf = append(e.buf, '"')
+		}
 	}
 	e.buf = append(e.buf, ']')
 
