@@ -533,9 +533,9 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkZap-4       	12432787	       996 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-4   	24231926	       496 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-4   	62495569	       194 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-4       	 9572103	      1261 ns/op	     128 B/op	       1 allocs/op
+BenchmarkZeroLog-4   	19495628	       625 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-4   	54409400	       219 ns/op	       0 B/op	       0 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
