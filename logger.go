@@ -666,6 +666,40 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 	return e
 }
 
+// TimeDiff adds the field key with positive duration between time t and start.
+// If time t is not greater than start, duration will be 0.
+// Duration format follows the same principle as Dur().
+func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
+	if e == nil {
+		return e
+	}
+	var d time.Duration
+	if t.After(start) {
+		d = t.Sub(start)
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendInt(e.buf, int64(d/time.Millisecond), 10)
+	if n := (d % time.Millisecond); n != 0 {
+		var tmp [7]byte
+		b := n % 100 * 2
+		n /= 100
+		tmp[6] = smallsString[b+1]
+		tmp[5] = smallsString[b]
+		b = n % 100 * 2
+		n /= 100
+		tmp[4] = smallsString[b+1]
+		tmp[3] = smallsString[b]
+		b = n % 100 * 2
+		tmp[2] = smallsString[b+1]
+		tmp[1] = smallsString[b]
+		tmp[0] = '.'
+		e.buf = append(e.buf, tmp[:]...)
+	}
+	return e
+}
+
 // Durs adds the field key with val as a []time.Duration to the entry.
 func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	if e == nil {
@@ -1318,25 +1352,6 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 		e.buf = append(e.buf, hex[c>>4])
 		e.buf = append(e.buf, hex[c&0xF])
 	}
-	e.buf = append(e.buf, '"')
-	return e
-}
-
-// TimeDiff adds the field key with positive duration between time t and start.
-// If time t is not greater than start, duration will be 0.
-// Duration format follows the same principle as Dur().
-func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
-	if e == nil {
-		return e
-	}
-	var d time.Duration
-	if t.After(start) {
-		d = t.Sub(start)
-	}
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
-	e.buf = append(e.buf, d.String()...)
 	e.buf = append(e.buf, '"')
 	return e
 }
