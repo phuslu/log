@@ -471,7 +471,9 @@ func (e *Entry) Time(key string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.rfc3339(timewall(t))
 	return e
 }
@@ -481,7 +483,9 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	switch timefmt {
 	case TimeFormatUnix:
 		e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
@@ -500,8 +504,9 @@ func (e *Entry) Times(key string, a []time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
-
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, t := range a {
 		if i != 0 {
@@ -519,8 +524,9 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
-
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, t := range a {
 		if i != 0 {
@@ -547,7 +553,9 @@ func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendBool(e.buf, b)
 	return e
 }
@@ -557,7 +565,9 @@ func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, a := range b {
 		if i != 0 {
@@ -598,7 +608,9 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.dur(d)
 	return e
 }
@@ -608,7 +620,9 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, a := range d {
 		if i != 0 {
@@ -632,12 +646,16 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 	}
 
 	if err == nil {
-		e.key(key)
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, '"', ':')
 		e.buf = append(e.buf, "null"...)
 		return e
 	}
 
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if o, ok := err.(ObjectMarshaler); ok {
 		o.MarshalObject(e)
 	} else {
@@ -654,7 +672,9 @@ func (e *Entry) Errs(key string, errs []error) *Entry {
 		return nil
 	}
 
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, err := range errs {
 		if i != 0 {
@@ -677,7 +697,9 @@ func (e *Entry) Float64(key string, f float64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendFloat(e.buf, f, 'f', -1, 64)
 	return e
 }
@@ -687,7 +709,9 @@ func (e *Entry) Floats64(key string, f []float64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, a := range f {
 		if i != 0 {
@@ -704,7 +728,9 @@ func (e *Entry) Floats32(key string, f []float32) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, a := range f {
 		if i != 0 {
@@ -721,7 +747,9 @@ func (e *Entry) Int64(key string, i int64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendInt(e.buf, i, 10)
 	return e
 }
@@ -731,7 +759,9 @@ func (e *Entry) Uint(key string, i uint) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendUint(e.buf, uint64(i), 10)
 	return e
 }
@@ -741,7 +771,9 @@ func (e *Entry) Uint64(key string, i uint64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendUint(e.buf, i, 10)
 	return e
 }
@@ -791,7 +823,9 @@ func (e *Entry) Ints64(key string, a []int64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -808,7 +842,9 @@ func (e *Entry) Ints32(key string, a []int32) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -825,7 +861,9 @@ func (e *Entry) Ints16(key string, a []int16) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -842,7 +880,9 @@ func (e *Entry) Ints8(key string, a []int8) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -859,7 +899,9 @@ func (e *Entry) Ints(key string, a []int) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -876,7 +918,9 @@ func (e *Entry) Uints64(key string, a []uint64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -893,7 +937,9 @@ func (e *Entry) Uints32(key string, a []uint32) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -910,7 +956,9 @@ func (e *Entry) Uints16(key string, a []uint16) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -927,7 +975,9 @@ func (e *Entry) Uints8(key string, a []uint8) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -944,7 +994,9 @@ func (e *Entry) Uints(key string, a []uint) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, n := range a {
 		if i != 0 {
@@ -961,7 +1013,9 @@ func (e *Entry) RawJSON(key string, b []byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, b...)
 	return e
 }
@@ -971,7 +1025,9 @@ func (e *Entry) RawJSONStr(key string, s string) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, s...)
 	return e
 }
@@ -981,7 +1037,9 @@ func (e *Entry) Str(key string, val string) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.string(val)
 	e.buf = append(e.buf, '"')
@@ -993,7 +1051,9 @@ func (e *Entry) StrInt(key string, val int64) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.buf = strconv.AppendInt(e.buf, val, 10)
 	e.buf = append(e.buf, '"')
@@ -1005,7 +1065,9 @@ func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if val != nil {
 		e.buf = append(e.buf, '"')
 		e.string(val.String())
@@ -1021,7 +1083,9 @@ func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if val != nil {
 		e.buf = append(e.buf, '"')
 		e.string(val.GoString())
@@ -1037,7 +1101,9 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '[')
 	for i, val := range vals {
 		if i != 0 {
@@ -1056,7 +1122,9 @@ func (e *Entry) Byte(key string, val byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	switch val {
 	case '"':
 		e.buf = append(e.buf, "\"\\\"\""...)
@@ -1089,7 +1157,9 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.bytes(val)
 	e.buf = append(e.buf, '"')
@@ -1101,7 +1171,9 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if val == nil {
 		e.buf = append(e.buf, "null"...)
 	} else {
@@ -1119,7 +1191,9 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	for _, v := range val {
 		e.buf = append(e.buf, hex[v>>4], hex[v&0x0f])
@@ -1133,8 +1207,9 @@ func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
-
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, (XID(xid)).String()...)
 	e.buf = append(e.buf, '"')
@@ -1147,7 +1222,9 @@ func (e *Entry) IPAddr(key string, ip net.IP) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	if ip4 := ip.To4(); ip4 != nil {
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[0]), 10)
@@ -1169,7 +1246,9 @@ func (e *Entry) IPPrefix(key string, pfx net.IPNet) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, pfx.String()...)
 	e.buf = append(e.buf, '"')
@@ -1181,7 +1260,9 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 	if e == nil {
 		return nil
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	for i, c := range ha {
 		if i > 0 {
@@ -1205,7 +1286,9 @@ func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
 	if t.After(start) {
 		d = t.Sub(start)
 	}
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	e.buf = append(e.buf, d.String()...)
 	e.buf = append(e.buf, '"')
@@ -1327,12 +1410,6 @@ func (e *Entry) Msgs(args ...interface{}) {
 	e.Msg("")
 }
 
-func (e *Entry) key(key string) {
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':')
-}
-
 func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
 	if i := strings.LastIndex(file, "/"); i >= 0 {
 		file = file[i+1:]
@@ -1446,7 +1523,9 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 		return e.Object(key, o)
 	}
 
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	e.buf = append(e.buf, '"')
 	b := bbget()
 	enc := json.NewEncoder(b)
@@ -1470,7 +1549,9 @@ func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 		return nil
 	}
 
-	e.key(key)
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if obj == nil {
 		e.buf = append(e.buf, "null"...)
 		return e
@@ -1512,13 +1593,17 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			continue
 		}
 		if v == nil {
-			e.key(key)
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, key...)
+			e.buf = append(e.buf, '"', ':')
 			e.buf = append(e.buf, "null"...)
 			continue
 		}
 		switch v := v.(type) {
 		case ObjectMarshaler:
-			e.key(key)
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, key...)
+			e.buf = append(e.buf, '"', ':')
 			v.MarshalObject(e)
 		case Context:
 			e.Dict(key, v)
@@ -1592,13 +1677,17 @@ func (e *Entry) Fields(fields map[string]interface{}) *Entry {
 	}
 	for k, v := range fields {
 		if v == nil {
-			e.key(k)
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, k...)
+			e.buf = append(e.buf, '"', ':')
 			e.buf = append(e.buf, "null"...)
 			continue
 		}
 		switch v := v.(type) {
 		case ObjectMarshaler:
-			e.key(k)
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, k...)
+			e.buf = append(e.buf, '"', ':')
 			v.MarshalObject(e)
 		case Context:
 			e.Dict(k, v)
