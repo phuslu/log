@@ -307,9 +307,9 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, l.TimeField...)
 		e.buf = append(e.buf, '"', ':')
 	}
-	sec, nsec := walltime()
 	switch l.TimeFormat {
 	case "":
+		sec, nsec := walltime()
 		var tmp [32]byte
 		var buf []byte
 		if timeOffset == 0 {
@@ -375,6 +375,7 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, buf...)
 	case TimeFormatUnix:
+		sec, _ := walltime()
 		// 1595759807
 		var tmp [10]byte
 		// seconds
@@ -400,6 +401,7 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
+		sec, nsec := walltime()
 		// 1595759807105
 		var tmp [13]byte
 		// milli seconds
