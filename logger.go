@@ -484,9 +484,9 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 	e.key(key)
 	switch timefmt {
 	case TimeFormatUnix:
-		e.unix(timewall(t))
+		e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
 	case TimeFormatUnixMs:
-		e.unixms(timewall(t))
+		e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000, 10)
 	default:
 		e.buf = append(e.buf, '"')
 		e.buf = t.AppendFormat(e.buf, timefmt)
@@ -562,12 +562,7 @@ func (e *Entry) Bools(key string, b []bool) *Entry {
 	return e
 }
 
-// Dur adds the field key with duration d to the entry.
-func (e *Entry) Dur(key string, d time.Duration) *Entry {
-	if e == nil {
-		return nil
-	}
-	e.key(key)
+func (e *Entry) dur(d time.Duration) {
 	if d < 0 {
 		d = -d
 		e.buf = append(e.buf, '-')
@@ -589,6 +584,15 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 		tmp[0] = '.'
 		e.buf = append(e.buf, tmp[:]...)
 	}
+}
+
+// Dur adds the field key with duration d to the entry.
+func (e *Entry) Dur(key string, d time.Duration) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.key(key)
+	e.dur(d)
 	return e
 }
 
@@ -599,31 +603,11 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	}
 	e.key(key)
 	e.buf = append(e.buf, '[')
-	var tmp [7]byte
 	for i, a := range d {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		if a < 0 {
-			a = -a
-			e.buf = append(e.buf, '-')
-		}
-		e.buf = strconv.AppendInt(e.buf, int64(a/time.Millisecond), 10)
-		if n := a % time.Millisecond; n != 0 {
-			b := n % 100 * 2
-			n /= 100
-			tmp[6] = smallsString[b+1]
-			tmp[5] = smallsString[b]
-			b = n % 100 * 2
-			n /= 100
-			tmp[4] = smallsString[b+1]
-			tmp[3] = smallsString[b]
-			b = n % 100 * 2
-			tmp[2] = smallsString[b+1]
-			tmp[1] = smallsString[b]
-			tmp[0] = '.'
-			e.buf = append(e.buf, tmp[:]...)
-		}
+		e.dur(a)
 	}
 	e.buf = append(e.buf, ']')
 	return e
