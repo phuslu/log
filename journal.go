@@ -56,8 +56,9 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 		return
 	}
 
-	b0 := bbget()
-	defer bbput(b0)
+	b0 := bbpool.Get().(*bb)
+	b0.B = b0.B[:0]
+	defer bbpool.Put(b0)
 	b0.B = append(b0.B, e.buf...)
 
 	var args FormatterArgs
@@ -67,8 +68,9 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	}
 
 	// buffer
-	b := bbget()
-	defer bbput(b)
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
+	defer bbpool.Put(b)
 
 	print := func(w io.Writer, name, value string) {
 		if strings.ContainsRune(value, '\n') {

@@ -634,7 +634,14 @@ func (e *Entry) Bools(key string, b []bool) *Entry {
 	return e
 }
 
-func (e *Entry) dur(d time.Duration) {
+// Dur adds the field key with duration d to the entry.
+func (e *Entry) Dur(key string, d time.Duration) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
 	if d < 0 {
 		d = -d
 		e.buf = append(e.buf, '-')
@@ -656,17 +663,6 @@ func (e *Entry) dur(d time.Duration) {
 		tmp[0] = '.'
 		e.buf = append(e.buf, tmp[:]...)
 	}
-}
-
-// Dur adds the field key with duration d to the entry.
-func (e *Entry) Dur(key string, d time.Duration) *Entry {
-	if e == nil {
-		return nil
-	}
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':')
-	e.dur(d)
 	return e
 }
 
@@ -682,7 +678,27 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.dur(a)
+		if a < 0 {
+			a = -a
+			e.buf = append(e.buf, '-')
+		}
+		e.buf = strconv.AppendInt(e.buf, int64(a/time.Millisecond), 10)
+		if n := (a % time.Millisecond); n != 0 {
+			var tmp [7]byte
+			b := n % 100 * 2
+			n /= 100
+			tmp[6] = smallsString[b+1]
+			tmp[5] = smallsString[b]
+			b = n % 100 * 2
+			n /= 100
+			tmp[4] = smallsString[b+1]
+			tmp[3] = smallsString[b]
+			b = n % 100 * 2
+			tmp[2] = smallsString[b+1]
+			tmp[1] = smallsString[b]
+			tmp[0] = '.'
+			e.buf = append(e.buf, tmp[:]...)
+		}
 	}
 	e.buf = append(e.buf, ']')
 	return e
@@ -1400,29 +1416,20 @@ var bbpool = sync.Pool{
 	},
 }
 
-func bbget() *bb {
-	b := bbpool.Get().(*bb)
-	b.B = b.B[:0]
-	return b
-}
-
-func bbput(b *bb) {
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
-	}
-}
-
 // Msgf sends the entry with formatted msg added as the message field if not empty.
 func (e *Entry) Msgf(format string, v ...interface{}) {
 	if e == nil {
 		return
 	}
-	b := bbget()
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
 	e.buf = append(e.buf, ",\"message\":\""...)
 	fmt.Fprintf(b, format, v...)
 	e.bytes(b.B)
 	e.buf = append(e.buf, '"')
-	bbput(b)
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
 	e.Msg("")
 }
 
@@ -1431,12 +1438,15 @@ func (e *Entry) Msgs(args ...interface{}) {
 	if e == nil {
 		return
 	}
-	b := bbget()
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
 	e.buf = append(e.buf, ",\"message\":\""...)
 	fmt.Fprint(b, args...)
 	e.bytes(b.B)
 	e.buf = append(e.buf, '"')
-	bbput(b)
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
 	e.Msg("")
 }
 
@@ -1556,7 +1566,8 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
-	b := bbget()
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
 	enc := json.NewEncoder(b)
 	enc.SetEscapeHTML(false)
 	err := enc.Encode(i)
@@ -1567,7 +1578,9 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 		e.buf = append(e.buf, b.B...)
 		e.buf[len(e.buf)-1] = '"'
 	}
-	bbput(b)
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
 
 	return e
 }
