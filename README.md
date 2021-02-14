@@ -510,14 +510,14 @@ func BenchmarkZap(b *testing.B) {
 		zapcore.InfoLevel,
 	))
 	for i := 0; i < b.N; i++ {
-		logger.Info(fakeMessage, zap.String("foo", "bar"), zap.Int("int", 42))
+		logger.Info(fakeMessage, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
 	}
 }
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(fakeMessage)
 	}
 }
 
@@ -527,15 +527,15 @@ func BenchmarkPhusLog(b *testing.B) {
 		Writer:     log.IOWriter{ioutil.Discard},
 	}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("foo", "bar").Int("int", 42).Msg(fakeMessage)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(fakeMessage)
 	}
 }
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkZap-4       	 9572103	      1261 ns/op	     128 B/op	       1 allocs/op
-BenchmarkZeroLog-4   	19495628	       625 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-4   	54409400	       219 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZap-4       	 7657142	      1538 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZeroLog-4   	14817405	       801 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLog-4   	26341993	       466 ns/op	       0 B/op	       0 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
