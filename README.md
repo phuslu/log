@@ -63,11 +63,6 @@ type Logger struct {
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
 }
-
-// Writer defines an entry writer interface.
-type Writer interface {
-	WriteEntry(*Entry) (int, error)
-}
 ```
 
 ### FileWriter & ConsoleWriter
@@ -394,8 +389,10 @@ To log to a syslog server, using `SyslogWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.SyslogWriter{
-	Network : "unixgram",                     // "tcp"
-	Address : "/run/systemd/journal/syslog",  // "192.168.0.2:601"
+	// Network : "unixgram",
+	// Address : "/run/systemd/journal/syslog",
+	Network : "tcp",
+	Address : "192.168.0.2:601",
 	Tag     : "",
 	Marker  : "@cee:",
 	Dial    : net.Dial,
