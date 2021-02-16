@@ -30,8 +30,8 @@ var (
 	isvt        bool
 )
 
-// Write implements io.Writer
-func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
+// WriteEntry implements Writer
+func (w *ConsoleWriter) WriteEntry(e *Entry) (n int, err error) {
 	onceConsole.Do(func() { isvt = isVirtualTerminal() })
 
 	out := w.Writer
@@ -39,9 +39,9 @@ func (w *ConsoleWriter) Write(p []byte) (n int, err error) {
 		out = os.Stderr
 	}
 	if isvt {
-		n, err = w.write(out, p)
+		n, err = w.write(out, e.buf)
 	} else {
-		n, err = w.writew(out, p)
+		n, err = w.writew(out, e.buf)
 	}
 	return
 }

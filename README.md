@@ -134,13 +134,13 @@ type ConsoleWriter struct {
 	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 }
 ```
-> Note: FileWriter/ConsoleWriter implements log.Writer and io.Writer interfaces both.
+> Note: FileWriter implements log.Writer and io.Writer interfaces both, it is a drop-in replacement of [lumberjack][lumberjack].
 
 ## Getting Started
 
 ### Simple Logging Example
 
-A out of box example. [![playground][play-simple-img]][play-simple]
+An out of box example. [![playground][play-simple-img]][play-simple]
 ```go
 package main
 

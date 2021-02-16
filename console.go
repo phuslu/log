@@ -50,11 +50,6 @@ func (w *ConsoleWriter) Close() (err error) {
 	return
 }
 
-// WriteEntry implements Writer.
-func (w *ConsoleWriter) WriteEntry(e *Entry) (int, error) {
-	return w.Write(e.buf)
-}
-
 const bbcap = 1 << 16
 
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (int, error) {
@@ -183,4 +178,3 @@ func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err e
 }
 
 var _ Writer = (*ConsoleWriter)(nil)
-var _ io.Writer = (*ConsoleWriter)(nil)
