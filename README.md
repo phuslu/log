@@ -177,7 +177,46 @@ log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
 ### Rotating File Writer
 
-To log to a rotating file, use `FileWriter`. [![playground][play-file-img]][play-file]
+To log to a daily-rotating file, use `FileWriter`. [![playground][play-file-img]][play-file]
+```go
+package main
+
+import (
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/phuslu/log"
+	"github.com/robfig/cron/v3"
+)
+
+func main() {
+	logger := log.Logger{
+		Level: log.ParseLevel("info"),
+		Writer: &log.FileWriter{
+			Filename:     "logs/main.log",
+			FileMode:     0600,
+			MaxSize:      100 * 1024 * 1024,
+			MaxBackups:   7,
+			EnsureFolder: true,
+			LocalTime:    true,
+		},
+	}
+
+	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
+	runner.AddFunc("0 0 0 * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	go runner.Run()
+
+	for {
+		time.Sleep(time.Second)
+		logger.Info().Msg("hello world")
+	}
+}
+```
+
+### Rotating File Writer within a total size
+
+To rotating log file hourly and keep in a total size, use `FileWriter.Cleaner`.
 ```go
 package main
 
@@ -208,7 +247,6 @@ func main() {
 				}
 			},
 			EnsureFolder: true,
-			LocalTime:    false,
 		},
 	}
 
