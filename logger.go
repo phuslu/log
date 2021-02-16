@@ -1587,12 +1587,13 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	enc.SetEscapeHTML(false)
 	err := enc.Encode(i)
 	if err != nil {
-		e.string("marshaling error: " + err.Error())
-		e.buf = append(e.buf, '"')
+		b.B = b.B[:0]
+		fmt.Fprintf(b, "marshaling error: %+v", err)
 	} else {
-		e.buf = append(e.buf, b.B...)
-		e.buf[len(e.buf)-1] = '"'
+		b.B = b.B[:len(b.B)-1]
 	}
+	e.bytes(b.B)
+	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
 	}
