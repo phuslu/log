@@ -552,7 +552,18 @@ import (
 
 var msg = "The quick brown fox jumps over the lazy dog"
 
-func BenchmarkZap(b *testing.B) {
+func BenchmarkZapNegative(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.ErrorLevel,
+	))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+	}
+}
+
+func BenchmarkZapPositive(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(ioutil.Discard),
@@ -563,18 +574,31 @@ func BenchmarkZap(b *testing.B) {
 	}
 }
 
-func BenchmarkZeroLog(b *testing.B) {
+func BenchmarkZeroLogNegative(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
-func BenchmarkPhusLog(b *testing.B) {
-	logger := log.Logger{
-		TimeFormat: "", // uses rfc3339 by default
-		Writer:     log.IOWriter{ioutil.Discard},
+func BenchmarkZeroLogPositive(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
+}
+
+func BenchmarkPhusLogNegative(b *testing.B) {
+	logger := log.Logger{Level: log.ErrorLevel, Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogPositive(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
@@ -582,9 +606,12 @@ func BenchmarkPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkZap-4       	 7657142	      1538 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZeroLog-4   	14817405	       801 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLog-4   	26341993	       466 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapNegative-4       	80756782	       145 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZapPositive-4       	 7090152	      1678 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZeroLogNegative-4   	716688078	        16.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPositive-4   	13665618	       892 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogNegative-4   	712320690	        16.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPositive-4   	23656248	       512 ns/op	       0 B/op	       0 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
