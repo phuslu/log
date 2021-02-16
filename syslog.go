@@ -111,41 +111,44 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	}
 
 	e1 := epool.Get().(*Entry)
-	defer epool.Put(e1)
+	defer func(entry *Entry) {
+		if cap(entry.buf) <= bbcap {
+			epool.Put(entry)
+		}
+	}(e1)
 
 	// <PRI>TIMESTAMP HOSTNAME TAG[PID]: MSG
-	b := append(e1.buf[:0], '<', priority, '>')
+	e1.buf = append(e1.buf[:0], '<', priority, '>')
 	if w.local {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
 		//	2. Drop the hostname field.
-		b = timeNow().AppendFormat(b, time.Stamp)
+		e1.buf = timeNow().AppendFormat(e1.buf, time.Stamp)
 	} else {
-		b = timeNow().AppendFormat(b, time.RFC3339)
-		b = append(b, ' ')
-		b = append(b, w.Hostname...)
+		e1.buf = timeNow().AppendFormat(e1.buf, time.RFC3339)
+		e1.buf = append(e1.buf, ' ')
+		e1.buf = append(e1.buf, w.Hostname...)
 	}
-	b = append(b, ' ')
-	b = append(b, w.Tag...)
-	b = append(b, '[')
-	b = strconv.AppendInt(b, int64(pid), 10)
-	b = append(b, ']', ':', ' ')
-	b = append(b, w.Marker...)
-	b = append(b, e.buf...)
-	e1.buf = b
+	e1.buf = append(e1.buf, ' ')
+	e1.buf = append(e1.buf, w.Tag...)
+	e1.buf = append(e1.buf, '[')
+	e1.buf = strconv.AppendInt(e1.buf, int64(pid), 10)
+	e1.buf = append(e1.buf, ']', ':', ' ')
+	e1.buf = append(e1.buf, w.Marker...)
+	e1.buf = append(e1.buf, e.buf...)
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	if w.conn != nil {
-		if n, err := w.conn.Write(b); err == nil {
+		if n, err := w.conn.Write(e1.buf); err == nil {
 			return n, err
 		}
 	}
 	if err := w.connect(); err != nil {
 		return 0, err
 	}
-	return w.conn.Write(b)
+	return w.conn.Write(e1.buf)
 }
 
 var _ Writer = (*SyslogWriter)(nil)
