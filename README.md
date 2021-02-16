@@ -163,14 +163,23 @@ func main() {
 
 To customize logger filed name and format. [![playground][play-customize-img]][play-customize]
 ```go
-log.DefaultLogger = log.Logger{
-	Level:      log.InfoLevel,
-	Caller:     1,
-	TimeField:  "date",
-	TimeFormat: "2006-01-02",
-	Writer:     &log.IOWriter{os.Stdout},
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+func main() {
+	log.DefaultLogger = log.Logger{
+		Level:      log.InfoLevel,
+		Caller:     1,
+		TimeField:  "date",
+		TimeFormat: "2006-01-02",
+		Writer:     &log.IOWriter{os.Stdout},
+	}
+
+	log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 }
-log.Info().Str("foo", "bar").Msgf("hello %s", "world")
 
 // Output: {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
 ```
@@ -203,8 +212,8 @@ func main() {
 		},
 	}
 
-	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
-	runner.AddFunc("0 0 0 * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	runner := cron.New(cron.WithLocation(time.Local))
+	runner.AddFunc("0 0 * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
 	go runner.Run()
 
 	for {
@@ -233,25 +242,23 @@ func main() {
 	logger := log.Logger{
 		Level: log.ParseLevel("info"),
 		Writer: &log.FileWriter{
-			Filename: "logs/main.log",
-			FileMode: 0600,
-			MaxSize:  50 * 1024 * 1024,
+			Filename: "main.log",
+			MaxSize:  500 * 1024 * 1024,
 			Cleaner:  func(filename string, maxBackups int, matches []os.FileInfo) {
 				var dir = filepath.Dir(filename)
 				var total int64
 				for i := len(matches) - 1; i >= 0; i-- {
 					total += matches[i].Size()
-					if total > 10*1024*1024*1024 {
+					if total > 5*1024*1024*1024 {
 						os.Remove(filepath.Join(dir, matches[i].Name()))
 					}
 				}
 			},
-			EnsureFolder: true,
 		},
 	}
 
-	runner := cron.New(cron.WithSeconds(), cron.WithLocation(time.UTC))
-	runner.AddFunc("0 0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	runner := cron.New(cron.WithLocation(time.UTC))
+	runner.AddFunc("0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
 	go runner.Run()
 
 	for {
@@ -325,6 +332,7 @@ log.DefaultLogger.Writer = &log.MultiWriter{
 	ConsoleWriter: &log.ConsoleWriter{ColorOutput: true},
 	ConsoleLevel:  log.ErrorLevel,
 }
+
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
@@ -392,6 +400,7 @@ log.DefaultLogger.Writer = &log.SyslogWriter{
 	Marker  : "@cee:",
 	Dial    : net.Dial,
 }
+
 log.Info().Msg("hi")
 
 // Output: <6>Oct 5 16:25:38 [237]: @cee:{"time":"2020-10-05T16:25:38.026Z","level":"info","message":"hi"}
@@ -401,6 +410,7 @@ To log to linux systemd journald, using `JournalWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.JournalWriter{}
+
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
@@ -411,6 +421,7 @@ log.DefaultLogger.Writer = &log.EventlogWriter{
 	Source: ".NET Runtime",
 	ID:     1000,
 }
+
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
 
@@ -539,7 +550,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var fakeMessage = "Test logging, but use a somewhat realistic message length. "
+var msg = "The quick brown fox jumps over the lazy dog"
 
 func BenchmarkZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -548,14 +559,14 @@ func BenchmarkZap(b *testing.B) {
 		zapcore.InfoLevel,
 	))
 	for i := 0; i < b.N; i++ {
-		logger.Info(fakeMessage, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
 	}
 }
 
 func BenchmarkZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(fakeMessage)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
@@ -565,7 +576,7 @@ func BenchmarkPhusLog(b *testing.B) {
 		Writer:     log.IOWriter{ioutil.Discard},
 	}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(fakeMessage)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 ```
