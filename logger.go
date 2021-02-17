@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -1489,7 +1488,7 @@ var escapes = [256]bool{
 	'\t': true,
 }
 
-func (e *Entry) escape(b []byte) {
+func (e *Entry) escapeb(b []byte) {
 	n := len(b)
 	j := 0
 	if n > 0 {
@@ -1543,15 +1542,64 @@ func (e *Entry) escape(b []byte) {
 	e.buf = append(e.buf, b[j:]...)
 }
 
+func (e *Entry) escapes(s string) {
+	n := len(s)
+	j := 0
+	if n > 0 {
+		// Hint the compiler to remove bounds checks in the loop below.
+		_ = s[n-1]
+	}
+	for i := 0; i < n; i++ {
+		switch s[i] {
+		case '"':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', '"')
+			j = i + 1
+		case '\\':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', '\\')
+			j = i + 1
+		case '\n':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'n')
+			j = i + 1
+		case '\r':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'r')
+			j = i + 1
+		case '\t':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 't')
+			j = i + 1
+		case '\f':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', 'c')
+			j = i + 1
+		case '\b':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '8')
+			j = i + 1
+		case '<':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '3', 'c')
+			j = i + 1
+		case '\'':
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '2', '7')
+			j = i + 1
+		case 0:
+			e.buf = append(e.buf, s[j:i]...)
+			e.buf = append(e.buf, '\\', 'u', '0', '0', '0', '0')
+			j = i + 1
+		}
+	}
+	e.buf = append(e.buf, s[j:]...)
+}
+
 func (e *Entry) string(s string) {
 	for _, c := range []byte(s) {
 		if escapes[c] {
-			sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-			// nolint
-			b := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-				Data: sh.Data, Len: sh.Len, Cap: sh.Len,
-			}))
-			e.escape(b)
+			e.escapes(s)
 			return
 		}
 	}
@@ -1561,7 +1609,7 @@ func (e *Entry) string(s string) {
 func (e *Entry) bytes(b []byte) {
 	for _, c := range b {
 		if escapes[c] {
-			e.escape(b)
+			e.escapeb(b)
 			return
 		}
 	}
