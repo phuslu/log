@@ -399,7 +399,7 @@ func TestLoggerFields(t *testing.T) {
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
-	logger.Info().Fields(map[string]interface{}{
+	logger.Info().Fields(Fields{
 		"bool":               true,
 		"bools":              []bool{false},
 		"bools_2":            []bool{true, false},

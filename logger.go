@@ -1776,8 +1776,11 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 	return e
 }
 
+// Fields type, used to pass to `Fields`.
+type Fields map[string]interface{}
+
 // Fields is a helper function to use a map to set fields using type assertion.
-func (e *Entry) Fields(fields map[string]interface{}) *Entry {
+func (e *Entry) Fields(fields Fields) *Entry {
 	if e == nil {
 		return nil
 	}
