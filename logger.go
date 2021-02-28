@@ -287,7 +287,7 @@ var timeOffset, timeZone = func() (int64, string) {
 }()
 
 func (l *Logger) header(level Level) *Entry {
-	if l.shouldnot(level) {
+	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
 		return nil
 	}
 	e := epool.Get().(*Entry)
