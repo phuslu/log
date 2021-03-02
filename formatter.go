@@ -289,6 +289,7 @@ func jsonParseLiteral(json []byte, i int) (int, []byte) {
 // jsonUnescape unescapes a string
 func jsonUnescape(json, str []byte) []byte {
 	_ = json[len(json)-1] // remove bounds check
+	var p [4]byte
 	for i := 0; i < len(json); i++ {
 		switch {
 		default:
@@ -337,9 +338,7 @@ func jsonUnescape(json, str []byte) []byte {
 					}
 				}
 				// provide enough space to encode the largest utf8 possible
-				str = append(str, 0, 0, 0, 0, 0, 0, 0, 0)
-				n := utf8.EncodeRune(str[len(str)-8:], r)
-				str = str[:len(str)-8+n]
+				str = append(str, p[:utf8.EncodeRune(p[:], r)]...)
 				i-- // backtrack index by one
 			}
 		}

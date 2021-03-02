@@ -1,6 +1,8 @@
 package log
 
 import (
+	"fmt"
+	"io"
 	"testing"
 )
 
@@ -16,4 +18,14 @@ func TestFormatterParse(t *testing.T) {
 		t.Logf("%#v", args)
 		t.Logf("foo=%v", args.Get("foo"))
 	}
+}
+
+func TestFormatterDefault(t *testing.T) {
+	DefaultLogger.Writer = &ConsoleWriter{
+		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
+			return fmt.Fprintf(w, "%s\n", a.Message)
+		},
+	}
+
+	Info().Msg("aaaa 'b' cccc")
 }
