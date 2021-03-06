@@ -600,6 +600,59 @@ func BenchmarkPhusLogPositive(b *testing.B) {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
+
+func BenchmarkZapCaller(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.InfoLevel),
+		zap.AddCaller(),
+	)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+	}
+}
+
+func BenchmarkZeroLogCaller(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogCaller(b *testing.B) {
+	logger := log.Logger{Caller: 1, Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZapPrintf(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.InfoLevel,
+	)).Sugar()
+	for i := 0; i < b.N; i++ {
+		logger.Infof("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkZeroLogPrintf(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkPhusLogPrintf(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
@@ -609,6 +662,12 @@ BenchmarkPhusLogNegative-4   	735726589	        16.3 ns/op	       0 B/op	       
 BenchmarkZapPositive-4       	 7970824	      1531 ns/op	     192 B/op	       1 allocs/op
 BenchmarkZeroLogPositive-4   	14024011	       866 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLogPositive-4   	24633658	       480 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapCaller-4         	 3723448	      3250 ns/op	     440 B/op	       4 allocs/op
+BenchmarkZeroLogCaller-4     	 3401059	      3438 ns/op	     264 B/op	       3 allocs/op
+BenchmarkPhusLogCaller-4     	 9022386	      1388 ns/op	     216 B/op	       2 allocs/op
+BenchmarkZapPrintf-4         	 6355765	      1904 ns/op	      96 B/op	       2 allocs/op
+BenchmarkZeroLogPrintf-4     	 8513709	      1413 ns/op	      96 B/op	       2 allocs/op
+BenchmarkPhusLogPrintf-4     	13171816	       901 ns/op	      16 B/op	       1 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
