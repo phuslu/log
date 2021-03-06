@@ -8,7 +8,6 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1465,7 +1464,13 @@ func (e *Entry) Msgs(args ...interface{}) {
 }
 
 func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
-	if i := strings.LastIndex(file, "/"); i >= 0 {
+	var i int
+	for i = len(file) - 1; i >= 0; i-- {
+		if file[i] == '/' {
+			break
+		}
+	}
+	if i > 0 {
 		file = file[i+1:]
 	}
 	e.buf = append(e.buf, ",\"caller\":\""...)
