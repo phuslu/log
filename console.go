@@ -50,8 +50,6 @@ func (w *ConsoleWriter) Close() (err error) {
 	return
 }
 
-const bbcap = 1 << 16
-
 func (w *ConsoleWriter) write(out io.Writer, p []byte) (int, error) {
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
