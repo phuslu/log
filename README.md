@@ -531,7 +531,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-The most common benchmarks(disable/normal/caller/printf) with zap/zerolog, which runs on [github actions][benchmark]:
+The most common benchmarks(disable/normal/caller/printf/interface) with zap/zerolog, which runs on [github actions][benchmark]:
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -548,6 +548,15 @@ import (
 )
 
 var msg = "The quick brown fox jumps over the lazy dog"
+var Object = struct {
+	Rate string
+	Low  int
+	High float32
+}{
+	Rate: "15",
+	Low:  16,
+	High: 123.2,
+}
 
 func BenchmarkDisableZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -650,6 +659,31 @@ func BenchmarkPrintfPhusLog(b *testing.B) {
 		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
+
+func BenchmarkInterfaceZap(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(ioutil.Discard),
+		zapcore.InfoLevel,
+	)).Sugar()
+	for i := 0; i < b.N; i++ {
+		logger.Infow(msg, "object", &Object)
+	}
+}
+
+func BenchmarkInterfaceZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Interface("object", &Object).Msg(msg)
+	}
+}
+
+func BenchmarkInterfacePhusLog(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Interface("object", &Object).Msg(msg)
+	}
+}
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
@@ -665,6 +699,9 @@ BenchmarkCallerPhusLog-4    	11088894	      1102 ns/op	     216 B/op	       2 al
 BenchmarkPrintfZap-4        	 8088470	      1524 ns/op	      96 B/op	       2 allocs/op
 BenchmarkPrintfZeroLog-4    	10527822	      1122 ns/op	      96 B/op	       2 allocs/op
 BenchmarkPrintfPhusLog-4    	16962496	       709 ns/op	      16 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 6095475	      1979 ns/op	     208 B/op	       2 allocs/op
+BenchmarkInterfaceZeroLog-4   	10245039	      1307 ns/op	      48 B/op	       1 allocs/op
+BenchmarkInterfacePhusLog-4   	12636720	       842 ns/op	       0 B/op	       0 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
