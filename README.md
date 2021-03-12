@@ -569,21 +569,6 @@ func BenchmarkDisableZap(b *testing.B) {
 	}
 }
 
-func BenchmarkDisableZeroLog(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkDisablePhusLog(b *testing.B) {
-	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{ioutil.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
 func BenchmarkNormalZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
@@ -592,20 +577,6 @@ func BenchmarkNormalZap(b *testing.B) {
 	))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
-	}
-}
-
-func BenchmarkNormalZeroLog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkNormalPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
@@ -621,20 +592,6 @@ func BenchmarkCallerZap(b *testing.B) {
 	}
 }
 
-func BenchmarkCallerZeroLog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkCallerPhusLog(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{ioutil.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
 func BenchmarkPrintfZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
@@ -643,20 +600,6 @@ func BenchmarkPrintfZap(b *testing.B) {
 	)).Sugar()
 	for i := 0; i < b.N; i++ {
 		logger.Infof("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
-}
-
-func BenchmarkPrintfZeroLog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
-}
-
-func BenchmarkPrintfPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
@@ -671,10 +614,67 @@ func BenchmarkInterfaceZap(b *testing.B) {
 	}
 }
 
+func BenchmarkDisableZeroLog(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkNormalZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkCallerZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPrintfZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
 func BenchmarkInterfaceZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Interface("object", &Object).Msg(msg)
+	}
+}
+
+func BenchmarkDisablePhusLog(b *testing.B) {
+	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkNormalPhusLog(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkCallerPhusLog(b *testing.B) {
+	logger := log.Logger{Caller: 1, Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPrintfPhusLog(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
@@ -688,19 +688,19 @@ func BenchmarkInterfacePhusLog(b *testing.B) {
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
 BenchmarkDisableZap-4       	100000000	       112 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4   	982447798	        12.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4   	841748570	        14.2 ns/op	       0 B/op	       0 allocs/op
 BenchmarkNormalZap-4        	10064242	      1190 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4    	18826512	       632 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4    	32286124	       376 ns/op	       0 B/op	       0 allocs/op
 BenchmarkCallerZap-4        	 4514316	      2714 ns/op	     440 B/op	       4 allocs/op
-BenchmarkCallerZeroLog-4    	 4304690	      2776 ns/op	     264 B/op	       3 allocs/op
-BenchmarkCallerPhusLog-4    	11088894	      1102 ns/op	     216 B/op	       2 allocs/op
 BenchmarkPrintfZap-4        	 8088470	      1524 ns/op	      96 B/op	       2 allocs/op
-BenchmarkPrintfZeroLog-4    	10527822	      1122 ns/op	      96 B/op	       2 allocs/op
-BenchmarkPrintfPhusLog-4    	16962496	       709 ns/op	      16 B/op	       1 allocs/op
 BenchmarkInterfaceZap-4       	 6095475	      1979 ns/op	     208 B/op	       2 allocs/op
+BenchmarkDisableZeroLog-4   	982447798	        12 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4    	18826512	       632 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCallerZeroLog-4    	 4304690	      2776 ns/op	     264 B/op	       3 allocs/op
+BenchmarkPrintfZeroLog-4    	10527822	      1122 ns/op	      96 B/op	       2 allocs/op
 BenchmarkInterfaceZeroLog-4   	10245039	      1307 ns/op	      48 B/op	       1 allocs/op
+BenchmarkDisablePhusLog-4   	841748570	        14 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4    	32286124	       376 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCallerPhusLog-4    	11088894	      1102 ns/op	     216 B/op	       2 allocs/op
+BenchmarkPrintfPhusLog-4    	16962496	       709 ns/op	      16 B/op	       1 allocs/op
 BenchmarkInterfacePhusLog-4   	12636720	       842 ns/op	       0 B/op	       0 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
