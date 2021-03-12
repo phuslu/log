@@ -548,15 +548,7 @@ import (
 )
 
 var msg = "The quick brown fox jumps over the lazy dog"
-var Object = struct {
-	Rate string
-	Low  int
-	High float32
-}{
-	Rate: "15",
-	Low:  16,
-	High: 123.2,
-}
+var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
 func BenchmarkDisableZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
@@ -610,7 +602,7 @@ func BenchmarkInterfaceZap(b *testing.B) {
 		zapcore.InfoLevel,
 	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &Object)
+		logger.Infow(msg, "object", &obj)
 	}
 }
 
@@ -646,7 +638,7 @@ func BenchmarkPrintfZeroLog(b *testing.B) {
 func BenchmarkInterfaceZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &Object).Msg(msg)
+		logger.Info().Interface("object", &obj).Msg(msg)
 	}
 }
 
@@ -681,7 +673,7 @@ func BenchmarkPrintfPhusLog(b *testing.B) {
 func BenchmarkInterfacePhusLog(b *testing.B) {
 	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &Object).Msg(msg)
+		logger.Info().Interface("object", &obj).Msg(msg)
 	}
 }
 ```
