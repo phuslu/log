@@ -80,8 +80,11 @@ const TimeFormatUnixMs = "\x02"
 
 // Trace starts a new message with trace level.
 func Trace() (e *Entry) {
+	if DefaultLogger.cannot(TraceLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(TraceLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -89,8 +92,11 @@ func Trace() (e *Entry) {
 
 // Debug starts a new message with debug level.
 func Debug() (e *Entry) {
+	if DefaultLogger.cannot(DebugLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(DebugLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -98,8 +104,11 @@ func Debug() (e *Entry) {
 
 // Info starts a new message with info level.
 func Info() (e *Entry) {
+	if DefaultLogger.cannot(InfoLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(InfoLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -107,8 +116,11 @@ func Info() (e *Entry) {
 
 // Warn starts a new message with warning level.
 func Warn() (e *Entry) {
+	if DefaultLogger.cannot(WarnLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(WarnLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -116,8 +128,11 @@ func Warn() (e *Entry) {
 
 // Error starts a new message with error level.
 func Error() (e *Entry) {
+	if DefaultLogger.cannot(ErrorLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(ErrorLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -125,8 +140,11 @@ func Error() (e *Entry) {
 
 // Fatal starts a new message with fatal level.
 func Fatal() (e *Entry) {
+	if DefaultLogger.cannot(FatalLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(FatalLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -134,8 +152,11 @@ func Fatal() (e *Entry) {
 
 // Panic starts a new message with panic level.
 func Panic() (e *Entry) {
+	if DefaultLogger.cannot(PanicLevel) {
+		return nil
+	}
 	e = DefaultLogger.header(PanicLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	return
@@ -144,7 +165,7 @@ func Panic() (e *Entry) {
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
-	if e != nil && DefaultLogger.Caller > 0 {
+	if DefaultLogger.Caller > 0 {
 		e.caller(runtime.Caller(DefaultLogger.Caller))
 	}
 	e.Msgf(format, v...)
@@ -152,8 +173,11 @@ func Printf(format string, v ...interface{}) {
 
 // Trace starts a new message with trace level.
 func (l *Logger) Trace() (e *Entry) {
+	if l.cannot(TraceLevel) {
+		return nil
+	}
 	e = l.header(TraceLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -161,8 +185,11 @@ func (l *Logger) Trace() (e *Entry) {
 
 // Debug starts a new message with debug level.
 func (l *Logger) Debug() (e *Entry) {
+	if l.cannot(DebugLevel) {
+		return nil
+	}
 	e = l.header(DebugLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -170,8 +197,11 @@ func (l *Logger) Debug() (e *Entry) {
 
 // Info starts a new message with info level.
 func (l *Logger) Info() (e *Entry) {
+	if l.cannot(InfoLevel) {
+		return nil
+	}
 	e = l.header(InfoLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -179,8 +209,11 @@ func (l *Logger) Info() (e *Entry) {
 
 // Warn starts a new message with warning level.
 func (l *Logger) Warn() (e *Entry) {
+	if l.cannot(WarnLevel) {
+		return nil
+	}
 	e = l.header(WarnLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -188,21 +221,11 @@ func (l *Logger) Warn() (e *Entry) {
 
 // Error starts a new message with error level.
 func (l *Logger) Error() (e *Entry) {
+	if l.cannot(ErrorLevel) {
+		return nil
+	}
 	e = l.header(ErrorLevel)
-	if e != nil && l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
-	}
-	return
-}
-
-// Err starts a new message with error level with err as a field if not nil or with info level if err is nil.
-func (l *Logger) Err(err error) (e *Entry) {
-	if err != nil {
-		e = l.header(ErrorLevel)
-	} else {
-		e = l.header(InfoLevel)
-	}
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -210,8 +233,11 @@ func (l *Logger) Err(err error) (e *Entry) {
 
 // Fatal starts a new message with fatal level.
 func (l *Logger) Fatal() (e *Entry) {
+	if l.cannot(FatalLevel) {
+		return nil
+	}
 	e = l.header(FatalLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -219,8 +245,11 @@ func (l *Logger) Fatal() (e *Entry) {
 
 // Panic starts a new message with panic level.
 func (l *Logger) Panic() (e *Entry) {
+	if l.cannot(PanicLevel) {
+		return nil
+	}
 	e = l.header(PanicLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -229,7 +258,7 @@ func (l *Logger) Panic() (e *Entry) {
 // Log starts a new message with no level.
 func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
-	if e != nil && l.Caller > 0 {
+	if l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
 	}
 	return
@@ -237,6 +266,25 @@ func (l *Logger) Log() (e *Entry) {
 
 // WithLevel starts a new message with level.
 func (l *Logger) WithLevel(level Level) (e *Entry) {
+	if l.cannot(level) {
+		return nil
+	}
+	e = l.header(level)
+	if l.Caller > 0 {
+		e.caller(runtime.Caller(l.Caller))
+	}
+	return
+}
+
+// Err starts a new message with error level with err as a field if not nil or with info level if err is nil.
+func (l *Logger) Err(err error) (e *Entry) {
+	var level = InfoLevel
+	if err != nil {
+		level = ErrorLevel
+	}
+	if l.cannot(level) {
+		return nil
+	}
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
 		e.caller(runtime.Caller(l.Caller))
@@ -287,10 +335,11 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
+func (l *Logger) cannot(level Level) bool {
+	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level))
+}
+
 func (l *Logger) header(level Level) *Entry {
-	if uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) {
-		return nil
-	}
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 	e.Level = level
