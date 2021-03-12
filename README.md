@@ -531,7 +531,7 @@ logger.Info().Context(ctx).Int("no2", 2).Msg("second")
 
 ### High Performance
 
-The most common benchmarks(disable/normal/caller/printf/interface) with zap/zerolog, which runs on [github actions][benchmark]:
+The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog, which runs on [github actions][benchmark]:
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -572,15 +572,14 @@ func BenchmarkNormalZap(b *testing.B) {
 	}
 }
 
-func BenchmarkCallerZap(b *testing.B) {
+func BenchmarkInterfaceZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(ioutil.Discard),
-		zapcore.InfoLevel),
-		zap.AddCaller(),
-	)
+		zapcore.InfoLevel,
+	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Infow(msg, "object", &obj)
 	}
 }
 
@@ -595,14 +594,15 @@ func BenchmarkPrintfZap(b *testing.B) {
 	}
 }
 
-func BenchmarkInterfaceZap(b *testing.B) {
+func BenchmarkCallerZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(ioutil.Discard),
-		zapcore.InfoLevel,
-	)).Sugar()
+		zapcore.InfoLevel),
+		zap.AddCaller(),
+	)
 	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &obj)
+		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
 	}
 }
 
@@ -621,10 +621,10 @@ func BenchmarkNormalZeroLog(b *testing.B) {
 	}
 }
 
-func BenchmarkCallerZeroLog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
+func BenchmarkInterfaceZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+		logger.Info().Interface("object", &obj).Msg(msg)
 	}
 }
 
@@ -635,10 +635,10 @@ func BenchmarkPrintfZeroLog(b *testing.B) {
 	}
 }
 
-func BenchmarkInterfaceZeroLog(b *testing.B) {
-	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
+func BenchmarkCallerZeroLog(b *testing.B) {
+	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
@@ -656,10 +656,10 @@ func BenchmarkNormalPhusLog(b *testing.B) {
 	}
 }
 
-func BenchmarkCallerPhusLog(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{ioutil.Discard}}
+func BenchmarkInterfacePhusLog(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+		logger.Info().Interface("object", &obj).Msg(msg)
 	}
 }
 
@@ -670,10 +670,10 @@ func BenchmarkPrintfPhusLog(b *testing.B) {
 	}
 }
 
-func BenchmarkInterfacePhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{ioutil.Discard}}
+func BenchmarkCallerPhusLog(b *testing.B) {
+	logger := log.Logger{Caller: 1, Writer: log.IOWriter{ioutil.Discard}}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 ```
@@ -681,19 +681,21 @@ A Performance result as below, for daily benchmark results see [github actions][
 ```
 BenchmarkDisableZap-4         	84149790	       138 ns/op	     192 B/op	       1 allocs/op
 BenchmarkNormalZap-4          	 8281590	      1459 ns/op	     192 B/op	       1 allocs/op
-BenchmarkCallerZap-4          	 3661080	      3280 ns/op	     440 B/op	       4 allocs/op
-BenchmarkPrintfZap-4          	 6664330	      1846 ns/op	      96 B/op	       2 allocs/op
 BenchmarkInterfaceZap-4       	 6159080	      1924 ns/op	     208 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	 6664330	      1846 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 3661080	      3280 ns/op	     440 B/op	       4 allocs/op
+
 BenchmarkDisableZeroLog-4     	788723734	        14.7 ns/op	       0 B/op	       0 allocs/op
 BenchmarkNormalZeroLog-4      	15282351	       768 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCallerZeroLog-4      	 3586092	      3563 ns/op	     264 B/op	       3 allocs/op
-BenchmarkPrintfZeroLog-4      	 8954383	      1360 ns/op	      96 B/op	       2 allocs/op
 BenchmarkInterfaceZeroLog-4   	10396608	      1163 ns/op	      48 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	 8954383	      1360 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZeroLog-4      	 3586092	      3563 ns/op	     264 B/op	       3 allocs/op
+
 BenchmarkDisablePhusLog-4     	932239788	        13.1 ns/op	       0 B/op	       0 allocs/op
 BenchmarkNormalPhusLog-4      	25032302	       449 ns/op	       0 B/op	       0 allocs/op
-BenchmarkCallerPhusLog-4      	 8207911	      1434 ns/op	     216 B/op	       2 allocs/op
-BenchmarkPrintfPhusLog-4      	13794639	       851 ns/op	      16 B/op	       1 allocs/op
 BenchmarkInterfacePhusLog-4   	14000850	       837 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	13794639	       851 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCallerPhusLog-4      	 8207911	      1434 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
