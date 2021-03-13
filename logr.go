@@ -29,13 +29,10 @@ func (l *Logger) Logr(context Context) *LogrLogger {
 // variable information.  The key/value pairs should alternate string
 // keys and arbitrary values.
 func (l *LogrLogger) Info(msg string, keysAndValues ...interface{}) {
-	if l == nil {
+	if l == nil || l.logger.silent(InfoLevel) {
 		return
 	}
 	e := l.logger.header(InfoLevel)
-	if e == nil {
-		return
-	}
 	if l.logger.Caller > 0 {
 		e.caller(runtime.Caller(l.logger.Caller))
 	}
@@ -51,13 +48,10 @@ func (l *LogrLogger) Info(msg string, keysAndValues ...interface{}) {
 // while the err field should be used to attach the actual error that
 // triggered this log line, if present.
 func (l *LogrLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	if l == nil {
+	if l == nil || l.logger.silent(ErrorLevel) {
 		return
 	}
 	e := l.logger.header(ErrorLevel)
-	if e == nil {
-		return
-	}
 	if l.logger.Caller > 0 {
 		e.caller(runtime.Caller(l.logger.Caller))
 	}
