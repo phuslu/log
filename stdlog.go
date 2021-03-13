@@ -22,10 +22,10 @@ type stdLogWriter struct {
 }
 
 func (w *stdLogWriter) Write(p []byte) (int, error) {
-	e := w.logger.header(w.level)
-	if e == nil {
+	if w.logger.silent(w.level) {
 		return 0, nil
 	}
+	e := w.logger.header(w.level)
 	if w.logger.Caller > 0 {
 		e.caller(runtime.Caller(w.logger.Caller + 2))
 	}
