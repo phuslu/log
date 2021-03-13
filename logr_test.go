@@ -61,8 +61,11 @@ func TestLogrLoggerLevel(t *testing.T) {
 
 	var logr logrLogger = DefaultLogger.Logr(NewContext(nil).Str("tag", "hi logr").Value())
 
-	logr.(*LogrLogger).logger.Level = FatalLevel
+	logr.(*LogrLogger).logger.Level = InfoLevel
+	logr.Info("hello", "foo", "bar", "number", 42)
+	logr.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
 
+	logr.(*LogrLogger).logger.Level = ErrorLevel
 	logr.Info("hello", "foo", "bar", "number", 42)
 	logr.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
 }
