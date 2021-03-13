@@ -80,7 +80,7 @@ const TimeFormatUnixMs = "\x02"
 
 // Trace starts a new message with trace level.
 func Trace() (e *Entry) {
-	if DefaultLogger.cannot(TraceLevel) {
+	if DefaultLogger.silent(TraceLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(TraceLevel)
@@ -92,7 +92,7 @@ func Trace() (e *Entry) {
 
 // Debug starts a new message with debug level.
 func Debug() (e *Entry) {
-	if DefaultLogger.cannot(DebugLevel) {
+	if DefaultLogger.silent(DebugLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(DebugLevel)
@@ -104,7 +104,7 @@ func Debug() (e *Entry) {
 
 // Info starts a new message with info level.
 func Info() (e *Entry) {
-	if DefaultLogger.cannot(InfoLevel) {
+	if DefaultLogger.silent(InfoLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(InfoLevel)
@@ -116,7 +116,7 @@ func Info() (e *Entry) {
 
 // Warn starts a new message with warning level.
 func Warn() (e *Entry) {
-	if DefaultLogger.cannot(WarnLevel) {
+	if DefaultLogger.silent(WarnLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(WarnLevel)
@@ -128,7 +128,7 @@ func Warn() (e *Entry) {
 
 // Error starts a new message with error level.
 func Error() (e *Entry) {
-	if DefaultLogger.cannot(ErrorLevel) {
+	if DefaultLogger.silent(ErrorLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(ErrorLevel)
@@ -140,7 +140,7 @@ func Error() (e *Entry) {
 
 // Fatal starts a new message with fatal level.
 func Fatal() (e *Entry) {
-	if DefaultLogger.cannot(FatalLevel) {
+	if DefaultLogger.silent(FatalLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(FatalLevel)
@@ -152,7 +152,7 @@ func Fatal() (e *Entry) {
 
 // Panic starts a new message with panic level.
 func Panic() (e *Entry) {
-	if DefaultLogger.cannot(PanicLevel) {
+	if DefaultLogger.silent(PanicLevel) {
 		return nil
 	}
 	e = DefaultLogger.header(PanicLevel)
@@ -173,7 +173,7 @@ func Printf(format string, v ...interface{}) {
 
 // Trace starts a new message with trace level.
 func (l *Logger) Trace() (e *Entry) {
-	if l.cannot(TraceLevel) {
+	if l.silent(TraceLevel) {
 		return nil
 	}
 	e = l.header(TraceLevel)
@@ -185,7 +185,7 @@ func (l *Logger) Trace() (e *Entry) {
 
 // Debug starts a new message with debug level.
 func (l *Logger) Debug() (e *Entry) {
-	if l.cannot(DebugLevel) {
+	if l.silent(DebugLevel) {
 		return nil
 	}
 	e = l.header(DebugLevel)
@@ -197,7 +197,7 @@ func (l *Logger) Debug() (e *Entry) {
 
 // Info starts a new message with info level.
 func (l *Logger) Info() (e *Entry) {
-	if l.cannot(InfoLevel) {
+	if l.silent(InfoLevel) {
 		return nil
 	}
 	e = l.header(InfoLevel)
@@ -209,7 +209,7 @@ func (l *Logger) Info() (e *Entry) {
 
 // Warn starts a new message with warning level.
 func (l *Logger) Warn() (e *Entry) {
-	if l.cannot(WarnLevel) {
+	if l.silent(WarnLevel) {
 		return nil
 	}
 	e = l.header(WarnLevel)
@@ -221,7 +221,7 @@ func (l *Logger) Warn() (e *Entry) {
 
 // Error starts a new message with error level.
 func (l *Logger) Error() (e *Entry) {
-	if l.cannot(ErrorLevel) {
+	if l.silent(ErrorLevel) {
 		return nil
 	}
 	e = l.header(ErrorLevel)
@@ -233,7 +233,7 @@ func (l *Logger) Error() (e *Entry) {
 
 // Fatal starts a new message with fatal level.
 func (l *Logger) Fatal() (e *Entry) {
-	if l.cannot(FatalLevel) {
+	if l.silent(FatalLevel) {
 		return nil
 	}
 	e = l.header(FatalLevel)
@@ -245,7 +245,7 @@ func (l *Logger) Fatal() (e *Entry) {
 
 // Panic starts a new message with panic level.
 func (l *Logger) Panic() (e *Entry) {
-	if l.cannot(PanicLevel) {
+	if l.silent(PanicLevel) {
 		return nil
 	}
 	e = l.header(PanicLevel)
@@ -266,7 +266,7 @@ func (l *Logger) Log() (e *Entry) {
 
 // WithLevel starts a new message with level.
 func (l *Logger) WithLevel(level Level) (e *Entry) {
-	if l.cannot(level) {
+	if l.silent(level) {
 		return nil
 	}
 	e = l.header(level)
@@ -282,7 +282,7 @@ func (l *Logger) Err(err error) (e *Entry) {
 	if err != nil {
 		level = ErrorLevel
 	}
-	if l.cannot(level) {
+	if l.silent(level) {
 		return nil
 	}
 	e = l.header(level)
@@ -335,7 +335,7 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
-func (l *Logger) cannot(level Level) bool {
+func (l *Logger) silent(level Level) bool {
 	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level))
 }
 
