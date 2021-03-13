@@ -22,10 +22,10 @@ func (l *Logger) Grpc(context Context) (g *GrpcLogger) {
 
 // Info logs to INFO log. Arguments are handled in the manner of fmt.Print.
 func (g *GrpcLogger) Info(args ...interface{}) {
-	e := g.logger.header(InfoLevel)
-	if e == nil {
+	if g.logger.silent(InfoLevel) {
 		return
 	}
+	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -34,10 +34,10 @@ func (g *GrpcLogger) Info(args ...interface{}) {
 
 // Infoln logs to INFO log. Arguments are handled in the manner of fmt.Println.
 func (g *GrpcLogger) Infoln(args ...interface{}) {
-	e := g.logger.header(InfoLevel)
-	if e == nil {
+	if g.logger.silent(InfoLevel) {
 		return
 	}
+	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -46,10 +46,10 @@ func (g *GrpcLogger) Infoln(args ...interface{}) {
 
 // Infof logs to INFO log. Arguments are handled in the manner of fmt.Printf.
 func (g *GrpcLogger) Infof(format string, args ...interface{}) {
-	e := g.logger.header(InfoLevel)
-	if e == nil {
+	if g.logger.silent(InfoLevel) {
 		return
 	}
+	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -58,10 +58,10 @@ func (g *GrpcLogger) Infof(format string, args ...interface{}) {
 
 // Warning logs to WARNING log. Arguments are handled in the manner of fmt.Print.
 func (g *GrpcLogger) Warning(args ...interface{}) {
-	e := g.logger.header(WarnLevel)
-	if e == nil {
+	if g.logger.silent(WarnLevel) {
 		return
 	}
+	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -70,10 +70,10 @@ func (g *GrpcLogger) Warning(args ...interface{}) {
 
 // Warningln logs to WARNING log. Arguments are handled in the manner of fmt.Println.
 func (g *GrpcLogger) Warningln(args ...interface{}) {
-	e := g.logger.header(WarnLevel)
-	if e == nil {
+	if g.logger.silent(WarnLevel) {
 		return
 	}
+	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -82,10 +82,10 @@ func (g *GrpcLogger) Warningln(args ...interface{}) {
 
 // Warningf logs to WARNING log. Arguments are handled in the manner of fmt.Printf.
 func (g *GrpcLogger) Warningf(format string, args ...interface{}) {
-	e := g.logger.header(WarnLevel)
-	if e == nil {
+	if g.logger.silent(WarnLevel) {
 		return
 	}
+	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -94,10 +94,10 @@ func (g *GrpcLogger) Warningf(format string, args ...interface{}) {
 
 // Error logs to ERROR log. Arguments are handled in the manner of fmt.Print.
 func (g *GrpcLogger) Error(args ...interface{}) {
-	e := g.logger.header(ErrorLevel)
-	if e == nil {
+	if g.logger.silent(ErrorLevel) {
 		return
 	}
+	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -106,10 +106,10 @@ func (g *GrpcLogger) Error(args ...interface{}) {
 
 // Errorln logs to ERROR log. Arguments are handled in the manner of fmt.Println.
 func (g *GrpcLogger) Errorln(args ...interface{}) {
-	e := g.logger.header(ErrorLevel)
-	if e == nil {
+	if g.logger.silent(ErrorLevel) {
 		return
 	}
+	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -118,10 +118,10 @@ func (g *GrpcLogger) Errorln(args ...interface{}) {
 
 // Errorf logs to ERROR log. Arguments are handled in the manner of fmt.Printf.
 func (g *GrpcLogger) Errorf(format string, args ...interface{}) {
-	e := g.logger.header(ErrorLevel)
-	if e == nil {
+	if g.logger.silent(ErrorLevel) {
 		return
 	}
+	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -132,10 +132,10 @@ func (g *GrpcLogger) Errorf(format string, args ...interface{}) {
 // gRPC ensures that all Fatal logs will exit with os.Exit(1).
 // Implementations may also call os.Exit() with a non-zero exit code.
 func (g *GrpcLogger) Fatal(args ...interface{}) {
-	e := g.logger.header(FatalLevel)
-	if e == nil {
+	if g.logger.silent(FatalLevel) {
 		return
 	}
+	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -146,10 +146,10 @@ func (g *GrpcLogger) Fatal(args ...interface{}) {
 // gRPC ensures that all Fatal logs will exit with os.Exit(1).
 // Implementations may also call os.Exit() with a non-zero exit code.
 func (g *GrpcLogger) Fatalln(args ...interface{}) {
-	e := g.logger.header(FatalLevel)
-	if e == nil {
+	if g.logger.silent(FatalLevel) {
 		return
 	}
+	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
@@ -160,10 +160,10 @@ func (g *GrpcLogger) Fatalln(args ...interface{}) {
 // gRPC ensures that all Fatal logs will exit with os.Exit(1).
 // Implementations may also call os.Exit() with a non-zero exit code.
 func (g *GrpcLogger) Fatalf(format string, args ...interface{}) {
-	e := g.logger.header(FatalLevel)
-	if e == nil {
+	if g.logger.silent(FatalLevel) {
 		return
 	}
+	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
 		e.caller(runtime.Caller(g.logger.Caller))
 	}
