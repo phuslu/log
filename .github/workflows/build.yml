@@ -13,5 +13,5 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/${GITHUB_REPOSITORY}
           cd $(basename ${GITHUB_REPOSITORY})
-          go build -v
+          go build -v -race
           go test -v
