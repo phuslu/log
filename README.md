@@ -12,8 +12,8 @@
 * Simple and Clean Interface
 * Consistent Writer
     - `IOWriter`, *io.Writer wrapper*
-    - `FileWriter`, *rotating & effective*
     - `ConsoleWriter`, *colorful & formatting*
+    - `FileWriter`, *rotating & effective*
     - `MultiWriter`, *multiple level dispatch*
     - `SyslogWriter`, *syslog server logging*
     - `JournalWriter`, *linux systemd logging*
@@ -65,8 +65,32 @@ type Logger struct {
 }
 ```
 
-### FileWriter & ConsoleWriter
+### ConsoleWriter & FileWriter
 ```go
+// ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
+// IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
+//
+// Default output format:
+//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
+type ConsoleWriter struct {
+	// ColorOutput determines if used colorized output.
+	ColorOutput bool
+
+	// QuoteString determines if quoting string values.
+	QuoteString bool
+
+	// EndWithMessage determines if output message in the end of line.
+	EndWithMessage bool
+
+	// Writer is the output destination. using os.Stderr if empty.
+	Writer io.Writer
+
+	// Formatter specifies an optional text formatter for creating a customized output,
+	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignored.
+	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
+}
+
+
 // FileWriter is an Writer that writes to the specified filename.
 type FileWriter struct {
 	// Filename is the file to write logs to.  Backup log files will be retained
@@ -104,29 +128,6 @@ type FileWriter struct {
 	// Cleaner specifies an optional cleanup function of log backups after rotation,
 	// if not set, the default behavior is to delete more than MaxBackups log files.
 	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
-}
-
-// ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
-// IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
-//
-// Default output format:
-//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
-type ConsoleWriter struct {
-	// ColorOutput determines if used colorized output.
-	ColorOutput bool
-
-	// QuoteString determines if quoting string values.
-	QuoteString bool
-
-	// EndWithMessage determines if output message in the end of line.
-	EndWithMessage bool
-
-	// Writer is the output destination. using os.Stderr if empty.
-	Writer io.Writer
-
-	// Formatter specifies an optional text formatter for creating a customized output,
-	// If it is set, ColorOutput, QuoteString and EndWithMessage will be ignored.
-	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 }
 ```
 > Note: FileWriter implements log.Writer and io.Writer interfaces both, it is a drop-in replacement of [lumberjack][lumberjack].
@@ -177,6 +178,58 @@ func main() {
 }
 
 // Output: {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
+```
+
+### Pretty Console Writer
+
+To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
+
+```go
+if log.IsTerminal(os.Stderr.Fd()) {
+	log.DefaultLogger = log.Logger{
+		TimeFormat: "15:04:05",
+		Caller:     1,
+		Writer: &log.ConsoleWriter{
+			ColorOutput:    true,
+			QuoteString:    true,
+			EndWithMessage: true,
+		},
+	}
+}
+
+log.Debug().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Info().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Warn().Int("everything", 42).Str("foo", "bar").Msg("hello world")
+log.Error().Err(errors.New("an error")).Msg("hello world")
+```
+![Pretty logging][pretty-img]
+> Note: pretty logging also works on windows console
+
+### Formatting Console Writer
+
+To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-formatting-img]][play-formatting]
+
+```go
+log.DefaultLogger = log.Logger{
+	Level:      log.InfoLevel,
+	Caller:     1,
+	TimeFormat: "0102 15:04:05.999999",
+	Writer: &log.ConsoleWriter{
+		Formatter: func (w io.Writer, a *log.FormatterArgs) (int, error) {
+			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", strings.ToUpper(a.Level)[0],
+				a.Time, a.Goid, a.Caller, a.Message, a.Stack)
+		},
+	},
+}
+
+log.Info().Msgf("hello glog %s", "Info")
+log.Warn().Msgf("hello glog %s", "Warn")
+log.Error().Msgf("hello glog %s", "Error")
+
+// Output:
+// I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
+// W0725 09:59:57.504247 19 console_test.go:184] hello glog Warn
+// E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 ```
 
 ### Rotating File Writer
@@ -261,58 +314,6 @@ func main() {
 		logger.Info().Msg("hello world")
 	}
 }
-```
-
-### Pretty Console Writer
-
-To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
-
-```go
-if log.IsTerminal(os.Stderr.Fd()) {
-	log.DefaultLogger = log.Logger{
-		TimeFormat: "15:04:05",
-		Caller:     1,
-		Writer: &log.ConsoleWriter{
-			ColorOutput:    true,
-			QuoteString:    true,
-			EndWithMessage: true,
-		},
-	}
-}
-
-log.Debug().Int("everything", 42).Str("foo", "bar").Msg("hello world")
-log.Info().Int("everything", 42).Str("foo", "bar").Msg("hello world")
-log.Warn().Int("everything", 42).Str("foo", "bar").Msg("hello world")
-log.Error().Err(errors.New("an error")).Msg("hello world")
-```
-![Pretty logging][pretty-img]
-> Note: pretty logging also works on windows console
-
-### Formatting Console Writer
-
-To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-formatting-img]][play-formatting]
-
-```go
-log.DefaultLogger = log.Logger{
-	Level:      log.InfoLevel,
-	Caller:     1,
-	TimeFormat: "0102 15:04:05.999999",
-	Writer: &log.ConsoleWriter{
-		Formatter: func (w io.Writer, a *log.FormatterArgs) (int, error) {
-			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", strings.ToUpper(a.Level)[0],
-				a.Time, a.Goid, a.Caller, a.Message, a.Stack)
-		},
-	},
-}
-
-log.Info().Msgf("hello glog %s", "Info")
-log.Warn().Msgf("hello glog %s", "Warn")
-log.Error().Msgf("hello glog %s", "Error")
-
-// Output:
-// I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
-// W0725 09:59:57.504247 19 console_test.go:184] hello glog Warn
-// E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 ```
 
 ### Multiple Dispatching Writer
