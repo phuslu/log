@@ -1,4 +1,4 @@
-# Structured Logging Made Easy
+# phuslog - Structured Logging Made Easy
 
 [![go.dev][pkg-img]][pkg]
 [![goreport][report-img]][report]
@@ -820,7 +820,7 @@ func main() {
 }
 ```
 
-### Acknowledgment
+## Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
 [pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
