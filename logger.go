@@ -358,7 +358,7 @@ func (l *Logger) header(level Level) *Entry {
 	}
 	switch l.TimeFormat {
 	case "":
-		sec, nsec := walltime()
+		sec, nsec, _ := now()
 		var tmp [32]byte
 		var buf []byte
 		if timeOffset == 0 {
@@ -424,7 +424,7 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, buf...)
 	case TimeFormatUnix:
-		sec, _ := walltime()
+		sec, _, _ := now()
 		// 1595759807
 		var tmp [10]byte
 		// seconds
@@ -450,7 +450,7 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
-		sec, nsec := walltime()
+		sec, nsec, _ := now()
 		// 1595759807105
 		var tmp [13]byte
 		// milli seconds

@@ -14,7 +14,7 @@ var nilXID XID
 
 // NewXID generates a globally unique XID
 func NewXID() XID {
-	sec, _ := walltime()
+	sec, _, _ := now()
 	return NewXIDWithTime(sec)
 }
 

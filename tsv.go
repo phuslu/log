@@ -48,7 +48,7 @@ func (l *TSVLogger) New() (e *TSVEntry) {
 // Timestamp adds the current time as UNIX timestamp
 func (e *TSVEntry) Timestamp() *TSVEntry {
 	var tmp [11]byte
-	sec, _ := walltime()
+	sec, _, _ := now()
 	// separator
 	tmp[10] = e.sep
 	// seconds
@@ -79,7 +79,7 @@ func (e *TSVEntry) Timestamp() *TSVEntry {
 // TimestampMS adds the current time with milliseconds as UNIX timestamp
 func (e *TSVEntry) TimestampMS() *TSVEntry {
 	var tmp [14]byte
-	sec, nsec := walltime()
+	sec, nsec, _ := now()
 	// separator
 	tmp[13] = e.sep
 	// milli seconds
