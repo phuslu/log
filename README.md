@@ -1,6 +1,6 @@
 # phuslog - Structured Logging Made Easy
 
-[![go.dev][pkg-img]][pkg]
+[![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
 [![build][build-img]][build]
 [![coverage][cov-img]][cov]
@@ -823,8 +823,8 @@ func main() {
 ## Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
-[pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
-[pkg]: https://godoc.org/github.com/phuslu/log
+[godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
+[godoc]: https://godocs.io/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
