@@ -364,6 +364,21 @@ func TestLoggerContext(t *testing.T) {
 	logger.Info().Context(ctx).Int("no2", 2).Msg("this is second context log entry")
 }
 
+func TestLoggerContext2(t *testing.T) {
+	notTest = false
+
+	DefaultLogger.Context = NewContext(nil).Str("ctx", "some_ctx").Int("n", 42).Value()
+
+	Trace().Str("foo", "bar").Msg("hello from Trace")
+	Debug().Str("foo", "bar").Msg("hello from Debug")
+	Info().Str("foo", "bar").Msg("hello from Info")
+	Warn().Str("foo", "bar").Msg("hello from Warn")
+	Error().Str("foo", "bar").Msg("hello from Error")
+	Fatal().Str("foo", "bar").Msg("hello from Fatal")
+	Panic().Str("foo", "bar").Msg("hello from Panic")
+	Printf("hello from %s", "Printf")
+}
+
 func TestLoggerContextDict(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 

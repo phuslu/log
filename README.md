@@ -518,16 +518,18 @@ func main() {
 To add preserved `key:value` pairs to each entry, use `NewContext`. [![playground][play-context-img]][play-context]
 
 ```go
-ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()
+logger := log.Logger{
+	Level:   log.InfoLevel,
+	Context: log.NewContext(nil).Str("ctx", "some_ctx").Value(),
+}
 
-logger := log.Logger{Level: log.InfoLevel}
-logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
-logger.Info().Context(ctx).Int("no1", 1).Msg("first")
-logger.Info().Context(ctx).Int("no2", 2).Msg("second")
+logger.Debug().Int("no0", 0).Msg("zero")
+logger.Info().Int("no1", 1).Msg("first")
+logger.Info().Int("no2", 2).Msg("second")
 
 // Output:
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx":"some_ctx","no1":1,"message":"first"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
 ```
 
 ### High Performance

@@ -66,6 +66,9 @@ type Logger struct {
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
+	// Context specifies an optional context of logger.
+	Context Context
+
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
 }
@@ -502,6 +505,10 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
 	case PanicLevel:
 		e.buf = append(e.buf, ",\"level\":\"panic\""...)
+	}
+	// context
+	if l.Context != nil {
+		e.buf = append(e.buf, l.Context...)
 	}
 	return e
 }
