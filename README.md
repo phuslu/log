@@ -335,6 +335,21 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
+### Multiple log WriterEntry
+To log to different writers, use `MultiWriterEntry`.
+
+```go
+log.DefaultLogger.Writer = &log.MultiWriterEntry{
+	&log.FileWriter{Filename: "main", MaxSize: 100<<20},
+	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000}
+	&log.ConsoleWriter{ColorOutput: true},
+}
+
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
+log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
+log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
+```
+
 ### Multiple IO Writer
 
 To log to multiple io writers like `io.MultiWriter`, use below idiom. [![playground][play-multiio-img]][play-multiio]
