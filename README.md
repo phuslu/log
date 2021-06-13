@@ -131,6 +131,7 @@ type FileWriter struct {
 }
 ```
 > Note: FileWriter implements log.Writer and io.Writer interfaces both, it is a drop-in replacement of [lumberjack][lumberjack].
+> FileWriter also creates a symlink to the current logging file, it requires administrator privileges on Windows.
 
 ## Getting Started
 
