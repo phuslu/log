@@ -4,11 +4,11 @@ import (
 	"io"
 )
 
-// MultiWriterEntry is an array Writer that log to different writers
-type MultiWriterEntry []Writer
+// MultiEntryWriter is an array Writer that log to different writers
+type MultiEntryWriter []Writer
 
-// Close implements io.Closer, and closes the underlying MultiWriterEntry.
-func (w *MultiWriterEntry) Close() (err error) {
+// Close implements io.Closer, and closes the underlying MultiEntryWriter.
+func (w *MultiEntryWriter) Close() (err error) {
 	for _, writer := range *w {
 		if closer, ok := writer.(io.Closer); ok {
 			if err1 := closer.Close(); err1 != nil {
@@ -20,7 +20,7 @@ func (w *MultiWriterEntry) Close() (err error) {
 }
 
 // WriteEntry implements entryWriter.
-func (w *MultiWriterEntry) WriteEntry(e *Entry) (n int, err error) {
+func (w *MultiEntryWriter) WriteEntry(e *Entry) (n int, err error) {
 	var err1 error
 	for _, writer := range *w {
 		n, err1 = writer.WriteEntry(e)
@@ -31,4 +31,4 @@ func (w *MultiWriterEntry) WriteEntry(e *Entry) (n int, err error) {
 	return
 }
 
-var _ Writer = (*MultiWriterEntry)(nil)
+var _ Writer = (*MultiEntryWriter)(nil)

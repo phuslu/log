@@ -336,10 +336,10 @@ log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
 ### Multiple log WriterEntry
-To log to different writers, use `MultiWriterEntry`.
+To log to different writers, use `MultiEntryWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.MultiWriterEntry{
+log.DefaultLogger.Writer = &log.MultiEntryWriter{
 	&log.FileWriter{Filename: "main", MaxSize: 100<<20},
 	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000}
 	&log.ConsoleWriter{ColorOutput: true},

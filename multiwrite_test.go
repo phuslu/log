@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func TestTypeMultiWriterEntry(t *testing.T) {
-	w := &MultiWriterEntry{
+func TestMultiEntryWriter(t *testing.T) {
+	w := &MultiEntryWriter{
 		&FileWriter{Filename: "file-1.log"},
 		&FileWriter{Filename: "file-2.log"},
 		&ConsoleWriter{ColorOutput: true},
@@ -61,13 +61,13 @@ func (ew errorWriterEntry) Close() (err error) {
 	return
 }
 
-func TestMultiWriterEntryError(t *testing.T) {
+func TestMultiEntryWriterError(t *testing.T) {
 	file, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	if err != nil {
 		t.Errorf("open null file error: %+v", err)
 	}
 
-	w := &MultiWriterEntry{
+	w := &MultiEntryWriter{
 		IOWriter{errorWriterEntry{file}},
 		IOWriter{errorWriterEntry{file}},
 		&ConsoleWriter{ColorOutput: true},
