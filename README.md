@@ -334,6 +334,41 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
+### Multiple IO Writer
+
+To log to multiple io writers like `io.MultiWriter`, use below idiom. [![playground][play-multiio-img]][play-multiio]
+
+```go
+package main
+
+import (
+	"io"
+	"os"
+
+	"github.com/phuslu/log"
+)
+
+type MultiIOWriter []io.Writer
+
+func (w *MultiIOWriter) WriteEntry(e *log.Entry) (n int, err error) {
+	buf := e.Value()
+	for _, writer := range *w {
+		n, err = writer.Write(buf)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func main() {
+	log.DefaultLogger.Writer = &MultiIOWriter{os.Stderr,os.Stdout}
+	
+	log.Info().Msg("hello phuslog")
+}
+```
+
 ### Multiple Combined Logger:
 
 To logging to different logger as you want, use below idiom. [![playground][play-combined-img]][play-combined]
@@ -839,6 +874,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/emTsJJKUGXZ
+[play-multiio-img]: https://img.shields.io/badge/playground-bwo03SW0B3l-29BEB0?style=flat&logo=go
+[play-multiio]: https://play.golang.org/p/bwo03SW0B3l
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
 [play-combined]: https://play.golang.org/p/24d4eDIpDeR
 [play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
