@@ -223,6 +223,9 @@ func (w *FileWriter) create() (err error) {
 		return err
 	}
 	w.size = 0
+	if st, err := w.file.Stat(); err == nil {
+		w.size = st.Size()
+	}
 
 	os.Remove(w.Filename)
 	if !w.ProcessID {
