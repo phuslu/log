@@ -623,6 +623,32 @@ logger.Info().Int("no2", 2).Msg("second")
 //   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
 ```
 
+You can make a copy of log and add contextual fields. [![playground][play-context-add-img]][play-context-add]
+
+```go
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+func main() {
+	sublogger := log.DefaultLogger
+	sublogger.Level = log.InfoLevel
+	sublogger.Context = log.NewContext(nil).Str("ctx", "some_ctx").Value()
+
+	sublogger.Debug().Int("no0", 0).Msg("zero")
+	sublogger.Info().Int("no1", 1).Msg("first")
+	sublogger.Info().Int("no2", 2).Msg("second")
+	log.Debug().Int("no3", 3).Msg("no context")
+}
+
+// Output:
+//   {"time":"2021-06-14T06:36:42.904+02:00","level":"info","ctx":"some_ctx","no1":1,"message":"first"}
+//   {"time":"2021-06-14T06:36:42.905+02:00","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
+//   {"time":"2021-06-14T06:36:42.906+02:00","level":"debug","no3":3,"message":"no context"}
+```
+
 ### High Performance
 
 The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog, which runs on [github actions][benchmark]:
@@ -943,6 +969,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-formatting]: https://play.golang.org/p/UmJmLxYXwRO
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
+[play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go
+[play-context-add]: https://play.golang.org/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
 [play-marshal]: https://play.golang.org/p/SoQdwQOaQR2
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
