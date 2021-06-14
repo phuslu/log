@@ -547,6 +547,7 @@ import (
 	grpcphuslog "github.com/grpc-ecosystem/go-grpc-middleware/providers/phuslog/v2"
 	"github.com/phuslu/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
@@ -556,6 +557,8 @@ import (
 func Example_initialization() {
 	// Logger is used, allowing pre-definition of certain fields by the user.
 	logger := log.DefaultLogger.GrcpGateway()
+	// You can also add grpc LoggerV2 logger wrapper
+	grpclog.SetLoggerV2(log.DefaultLogger.Grpc(nil))
 	// Create a server, make sure we put the tags context before everything else.
 	_ = grpc.NewServer(
 		middleware.WithUnaryServerChain(
