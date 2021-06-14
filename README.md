@@ -533,6 +533,43 @@ func main() {
 }
 ```
 
+### GrcpGateway Interceptor
+
+Using wrapped loggers for grcp-gateway in go-grpc-middleware.
+
+```go
+package main
+
+import (
+	"context"
+	"testing"
+
+	grpcphuslog "github.com/grpc-ecosystem/go-grpc-middleware/providers/phuslog/v2"
+	"github.com/phuslu/log"
+	"google.golang.org/grpc"
+
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
+)
+
+func Example_initialization() {
+	// Logger is used, allowing pre-definition of certain fields by the user.
+	logger := log.DefaultLogger.GrcpGateway()
+	// Create a server, make sure we put the tags context before everything else.
+	_ = grpc.NewServer(
+		middleware.WithUnaryServerChain(
+			tags.UnaryServerInterceptor(),
+			logging.UnaryServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
+		),
+		middleware.WithStreamServerChain(
+			tags.StreamServerInterceptor(),
+			logging.StreamServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
+		),
+	)
+}
+```
+
 ### User-defined Data Structure
 
 To log with user-defined struct effectively, implements `MarshalObject`. [![playground][play-marshal-img]][play-marshal]
