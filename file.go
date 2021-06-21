@@ -70,6 +70,9 @@ type FileWriter struct {
 	// EnsureFolder ensures the file directory creation before writing.
 	EnsureFolder bool
 
+	// Header specifies an optional header function of log file after rotation,
+	Header func(fileinfo os.FileInfo) []byte
+
 	// Cleaner specifies an optional cleanup function of log backups after rotation,
 	// if not set, the default behavior is to delete more than MaxBackups log files.
 	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
@@ -163,6 +166,20 @@ func (w *FileWriter) rotate() (err error) {
 	w.file = file
 	w.size = 0
 
+	if w.Header != nil {
+		st, err := file.Stat()
+		if err != nil {
+			return err
+		}
+		if b := w.Header(st); b != nil {
+			n, err := w.file.Write(b)
+			w.size += int64(n)
+			if err != nil {
+				return nil
+			}
+		}
+	}
+
 	go func(newname string) {
 		os.Remove(w.Filename)
 		if !w.ProcessID {
@@ -223,8 +240,19 @@ func (w *FileWriter) create() (err error) {
 		return err
 	}
 	w.size = 0
-	if st, err := w.file.Stat(); err == nil {
+	st, err := w.file.Stat()
+	if err == nil {
 		w.size = st.Size()
+	}
+
+	if w.size == 0 && w.Header != nil {
+		if b := w.Header(st); b != nil {
+			n, err := w.file.Write(b)
+			w.size += int64(n)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	os.Remove(w.Filename)

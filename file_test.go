@@ -154,6 +154,7 @@ func TestFileWriterHostname(t *testing.T) {
 
 func TestFileWriterRotate(t *testing.T) {
 	filename := "file-rotate.log"
+	header := "# I AM A FILEWRITER HEADER\n"
 	text1 := "hello file writer!\n"
 	text2 := "hello rotated file writer!\n"
 
@@ -163,6 +164,9 @@ func TestFileWriterRotate(t *testing.T) {
 	w := &FileWriter{
 		Filename:   filename,
 		MaxBackups: 2,
+		Header: func(_ os.FileInfo) []byte {
+			return []byte(header)
+		},
 	}
 
 	// text 1
@@ -195,7 +199,7 @@ func TestFileWriterRotate(t *testing.T) {
 		t.Fatalf("ioutil read file error: %+v", err)
 	}
 
-	if string(data) != text1 {
+	if string(data) != header+text1 {
 		t.Fatalf("ioutil read file content mismath: data=[%s], text1=[%s]", data, text1)
 	}
 
@@ -204,7 +208,7 @@ func TestFileWriterRotate(t *testing.T) {
 		t.Fatalf("ioutil read file error: %+v", err)
 	}
 
-	if string(data) != text2 {
+	if string(data) != header+text2 {
 		t.Fatalf("ioutil read file content mismath: data=[%s], text2=[%s]", data, text2)
 	}
 
