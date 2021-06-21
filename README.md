@@ -125,6 +125,9 @@ type FileWriter struct {
 	// EnsureFolder ensures the file directory creation before writing.
 	EnsureFolder bool
 
+	// Header specifies an optional header function of log file after rotation,
+	Header func(fileinfo os.FileInfo) []byte
+
 	// Cleaner specifies an optional cleanup function of log backups after rotation,
 	// if not set, the default behavior is to delete more than MaxBackups log files.
 	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
