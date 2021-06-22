@@ -108,3 +108,19 @@ func (w *MultiEntryWriter) WriteEntry(e *Entry) (n int, err error) {
 }
 
 var _ Writer = (*MultiEntryWriter)(nil)
+
+// MultiEntryWriter is an array io.Writer that log to different writers
+type MultiIOWriter []io.Writer
+
+// WriteEntry implements entryWriter.
+func (w *MultiIOWriter) WriteEntry(e *Entry) (n int, err error) {
+	buf := e.Value()
+	for _, writer := range *w {
+		n, err = writer.Write(buf)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}

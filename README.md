@@ -343,14 +343,12 @@ To log to different writers, use `MultiEntryWriter`.
 
 ```go
 log.DefaultLogger.Writer = &log.MultiEntryWriter{
-	&log.FileWriter{Filename: "main", MaxSize: 100<<20},
-	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000}
 	&log.ConsoleWriter{ColorOutput: true},
+	&log.FileWriter{Filename: "main.log", MaxSize: 100<<20},
+	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000},
 }
 
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
-log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
-log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
 ### Multiple IO Writer
@@ -358,34 +356,12 @@ log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 To log to multiple io writers like `io.MultiWriter`, use below idiom. [![playground][play-multiio-img]][play-multiio]
 
 ```go
-package main
-
-import (
-	"io"
-	"os"
-
-	"github.com/phuslu/log"
-)
-
-type MultiIOWriter []io.Writer
-
-func (w *MultiIOWriter) WriteEntry(e *log.Entry) (n int, err error) {
-	buf := e.Value()
-	for _, writer := range *w {
-		n, err = writer.Write(buf)
-		if err != nil {
-			return
-		}
-	}
-
-	return
+log.DefaultLogger.Writer = &log.MultiIOWriter{
+	os.Stdout,
+	&log.FileWriter{Filename: "main.log", MaxSize: 100<<20},
 }
 
-func main() {
-	log.DefaultLogger.Writer = &MultiIOWriter{os.Stderr,os.Stdout}
-	
-	log.Info().Msg("hello phuslog")
-}
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 ```
 
 ### Multiple Combined Logger:
