@@ -338,7 +338,7 @@ log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
 ```
 
-### Multiple log WriterEntry
+### Multiple Entry Writer
 To log to different writers, use `MultiEntryWriter`.
 
 ```go
