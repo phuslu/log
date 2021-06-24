@@ -155,8 +155,7 @@ func (w *FileWriter) Rotate() (err error) {
 
 func (w *FileWriter) rotate() (err error) {
 	var file *os.File
-	name, flag, perm := w.fileargs(timeNow())
-	file, err = os.OpenFile(name, flag, perm)
+	file, err = os.OpenFile(w.fileargs(timeNow()))
 	if err != nil {
 		return err
 	}
@@ -234,8 +233,7 @@ func (w *FileWriter) rotate() (err error) {
 }
 
 func (w *FileWriter) create() (err error) {
-	name, flag, perm := w.fileargs(timeNow())
-	w.file, err = os.OpenFile(name, flag, perm)
+	w.file, err = os.OpenFile(w.fileargs(timeNow()))
 	if err != nil {
 		return err
 	}

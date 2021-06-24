@@ -16,9 +16,9 @@ func TestSyslogWriterTCP(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
 	_, err := wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
@@ -48,9 +48,9 @@ func TestSyslogWriterTCPError(t *testing.T) {
 		Dial:    net.Dial,
 	}
 
-	wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	_, _ = wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	w.Close()
-	wlprintf(w, InfoLevel, "a long long long long message again.\n")
+	_, _ = wlprintf(w, InfoLevel, "a long long long long message again.\n")
 }
 
 func TestSyslogWriterUnix(t *testing.T) {
@@ -83,9 +83,9 @@ func TestSyslogWriterUnix(t *testing.T) {
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
-		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
-		wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277Z","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"time":"2019-07-10T05:35:54.277+08:00","level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
+		_, _ = wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
 	_, err = wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
