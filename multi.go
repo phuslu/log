@@ -112,11 +112,22 @@ var _ Writer = (*MultiEntryWriter)(nil)
 // MultiEntryWriter is an array io.Writer that log to different writers
 type MultiIOWriter []io.Writer
 
+// Close implements io.Closer, and closes the underlying MultiIOWriter.
+func (w *MultiIOWriter) Close() (err error) {
+	for _, writer := range *w {
+		if closer, ok := writer.(io.Closer); ok {
+			if err1 := closer.Close(); err1 != nil {
+				err = err1
+			}
+		}
+	}
+	return
+}
+
 // WriteEntry implements entryWriter.
 func (w *MultiIOWriter) WriteEntry(e *Entry) (n int, err error) {
-	buf := e.Value()
 	for _, writer := range *w {
-		n, err = writer.Write(buf)
+		n, err = writer.Write(e.buf)
 		if err != nil {
 			return
 		}
