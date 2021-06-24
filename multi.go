@@ -4,8 +4,11 @@ import (
 	"io"
 )
 
-// MultiWriter is an Writer that log to different writers by different levels
-type MultiWriter struct {
+// MultiWriter is an alias for MultiLevelWriter
+type MultiWriter = MultiLevelWriter
+
+// MultiLevelWriter is an Writer that log to different writers by different levels
+type MultiLevelWriter struct {
 	// InfoWriter specifies all the level logs writes to
 	InfoWriter Writer
 
@@ -23,7 +26,7 @@ type MultiWriter struct {
 }
 
 // Close implements io.Closer, and closes the underlying LeveledWriter.
-func (w *MultiWriter) Close() (err error) {
+func (w *MultiLevelWriter) Close() (err error) {
 	for _, writer := range []Writer{
 		w.InfoWriter,
 		w.WarnWriter,
@@ -43,7 +46,7 @@ func (w *MultiWriter) Close() (err error) {
 }
 
 // WriteEntry implements entryWriter.
-func (w *MultiWriter) WriteEntry(e *Entry) (n int, err error) {
+func (w *MultiLevelWriter) WriteEntry(e *Entry) (n int, err error) {
 	var err1 error
 	switch e.Level {
 	case noLevel, PanicLevel, FatalLevel, ErrorLevel:
@@ -78,7 +81,7 @@ func (w *MultiWriter) WriteEntry(e *Entry) (n int, err error) {
 	return
 }
 
-var _ Writer = (*MultiWriter)(nil)
+var _ Writer = (*MultiLevelWriter)(nil)
 
 // MultiEntryWriter is an array Writer that log to different writers
 type MultiEntryWriter []Writer
@@ -109,7 +112,7 @@ func (w *MultiEntryWriter) WriteEntry(e *Entry) (n int, err error) {
 
 var _ Writer = (*MultiEntryWriter)(nil)
 
-// MultiEntryWriter is an array io.Writer that log to different writers
+// MultiIOWriter is an array io.Writer that log to different writers
 type MultiIOWriter []io.Writer
 
 // Close implements io.Closer, and closes the underlying MultiIOWriter.

@@ -14,7 +14,7 @@
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
-    - `MultiWriter`, *multiple level dispatch*
+    - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *syslog server logging*
     - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
@@ -322,10 +322,10 @@ func main() {
 
 ### Multiple Dispatching Writer
 
-To log to different writers by different levels, use `MultiWriter`.
+To log to different writers by different levels, use `MultiLevelWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.MultiWriter{
+log.DefaultLogger.Writer = &log.MultiLevelWriter{
 	InfoWriter:    &log.FileWriter{Filename: "main.INFO", MaxSize: 100<<20},
 	WarnWriter:    &log.FileWriter{Filename: "main.WARNING", MaxSize: 100<<20},
 	ErrorWriter:   &log.FileWriter{Filename: "main.ERROR", MaxSize: 100<<20},
