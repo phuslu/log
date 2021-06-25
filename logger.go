@@ -1738,6 +1738,14 @@ func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 	return e
 }
 
+// Func allows an anonymous func to run only if the entry is enabled.
+func (e *Entry) Func(f func(e *Entry)) *Entry {
+	if e != nil {
+		f(e)
+	}
+	return e
+}
+
 // EmbedObject marshals and Embeds an object that implement the ObjectMarshaler interface.
 func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 	if e == nil {

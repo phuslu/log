@@ -70,6 +70,7 @@ func TestLoggerInfo(t *testing.T) {
 		Ints16("ints16", []int16{123, 123}).
 		Ints8("ints8", []int8{123, 123}).
 		Ints("ints", []int{123, 123}).
+		Func(func(e *Entry) { e.Str("func", "func_output") }).
 		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
 		RawJSONStr("raw_json", "{\"c\":1,\"d\":2}").
 		Hex("hex", []byte("\"<>?'")).
@@ -152,6 +153,7 @@ func TestLoggerNil(t *testing.T) {
 		Ints16("ints16", []int16{123, 123}).
 		Ints8("ints8", []int8{123, 123}).
 		Ints("ints", []int{123, 123}).
+		Func(func(e *Entry) { e.Str("func", "func_output") }).
 		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
 		RawJSONStr("raw_json", "{\"c\":1,\"d\":2}").
 		Hex("hex", []byte("\"<>?'")).
