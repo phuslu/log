@@ -27,7 +27,8 @@ func (g *GrpcLogger) Info(args ...interface{}) {
 	}
 	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -39,7 +40,8 @@ func (g *GrpcLogger) Infoln(args ...interface{}) {
 	}
 	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -51,7 +53,8 @@ func (g *GrpcLogger) Infof(format string, args ...interface{}) {
 	}
 	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -63,7 +66,8 @@ func (g *GrpcLogger) Warning(args ...interface{}) {
 	}
 	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -75,7 +79,8 @@ func (g *GrpcLogger) Warningln(args ...interface{}) {
 	}
 	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -87,7 +92,8 @@ func (g *GrpcLogger) Warningf(format string, args ...interface{}) {
 	}
 	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -99,7 +105,8 @@ func (g *GrpcLogger) Error(args ...interface{}) {
 	}
 	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -111,7 +118,8 @@ func (g *GrpcLogger) Errorln(args ...interface{}) {
 	}
 	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -123,7 +131,8 @@ func (g *GrpcLogger) Errorf(format string, args ...interface{}) {
 	}
 	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -137,7 +146,8 @@ func (g *GrpcLogger) Fatal(args ...interface{}) {
 	}
 	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -151,7 +161,8 @@ func (g *GrpcLogger) Fatalln(args ...interface{}) {
 	}
 	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -165,7 +176,8 @@ func (g *GrpcLogger) Fatalf(format string, args ...interface{}) {
 	}
 	e := g.logger.header(FatalLevel)
 	if g.logger.Caller > 0 {
-		e.caller(runtime.Caller(g.logger.Caller))
+		_, file, line, _ := runtime.Caller(g.logger.Caller)
+		e.caller(file, line, g.logger.Fullpath)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }

@@ -34,7 +34,8 @@ func (l *LogrLogger) Info(msg string, keysAndValues ...interface{}) {
 	}
 	e := l.logger.header(InfoLevel)
 	if l.logger.Caller > 0 {
-		e.caller(runtime.Caller(l.logger.Caller))
+		_, file, line, _ := runtime.Caller(l.logger.Caller)
+		e.caller(file, line, l.logger.Fullpath)
 	}
 	e.Context(l.context).KeysAndValues(keysAndValues...).Msg(msg)
 }
@@ -53,7 +54,8 @@ func (l *LogrLogger) Error(err error, msg string, keysAndValues ...interface{}) 
 	}
 	e := l.logger.header(ErrorLevel)
 	if l.logger.Caller > 0 {
-		e.caller(runtime.Caller(l.logger.Caller))
+		_, file, line, _ := runtime.Caller(l.logger.Caller)
+		e.caller(file, line, l.logger.Fullpath)
 	}
 	e.Context(l.context).KeysAndValues(keysAndValues...).Msg(msg)
 }

@@ -71,6 +71,9 @@ type Logger struct {
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
+
+	// Fullpath determines whether to use full file path like /a/b/c/d.go:line as "caller" or not.
+	Fullpath bool
 }
 
 // TimeFormatUnix defines a time format that makes time fields to be
@@ -88,7 +91,8 @@ func Trace() (e *Entry) {
 	}
 	e = DefaultLogger.header(TraceLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -100,7 +104,8 @@ func Debug() (e *Entry) {
 	}
 	e = DefaultLogger.header(DebugLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -112,7 +117,8 @@ func Info() (e *Entry) {
 	}
 	e = DefaultLogger.header(InfoLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -124,7 +130,8 @@ func Warn() (e *Entry) {
 	}
 	e = DefaultLogger.header(WarnLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -136,7 +143,8 @@ func Error() (e *Entry) {
 	}
 	e = DefaultLogger.header(ErrorLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -148,7 +156,8 @@ func Fatal() (e *Entry) {
 	}
 	e = DefaultLogger.header(FatalLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -160,7 +169,8 @@ func Panic() (e *Entry) {
 	}
 	e = DefaultLogger.header(PanicLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -169,7 +179,8 @@ func Panic() (e *Entry) {
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	e.Msgf(format, v...)
 }
@@ -181,7 +192,8 @@ func (l *Logger) Trace() (e *Entry) {
 	}
 	e = l.header(TraceLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -193,7 +205,8 @@ func (l *Logger) Debug() (e *Entry) {
 	}
 	e = l.header(DebugLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -205,7 +218,8 @@ func (l *Logger) Info() (e *Entry) {
 	}
 	e = l.header(InfoLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -217,7 +231,8 @@ func (l *Logger) Warn() (e *Entry) {
 	}
 	e = l.header(WarnLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -229,7 +244,8 @@ func (l *Logger) Error() (e *Entry) {
 	}
 	e = l.header(ErrorLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -241,7 +257,8 @@ func (l *Logger) Fatal() (e *Entry) {
 	}
 	e = l.header(FatalLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -253,7 +270,8 @@ func (l *Logger) Panic() (e *Entry) {
 	}
 	e = l.header(PanicLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -262,7 +280,8 @@ func (l *Logger) Panic() (e *Entry) {
 func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -274,7 +293,8 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 	}
 	e = l.header(level)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -290,7 +310,8 @@ func (l *Logger) Err(err error) (e *Entry) {
 	}
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	return
 }
@@ -304,7 +325,8 @@ func (l *Logger) SetLevel(level Level) {
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(noLevel)
 	if e != nil && l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.Fullpath)
 	}
 	e.Msgf(format, v...)
 }
@@ -1413,9 +1435,10 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 }
 
 // Caller adds the file:line of the "caller" key.
-func (e *Entry) Caller(depth int) *Entry {
+func (e *Entry) Caller(depth int, fullpath bool) *Entry {
 	if e != nil {
-		e.caller(runtime.Caller(depth))
+		_, file, line, _ := runtime.Caller(depth)
+		e.caller(file, line, fullpath)
 	}
 	return e
 }
@@ -1521,16 +1544,19 @@ func (e *Entry) Msgs(args ...interface{}) {
 	e.Msg("")
 }
 
-func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
-	var i int
-	for i = len(file) - 1; i >= 0; i-- {
-		if file[i] == '/' {
-			break
+func (e *Entry) caller(file string, line int, fullpath bool) {
+	if !fullpath {
+		var i int
+		for i = len(file) - 1; i >= 0; i-- {
+			if file[i] == '/' {
+				break
+			}
+		}
+		if i > 0 {
+			file = file[i+1:]
 		}
 	}
-	if i > 0 {
-		file = file[i+1:]
-	}
+	
 	e.buf = append(e.buf, ",\"caller\":\""...)
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
