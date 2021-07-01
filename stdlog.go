@@ -27,7 +27,8 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 	}
 	e := w.logger.header(w.level)
 	if w.logger.Caller > 0 {
-		e.caller(runtime.Caller(w.logger.Caller + 2))
+		_, file, line, _ := runtime.Caller(w.logger.Caller + 2)
+		e.caller(file, line, w.logger.Fullpath)
 	}
 	e.Context(w.context).Msg(b2s(p))
 	return len(p), nil
