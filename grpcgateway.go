@@ -31,7 +31,7 @@ func (g GrcpGatewayLogger) Debug(msg string) {
 	e := g.logger.header(DebugLevel)
 	if g.logger.Caller > 0 {
 		_, file, line, _ := runtime.Caller(g.logger.Caller)
-		e.caller(file, line, g.logger.Fullpath)
+		e.caller(file, line, g.logger.FullpathCaller)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -44,7 +44,7 @@ func (g GrcpGatewayLogger) Info(msg string) {
 	e := g.logger.header(InfoLevel)
 	if g.logger.Caller > 0 {
 		_, file, line, _ := runtime.Caller(g.logger.Caller)
-		e.caller(file, line, g.logger.Fullpath)
+		e.caller(file, line, g.logger.FullpathCaller)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -57,7 +57,7 @@ func (g GrcpGatewayLogger) Warning(msg string) {
 	e := g.logger.header(WarnLevel)
 	if g.logger.Caller > 0 {
 		_, file, line, _ := runtime.Caller(g.logger.Caller)
-		e.caller(file, line, g.logger.Fullpath)
+		e.caller(file, line, g.logger.FullpathCaller)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -70,7 +70,7 @@ func (g GrcpGatewayLogger) Error(msg string) {
 	e := g.logger.header(ErrorLevel)
 	if g.logger.Caller > 0 {
 		_, file, line, _ := runtime.Caller(g.logger.Caller)
-		e.caller(file, line, g.logger.Fullpath)
+		e.caller(file, line, g.logger.FullpathCaller)
 	}
 	e.Context(g.context).Msg(msg)
 }
