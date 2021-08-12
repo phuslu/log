@@ -1822,6 +1822,11 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			e.IPAddr(key, v)
 		case net.IPNet:
 			e.IPPrefix(key, v)
+		case json.RawMessage:
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, key...)
+			e.buf = append(e.buf, '"', ':')
+			e.buf = append(e.buf, v...)
 		case []bool:
 			e.Bools(key, v)
 		case []byte:
@@ -1908,6 +1913,11 @@ func (e *Entry) Fields(fields Fields) *Entry {
 			e.IPAddr(k, v)
 		case net.IPNet:
 			e.IPPrefix(k, v)
+		case json.RawMessage:
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, k...)
+			e.buf = append(e.buf, '"', ':')
+			e.buf = append(e.buf, v...)
 		case []bool:
 			e.Bools(k, v)
 		case []byte:
