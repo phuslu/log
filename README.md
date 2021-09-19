@@ -320,6 +320,15 @@ func main() {
 }
 ```
 
+### Random Sample Logger:
+
+To logging only 5% logs, use below idiom.
+```go
+if log.Fastrandn(100) < 5 {
+	log.Log().Msg("hello world")
+}
+```
+
 ### Multiple Dispatching Writer
 
 To log to different writers by different levels, use `MultiLevelWriter`.
