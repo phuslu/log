@@ -85,7 +85,7 @@ func TestLoggerInfo(t *testing.T) {
 		Stringer("stringer", ipv4Addr).
 		GoStringer("gostringer", nil).
 		GoStringer("gostringer", binary.BigEndian).
-		Time("now_1", timeNow()).
+		Time("now_1", timeNow().In(time.FixedZone("UTC-7", -7*60*60))).
 		Times("now_2", []time.Time{timeNow(), timeNow()}).
 		TimeFormat("now_3", time.RFC3339, timeNow()).
 		TimeFormat("now_3_1", TimeFormatUnix, timeNow()).
