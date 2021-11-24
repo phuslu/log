@@ -31,3 +31,11 @@ TEXT ·goid(SB),NOSPLIT,$0-4
 	MOVL BX, ret+0(FP)
 	RET
 #endif
+
+#ifdef GOARCH_mipsle
+TEXT ·goid(SB),NOSPLIT,$0-4
+	MOVW g, R8
+	MOVW 80(R8), R7
+	MOVW R7, ret+0(FP)
+	RET
+#endif

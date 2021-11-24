@@ -1,4 +1,4 @@
-// +build !amd64,!arm64,!arm,!386
+// +build !amd64,!arm64,!arm,!386,!mipsle
 
 package log
 
