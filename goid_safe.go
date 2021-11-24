@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-func Goid() (n int64) {
+func goid() (n int) {
 	const offset = len("goroutine ")
 	var data [32]byte
 	b := data[:runtime.Stack(data[:], false)]
@@ -14,11 +14,17 @@ func Goid() (n int64) {
 		return
 	}
 	for i := offset; i < len(b); i++ {
-		j := int64(b[i] - '0')
+		j := int(b[i] - '0')
 		if j < 0 || j > 9 {
 			break
 		}
 		n = n*10 + j
 	}
 	return n
+}
+
+// Goid returns the current goroutine id.
+// It exactly matches goroutine id of the stack trace.
+func Goid() int64 {
+	return int64(goid())
 }
