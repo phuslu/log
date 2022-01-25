@@ -218,6 +218,7 @@ type nullMarshalObject struct {
 }
 
 func (o *nullMarshalObject) MarshalObject(e *Entry) {
+	e.Int("i", o.I).Str("n", o.N)
 }
 
 func TestLoggerObject(t *testing.T) {
@@ -232,6 +233,11 @@ func TestLoggerObject(t *testing.T) {
 
 	logger.Info().Object("null_object", &nullMarshalObject{3, "xxx"}).Msg("this is a empty_object test")
 	logger.Info().EmbedObject(&nullMarshalObject{3, "xxx"}).Msg("this is a empty_object test")
+
+	var nilObjct *nullMarshalObject
+	var nilIface ObjectMarshaler = nilObjct
+	logger.Info().Object("null_object_2", nilIface).Msg("this is a null_object_2 test")
+	logger.Info().EmbedObject(nilIface).Msg("this is a null_object_2 test")
 }
 
 func TestLoggerLog(t *testing.T) {
