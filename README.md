@@ -787,23 +787,23 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	100000000	       111 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZap-4          	 9192708	      1258 ns/op	     192 B/op	       1 allocs/op
-BenchmarkInterfaceZap-4       	 7009218	      1746 ns/op	     208 B/op	       2 allocs/op
-BenchmarkPrintfZap-4          	 7389448	      1648 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZap-4          	 4112085	      2948 ns/op	     440 B/op	       4 allocs/op
+BenchmarkDisableZap-4         	72864122	       155.3 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZap-4          	 9489657	      1301 ns/op	     192 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 6692570	      1779 ns/op	     208 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	 6956133	      1704 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 3169976	      3855 ns/op	     424 B/op	       3 allocs/op
 
-BenchmarkDisableZeroLog-4     	940196673	        12.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalZeroLog-4      	16421583	       717 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfaceZeroLog-4   	11076124	      1075 ns/op	      48 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 9741673	      1233 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZeroLog-4      	 3882822	      3152 ns/op	     272 B/op	       4 allocs/op
+BenchmarkDisableZeroLog-4     	970189784	        12.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4      	16062643	       746.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZeroLog-4   	10577792	      1126 ns/op	      48 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	 9281743	      1341 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZeroLog-4      	 3067664	      3848 ns/op	     272 B/op	       4 allocs/op
 
-BenchmarkDisablePhusLog-4     	1000000000	        11.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	27455464	       426 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfacePhusLog-4   	14598555	       756 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPrintfPhusLog-4      	15283591	       796 ns/op	      16 B/op	       1 allocs/op
-BenchmarkCallerPhusLog-4      	 8991439	      1376 ns/op	     216 B/op	       2 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	        11.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	29821248	       419.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfacePhusLog-4   	14412892	       819.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	13294568	       880.2 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCallerPhusLog-4      	 8059633	      1464 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
