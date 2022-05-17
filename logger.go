@@ -360,8 +360,15 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
+var globalLevel = new(Level)
+
+
+func SetGlobalLevel(level Level) {
+	atomic.StoreUint32((*uint32)(globalLevel), uint32(level))
+}
+
 func (l *Logger) silent(level Level) bool {
-	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level))
+	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) || uint32(level) < atomic.LoadUint32((*uint32)(globalLevel))
 }
 
 func (l *Logger) header(level Level) *Entry {
