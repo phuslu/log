@@ -360,16 +360,8 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
-var globalLevel = new(Level)
-
-// SetGlobalLevelForAllLoggers set global override level for all loggers. If this function called,
-// all loggers will use at least this level.
-func SetGlobalLevelForAllLoggers(level Level) {
-	atomic.StoreUint32((*uint32)(globalLevel), uint32(level))
-}
-
 func (l *Logger) silent(level Level) bool {
-	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level)) || uint32(level) < atomic.LoadUint32((*uint32)(globalLevel))
+	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level))
 }
 
 func (l *Logger) header(level Level) *Entry {
