@@ -363,7 +363,7 @@ var timeOffset, timeZone = func() (int64, string) {
 var globalLevel = new(Level)
 
 
-func SetGlobalLevel(level Level) {
+func SetGlobalLevelForAllLoggers(level Level) {
 	atomic.StoreUint32((*uint32)(globalLevel), uint32(level))
 }
 
