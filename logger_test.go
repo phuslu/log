@@ -498,6 +498,16 @@ func TestLoggerErrorStack(t *testing.T) {
 	logger.Info().Err(errno(3)).Msg("log errno(3) here")
 }
 
+func TestLoggerSetGlobalLevelForAllLoggers(t *testing.T) {
+	logger := Logger{Level: InfoLevel, Writer: &ConsoleWriter{ColorOutput: true}}
+	logger.Info().Msg("log info here")
+	SetGlobalLevelForAllLoggers(WarnLevel)
+	logger.Info().Msg("log silent by global level here")
+	logger.Warn().Msg("log warn here")
+	SetGlobalLevelForAllLoggers(InfoLevel)
+	logger.Info().Msg("log info re-enabled here")
+}
+
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		TimeFormat: TimeFormatUnix,
