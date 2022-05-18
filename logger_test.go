@@ -13,6 +13,7 @@ import (
 
 func TestLoggerDefault(t *testing.T) {
 	notTest = false
+	DefaultLogger.Caller = 1
 
 	Trace().Str("foo", "bar").Msg("hello from Trace")
 	Debug().Str("foo", "bar").Msg("hello from Debug")
