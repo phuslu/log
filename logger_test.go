@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strings"
 	"testing"
 	"time"
 )
@@ -497,6 +498,20 @@ func TestLoggerErrorStack(t *testing.T) {
 	logger.Info().Err(errno(1)).Msg("log errno(1) here")
 	logger.Info().Err(errno(2)).Msg("log errno(2) here")
 	logger.Info().Err(errno(3)).Msg("log errno(3) here")
+}
+
+func TestFixMissingErrEntry(t *testing.T) {
+	var b bytes.Buffer
+	logger := Logger{Level: TraceLevel, Writer: &IOWriter{Writer: &b}}
+	logger.Err(errors.New("test error")).Msg("log error here")
+	if !strings.Contains(b.String(), `"error":"test error"`) {
+		t.Fatal("logger.Err need an error entry if err != nil")
+	}
+	b.Reset()
+	logger.Err(nil).Msg("log info here")
+	if !strings.Contains(b.String(), `"level":"info"`) {
+		t.Fatal("logger.Err need info level if err == nil")
+	}
 }
 
 func BenchmarkLogger(b *testing.B) {

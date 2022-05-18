@@ -241,7 +241,13 @@ func (l *Logger) Err(err error) (e *Entry) {
 		return nil
 	}
 	e = l.header(level)
-	if e != nil && l.Caller > 0 {
+	if e == nil {
+		return nil
+	}
+	if level == ErrorLevel {
+		e = e.Err(err)
+	}
+	if l.Caller > 0 {
 		_, file, line, _ := runtime.Caller(l.Caller)
 		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
