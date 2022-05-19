@@ -1,9 +1,5 @@
 package log
 
-import (
-	"runtime"
-)
-
 // GrpcLogger implements methods to satisfy interface
 // google.golang.org/grpc/grpclog.LoggerV2.
 type GrpcLogger struct {
@@ -30,8 +26,8 @@ func (g *GrpcLogger) Info(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -46,8 +42,8 @@ func (g *GrpcLogger) Infoln(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -62,8 +58,8 @@ func (g *GrpcLogger) Infof(format string, args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -78,8 +74,8 @@ func (g *GrpcLogger) Warning(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -94,8 +90,8 @@ func (g *GrpcLogger) Warningln(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -110,8 +106,8 @@ func (g *GrpcLogger) Warningf(format string, args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -126,8 +122,8 @@ func (g *GrpcLogger) Error(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -142,8 +138,8 @@ func (g *GrpcLogger) Errorln(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -158,8 +154,8 @@ func (g *GrpcLogger) Errorf(format string, args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }
@@ -176,8 +172,8 @@ func (g *GrpcLogger) Fatal(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -194,8 +190,8 @@ func (g *GrpcLogger) Fatalln(args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgs(args...)
 }
@@ -212,8 +208,8 @@ func (g *GrpcLogger) Fatalf(format string, args ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msgf(format, args...)
 }

@@ -1,7 +1,5 @@
 package log
 
-import "runtime"
-
 // GrpcGatewayLogger implements methods to satisfy interface
 // github.com/grpc-ecosystem/go-grpc-middleware/blob/v2/interceptors/logging/logging.go
 type GrpcGatewayLogger struct {
@@ -33,8 +31,8 @@ func (g GrpcGatewayLogger) Debug(msg string) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -49,8 +47,8 @@ func (g GrpcGatewayLogger) Info(msg string) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -65,8 +63,8 @@ func (g GrpcGatewayLogger) Warning(msg string) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msg(msg)
 }
@@ -81,8 +79,8 @@ func (g GrpcGatewayLogger) Error(msg string) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(g.context).Msg(msg)
 }

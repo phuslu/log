@@ -112,8 +112,8 @@ func Printf(format string, v ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Msgf(format, v...)
 }
@@ -128,8 +128,8 @@ func (l *Logger) Trace() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -144,8 +144,8 @@ func (l *Logger) Debug() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -160,8 +160,8 @@ func (l *Logger) Info() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -176,8 +176,8 @@ func (l *Logger) Warn() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -192,8 +192,8 @@ func (l *Logger) Error() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -208,8 +208,8 @@ func (l *Logger) Fatal() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -224,8 +224,8 @@ func (l *Logger) Panic() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -237,8 +237,8 @@ func (l *Logger) Log() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -253,8 +253,8 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -279,8 +279,8 @@ func (l *Logger) Err(err error) (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	return
 }
@@ -298,8 +298,8 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 			if caller < 0 {
 				caller, full = -caller, true
 			}
-			_, file, line, _ := runtime.Caller(caller)
-			e.caller(file, line, full)
+			var rpc [1]uintptr
+			e.caller(callers(caller, rpc[:]), rpc[:], full)
 		}
 	}
 	e.Msgf(format, v...)
@@ -1347,8 +1347,8 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 // Caller adds the file:line of the "caller" key.
 func (e *Entry) Caller(depth int, fullpath bool) *Entry {
 	if e != nil {
-		_, file, line, _ := runtime.Caller(depth)
-		e.caller(file, line, fullpath)
+		var rpc [1]uintptr
+		e.caller(callers(depth, rpc[:]), rpc[:], fullpath)
 	}
 	return e
 }
@@ -1454,7 +1454,12 @@ func (e *Entry) Msgs(args ...interface{}) {
 	e.Msg("")
 }
 
-func (e *Entry) caller(file string, line int, fullpath bool) {
+func (e *Entry) caller(n int, rpc []uintptr, fullpath bool) {
+	if n < 1 {
+		return
+	}
+	frame, _ := runtime.CallersFrames(rpc).Next()
+	file := frame.File
 	if !fullpath {
 		var i int
 		for i = len(file) - 1; i >= 0; i-- {
@@ -1470,7 +1475,7 @@ func (e *Entry) caller(file string, line int, fullpath bool) {
 	e.buf = append(e.buf, ",\"caller\":\""...)
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = strconv.AppendInt(e.buf, int64(frame.Line), 10)
 	e.buf = append(e.buf, "\",\"goid\":"...)
 	e.buf = strconv.AppendInt(e.buf, int64(goid()), 10)
 }
@@ -1960,6 +1965,10 @@ func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday i
 //go:noescape
 //go:linkname absClock time.absClock
 func absClock(abs uint64) (hour, min, sec int)
+
+//go:noescape
+//go:linkname callers runtime.callers
+func callers(skip int, pcbuf []uintptr) int
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //

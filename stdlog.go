@@ -2,7 +2,6 @@ package log
 
 import (
 	stdLog "log"
-	"runtime"
 )
 
 // Std wraps the Logger to provide *stdLog.Logger
@@ -30,8 +29,8 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		_, file, line, _ := runtime.Caller(caller + 2)
-		e.caller(file, line, full)
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
 	}
 	e.Context(w.context).Msg(b2s(p))
 	return len(p), nil
