@@ -33,9 +33,12 @@ func (l *LogrLogger) Info(msg string, keysAndValues ...interface{}) {
 		return
 	}
 	e := l.logger.header(InfoLevel)
-	if l.logger.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.logger.Caller)
-		e.caller(file, line, l.logger.FullpathCaller)
+	if caller, full := l.logger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	e.Context(l.context).KeysAndValues(keysAndValues...).Msg(msg)
 }
@@ -53,9 +56,12 @@ func (l *LogrLogger) Error(err error, msg string, keysAndValues ...interface{}) 
 		return
 	}
 	e := l.logger.header(ErrorLevel)
-	if l.logger.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.logger.Caller)
-		e.caller(file, line, l.logger.FullpathCaller)
+	if caller, full := l.logger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	e.Context(l.context).KeysAndValues(keysAndValues...).Msg(msg)
 }

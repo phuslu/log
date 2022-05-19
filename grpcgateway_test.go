@@ -5,76 +5,76 @@ import (
 )
 
 type grcpGatewayLogger interface {
-	WithValues(keysAndValues ...interface{}) GrcpGatewayLogger
+	WithValues(keysAndValues ...interface{}) GrpcGatewayLogger
 	Debug(msg string)
 	Info(msg string)
 	Warning(msg string)
 	Error(msg string)
 }
 
-func TestGrcpGatewayLoggerNil(t *testing.T) {
-	var gglog grcpGatewayLogger = DefaultLogger.GrcpGateway()
+func TestGrpcGatewayLoggerNil(t *testing.T) {
+	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
 
-	gglog.Debug("Grcp Gateway Debug")
-	gglog.Info("Grcp Gateway Info")
-	gglog.Warning("Grcp Gateway Warning")
-	gglog.Error("Grcp Gateway Error")
+	gglog.Debug("Grpc Gateway Debug")
+	gglog.Info("Grpc Gateway Info")
+	gglog.Warning("Grpc Gateway Warning")
+	gglog.Error("Grpc Gateway Error")
 
 	gglog = gglog.WithValues("a_key", "a_value")
-	gglog.Debug("Grcp Gateway WithValues test")
-	gglog.Info("Grcp Gateway WithValues test")
-	gglog.Warning("Grcp Gateway WithValues test")
-	gglog.Error("Grcp Gateway WithValues test")
+	gglog.Debug("Grpc Gateway WithValues test")
+	gglog.Info("Grpc Gateway WithValues test")
+	gglog.Warning("Grpc Gateway WithValues test")
+	gglog.Error("Grpc Gateway WithValues test")
 }
 
-func TestGrcpGatewayLogger(t *testing.T) {
-	DefaultLogger.Caller = 1
+func TestGrpcGatewayLogger(t *testing.T) {
+	DefaultLogger.Caller = -1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var gglog grcpGatewayLogger = DefaultLogger.GrcpGateway()
+	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
 
-	gglog.Debug("Grcp Gateway Debug")
-	gglog.Info("Grcp Gateway Info")
-	gglog.Warning("Grcp Gateway Warning")
-	gglog.Error("Grcp Gateway Error")
+	gglog.Debug("Grpc Gateway Debug")
+	gglog.Info("Grpc Gateway Info")
+	gglog.Warning("Grpc Gateway Warning")
+	gglog.Error("Grpc Gateway Error")
 
 	gglog = gglog.WithValues("a_key", "a_value")
-	gglog.Debug("Grcp Gateway WithValues test")
-	gglog.Info("Grcp Gateway WithValues test")
-	gglog.Warning("Grcp Gateway WithValues test")
-	gglog.Error("Grcp Gateway WithValues test")
+	gglog.Debug("Grpc Gateway WithValues test")
+	gglog.Info("Grpc Gateway WithValues test")
+	gglog.Warning("Grpc Gateway WithValues test")
+	gglog.Error("Grpc Gateway WithValues test")
 }
 
-func TestGrcpGatewayLoggerLevel(t *testing.T) {
+func TestGrpcGatewayLoggerLevel(t *testing.T) {
 	DefaultLogger.Caller = 1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 	DefaultLogger.Level = noLevel
 
-	var gglog grcpGatewayLogger = DefaultLogger.GrcpGateway()
+	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
 
-	gglog.Debug("Grcp Gateway Debug")
-	gglog.Info("Grcp Gateway Info")
-	gglog.Warning("Grcp Gateway Warning")
-	gglog.Error("Grcp Gateway Error")
+	gglog.Debug("Grpc Gateway Debug")
+	gglog.Info("Grpc Gateway Info")
+	gglog.Warning("Grpc Gateway Warning")
+	gglog.Error("Grpc Gateway Error")
 
 	gglog = gglog.WithValues("a_key", "a_value")
-	gglog.Debug("Grcp Gateway WithValues test")
-	gglog.Info("Grcp Gateway WithValues test")
-	gglog.Warning("Grcp Gateway WithValues test")
-	gglog.Error("Grcp Gateway WithValues test")
+	gglog.Debug("Grpc Gateway WithValues test")
+	gglog.Info("Grpc Gateway WithValues test")
+	gglog.Warning("Grpc Gateway WithValues test")
+	gglog.Error("Grpc Gateway WithValues test")
 }
 
-func TestGrcpGatewayLoggerChangingValues(t *testing.T) {
-	var gglog grcpGatewayLogger = DefaultLogger.GrcpGateway()
+func TestGrpcGatewayLoggerChangingValues(t *testing.T) {
+	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
 
-	gglog.Info("Grcp Gateway Info")
+	gglog.Info("Grpc Gateway Info")
 
 	gglogUnique := gglog
-	gglogUnique.WithValues("a_key", "a_value").Info("Grcp Gateway WithValues test")
-	gglogUnique.WithValues("b_key", "b_value").Info("Grcp Gateway WithValues test")
+	gglogUnique.WithValues("a_key", "a_value").Info("Grpc Gateway WithValues test")
+	gglogUnique.WithValues("b_key", "b_value").Info("Grpc Gateway WithValues test")
 
 	gglogAcumulate := gglog
 	gglogAcumulate = gglogAcumulate.WithValues("a_key", "a_value")
 	gglogAcumulate = gglogAcumulate.WithValues("b_key", "b_value")
-	gglogAcumulate.Info("Grcp Gateway WithValues test")
+	gglogAcumulate.Info("Grpc Gateway WithValues test")
 }

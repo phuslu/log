@@ -51,6 +51,7 @@ type Logger struct {
 	Level Level
 
 	// Caller determines if adds the file:line of the "caller" key.
+	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
 
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.

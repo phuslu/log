@@ -80,10 +80,8 @@ type Logger struct {
 	Level Level
 
 	// Caller determines if adds the file:line of the "caller" key.
+	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
-
-	// FullpathCaller determines whether to use full file path like /a/b/c/d.go:line as "caller" or not.
-	FullpathCaller bool
 
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
@@ -110,9 +108,12 @@ const TimeFormatUnixMs = "\x02"
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
-	if DefaultLogger.Caller > 0 {
-		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	e.Msgf(format, v...)
 }
@@ -123,9 +124,12 @@ func (l *Logger) Trace() (e *Entry) {
 		return nil
 	}
 	e = l.header(TraceLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -136,9 +140,12 @@ func (l *Logger) Debug() (e *Entry) {
 		return nil
 	}
 	e = l.header(DebugLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -149,9 +156,12 @@ func (l *Logger) Info() (e *Entry) {
 		return nil
 	}
 	e = l.header(InfoLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -162,9 +172,12 @@ func (l *Logger) Warn() (e *Entry) {
 		return nil
 	}
 	e = l.header(WarnLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -175,9 +188,12 @@ func (l *Logger) Error() (e *Entry) {
 		return nil
 	}
 	e = l.header(ErrorLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -188,9 +204,12 @@ func (l *Logger) Fatal() (e *Entry) {
 		return nil
 	}
 	e = l.header(FatalLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -201,9 +220,12 @@ func (l *Logger) Panic() (e *Entry) {
 		return nil
 	}
 	e = l.header(PanicLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -211,9 +233,12 @@ func (l *Logger) Panic() (e *Entry) {
 // Log starts a new message with no level.
 func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -224,9 +249,12 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 		return nil
 	}
 	e = l.header(level)
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -247,9 +275,12 @@ func (l *Logger) Err(err error) (e *Entry) {
 	if level == ErrorLevel {
 		e = e.Err(err)
 	}
-	if l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if caller, full := l.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		_, file, line, _ := runtime.Caller(caller)
+		e.caller(file, line, full)
 	}
 	return
 }
@@ -262,9 +293,14 @@ func (l *Logger) SetLevel(level Level) {
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(noLevel)
-	if e != nil && l.Caller > 0 {
-		_, file, line, _ := runtime.Caller(l.Caller)
-		e.caller(file, line, DefaultLogger.FullpathCaller)
+	if e != nil {
+		if caller, full := l.Caller, false; caller != 0 {
+			if caller < 0 {
+				caller, full = -caller, true
+			}
+			_, file, line, _ := runtime.Caller(caller)
+			e.caller(file, line, full)
+		}
 	}
 	e.Msgf(format, v...)
 }

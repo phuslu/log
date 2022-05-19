@@ -5,7 +5,7 @@ import (
 )
 
 func TestGrpcLogger(t *testing.T) {
-	DefaultLogger.Caller = 1
+	DefaultLogger.Caller = -1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
 	var grpclog grpcLoggerV2 = DefaultLogger.Grpc(NewContext(nil).Str("tag", "hi sugar").Value())

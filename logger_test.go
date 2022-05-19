@@ -14,15 +14,19 @@ import (
 
 func TestLoggerDefault(t *testing.T) {
 	notTest = false
-	DefaultLogger.Caller = 1
 
+	DefaultLogger.Caller = 1
 	Trace().Str("foo", "bar").Msg("hello from Trace")
 	Debug().Str("foo", "bar").Msg("hello from Debug")
 	Info().Str("foo", "bar").Msg("hello from Info")
+
+	DefaultLogger.Caller = -1
 	Warn().Str("foo", "bar").Msg("hello from Warn")
 	Error().Str("foo", "bar").Msg("hello from Error")
 	Fatal().Str("foo", "bar").Msg("hello from Fatal")
 	Panic().Str("foo", "bar").Msg("hello from Panic")
+
+	DefaultLogger.Caller = 0
 	Printf("hello from %s", "Printf")
 }
 

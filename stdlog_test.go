@@ -29,7 +29,7 @@ func TestStdWriter(t *testing.T) {
 func TestStdLogger(t *testing.T) {
 	logger := Logger{
 		Level:  DebugLevel,
-		Caller: 1,
+		Caller: -1,
 		Writer: &ConsoleWriter{ColorOutput: true, EndWithMessage: true},
 	}
 
