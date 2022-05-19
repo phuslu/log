@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-type grcpGatewayLogger interface {
+type grpcGatewayLogger interface {
 	WithValues(keysAndValues ...interface{}) GrpcGatewayLogger
 	Debug(msg string)
 	Info(msg string)
@@ -13,7 +13,7 @@ type grcpGatewayLogger interface {
 }
 
 func TestGrpcGatewayLoggerNil(t *testing.T) {
-	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
+	var gglog grpcGatewayLogger = DefaultLogger.GrpcGateway()
 
 	gglog.Debug("Grpc Gateway Debug")
 	gglog.Info("Grpc Gateway Info")
@@ -31,7 +31,7 @@ func TestGrpcGatewayLogger(t *testing.T) {
 	DefaultLogger.Caller = -1
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 
-	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
+	var gglog grpcGatewayLogger = DefaultLogger.GrpcGateway()
 
 	gglog.Debug("Grpc Gateway Debug")
 	gglog.Info("Grpc Gateway Info")
@@ -50,7 +50,7 @@ func TestGrpcGatewayLoggerLevel(t *testing.T) {
 	DefaultLogger.Writer = &ConsoleWriter{ColorOutput: true, EndWithMessage: true}
 	DefaultLogger.Level = noLevel
 
-	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
+	var gglog grpcGatewayLogger = DefaultLogger.GrpcGateway()
 
 	gglog.Debug("Grpc Gateway Debug")
 	gglog.Info("Grpc Gateway Info")
@@ -65,7 +65,7 @@ func TestGrpcGatewayLoggerLevel(t *testing.T) {
 }
 
 func TestGrpcGatewayLoggerChangingValues(t *testing.T) {
-	var gglog grcpGatewayLogger = DefaultLogger.GrpcGateway()
+	var gglog grpcGatewayLogger = DefaultLogger.GrpcGateway()
 
 	gglog.Info("Grpc Gateway Info")
 

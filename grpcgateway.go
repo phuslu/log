@@ -2,29 +2,29 @@ package log
 
 import "runtime"
 
-// GrcpGatewayLogger implements methods to satisfy interface
+// GrpcGatewayLogger implements methods to satisfy interface
 // github.com/grpc-ecosystem/go-grpc-middleware/blob/v2/interceptors/logging/logging.go
-type GrcpGatewayLogger struct {
+type GrpcGatewayLogger struct {
 	logger  Logger
 	context Context
 }
 
-// GrcpGateway wraps the Logger to provide a GrcpGateway logger
-func (l *Logger) GrcpGateway() GrcpGatewayLogger {
-	return GrcpGatewayLogger{
+// GrpcGateway wraps the Logger to provide a GrpcGateway logger
+func (l *Logger) GrpcGateway() GrpcGatewayLogger {
+	return GrpcGatewayLogger{
 		logger: *l,
 	}
 }
 
 // WithValues adds some key-value pairs of context to a logger.
 // See Info for documentation on how key/value pairs work.
-func (g GrcpGatewayLogger) WithValues(keysAndValues ...interface{}) GrcpGatewayLogger {
+func (g GrpcGatewayLogger) WithValues(keysAndValues ...interface{}) GrpcGatewayLogger {
 	g.context = append(g.context, NewContext(nil).KeysAndValues(keysAndValues...).Value()...)
 	return g
 }
 
 // Debug logs a debug with the message and key/value pairs as context.
-func (g GrcpGatewayLogger) Debug(msg string) {
+func (g GrpcGatewayLogger) Debug(msg string) {
 	if g.logger.silent(DebugLevel) {
 		return
 	}
@@ -40,7 +40,7 @@ func (g GrcpGatewayLogger) Debug(msg string) {
 }
 
 // Info logs an info with the message and key/value pairs as context.
-func (g GrcpGatewayLogger) Info(msg string) {
+func (g GrpcGatewayLogger) Info(msg string) {
 	if g.logger.silent(InfoLevel) {
 		return
 	}
@@ -56,7 +56,7 @@ func (g GrcpGatewayLogger) Info(msg string) {
 }
 
 // Warning logs a warning with the message and key/value pairs as context.
-func (g GrcpGatewayLogger) Warning(msg string) {
+func (g GrpcGatewayLogger) Warning(msg string) {
 	if g.logger.silent(WarnLevel) {
 		return
 	}
@@ -72,7 +72,7 @@ func (g GrcpGatewayLogger) Warning(msg string) {
 }
 
 // Error logs an error with the message and key/value pairs as context.
-func (g GrcpGatewayLogger) Error(msg string) {
+func (g GrpcGatewayLogger) Error(msg string) {
 	if g.logger.silent(ErrorLevel) {
 		return
 	}
