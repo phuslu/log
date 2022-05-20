@@ -23,29 +23,6 @@ var DefaultLogger = Logger{
 	Writer:     IOWriter{os.Stderr},
 }
 
-var (
-	// Trace starts a new message with trace level.
-	Trace = DefaultLogger.Trace
-
-	// Debug starts a new message with trace level.
-	Debug = DefaultLogger.Debug
-
-	// Info starts a new message with trace level.
-	Info = DefaultLogger.Info
-
-	// Warn starts a new message with trace level.
-	Warn = DefaultLogger.Warn
-
-	// Error starts a new message with trace level.
-	Error = DefaultLogger.Error
-
-	// Fatal starts a new message with trace level.
-	Fatal = DefaultLogger.Fatal
-
-	// Panic starts a new message with trace level.
-	Panic = DefaultLogger.Panic
-)
-
 // Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Entry struct {
 	buf   []byte
@@ -104,6 +81,118 @@ const TimeFormatUnix = "\x01"
 // TimeFormatUnixMs defines a time format that makes time fields to be
 // serialized as Unix timestamp integers in milliseconds.
 const TimeFormatUnixMs = "\x02"
+
+// Trace starts a new message with trace level.
+func Trace() (e *Entry) {
+	if DefaultLogger.silent(TraceLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(TraceLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Debug starts a new message with debug level.
+func Debug() (e *Entry) {
+	if DefaultLogger.silent(DebugLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(DebugLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Info starts a new message with info level.
+func Info() (e *Entry) {
+	if DefaultLogger.silent(InfoLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(InfoLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Warn starts a new message with warning level.
+func Warn() (e *Entry) {
+	if DefaultLogger.silent(WarnLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(WarnLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Error starts a new message with error level.
+func Error() (e *Entry) {
+	if DefaultLogger.silent(ErrorLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(ErrorLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Fatal starts a new message with fatal level.
+func Fatal() (e *Entry) {
+	if DefaultLogger.silent(FatalLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(FatalLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
+
+// Panic starts a new message with panic level.
+func Panic() (e *Entry) {
+	if DefaultLogger.silent(PanicLevel) {
+		return nil
+	}
+	e = DefaultLogger.header(PanicLevel)
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	}
+	return
+}
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
