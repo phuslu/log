@@ -45,6 +45,21 @@ func (w IOWriter) WriteEntry(e *Entry) (n int, err error) {
 	return w.Writer.Write(e.buf)
 }
 
+// IOWriteCloser wraps an io.IOWriteCloser to Writer.
+type IOWriteCloser struct {
+	io.WriteCloser
+}
+
+// WriteEntry implements Writer.
+func (w IOWriteCloser) WriteEntry(e *Entry) (n int, err error) {
+	return w.WriteCloser.Write(e.buf)
+}
+
+// Close implements Writer.
+func (w IOWriteCloser) Close() (err error) {
+	return w.WriteCloser.Close()
+}
+
 // ObjectMarshaler provides a strongly-typed and encoding-agnostic interface
 // to be implemented by types used with Entry's Object methods.
 type ObjectMarshaler interface {

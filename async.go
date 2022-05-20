@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io"
 	"sync"
 )
 
@@ -21,6 +22,11 @@ type AsyncWriter struct {
 func (w *AsyncWriter) Close() (err error) {
 	w.ch <- nil
 	err = <-w.chClose
+	if closer, ok := w.Writer.(io.Closer); ok {
+		if err1 := closer.Close(); err1 != nil {
+			err = err1
+		}
+	}
 	return
 }
 
