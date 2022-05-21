@@ -28,10 +28,9 @@ import (
 //
 // Whenever a new logfile gets created, old log files may be deleted.  The most
 // recent files according to filesystem modified time will be retained, up to a
-// number equal to MaxBackups (or all of them if MaxBackups is 0).  Any files
-// with an encoded timestamp older than MaxAge days are deleted, regardless of
-// MaxBackups.  Note that the time encoded in the timestamp is the rotation
-// time, which may differ from the last time that file was written to.
+// number equal to MaxBackups (or all of them if MaxBackups is 0). Note that the
+// time encoded in the timestamp is the rotation time, which may differ from the
+// last time that file was written to.
 type FileWriter struct {
 	// Filename is the file to write logs to.  Backup log files will be retained
 	// in the same directory.
