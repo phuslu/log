@@ -12,6 +12,7 @@ func TestTSVLogger(t *testing.T) {
 	logger.New().
 		Timestamp().
 		TimestampMS().
+		Caller(1).
 		Bool(true).
 		Bool(false).
 		Byte('m').

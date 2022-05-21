@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -115,13 +114,24 @@ func (e *TSVEntry) TimestampMS() *TSVEntry {
 
 // Caller adds the file:line of to the entry.
 func (e *TSVEntry) Caller(depth int) *TSVEntry {
-	_, file, line, _ := runtime.Caller(depth)
-	if i := strings.LastIndex(file, "/"); i >= 0 {
+	var rpc [1]uintptr
+	i := callers(depth, rpc[:])
+	if i < 1 {
+		return e
+	}
+	frame, _ := runtime.CallersFrames(rpc[:]).Next()
+	file := frame.File
+	for i = len(file) - 1; i >= 0; i-- {
+		if file[i] == '/' {
+			break
+		}
+	}
+	if i > 0 {
 		file = file[i+1:]
 	}
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+	e.buf = strconv.AppendInt(e.buf, int64(frame.Line), 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }
