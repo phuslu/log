@@ -1449,10 +1449,15 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 }
 
 // Caller adds the file:line of the "caller" key.
-func (e *Entry) Caller(depth int, fullpath bool) *Entry {
+// If depth is negative, adds the full /path/to/file:line of the "caller" key.
+func (e *Entry) Caller(depth int) *Entry {
 	if e != nil {
+		var full bool
 		var rpc [1]uintptr
-		e.caller(callers(depth, rpc[:]), rpc[:], fullpath)
+		if depth < 0 {
+			depth, full = -depth, true
+		}
+		e.caller(callers(depth, rpc[:]), rpc[:], full)
 	}
 	return e
 }

@@ -40,7 +40,7 @@ func TestLoggerInfo(t *testing.T) {
 		Level: ParseLevel("debug"),
 	}
 	logger.Info().
-		Caller(1, false).
+		Caller(-1).
 		Bool("bool", true).
 		Bools("bools", []bool{false}).
 		Bools("bools", []bool{true, false}).
@@ -115,7 +115,7 @@ func TestLoggerInfo(t *testing.T) {
 
 func TestLoggerNil(t *testing.T) {
 	e := Info()
-	e.Caller(1, false).Str("foo", "bar").Int("num", 42).Msgf("this is a nil entry test")
+	e.Caller(1).Str("foo", "bar").Int("num", 42).Msgf("this is a nil entry test")
 
 	ipv4Addr, ipv4Net, err := net.ParseCIDR("192.0.2.1/24")
 	if err != nil {
@@ -126,7 +126,7 @@ func TestLoggerNil(t *testing.T) {
 		Level: ParseLevel("info"),
 	}
 	logger.Debug().
-		Caller(1, false).
+		Caller(1).
 		Bool("bool", true).
 		Bools("bools", []bool{true, false}).
 		Dur("1_hour", time.Hour).
@@ -204,7 +204,7 @@ func TestLoggerInterface(t *testing.T) {
 	cyclicStruct.Value = &cyclicStruct
 
 	logger.Info().
-		Caller(1, false).
+		Caller(-1).
 		Interface("a_cyclic_struct", cyclicStruct).
 		Msgf("this is a cyclic struct test")
 }
