@@ -926,7 +926,7 @@ func main() {
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
 [godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
-[godoc]: https://godocs.io/github.com/phuslu/log
+[godoc]: https://pkg.go.dev/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
