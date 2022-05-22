@@ -321,6 +321,54 @@ func main() {
 }
 ```
 
+### Rotating File Writer with compression
+
+To rotating log file hourly and compressing after rotation, use `FileWriter.Cleaner`.
+```go
+package main
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+
+	"github.com/phuslu/log"
+	"github.com/robfig/cron/v3"
+)
+
+func main() {
+	logger := log.Logger{
+		Level: log.ParseLevel("info"),
+		Writer: &log.FileWriter{
+			Filename: "main.log",
+			MaxSize:  500 * 1024 * 1024,
+			Cleaner:  func(filename string, maxBackups int, matches []os.FileInfo) {
+				var dir = filepath.Dir(filename)
+				for i, fi := range matches {
+					filename := filepath.Join(dir, fi.Name())
+					switch {
+					case i > maxBackups:
+						os.Remove(filename)
+					case !strings.HasSuffix(filename, ".gz"):
+						go exec.Command("gzip", filename).Run()
+					}
+				}
+			},
+		},
+	}
+
+	runner := cron.New(cron.WithLocation(time.UTC))
+	runner.AddFunc("0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	go runner.Run()
+
+	for {
+		time.Sleep(time.Second)
+		logger.Info().Msg("hello world")
+	}
+}
+```
+
 ### Random Sample Logger:
 
 To logging only 5% logs, use below idiom.
