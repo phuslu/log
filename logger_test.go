@@ -96,6 +96,7 @@ func TestLoggerInfo(t *testing.T) {
 		TimeFormat("now_3", time.RFC3339, timeNow()).
 		TimeFormat("now_3_1", TimeFormatUnix, timeNow()).
 		TimeFormat("now_3_2", TimeFormatUnixMs, timeNow()).
+		TimeFormat("now_3_3", TimeFormatUnixWithMs, timeNow()).
 		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
@@ -354,6 +355,9 @@ func TestLoggerTimeFormat(t *testing.T) {
 
 	logger.TimeFormat = TimeFormatUnixMs
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix_ms time log entry")
+
+	logger.TimeFormat = TimeFormatUnixWithMs
+	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is unix_with_ms time log entry")
 
 	logger.TimeFormat = time.RFC3339Nano
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is rfc3339 time log entry")

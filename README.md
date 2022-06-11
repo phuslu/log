@@ -58,7 +58,7 @@ type Logger struct {
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses RFC3339 with millisecond if empty.
-	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
+	// If set with `TimeFormatUnix/TimeFormatUnixMs/TimeFormatUnixWithMs`, timestamps are formated.
 	TimeFormat string
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
@@ -180,9 +180,19 @@ func main() {
 	}
 
 	log.Info().Str("foo", "bar").Msgf("hello %s", "world")
+
+	logger := log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "ts",
+		TimeFormat: log.TimeFormatUnixWithMs,
+	}
+
+	logger.Log().Str("foo", "bar").Msg("")
 }
 
-// Output: {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
+// Output:
+//    {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
+//    {"ts":1257894000.000,"foo":"bar"}
 ```
 
 ### Pretty Console Writer

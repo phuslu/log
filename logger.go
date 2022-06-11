@@ -97,6 +97,10 @@ const TimeFormatUnix = "\x01"
 // serialized as Unix timestamp integers in milliseconds.
 const TimeFormatUnixMs = "\x02"
 
+// TimeFormatUnixWithMs defines a time format that makes time fields to be
+// serialized as Unix timestamp timestamp floats.
+const TimeFormatUnixWithMs = "\x03"
+
 // Trace starts a new message with trace level.
 func Trace() (e *Entry) {
 	if DefaultLogger.silent(TraceLevel) {
@@ -584,6 +588,39 @@ func (l *Logger) header(level Level) *Entry {
 		tmp[0] = smallsString[b]
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
+	case TimeFormatUnixWithMs:
+		sec, nsec, _ := now()
+		// 1595759807.105
+		var tmp [14]byte
+		// milli seconds
+		a := int64(nsec) / 1000000
+		b := a % 100 * 2
+		tmp[13] = smallsString[b+1]
+		tmp[12] = smallsString[b]
+		tmp[11] = byte('0' + a/100)
+		tmp[10] = '.'
+		// seconds
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[9] = smallsString[b+1]
+		tmp[8] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[7] = smallsString[b+1]
+		tmp[6] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[5] = smallsString[b+1]
+		tmp[4] = smallsString[b]
+		b = sec % 100 * 2
+		sec /= 100
+		tmp[3] = smallsString[b+1]
+		tmp[2] = smallsString[b]
+		b = sec % 100 * 2
+		tmp[1] = smallsString[b+1]
+		tmp[0] = smallsString[b]
+		// append to e.buf
+		e.buf = append(e.buf, tmp[:]...)
 	default:
 		e.buf = append(e.buf, '"')
 		e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
@@ -639,6 +676,10 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 		e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
 	case TimeFormatUnixMs:
 		e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000, 10)
+	case TimeFormatUnixWithMs:
+		e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
+		e.buf = append(e.buf, '.')
+		e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000%1000, 10)
 	default:
 		e.buf = append(e.buf, '"')
 		e.buf = t.AppendFormat(e.buf, timefmt)
@@ -685,6 +726,10 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 			e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
 		case TimeFormatUnixMs:
 			e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000, 10)
+		case TimeFormatUnixWithMs:
+			e.buf = strconv.AppendInt(e.buf, t.Unix(), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, t.UnixNano()/1000000%1000, 10)
 		default:
 			e.buf = append(e.buf, '"')
 			e.buf = t.AppendFormat(e.buf, timefmt)
