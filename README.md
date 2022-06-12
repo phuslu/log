@@ -1,4 +1,4 @@
-# phuslog - Structured Logging Made Easy
+# phuslog - High performance structured logging
 
 [![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
@@ -66,7 +66,7 @@ type Logger struct {
 }
 ```
 
-### ConsoleWriter & FileWriter
+### ConsoleWriter
 ```go
 // ConsoleWriter parses the JSON input and writes it in a colorized, human-friendly format to Writer.
 // IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
@@ -91,7 +91,23 @@ type ConsoleWriter struct {
 	Formatter func(w io.Writer, args *FormatterArgs) (n int, err error)
 }
 
+// FormatterArgs is a parsed sturct from json input
+type FormatterArgs struct {
+	Time      string // "2019-07-10T05:35:54.277Z"
+	Message   string // "a structure message"
+	Level     string // "info"
+	Caller    string // "main.go:123"
+	Goid      string // "1"
+	Stack     string // "<stack string>"
+	KeyValues []struct {
+		Key       string // "foo"
+		Value     string // "bar"
+	}
+}
+```
 
+### FileWriter
+```go
 // FileWriter is an Writer that writes to the specified filename.
 type FileWriter struct {
 	// Filename is the file to write logs to.  Backup log files will be retained
@@ -134,8 +150,10 @@ type FileWriter struct {
 	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
 }
 ```
-> Note: FileWriter implements log.Writer and io.Writer interfaces both, it is a drop-in replacement of [lumberjack][lumberjack].
-> FileWriter also creates a symlink to the current logging file, it requires administrator privileges on Windows.
+*Highlights*:
+- FileWriter implements log.Writer and io.Writer interfaces both, it is a recommended alternative to [lumberjack][lumberjack].
+- FileWriter creates a symlink to the current logging file, it requires administrator privileges on Windows.
+- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) then reach its MaxSize.
 
 ## Getting Started
 
@@ -184,7 +202,7 @@ func main() {
 	logger := log.Logger{
 		Level:      log.InfoLevel,
 		TimeField:  "ts",
-		TimeFormat: log.TimeFormatUnixWithMs,
+		TimeFormat: log.TimeFormatUnixMs,
 	}
 
 	logger.Log().Str("foo", "bar").Msg("")
@@ -192,7 +210,7 @@ func main() {
 
 // Output:
 //    {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
-//    {"ts":1257894000.000,"foo":"bar"}
+//    {"ts":1257894000000,"foo":"bar"}
 ```
 
 ### Pretty Console Writer
@@ -361,7 +379,7 @@ func main() {
 					case i > maxBackups:
 						os.Remove(filename)
 					case !strings.HasSuffix(filename, ".gz"):
-						go exec.Command("gzip", filename).Run()
+						go exec.Command("nice", "gzip", filename).Run()
 					}
 				}
 			},
@@ -840,23 +858,23 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	72864122	       155.3 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZap-4          	 9489657	      1301 ns/op	     192 B/op	       1 allocs/op
-BenchmarkInterfaceZap-4       	 6692570	      1779 ns/op	     208 B/op	       2 allocs/op
-BenchmarkPrintfZap-4          	 6956133	      1704 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZap-4          	 3169976	      3855 ns/op	     424 B/op	       3 allocs/op
+BenchmarkDisableZap-4         	122571100	       100.7 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZap-4          	11918024	       994.0 ns/op	     192 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 8115175	      1453 ns/op	     208 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	 9160558	      1277 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 4207305	      2854 ns/op	     424 B/op	       3 allocs/op
 
-BenchmarkDisableZeroLog-4     	970189784	        12.13 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalZeroLog-4      	16062643	       746.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfaceZeroLog-4   	10577792	      1126 ns/op	      48 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 9281743	      1341 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZeroLog-4      	 3067664	      3848 ns/op	     272 B/op	       4 allocs/op
+BenchmarkDisableZeroLog-4     	1000000000	         8.896 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4      	18363427	       653.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZeroLog-4   	14085961	       849.5 ns/op	      48 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	12356112	      1009 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZeroLog-4      	 4276040	      2838 ns/op	     272 B/op	       4 allocs/op
 
-BenchmarkDisablePhusLog-4     	1000000000	        11.51 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	29821248	       419.0 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfacePhusLog-4   	14412892	       819.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPrintfPhusLog-4      	13294568	       880.2 ns/op	      16 B/op	       1 allocs/op
-BenchmarkCallerPhusLog-4      	 8059633	      1464 ns/op	     216 B/op	       2 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	         8.877 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	38010949	       314.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfacePhusLog-4   	19578997	       600.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	18858850	       672.0 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCallerPhusLog-4      	11047920	      1081 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
@@ -995,8 +1013,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [high-performance]: https://github.com/phuslu/log#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
-[play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
-[play-customize]: https://go.dev/play/p/emTsJJKUGXZ
+[play-customize-img]: https://img.shields.io/badge/playground-WudQ__2rGj7R-29BEB0?style=flat&logo=go
+[play-customize]: https://go.dev/play/p/WudQ_2rGj7R
 [play-multiio-img]: https://img.shields.io/badge/playground-MH--J3Je--KEq-29BEB0?style=flat&logo=go
 [play-multiio]: https://go.dev/play/p/MH-J3Je-KEq
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
