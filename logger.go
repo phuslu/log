@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"sync"
@@ -1489,6 +1490,19 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 		e.buf = append(e.buf, hex[c>>4])
 		e.buf = append(e.buf, hex[c&0xF])
 	}
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// Type adds type of the key using reflection to the entry.
+func (e *Entry) Type(key string, v interface{}) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = append(e.buf, reflect.TypeOf(v).String()...)
 	e.buf = append(e.buf, '"')
 	return e
 }

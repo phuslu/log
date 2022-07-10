@@ -100,6 +100,7 @@ func TestLoggerInfo(t *testing.T) {
 		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
+		Type("ip_type", ipv4Addr).
 		Stringer("ip_str", ipv4Addr).
 		GoStringer("big_edian", binary.BigEndian).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
@@ -182,6 +183,7 @@ func TestLoggerNil(t *testing.T) {
 		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
 		TimeDiff("time_diff_2", time.Time{}, timeNow()).
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
+		Type("ip_type", ipv4Addr).
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
