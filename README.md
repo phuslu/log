@@ -265,6 +265,40 @@ log.Error().Msgf("hello glog %s", "Error")
 // E0725 09:59:57.504247 19 console_test.go:185] hello glog Error
 ```
 
+### Formatting Logfmt output
+
+To log with logfmt format, also using `ConsoleWriter.Formatter`. [![playground][play-logfmt-img]][play-logfmt]
+
+```go
+package main
+
+import (
+	"io"
+	"os"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	log.DefaultLogger = log.Logger{
+		Level:      log.InfoLevel,
+		Caller:     1,
+		TimeField:  "ts",
+		TimeFormat: log.TimeFormatUnixWithMs,
+		Writer: &log.ConsoleWriter{
+			Formatter: log.LogfmtFormatter{"ts"}.Formatter,
+			Writer:    io.MultiWriter(os.Stdout, os.Stderr),
+		},
+	}
+
+	log.Info().Str("foo", "bar").Int("no", 42).Msgf("a logfmt %s", "info")
+}
+
+// Output:
+// ts=1257894000.000 level=info goid=1 caller="prog.go:20" foo="bar" no=42 "a logfmt info"
+// ts=1257894000.000 level=info goid=1 caller="prog.go:20" foo="bar" no=42 "a logfmt info"
+```
+
 ### Rotating File Writer
 
 To log to a daily-rotating file, use `FileWriter`. [![playground][play-file-img]][play-file]
@@ -1026,6 +1060,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
 [play-formatting-img]: https://img.shields.io/badge/playground-UmJmLxYXwRO-29BEB0?style=flat&logo=go
 [play-formatting]: https://go.dev/play/p/UmJmLxYXwRO
+[play-logfmt-img]: https://img.shields.io/badge/playground-7aSa--rxHmqw-29BEB0?style=flat&logo=go
+[play-logfmt]: https://go.dev/play/p/7aSa-rxHmqw
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://go.dev/play/p/oAVAo302faf
 [play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go

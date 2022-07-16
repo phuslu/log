@@ -1,11 +1,13 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestIsTerminal(t *testing.T) {
@@ -246,4 +248,76 @@ func TestConsoleWriterInvaild(t *testing.T) {
 	if err != nil {
 		t.Errorf("test plain text console writer error: %+v", err)
 	}
+}
+
+func TestConsoleWriterLogfmt(t *testing.T) {
+	DefaultLogger.Writer = &ConsoleWriter{
+		Formatter: LogfmtFormatter{"time"}.Formatter,
+	}
+
+	Info().
+		Caller(-1).
+		Bool("bool", true).
+		Bools("bools", []bool{false}).
+		Bools("bools", []bool{true, false}).
+		Dur("1_sec", time.Second+2*time.Millisecond+30*time.Microsecond+400*time.Nanosecond).
+		Dur("1_sec", -time.Second+2*time.Millisecond+30*time.Microsecond+400*time.Nanosecond).
+		Durs("hour_minute_second", []time.Duration{time.Hour, time.Minute, time.Second, -time.Second}).
+		Err(errors.New("test error")).
+		Err(nil).
+		AnErr("an_error", fmt.Errorf("an %w", errors.New("test error"))).
+		AnErr("an_error", nil).
+		Int64("goid", Goid()).
+		Float32("float32", 1.111).
+		Floats32("float32", []float32{1.111}).
+		Floats32("float32", []float32{1.111, 2.222}).
+		Float64("float64", 1.111).
+		Floats64("float64", []float64{1.111, 2.222}).
+		Uint64("uint64", 1234567890).
+		Uint32("uint32", 123).
+		Uint16("uint16", 123).
+		Uint8("uint8", 123).
+		Int64("int64", 1234567890).
+		Int32("int32", 123).
+		Int16("int16", 123).
+		Int8("int8", 123).
+		Int("int", 123).
+		Uints64("uints64", []uint64{1234567890, 1234567890}).
+		Uints32("uints32", []uint32{123, 123}).
+		Uints16("uints16", []uint16{123, 123}).
+		Uints8("uints8", []uint8{123, 123}).
+		Uints("uints", []uint{123, 123}).
+		Ints64("ints64", []int64{1234567890, 1234567890}).
+		Ints32("ints32", []int32{123, 123}).
+		Ints16("ints16", []int16{123, 123}).
+		Ints8("ints8", []int8{123, 123}).
+		Ints("ints", []int{123, 123}).
+		Func(func(e *Entry) { e.Str("func", "func_output") }).
+		RawJSON("raw_json", []byte("{\"a\":1,\"b\":2}")).
+		RawJSONStr("raw_json", "{\"c\":1,\"d\":2}").
+		Hex("hex", []byte("\"<>?'")).
+		Bytes("bytes1", []byte("bytes1")).
+		Bytes("bytes2", []byte("\"<>?'")).
+		BytesOrNil("bytes3", []byte("\"<>?'")).
+		Bytes("nil_bytes_1", nil).
+		BytesOrNil("nil_bytes_2", nil).
+		Str("foobar", "\"\\\t\r\n\f\b\x00<>?'").
+		Strs("strings", []string{"a", "b", "\"<>?'"}).
+		Stringer("stringer", nil).
+		GoStringer("gostringer", nil).
+		Time("now_1", timeNow().In(time.FixedZone("UTC-7", -7*60*60))).
+		Times("now_2", []time.Time{timeNow(), timeNow()}).
+		TimeFormat("now_3", time.RFC3339, timeNow()).
+		TimeFormat("now_3_1", TimeFormatUnix, timeNow()).
+		TimeFormat("now_3_2", TimeFormatUnixMs, timeNow()).
+		TimeFormat("now_3_3", TimeFormatUnixWithMs, timeNow()).
+		TimesFormat("now_4", time.RFC3339, []time.Time{timeNow(), timeNow()}).
+		TimeDiff("time_diff_1", timeNow().Add(time.Second), timeNow()).
+		TimeDiff("time_diff_2", time.Time{}, timeNow()).
+		Xid("xid", NewXID()).
+		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
+		Interface("console_writer", ConsoleWriter{ColorOutput: true}).
+		Interface("time.Time", timeNow()).
+		KeysAndValues("foo", "bar", "number", 42).
+		Msg("aaaa 'b' cccc")
 }

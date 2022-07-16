@@ -175,4 +175,46 @@ func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err e
 	return out.Write(b.B)
 }
 
+type LogfmtFormatter struct {
+	TimeField string
+}
+
+func (f LogfmtFormatter) Formatter(out io.Writer, args *FormatterArgs) (n int, err error) {
+	b := bbpool.Get().(*bb)
+	b.B = b.B[:0]
+	defer bbpool.Put(b)
+
+	fmt.Fprintf(b, "%s=%s ", f.TimeField, args.Time)
+	if args.Level != "" && args.Level[0] != '?' {
+		fmt.Fprintf(b, "level=%s ", args.Level)
+	}
+	if args.Caller != "" {
+		fmt.Fprintf(b, "goid=%s caller=%s ", args.Goid, strconv.Quote(args.Caller))
+	}
+	if args.Stack != "" {
+		fmt.Fprintf(b, "stack=%s ", strconv.Quote(args.Stack))
+	}
+	// key and values
+	for _, kv := range args.KeyValues {
+		switch kv.ValueType {
+		case 't':
+			fmt.Fprintf(b, "%s ", kv.Key)
+		case 'f':
+			fmt.Fprintf(b, "%s=false ", kv.Key)
+		case 'n':
+			fmt.Fprintf(b, "%s=%s ", kv.Key, kv.Value)
+		case 'S':
+			fmt.Fprintf(b, "%s=%s ", kv.Key, kv.Value)
+		case 's':
+			fmt.Fprintf(b, "%s=%s ", kv.Key, strconv.Quote(kv.Value))
+		default:
+			fmt.Fprintf(b, "%s=%s ", kv.Key, strconv.Quote(kv.Value))
+		}
+	}
+	// message
+	fmt.Fprintf(b, "%s\n", strconv.Quote(args.Message))
+
+	return out.Write(b.B)
+}
+
 var _ Writer = (*ConsoleWriter)(nil)
