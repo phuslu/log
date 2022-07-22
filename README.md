@@ -240,24 +240,34 @@ log.Error().Err(errors.New("an error")).Msg("hello world")
 
 ### Formatting Console Writer
 
-To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-formatting-img]][play-formatting]
+To log with user-defined format(e.g. glog), using `ConsoleWriter.Formatter`. [![playground][play-glog-img]][play-glog]
 
 ```go
-log.DefaultLogger = log.Logger{
+package main
+
+import (
+	"io"
+	"fmt"
+	"github.com/phuslu/log"
+)
+
+var glog = &log.Logger{
 	Level:      log.InfoLevel,
 	Caller:     1,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{
 		Formatter: func (w io.Writer, a *log.FormatterArgs) (int, error) {
-			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", strings.ToUpper(a.Level)[0],
-				a.Time, a.Goid, a.Caller, a.Message, a.Stack)
+			return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", a.Level[0]-32,
+						a.Time, a.Goid, a.Caller, a.Message, a.Stack)
 		},
 	},
 }
 
-log.Info().Msgf("hello glog %s", "Info")
-log.Warn().Msgf("hello glog %s", "Warn")
-log.Error().Msgf("hello glog %s", "Error")
+func main() {
+	glog.Info().Msgf("hello glog %s", "Info")
+	glog.Warn().Msgf("hello glog %s", "Warn")
+	glog.Error().Msgf("hello glog %s", "Error")
+}
 
 // Output:
 // I0725 09:59:57.503246 19 console_test.go:183] hello glog Info
@@ -1058,8 +1068,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
 [play-pretty]: https://go.dev/play/p/SCcXG33esvI
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
-[play-formatting-img]: https://img.shields.io/badge/playground-UmJmLxYXwRO-29BEB0?style=flat&logo=go
-[play-formatting]: https://go.dev/play/p/UmJmLxYXwRO
+[play-glog-img]: https://img.shields.io/badge/playground-UmJmLxYXwRO-29BEB0?style=flat&logo=go
+[play-glog]: https://go.dev/play/p/UmJmLxYXwRO
 [play-logfmt-img]: https://img.shields.io/badge/playground-7aSa--rxHmqw-29BEB0?style=flat&logo=go
 [play-logfmt]: https://go.dev/play/p/7aSa-rxHmqw
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
