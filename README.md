@@ -726,7 +726,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var msg = "The quick brown fox jumps over the lazy dog"
+const msg = "The quick brown fox jumps over the lazy dog"
 var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
 func BenchmarkDisableZap(b *testing.B) {
@@ -858,23 +858,23 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	122571100	       100.7 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZap-4          	11918024	       994.0 ns/op	     192 B/op	       1 allocs/op
-BenchmarkInterfaceZap-4       	 8115175	      1453 ns/op	     208 B/op	       2 allocs/op
-BenchmarkPrintfZap-4          	 9160558	      1277 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZap-4          	 4207305	      2854 ns/op	     424 B/op	       3 allocs/op
+BenchmarkDisableZap-4         	100000000	       125.1 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZap-4          	10482348	      1199 ns/op	     192 B/op	       1 allocs/op
+BenchmarkPrintfZap-4          	 7649223	      1524 ns/op	      80 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 6999212	      1753 ns/op	     208 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 3496068	      3328 ns/op	     424 B/op	       3 allocs/op
 
-BenchmarkDisableZeroLog-4     	1000000000	         8.896 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalZeroLog-4      	18363427	       653.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfaceZeroLog-4   	14085961	       849.5 ns/op	      48 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	12356112	      1009 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZeroLog-4      	 4276040	      2838 ns/op	     272 B/op	       4 allocs/op
+BenchmarkDisableZeroLog-4     	1000000000	        10.39 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4      	17467065	       704.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfZeroLog-4      	10217528	      1173 ns/op	      80 B/op	       1 allocs/op
+BenchmarkInterfaceZeroLog-4   	10827093	      1078 ns/op	      48 B/op	       1 allocs/op
+BenchmarkCallerZeroLog-4      	 3527376	      3424 ns/op	     272 B/op	       4 allocs/op
 
-BenchmarkDisablePhusLog-4     	1000000000	         8.877 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	38010949	       314.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfacePhusLog-4   	19578997	       600.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPrintfPhusLog-4      	18858850	       672.0 ns/op	      16 B/op	       1 allocs/op
-BenchmarkCallerPhusLog-4      	11047920	      1081 ns/op	     216 B/op	       2 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	         9.953 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	32007682	       385.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	16776183	       682.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfacePhusLog-4   	16598343	       718.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCallerPhusLog-4      	10233750	      1205 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
