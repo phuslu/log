@@ -15,7 +15,7 @@
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
     - `MultiLevelWriter`, *multiple level dispatch*
-    - `SyslogWriter`, *syslog server logging*
+    - `SyslogWriter`, *memory efficient syslog*
     - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
     - `AsyncWriter`, *asynchronously writing*
@@ -544,33 +544,69 @@ func main() {
 }
 ```
 
-### SyslogWriter & JournalWriter & EventlogWriter
+### SyslogWriter
 
-To log to a syslog server, using `SyslogWriter`.
+`SyslogWriter` is a memory-efficient, cross-platform, dependency-free syslog writer, outperforms all other structured logging libraries.
 
 ```go
-log.DefaultLogger.Writer = &log.SyslogWriter{
-	// Network : "unixgram",
-	// Address : "/run/systemd/journal/syslog",
-	Network : "tcp",
-	Address : "192.168.0.2:601",
-	Tag     : "",
-	Marker  : "@cee:",
-	Dial    : net.Dial,
+package main
+
+import (
+	"net"
+	"time"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	go func() {
+		ln, _ := net.Listen("tcp", "127.0.0.1:1601")
+		for {
+			conn, _ := ln.Accept()
+			go func(c net.Conn) {
+				b := make([]byte, 8192)
+				n, _ := conn.Read(b)
+				println(string(b[:n]))
+			}(conn)
+		}
+	}()
+
+	syslog := log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "ts",
+		TimeFormat: log.TimeFormatUnixMs,
+		Writer: &log.SyslogWriter{
+			Network: "tcp",            // "unixgram",
+			Address: "127.0.0.1:1601", // "/run/systemd/journal/syslog",
+			Tag:     "",
+			Marker:  "@cee:",
+			Dial:    net.Dial,
+		},
+	}
+
+	syslog.Info().Str("foo", "bar").Int("an", 42).Msg("a syslog info")
+	syslog.Warn().Str("foo", "bar").Int("an", 42).Msg("a syslog warn")
+	time.Sleep(2)
 }
 
-log.Info().Msg("hi")
-
-// Output: <6>Oct 5 16:25:38 [237]: @cee:{"time":"2020-10-05T16:25:38.026Z","level":"info","message":"hi"}
+// Output:
+// <6>2022-07-24T18:48:15+08:00 127.0.0.1:59277 [11516]: @cee:{"ts":1658659695428,"level":"info","foo":"bar","an":42,"message":"a syslog info"}
+// <4>2022-07-24T18:48:15+08:00 127.0.0.1:59277 [11516]: @cee:{"ts":1658659695429,"level":"warn","foo":"bar","an":42,"message":"a syslog warn"}
 ```
+
+### JournalWriter
 
 To log to linux systemd journald, using `JournalWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.JournalWriter{}
+log.DefaultLogger.Writer = &log.JournalWriter{
+	JournalSocket: "/run/systemd/journal/socket",
+}
 
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
+
+### EventlogWriter
 
 To log to windows system event, using `EventlogWriter`.
 
