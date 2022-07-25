@@ -11,11 +11,11 @@ import (
 // FormatterArgs is a parsed sturct from json input
 type FormatterArgs struct {
 	Time      string // "2019-07-10T05:35:54.277Z"
-	Message   string // "a structure message"
 	Level     string // "info"
 	Caller    string // "prog.go:42"
 	Goid      string // "123"
 	Stack     string // "<stack string>"
+	Message   string // "a structure message"
 	KeyValues []struct {
 		Key       string // "foo"
 		Value     string // "bar"
@@ -38,15 +38,15 @@ func formatterArgsPos(key string) (pos int) {
 	switch key {
 	case "time":
 		pos = 1
-	case "message", "msg":
-		pos = 2
 	case "level":
-		pos = 3
+		pos = 2
 	case "caller":
-		pos = 4
+		pos = 3
 	case "goid":
-		pos = 5
+		pos = 4
 	case "stack":
+		pos = 5
+	case "message", "msg":
 		pos = 6
 	}
 	return
@@ -104,7 +104,9 @@ func parseFormatterArgs(json []byte, args *FormatterArgs) {
 			if pos == 2 && len(str) != 0 && str[len(str)-1] == '\n' {
 				str = str[:len(str)-1]
 			}
-			slice[pos-1] = b2s(str)
+			if slice[pos-1] == "" {
+				slice[pos-1] = b2s(str)
+			}
 		} else {
 			args.KeyValues = append(args.KeyValues, struct {
 				Key, Value string
