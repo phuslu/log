@@ -24,5 +24,6 @@ jobs:
           go mod init main
           go get github.com/${GITHUB_REPOSITORY}@master
           go get github.com/rs/zerolog
+          go get github.com/francoispqt/onelog
           go get go.uber.org/zap
           head -1 log_test.go | cut -b3- | sed -E 's#\r##' | bash -xe

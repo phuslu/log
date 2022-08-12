@@ -790,7 +790,7 @@ func main() {
 
 ### High Performance
 
-The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog, which runs on [github actions][benchmark]:
+The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog/onelog, which runs on [github actions][benchmark]:
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -799,7 +799,9 @@ package main
 import (
 	"io/ioutil"
 	"testing"
+	"time"
 
+	"github.com/francoispqt/onelog"
 	"github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
@@ -817,6 +819,14 @@ func BenchmarkDisableZap(b *testing.B) {
 	))
 	for i := 0; i < b.N; i++ {
 		logger.Debug(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+	}
+}
+
+func BenchmarkDisableOneLog(b *testing.B) {
+	logger := onelog.New(ioutil.Discard, onelog.INFO|onelog.WARN|onelog.ERROR|onelog.FATAL)
+	logger.Hook(func(e onelog.Entry) { e.String("time", time.Now().Format(time.RFC3339)) })
+	for i := 0; i < b.N; i++ {
+		logger.DebugWith(msg).String("rate", "15").Int("low", 16).Float("high", 123.2).Write()
 	}
 }
 
@@ -846,6 +856,14 @@ func BenchmarkNormalZap(b *testing.B) {
 	}
 }
 
+func BenchmarkNormalOneLog(b *testing.B) {
+	logger := onelog.New(ioutil.Discard, onelog.INFO|onelog.WARN|onelog.ERROR|onelog.FATAL)
+	logger.Hook(func(e onelog.Entry) { e.String("time", time.Now().Format(time.RFC3339)) })
+	for i := 0; i < b.N; i++ {
+		logger.InfoWith(msg).String("rate", "15").Int("low", 16).Float("high", 123.2).Write()
+	}
+}
+
 func BenchmarkNormalZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
@@ -868,6 +886,14 @@ func BenchmarkInterfaceZap(b *testing.B) {
 	)).Sugar()
 	for i := 0; i < b.N; i++ {
 		logger.Infow(msg, "object", &obj)
+	}
+}
+
+func BenchmarkInterfaceOneLog(b *testing.B) {
+	logger := onelog.New(ioutil.Discard, onelog.INFO|onelog.WARN|onelog.ERROR|onelog.FATAL)
+	logger.Hook(func(e onelog.Entry) { e.String("time", time.Now().Format(time.RFC3339)) })
+	for i := 0; i < b.N; i++ {
+		logger.InfoWith(msg).Any("object", &obj).Write()
 	}
 }
 
@@ -922,6 +948,14 @@ func BenchmarkCallerZap(b *testing.B) {
 	}
 }
 
+func BenchmarkCallerOneLog(b *testing.B) {
+	logger := onelog.New(ioutil.Discard, onelog.INFO|onelog.WARN|onelog.ERROR|onelog.FATAL)
+	logger.Hook(func(e onelog.Entry) { e.String("time", time.Now().Format(time.RFC3339)).String("caller", logger.Caller(1)) })
+	for i := 0; i < b.N; i++ {
+		logger.InfoWith(msg).String("rate", "15").Int("low", 16).Float("high", 123.2).Write()
+	}
+}
+
 func BenchmarkCallerZeroLog(b *testing.B) {
 	logger := zerolog.New(ioutil.Discard).With().Caller().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
@@ -938,25 +972,29 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	100000000	       125.1 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4     	1000000000	        10.39 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4     	1000000000	         9.953 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisableZap-4         	86193418	       142.8 ns/op	     192 B/op	       1 allocs/op
+BenchmarkDisableOneLog-4      	285416528	        41.98 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisableZeroLog-4     	1000000000	        11.58 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	        11.93 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkNormalZap-4          	10482348	      1199 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4      	17467065	       704.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	32007682	       385.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZap-4          	 9152504	      1331 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalOneLog-4       	12284583	      1002 ns/op	      24 B/op	       1 allocs/op
+BenchmarkNormalZeroLog-4      	14775375	       812.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	27574824	       435.5 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkPrintfZap-4          	 7649223	      1524 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	10217528	      1173 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfPhusLog-4      	16776183	       682.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZap-4       	 6488127	      1850 ns/op	     208 B/op	       2 allocs/op
+BenchmarkInterfaceOneLog-4    	10915911	      1098 ns/op	     120 B/op	       3 allocs/op
+BenchmarkInterfaceZeroLog-4   	10102683	      1199 ns/op	      48 B/op	       1 allocs/op
+BenchmarkInterfacePhusLog-4   	13968078	       858.7 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkInterfaceZap-4       	 6999212	      1753 ns/op	     208 B/op	       2 allocs/op
-BenchmarkInterfaceZeroLog-4   	10827093	      1078 ns/op	      48 B/op	       1 allocs/op
-BenchmarkInterfacePhusLog-4   	16598343	       718.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfZap-4          	 7066578	      1687 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	 9119858	      1317 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfPhusLog-4      	14854870	       808.7 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkCallerZap-4          	 3496068	      3328 ns/op	     424 B/op	       3 allocs/op
-BenchmarkCallerZeroLog-4      	 3527376	      3424 ns/op	     272 B/op	       4 allocs/op
-BenchmarkCallerPhusLog-4      	10233750	      1205 ns/op	     216 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 2931970	      4038 ns/op	     424 B/op	       3 allocs/op
+BenchmarkCallerOneLog-4       	 5023149	      2402 ns/op	     296 B/op	       5 allocs/op
+BenchmarkCallerZeroLog-4      	 3029824	      3947 ns/op	     272 B/op	       4 allocs/op
+BenchmarkCallerPhusLog-4      	 8405709	      1406 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
