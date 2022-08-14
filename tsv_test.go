@@ -1,7 +1,7 @@
 package log
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"testing"
 )
@@ -65,7 +65,7 @@ func TestTSVSeparator(t *testing.T) {
 
 func TestTSVDiscard(t *testing.T) {
 	logger := TSVLogger{
-		Writer: ioutil.Discard,
+		Writer: io.Discard,
 	}
 
 	logger.New().
@@ -90,7 +90,7 @@ func TestTSVDiscard(t *testing.T) {
 
 func BenchmarkTSVLogger(b *testing.B) {
 	logger := TSVLogger{
-		Writer: ioutil.Discard,
+		Writer: io.Discard,
 	}
 
 	b.ReportAllocs()

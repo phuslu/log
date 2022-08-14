@@ -1,7 +1,7 @@
 package log
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 )
@@ -36,7 +36,7 @@ func BenchmarkAsyncWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
 			ChannelSize: 100,
-			Writer:      IOWriter{ioutil.Discard},
+			Writer:      IOWriter{io.Discard},
 		},
 	}
 	b.SetParallelism(1000)

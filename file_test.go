@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,13 +31,13 @@ func TestFileWriter(t *testing.T) {
 		t.Fatal("filepath glob return empty")
 	}
 
-	data, err := ioutil.ReadFile(matches[0])
+	data, err := os.ReadFile(matches[0])
 	if err != nil {
-		t.Fatalf("ioutil read file error: %+v", err)
+		t.Fatalf("read file error: %+v", err)
 	}
 
 	if string(data) != text {
-		t.Fatalf("ioutil read file content mismath: data=[%s], text=[%s]", data, text)
+		t.Fatalf("read file content mismath: data=[%s], text=[%s]", data, text)
 	}
 
 	err = os.Remove(matches[0])
@@ -194,22 +193,22 @@ func TestFileWriterRotate(t *testing.T) {
 		t.Fatalf("filepath glob return %+v number mismath", matches)
 	}
 
-	data, err := ioutil.ReadFile(matches[0])
+	data, err := os.ReadFile(matches[0])
 	if err != nil {
-		t.Fatalf("ioutil read file error: %+v", err)
+		t.Fatalf("read file error: %+v", err)
 	}
 
 	if string(data) != header+text1 {
-		t.Fatalf("ioutil read file content mismath: data=[%s], text1=[%s]", data, text1)
+		t.Fatalf("read file content mismath: data=[%s], text1=[%s]", data, text1)
 	}
 
-	data, err = ioutil.ReadFile(matches[1])
+	data, err = os.ReadFile(matches[1])
 	if err != nil {
-		t.Fatalf("ioutil read file error: %+v", err)
+		t.Fatalf("read file error: %+v", err)
 	}
 
 	if string(data) != header+text2 {
-		t.Fatalf("ioutil read file content mismath: data=[%s], text2=[%s]", data, text2)
+		t.Fatalf("read file content mismath: data=[%s], text2=[%s]", data, text2)
 	}
 
 	for i := range matches {

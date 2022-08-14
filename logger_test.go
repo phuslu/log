@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 	"testing"
@@ -528,7 +528,7 @@ func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		TimeFormat: TimeFormatUnix,
 		Level:      DebugLevel,
-		Writer:     IOWriter{ioutil.Discard},
+		Writer:     IOWriter{io.Discard},
 	}
 
 	b.ReportAllocs()

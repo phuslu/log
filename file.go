@@ -3,7 +3,6 @@ package log
 import (
 	"crypto/md5"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -322,7 +321,7 @@ var hostname, machine = func() (string, [16]byte) {
 	// append seed to hostname
 	data := []byte(host)
 	for _, file := range files {
-		if b, err := ioutil.ReadFile(file); err == nil {
+		if b, err := os.ReadFile(file); err == nil {
 			data = append(data, b...)
 		}
 	}

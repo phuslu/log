@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -136,7 +135,7 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 
 	// Large log entry, send it via tempfile and ancillary-fd.
 	var file *os.File
-	file, err = ioutil.TempFile("/dev/shm/", "journal.XXXXX")
+	file, err = os.CreateTemp("/dev/shm/", "journal.XXXXX")
 	if err != nil {
 		return
 	}
