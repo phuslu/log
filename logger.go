@@ -1867,6 +1867,90 @@ func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 	return e
 }
 
+// Any adds the field key with f as an any value to the entry.
+func (e *Entry) any(key string, value interface{}) *Entry {
+	if value == nil || (*[2]uintptr)(unsafe.Pointer(&value))[1] == 0 {
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, '"', ':')
+		e.buf = append(e.buf, "null"...)
+		return e
+	}
+	switch value := value.(type) {
+	case ObjectMarshaler:
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, '"', ':')
+		value.MarshalObject(e)
+	case Context:
+		e.Dict(key, value)
+	case []time.Duration:
+		e.Durs(key, value)
+	case time.Duration:
+		e.Dur(key, value)
+	case time.Time:
+		e.Time(key, value)
+	case net.HardwareAddr:
+		e.MACAddr(key, value)
+	case net.IP:
+		e.IPAddr(key, value)
+	case net.IPNet:
+		e.IPPrefix(key, value)
+	case json.RawMessage:
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, '"', ':')
+		e.buf = append(e.buf, value...)
+	case []bool:
+		e.Bools(key, value)
+	case []byte:
+		e.Bytes(key, value)
+	case []error:
+		e.Errs(key, value)
+	case []float32:
+		e.Floats32(key, value)
+	case []float64:
+		e.Floats64(key, value)
+	case []string:
+		e.Strs(key, value)
+	case string:
+		e.Str(key, value)
+	case bool:
+		e.Bool(key, value)
+	case error:
+		e.AnErr(key, value)
+	case float32:
+		e.Float32(key, value)
+	case float64:
+		e.Float64(key, value)
+	case int16:
+		e.Int16(key, value)
+	case int32:
+		e.Int32(key, value)
+	case int64:
+		e.Int64(key, value)
+	case int8:
+		e.Int8(key, value)
+	case int:
+		e.Int(key, value)
+	case uint16:
+		e.Uint16(key, value)
+	case uint32:
+		e.Uint32(key, value)
+	case uint64:
+		e.Uint64(key, value)
+	case uint8:
+		e.Uint8(key, value)
+	case fmt.GoStringer:
+		e.GoStringer(key, value)
+	case fmt.Stringer:
+		e.Stringer(key, value)
+	default:
+		e.Interface(key, value)
+	}
+	return e
+}
+
 // KeysAndValues sends keysAndValues to Entry
 func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 	if e == nil {
@@ -1878,85 +1962,7 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			key, _ = v.(string)
 			continue
 		}
-		if v == nil {
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, key...)
-			e.buf = append(e.buf, '"', ':')
-			e.buf = append(e.buf, "null"...)
-			continue
-		}
-		switch v := v.(type) {
-		case ObjectMarshaler:
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, key...)
-			e.buf = append(e.buf, '"', ':')
-			v.MarshalObject(e)
-		case Context:
-			e.Dict(key, v)
-		case []time.Duration:
-			e.Durs(key, v)
-		case time.Duration:
-			e.Dur(key, v)
-		case time.Time:
-			e.Time(key, v)
-		case net.HardwareAddr:
-			e.MACAddr(key, v)
-		case net.IP:
-			e.IPAddr(key, v)
-		case net.IPNet:
-			e.IPPrefix(key, v)
-		case json.RawMessage:
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, key...)
-			e.buf = append(e.buf, '"', ':')
-			e.buf = append(e.buf, v...)
-		case []bool:
-			e.Bools(key, v)
-		case []byte:
-			e.Bytes(key, v)
-		case []error:
-			e.Errs(key, v)
-		case []float32:
-			e.Floats32(key, v)
-		case []float64:
-			e.Floats64(key, v)
-		case []string:
-			e.Strs(key, v)
-		case string:
-			e.Str(key, v)
-		case bool:
-			e.Bool(key, v)
-		case error:
-			e.AnErr(key, v)
-		case float32:
-			e.Float32(key, v)
-		case float64:
-			e.Float64(key, v)
-		case int16:
-			e.Int16(key, v)
-		case int32:
-			e.Int32(key, v)
-		case int64:
-			e.Int64(key, v)
-		case int8:
-			e.Int8(key, v)
-		case int:
-			e.Int(key, v)
-		case uint16:
-			e.Uint16(key, v)
-		case uint32:
-			e.Uint32(key, v)
-		case uint64:
-			e.Uint64(key, v)
-		case uint8:
-			e.Uint8(key, v)
-		case fmt.GoStringer:
-			e.GoStringer(key, v)
-		case fmt.Stringer:
-			e.Stringer(key, v)
-		default:
-			e.Interface(key, v)
-		}
+		e.any(key, v)
 	}
 	return e
 }
@@ -1969,85 +1975,8 @@ func (e *Entry) Fields(fields Fields) *Entry {
 	if e == nil {
 		return nil
 	}
-	for k, v := range fields {
-		if v == nil {
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, k...)
-			e.buf = append(e.buf, "\":null"...)
-			continue
-		}
-		switch v := v.(type) {
-		case ObjectMarshaler:
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, k...)
-			e.buf = append(e.buf, '"', ':')
-			v.MarshalObject(e)
-		case Context:
-			e.Dict(k, v)
-		case []time.Duration:
-			e.Durs(k, v)
-		case time.Duration:
-			e.Dur(k, v)
-		case time.Time:
-			e.Time(k, v)
-		case net.HardwareAddr:
-			e.MACAddr(k, v)
-		case net.IP:
-			e.IPAddr(k, v)
-		case net.IPNet:
-			e.IPPrefix(k, v)
-		case json.RawMessage:
-			e.buf = append(e.buf, ',', '"')
-			e.buf = append(e.buf, k...)
-			e.buf = append(e.buf, '"', ':')
-			e.buf = append(e.buf, v...)
-		case []bool:
-			e.Bools(k, v)
-		case []byte:
-			e.Bytes(k, v)
-		case []error:
-			e.Errs(k, v)
-		case []float32:
-			e.Floats32(k, v)
-		case []float64:
-			e.Floats64(k, v)
-		case []string:
-			e.Strs(k, v)
-		case string:
-			e.Str(k, v)
-		case bool:
-			e.Bool(k, v)
-		case error:
-			e.AnErr(k, v)
-		case float32:
-			e.Float32(k, v)
-		case float64:
-			e.Float64(k, v)
-		case int16:
-			e.Int16(k, v)
-		case int32:
-			e.Int32(k, v)
-		case int64:
-			e.Int64(k, v)
-		case int8:
-			e.Int8(k, v)
-		case int:
-			e.Int(k, v)
-		case uint16:
-			e.Uint16(k, v)
-		case uint32:
-			e.Uint32(k, v)
-		case uint64:
-			e.Uint64(k, v)
-		case uint8:
-			e.Uint8(k, v)
-		case fmt.GoStringer:
-			e.GoStringer(k, v)
-		case fmt.Stringer:
-			e.Stringer(k, v)
-		default:
-			e.Interface(k, v)
-		}
+	for key, value := range fields {
+		e.any(key, value)
 	}
 	return e
 }
