@@ -19,10 +19,15 @@
     - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
     - `AsyncWriter`, *asynchronously writing*
+* Stdlib Log Adapter
+    - `Logger.Std`, *transform to std log instances*
 * Third-party Logger Interceptor
-    - `Logger.Std`, *(std)log*
-    - `Logger.Grpc`, *grpclog.LoggerV2*
-    - `Logger.GrpcGatewayLogger`, *grpcgateway.Logger*
+    - `logr`, *logr interceptor*
+    - `gin`, *gin logging middleware*
+    - `gorm`, *gorm logger interface*
+    - `fiber`, *fiber logging handler*
+    - `grpc`, *grpc logger interceptor*
+    - `grpcgateway`, *grpcgateway logger interceptor*
 * Useful utility function
     - `Goid()`, *the goroutine id matches stack trace*
     - `NewXID()`, *create a tracing id*
@@ -645,72 +650,46 @@ logger.Writer.(io.Closer).Close()
 
 > Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
 
-### StdLog & Grpc Interceptor
+### Stdlib Log Adapter
 
-Using wrapped loggers for stdlog/grpc. [![playground][play-interceptor-img]][play-interceptor]
+Using wrapped loggers for stdlog. [![playground][play-stdlog-img]][play-stdlog]
 
 ```go
 package main
 
 import (
-	stdLog "log"
+	stdlog "log"
+	"os"
+
 	"github.com/phuslu/log"
-	"google.golang.org/grpc/grpclog"
 )
 
 func main() {
-	ctx := log.NewContext(nil).Str("tag", "hi log").Value()
+	var logger *stdlog.Logger = (&log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "date",
+		TimeFormat: "2006-01-02",
+		Caller:     1,
+		Context:    log.NewContext(nil).Str("logger", "mystdlog").Int("myid", 42).Value(),
+		Writer:     &log.IOWriter{os.Stdout},
+	}).Std("", 0)
 
-	var stdlog *stdLog.Logger = log.DefaultLogger.Std(log.InfoLevel, ctx, "prefix ", stdLog.LstdFlags)
-	stdlog.Print("hello from stdlog Print")
-	stdlog.Println("hello from stdlog Println")
-	stdlog.Printf("hello from stdlog %s", "Printf")
-
-	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
-	grpclog.Infof("hello %s", "grpclog Infof message")
-	grpclog.Errorf("hello %s", "grpclog Errorf message")
+	logger.Print("hello from stdlog Print")
+	logger.Println("hello from stdlog Println")
+	logger.Printf("hello from stdlog %s", "Printf")
 }
 ```
 
-### GrcpGateway Interceptor
+### Third-party Logger Interceptor
 
-Using wrapped loggers for grcp-gateway in go-grpc-middleware.
-
-```go
-package main
-
-import (
-	"context"
-	"testing"
-
-	grpcphuslog "github.com/grpc-ecosystem/go-grpc-middleware/providers/phuslog/v2"
-	"github.com/phuslu/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
-
-	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
-)
-
-func Example_initialization() {
-	// Logger is used, allowing pre-definition of certain fields by the user.
-	logger := log.DefaultLogger.GrcpGateway()
-	// You can also add grpc LoggerV2 logger wrapper
-	grpclog.SetLoggerV2(log.DefaultLogger.Grpc(nil))
-	// Create a server, make sure we put the tags context before everything else.
-	_ = grpc.NewServer(
-		middleware.WithUnaryServerChain(
-			tags.UnaryServerInterceptor(),
-			logging.UnaryServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
-		),
-		middleware.WithStreamServerChain(
-			tags.StreamServerInterceptor(),
-			logging.StreamServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
-		),
-	)
-}
-```
+| Logger | Interceptor |
+|---|---|
+| logr |  https://github.com/phuslu/log-contrib/tree/master/logr |
+| gin |  https://github.com/phuslu/log-contrib/tree/master/gin |
+| fiber |  https://github.com/phuslu/log-contrib/tree/master/fiber |
+| gorm |  https://github.com/phuslu/log-contrib/tree/master/gorm |
+| grpc |  https://github.com/phuslu/log-contrib/tree/master/grpc |
+| grpcgateway |  https://github.com/phuslu/log-contrib/tree/master/grpcgateway |
 
 ### User-defined Data Structure
 
@@ -1116,8 +1095,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-context-add]: https://go.dev/play/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
 [play-marshal]: https://go.dev/play/p/SoQdwQOaQR2
-[play-interceptor]: https://go.dev/play/p/upmVP5cO62Y
-[play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
+[play-stdlog]: https://go.dev/play/p/DnKyE92LEEm
+[play-stdlog-img]: https://img.shields.io/badge/playground-DnKyE92LEEm-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog

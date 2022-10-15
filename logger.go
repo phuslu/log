@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	stdLog "log"
 	"net"
 	"os"
 	"reflect"
@@ -2005,6 +2006,31 @@ func (e *Entry) Context(ctx Context) *Entry {
 		e.buf = append(e.buf, ctx...)
 	}
 	return e
+}
+
+type stdLogWriter struct {
+	Logger
+}
+
+func (w *stdLogWriter) Write(p []byte) (int, error) {
+	if w.Logger.silent(w.Logger.Level) {
+		return 0, nil
+	}
+	e := w.Logger.header(w.Level)
+	if caller, full := w.Logger.Caller, false; caller != 0 {
+		if caller < 0 {
+			caller, full = -caller, true
+		}
+		var rpc [1]uintptr
+		e.caller(callers(caller+2, rpc[:]), rpc[:], full)
+	}
+	e.Context(w.Logger.Context).Msg(b2s(p))
+	return len(p), nil
+}
+
+// Std wraps the Logger to provide *stdLog.Logger
+func (l *Logger) Std(prefix string, flag int) *stdLog.Logger {
+	return stdLog.New(&stdLogWriter{*l}, prefix, flag)
 }
 
 // Dict sends the contextual fields with key to entry.
