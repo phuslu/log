@@ -2024,7 +2024,7 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 		var rpc [1]uintptr
 		e.caller(callers(caller+2, rpc[:]), rpc[:], full)
 	}
-	e.Context(w.Logger.Context).Msg(b2s(p))
+	e.Msg(b2s(p))
 	return len(p), nil
 }
 
