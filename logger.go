@@ -1869,7 +1869,7 @@ func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 }
 
 // Any adds the field key with f as an any value to the entry.
-func (e *Entry) any(key string, value interface{}) *Entry {
+func (e *Entry) Any(key string, value interface{}) *Entry {
 	if value == nil || (*[2]uintptr)(unsafe.Pointer(&value))[1] == 0 {
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, key...)
@@ -1963,7 +1963,7 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			key, _ = v.(string)
 			continue
 		}
-		e.any(key, v)
+		e.Any(key, v)
 	}
 	return e
 }
@@ -1977,7 +1977,7 @@ func (e *Entry) Fields(fields Fields) *Entry {
 		return nil
 	}
 	for key, value := range fields {
-		e.any(key, value)
+		e.Any(key, value)
 	}
 	return e
 }
