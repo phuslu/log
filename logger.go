@@ -2034,6 +2034,9 @@ func NewContext(dst []byte) (e *Entry) {
 
 // Value builds the contextual fields.
 func (e *Entry) Value() Context {
+	if e == nil {
+		return nil
+	}
 	return e.buf
 }
 
