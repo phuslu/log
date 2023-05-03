@@ -147,6 +147,18 @@ func (e *TSVEntry) Bool(b bool) *TSVEntry {
 	return e
 }
 
+// BoolRaw append the b as a bool to the entry.
+func (e *TSVEntry) BoolRaw(b bool) *TSVEntry {
+	if b {
+		e.buf = append(e.buf, "true"...)
+		e.buf = append(e.buf, e.sep)
+	} else {
+		e.buf = append(e.buf, "false"...)
+		e.buf = append(e.buf, e.sep)
+	}
+	return e
+}
+
 // Byte append the b as a byte to the entry.
 func (e *TSVEntry) Byte(b byte) *TSVEntry {
 	e.buf = append(e.buf, b, e.sep)
