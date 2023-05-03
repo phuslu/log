@@ -137,7 +137,7 @@ func (e *TSVEntry) Caller(depth int) *TSVEntry {
 	return e
 }
 
-// Bool append the b as a bool to the entry.
+// Bool append the b as a bool to the entry, the value of output bool is 0 or 1.
 func (e *TSVEntry) Bool(b bool) *TSVEntry {
 	if b {
 		e.buf = append(e.buf, '1', e.sep)
@@ -147,14 +147,12 @@ func (e *TSVEntry) Bool(b bool) *TSVEntry {
 	return e
 }
 
-// BoolRaw append the b as a bool to the entry.
-func (e *TSVEntry) BoolRaw(b bool) *TSVEntry {
+// BoolString append the b as a bool to the entry, the value of output bool is false or true.
+func (e *TSVEntry) BoolString(b bool) *TSVEntry {
 	if b {
-		e.buf = append(e.buf, "true"...)
-		e.buf = append(e.buf, e.sep)
+		e.buf = append(e.buf, 't', 'r', 'u', 'e', e.sep)
 	} else {
-		e.buf = append(e.buf, "false"...)
-		e.buf = append(e.buf, e.sep)
+		e.buf = append(e.buf, 'f', 'a', 'l', 's', 'e', e.sep)
 	}
 	return e
 }
