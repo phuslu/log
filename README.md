@@ -3,7 +3,6 @@
 [![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
 [![build][build-img]][build]
-[![coverage][cov-img]][cov]
 ![stability-stable][stability-img]
 
 ## Features
@@ -1076,9 +1075,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
 [build]: https://github.com/phuslu/log/actions
-[cov-img]: http://gocover.io/_badge/github.com/phuslu/log
-[cov]: https://gocover.io/github.com/phuslu/log
-[stability-img]: https://img.shields.io/badge/stability-stable-green.svg
+[stability-img]: https://img.shields.io/badge/stability-maintenance-green.svg
 [high-performance]: https://github.com/phuslu/log#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
