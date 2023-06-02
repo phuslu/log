@@ -28,8 +28,9 @@ func (h *slogHandler) Enabled(_ context.Context, level slog.Level) bool {
 
 func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 	e := h.Logger.Log()
-	r.Attrs(func(attr slog.Attr) {
+	r.Attrs(func(attr slog.Attr) bool {
 		e = e.Any(attr.Key, attr.Value)
+		return true
 	})
 	e.Msg(r.Message)
 	return nil
