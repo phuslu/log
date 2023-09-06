@@ -27,7 +27,19 @@ func (h *slogHandler) Enabled(_ context.Context, level slog.Level) bool {
 }
 
 func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
-	e := h.Logger.Log()
+	var e *Entry
+	switch r.Level {
+	case slog.LevelDebug:
+		e = h.Logger.Debug()
+	case slog.LevelInfo:
+		e = h.Logger.Info()
+	case slog.LevelWarn:
+		e = h.Logger.Warn()
+	case slog.LevelError:
+		e = h.Logger.Error()
+	default:
+		e = h.Logger.Log()
+	}
 	r.Attrs(func(attr slog.Attr) bool {
 		e = e.Any(attr.Key, attr.Value)
 		return true
@@ -54,5 +66,12 @@ func (h *slogHandler) WithGroup(name string) slog.Handler {
 
 // Slog wraps the Logger to provide *slog.Logger
 func (l *Logger) Slog() *slog.Logger {
-	return slog.New(&slogHandler{*l})
+	logger := *l
+	switch {
+	case logger.Caller > 0:
+		logger.Caller += 3
+	case logger.Caller < 0:
+		logger.Caller -= 3
+	}
+	return slog.New(&slogHandler{logger})
 }
