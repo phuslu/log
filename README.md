@@ -20,6 +20,7 @@
     - `AsyncWriter`, *asynchronously writing*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
+    - `Logger.Slog`, *transform to log/slog instances*
 * Third-party Logger Interceptor
     - `logr`, *logr interceptor*
     - `gin`, *gin logging middleware*
@@ -687,6 +688,35 @@ func main() {
 }
 ```
 
+### log/slog Adapter
+
+Using wrapped loggers for log/slog. [![playground][play-slog-img]][play-slog]
+
+```go
+package main
+
+import (
+	"log/slog"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	slog.SetDefault((&log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "date",
+		TimeFormat: "2006-01-02",
+		Caller:     1,
+		Context:    log.NewContext(nil).Str("logger", "my_slog").Int("myid", 42).Value(),
+	}).Slog())
+
+	slog.Debug("hello from slog Info")
+	slog.Info("hello from slog Info")
+	slog.Warn("hello from slog Warn")
+	slog.Error("hello from slog Error")
+}
+```
+
 ### Third-party Logger Interceptor
 
 | Logger | Interceptor |
@@ -1102,6 +1132,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-marshal]: https://go.dev/play/p/SoQdwQOaQR2
 [play-stdlog]: https://go.dev/play/p/DnKyE92LEEm
 [play-stdlog-img]: https://img.shields.io/badge/playground-DnKyE92LEEm-29BEB0?style=flat&logo=go
+[play-slog]: https://go.dev/play/p/ez_yIPOXBQF
+[play-slog-img]: https://img.shields.io/badge/playground-ez__yIPOXBQF-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
