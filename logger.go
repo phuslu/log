@@ -458,12 +458,10 @@ func (l *Logger) silent(level Level) bool {
 func (l *Logger) header(level Level) *Entry {
 	headerTimeFunc := timeNow
 	headerTimeOffset := timeOffset
-	headerTimeZone := timeZone
 
 	if l.TimeUTC {
 		headerTimeFunc = timeUtcNow
 		headerTimeOffset = 0
-		headerTimeZone = "Z"
 	}
 
 	e := epool.Get().(*Entry)
@@ -495,12 +493,12 @@ func (l *Logger) header(level Level) *Entry {
 		} else {
 			// "2006-01-02T15:04:05.999Z07:00"
 			tmp[30] = '"'
-			tmp[29] = headerTimeZone[5]
-			tmp[28] = headerTimeZone[4]
-			tmp[27] = headerTimeZone[3]
-			tmp[26] = headerTimeZone[2]
-			tmp[25] = headerTimeZone[1]
-			tmp[24] = headerTimeZone[0]
+			tmp[29] = timeZone[5]
+			tmp[28] = timeZone[4]
+			tmp[27] = timeZone[3]
+			tmp[26] = timeZone[2]
+			tmp[25] = timeZone[1]
+			tmp[24] = timeZone[0]
 			buf = tmp[:31]
 		}
 		// date time
