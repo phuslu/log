@@ -367,6 +367,29 @@ func TestLoggerTimeFormat(t *testing.T) {
 	logger.Info().Int64("timestamp_ms", timeNow().UnixNano()/1000000).Msg("this is rfc3339 time log entry")
 }
 
+func TestLoggerTimeLocation(t *testing.T) {
+	logger := Logger{}
+
+	for _, format := range []string{"", time.RFC822} {
+		logger.TimeFormat = format
+
+		logger.TimeLocation = nil
+		logger.Info().Msgf("this is TimeFormat=%#v TimeLocation=nil log entry", logger.TimeFormat)
+
+		logger.TimeLocation = time.Local
+		logger.Info().Msgf("this is TimeFormat=%#v TimeLocation=time.Local log entry", logger.TimeFormat)
+
+		logger.TimeLocation = time.UTC
+		logger.Info().Msgf("this is TimeFormat=%#v TimeLocation=time.UTC log entry", logger.TimeFormat)
+
+		logger.TimeLocation, _ = time.LoadLocation("Asia/Singapore")
+		logger.Info().Msgf("this is TimeFormat=%#v TimeLocation=Asia/Singapore log entry", logger.TimeFormat)
+
+		logger.TimeLocation, _ = time.LoadLocation("America/New_York")
+		logger.Info().Msgf("this is TimeFormat=%#v TimeLocation=America/New_York log entry", logger.TimeFormat)
+	}
+}
+
 func TestLoggerTimeOffset(t *testing.T) {
 	logger := Logger{}
 
