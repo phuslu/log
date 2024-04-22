@@ -50,7 +50,7 @@ var DefaultLogger = Logger{
 	Writer:     &IOWriter{os.Stderr},
 }
 
-// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
+// Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
 	// Level defines log levels.
 	Level Level
@@ -59,12 +59,15 @@ type Logger struct {
 	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
 
-	// TimeField defines the time filed name in output.  It uses "time" in if empty.
+	// TimeField defines the time field name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the time format in output. It uses RFC3339 with millisecond if empty.
-	// If set with `TimeFormatUnix/TimeFormatUnixMs/TimeFormatUnixWithMs`, timestamps are formated.
+	// TimeFormat specifies the time format in output. Uses RFC3339 with millisecond if empty.
+	// If set to `TimeFormatUnix/TimeFormatUnixMs`, timestamps will be formatted.
 	TimeFormat string
+
+	// TimeLocation specifices that the location of TimeFormat used. Uses time.Local if empty.
+	TimeLocation *time.Location
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
