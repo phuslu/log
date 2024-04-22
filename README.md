@@ -957,25 +957,32 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	86193418	       142.8 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4     	1000000000	        11.58 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4     	1000000000	        11.93 ns/op	       0 B/op	       0 allocs/op
+goos: linux
+goarch: amd64
+cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkNormalZap-4          	 9152504	      1331 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4      	14775375	       812.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	27574824	       435.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisableZap-4         	190298439	        62.62 ns/op	     192 B/op	       1 allocs/op
+BenchmarkDisableZeroLog-4     	1000000000	         9.014 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	         9.604 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkInterfaceZap-4       	 6488127	      1850 ns/op	     208 B/op	       2 allocs/op
-BenchmarkInterfaceZeroLog-4   	10102683	      1199 ns/op	      48 B/op	       1 allocs/op
-BenchmarkInterfacePhusLog-4   	13968078	       858.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZap-4          	16307428	       738.0 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZeroLog-4      	33277992	       359.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	44305356	       269.8 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkPrintfZap-4          	 7066578	      1687 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 9119858	      1317 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfPhusLog-4      	14854870	       808.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZap-4       	10783807	      1096 ns/op	     224 B/op	       2 allocs/op
+BenchmarkInterfaceZeroLog-4   	19654053	       604.0 ns/op	      48 B/op	       1 allocs/op
+BenchmarkInterfacePhusLog-4   	21652580	       552.4 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkCallerZap-4          	 2931970	      4038 ns/op	     424 B/op	       3 allocs/op
-BenchmarkCallerZeroLog-4      	 3029824	      3947 ns/op	     272 B/op	       4 allocs/op
-BenchmarkCallerPhusLog-4      	 8405709	      1406 ns/op	     216 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	13087916	       938.2 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	18128668	       651.0 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfPhusLog-4      	23203374	       517.9 ns/op	       0 B/op	       0 allocs/op
+
+BenchmarkCallerZap-4          	 5881387	      2017 ns/op	     440 B/op	       3 allocs/op
+BenchmarkCallerZeroLog-4      	 9414148	      1271 ns/op	     288 B/op	       4 allocs/op
+BenchmarkCallerPhusLog-4      	16249498	       737.2 ns/op	     232 B/op	       2 allocs/op
+
+PASS
+ok  	command-line-arguments	192.224s
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
