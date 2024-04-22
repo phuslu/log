@@ -448,10 +448,6 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
-func (l *Logger) silent(level Level) bool {
-	return uint32(level) < atomic.LoadUint32((*uint32)(&l.Level))
-}
-
 func (l *Logger) header(level Level) *Entry {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
