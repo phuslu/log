@@ -78,12 +78,15 @@ type Logger struct {
 	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
 
-	// TimeField defines the time filed name in output.  It uses "time" in if empty.
+	// TimeField defines the time field name in output.  It uses "time" in if empty.
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
+
+	// TimeUTC specifices that the timestamps should be UTC instead of system local time.
+	TimeUTC bool
 
 	// Context specifies an optional context of logger.
 	Context Context
@@ -450,6 +453,19 @@ func (l *Logger) silent(level Level) bool {
 }
 
 func (l *Logger) header(level Level) *Entry {
+	headerTimeFunc := timeNow
+	headerTimeOffset := timeOffset
+	headerTimeZone := timeZone
+
+	if l.TimeUTC {
+		headerTimeFunc = func () time.Time {
+			return time.Now().UTC()
+		}
+
+		headerTimeOffset = 0
+		headerTimeZone = "Z"
+	}
+
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 	e.Level = level
@@ -471,7 +487,7 @@ func (l *Logger) header(level Level) *Entry {
 		sec, nsec, _ := now()
 		var tmp [32]byte
 		var buf []byte
-		if timeOffset == 0 {
+		if headerTimeOffset == 0 {
 			// "2006-01-02T15:04:05.999Z"
 			tmp[25] = '"'
 			tmp[24] = 'Z'
@@ -479,16 +495,16 @@ func (l *Logger) header(level Level) *Entry {
 		} else {
 			// "2006-01-02T15:04:05.999Z07:00"
 			tmp[30] = '"'
-			tmp[29] = timeZone[5]
-			tmp[28] = timeZone[4]
-			tmp[27] = timeZone[3]
-			tmp[26] = timeZone[2]
-			tmp[25] = timeZone[1]
-			tmp[24] = timeZone[0]
+			tmp[29] = headerTimeZone[5]
+			tmp[28] = headerTimeZone[4]
+			tmp[27] = headerTimeZone[3]
+			tmp[26] = headerTimeZone[2]
+			tmp[25] = headerTimeZone[1]
+			tmp[24] = headerTimeZone[0]
 			buf = tmp[:31]
 		}
 		// date time
-		sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
+		sec += 9223372028715321600 + headerTimeOffset // unixToInternal + internalToAbsolute + timeOffset
 		year, month, day, _ := absDate(uint64(sec), true)
 		hour, minute, second := absClock(uint64(sec))
 		// year
@@ -626,7 +642,7 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:]...)
 	default:
 		e.buf = append(e.buf, '"')
-		e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
+		e.buf = headerTimeFunc().AppendFormat(e.buf, l.TimeFormat)
 		e.buf = append(e.buf, '"')
 	}
 	// level
