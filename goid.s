@@ -1,5 +1,15 @@
 #include "textflag.h"
 
+// After go1.9, goid in "goroutine struct" has a stable offset.
+// See https://github.com/golang/go/blob/master/src/runtime/runtime2.go#L458
+//
+// This file exposes "goid()" function by
+//   1. get current "g" pointer,
+//   2. extract goid with a hardcoded offset.
+//      *) for GOARCH amd64/arm64, offset=152, size=8.
+//      *) for GOARCH arm/386, offset=80, size=4.
+//
+
 #ifdef GOARCH_amd64
 TEXT ·goid(SB),NOSPLIT,$0-8
 	MOVQ (TLS), R14
