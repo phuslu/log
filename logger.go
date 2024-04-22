@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	stdLog "log"
+	"math"
 	"net"
 	"net/netip"
 	"os"
@@ -955,6 +956,36 @@ func (e *Entry) Errs(key string, errs []error) *Entry {
 	return e
 }
 
+// https://github.com/golang/go/blob/master/src/encoding/json/encode.go#L541
+func appendFloat(b []byte, f float64, bits int) []byte {
+	switch {
+	case math.IsNaN(f):
+		return append(b, `"NaN"`...)
+	case math.IsInf(f, 1):
+		return append(b, `"+Inf"`...)
+	case math.IsInf(f, -1):
+		return append(b, `"-Inf"`...)
+	}
+	abs := math.Abs(f)
+	fmt := byte('f')
+	// Note: Must use float32 comparisons for underlying float32 value to get precise cutoffs right.
+	if abs != 0 {
+		if bits == 64 && (abs < 1e-6 || abs >= 1e21) || bits == 32 && (float32(abs) < 1e-6 || float32(abs) >= 1e21) {
+			fmt = 'e'
+		}
+	}
+	b = strconv.AppendFloat(b, f, fmt, -1, int(bits))
+	if fmt == 'e' {
+		// clean up e-09 to e-9
+		n := len(b)
+		if n >= 4 && b[n-4] == 'e' && b[n-3] == '-' && b[n-2] == '0' {
+			b[n-2] = b[n-1]
+			b = b[:n-1]
+		}
+	}
+	return b
+}
+
 // Float64 adds the field key with f as a float64 to the entry.
 func (e *Entry) Float64(key string, f float64) *Entry {
 	if e == nil {
@@ -963,7 +994,19 @@ func (e *Entry) Float64(key string, f float64) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
-	e.buf = strconv.AppendFloat(e.buf, f, 'f', -1, 64)
+	e.buf = appendFloat(e.buf, f, 64)
+	return e
+}
+
+// Float32 adds the field key with f as a float32 to the entry.
+func (e *Entry) Float32(key string, f float32) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = appendFloat(e.buf, float64(f), 32)
 	return e
 }
 
@@ -979,7 +1022,7 @@ func (e *Entry) Floats64(key string, f []float64) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.buf = strconv.AppendFloat(e.buf, a, 'f', -1, 64)
+		e.buf = appendFloat(e.buf, a, 64)
 	}
 	e.buf = append(e.buf, ']')
 	return e
@@ -997,7 +1040,7 @@ func (e *Entry) Floats32(key string, f []float32) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.buf = strconv.AppendFloat(e.buf, float64(a), 'f', -1, 32)
+		e.buf = appendFloat(e.buf, float64(a), 32)
 	}
 	e.buf = append(e.buf, ']')
 	return e
@@ -1037,11 +1080,6 @@ func (e *Entry) Uint64(key string, i uint64) *Entry {
 	e.buf = append(e.buf, '"', ':')
 	e.buf = strconv.AppendUint(e.buf, i, 10)
 	return e
-}
-
-// Float32 adds the field key with f as a float32 to the entry.
-func (e *Entry) Float32(key string, f float32) *Entry {
-	return e.Float64(key, float64(f))
 }
 
 // Int adds the field key with i as a int to the entry.
