@@ -441,6 +441,9 @@ const smallsString = "00010203040506070809" +
 	"90919293949596979899"
 
 var timeNow = time.Now
+var timeUtcNow = func() time.Time {
+	return time.Now().UTC()
+}
 var timeOffset, timeZone = func() (int64, string) {
 	now := timeNow()
 	_, n := now.Zone()
@@ -458,10 +461,7 @@ func (l *Logger) header(level Level) *Entry {
 	headerTimeZone := timeZone
 
 	if l.TimeUTC {
-		headerTimeFunc = func () time.Time {
-			return time.Now().UTC()
-		}
-
+		headerTimeFunc = timeUtcNow
 		headerTimeOffset = 0
 		headerTimeZone = "Z"
 	}
