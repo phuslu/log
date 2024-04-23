@@ -879,31 +879,6 @@ func BenchmarkNormalPhusLog(b *testing.B) {
 	}
 }
 
-func BenchmarkInterfaceZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	)).Sugar()
-	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &obj)
-	}
-}
-
-func BenchmarkInterfaceZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
-	}
-}
-
-func BenchmarkInterfacePhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
-	}
-}
-
 func BenchmarkPrintfZap(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
@@ -954,6 +929,31 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
+
+func BenchmarkInterfaceZap(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)).Sugar()
+	for i := 0; i < b.N; i++ {
+		logger.Infow(msg, "object", &obj)
+	}
+}
+
+func BenchmarkInterfaceZeroLog(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Interface("object", &obj).Msg(msg)
+	}
+}
+
+func BenchmarkInterfacePhusLog(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Interface("object", &obj).Msg(msg)
+	}
+}
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
@@ -961,28 +961,28 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkDisableZap-4         	190298439	        62.62 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4     	1000000000	         9.014 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4     	1000000000	         9.604 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisableZap-4         	185592676	        64.84 ns/op	     192 B/op	       1 allocs/op
+BenchmarkDisableZeroLog-4     	1000000000	         9.938 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	         9.605 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkNormalZap-4          	16307428	       738.0 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4      	33277992	       359.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	44305356	       269.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZap-4          	16546404	       730.1 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZeroLog-4      	34346268	       347.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	53834917	       227.8 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkInterfaceZap-4       	10783807	      1096 ns/op	     224 B/op	       2 allocs/op
-BenchmarkInterfaceZeroLog-4   	19654053	       604.0 ns/op	      48 B/op	       1 allocs/op
-BenchmarkInterfacePhusLog-4   	21652580	       552.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfZap-4          	13039936	       931.5 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	18802732	       641.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkPrintfPhusLog-4      	24678733	       488.3 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkPrintfZap-4          	13087916	       938.2 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	18128668	       651.0 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfPhusLog-4      	23203374	       517.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCallerZap-4          	 5967156	      2016 ns/op	     440 B/op	       3 allocs/op
+BenchmarkCallerZeroLog-4      	 9310912	      1286 ns/op	     304 B/op	       4 allocs/op
+BenchmarkCallerPhusLog-4      	17120493	       705.3 ns/op	     232 B/op	       2 allocs/op
 
-BenchmarkCallerZap-4          	 5881387	      2017 ns/op	     440 B/op	       3 allocs/op
-BenchmarkCallerZeroLog-4      	 9414148	      1271 ns/op	     288 B/op	       4 allocs/op
-BenchmarkCallerPhusLog-4      	16249498	       737.2 ns/op	     232 B/op	       2 allocs/op
+BenchmarkInterfaceZap-4       	10968961	      1093 ns/op	     224 B/op	       2 allocs/op
+BenchmarkInterfaceZeroLog-4   	19989060	       598.5 ns/op	      48 B/op	       1 allocs/op
+BenchmarkInterfacePhusLog-4   	23181860	       519.4 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	command-line-arguments	192.224s
+ok  	command-line-arguments	194.383s
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting

@@ -15,14 +15,16 @@ jobs:
         with:
           go-version: '1.22'
           check-latest: true
-      - name: Benchmark
+      - uses: actions/checkout@v4
+      - name: go mod tidy
         run: |
-          curl -sL https://github.com/${GITHUB_REPOSITORY}/raw/master/README.md | \
-          awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' | \
-          tee log_test.go
-          export GOPROXY=direct
-          go mod init main
-          go get github.com/${GITHUB_REPOSITORY}@master
-          go get github.com/rs/zerolog
-          go get go.uber.org/zap
-          head -1 log_test.go | cut -b3- | sed -E 's#\r##' | bash -xe
+          mkdir bench
+          cd bench
+          awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' ../README.md | tee bench_test.go
+          go mod init bench
+          go mod tidy
+          go mod edit -replace github.com/phuslu/log=../
+      - name: Throughput benchmarks
+        working-directory: ./bench
+        run: |
+          go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem
