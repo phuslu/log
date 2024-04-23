@@ -1741,9 +1741,8 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 	if n < 1 {
 		return
 	}
-	rpc := [1]uintptr{pc}
-	frame, _ := runtime.CallersFrames(rpc[:]).Next()
-	file := frame.File
+
+	file, line := pcFileLine(pc)
 	if !fullpath {
 		var i int
 		for i = len(file) - 1; i >= 0; i-- {
@@ -1759,7 +1758,7 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 	e.buf = append(e.buf, ",\"caller\":\""...)
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(frame.Line), 10)
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
 	e.buf = append(e.buf, "\",\"goid\":"...)
 	e.buf = strconv.AppendInt(e.buf, int64(goid()), 10)
 }
