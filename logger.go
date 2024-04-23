@@ -118,8 +118,8 @@ func Trace() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -134,8 +134,8 @@ func Debug() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -150,8 +150,8 @@ func Info() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -166,8 +166,8 @@ func Warn() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -182,8 +182,8 @@ func Error() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -198,8 +198,8 @@ func Fatal() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -214,8 +214,8 @@ func Panic() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -227,8 +227,8 @@ func Printf(format string, v ...interface{}) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	e.Msgf(format, v...)
 }
@@ -243,8 +243,8 @@ func (l *Logger) Trace() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -259,8 +259,8 @@ func (l *Logger) Debug() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -275,8 +275,8 @@ func (l *Logger) Info() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -291,8 +291,8 @@ func (l *Logger) Warn() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -307,8 +307,8 @@ func (l *Logger) Error() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -323,8 +323,8 @@ func (l *Logger) Fatal() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -339,8 +339,8 @@ func (l *Logger) Panic() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -352,8 +352,8 @@ func (l *Logger) Log() (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -368,8 +368,8 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -394,8 +394,8 @@ func (l *Logger) Err(err error) (e *Entry) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -413,8 +413,8 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 			if caller < 0 {
 				caller, full = -caller, true
 			}
-			var rpc [1]uintptr
-			e.caller(callers(caller, rpc[:]), rpc[:], full)
+			var pc uintptr
+			e.caller(caller1(caller, &pc, 1, 1), pc, full)
 		}
 	}
 	e.Msgf(format, v...)
@@ -1627,11 +1627,11 @@ func (e *Entry) Type(key string, v interface{}) *Entry {
 func (e *Entry) Caller(depth int) *Entry {
 	if e != nil {
 		var full bool
-		var rpc [1]uintptr
+		var pc uintptr
 		if depth < 0 {
 			depth, full = -depth, true
 		}
-		e.caller(callers(depth, rpc[:]), rpc[:], full)
+		e.caller(caller1(depth, &pc, 1, 1), pc, full)
 	}
 	return e
 }
@@ -1737,11 +1737,12 @@ func (e *Entry) Msgs(args ...interface{}) {
 	e.Msg("")
 }
 
-func (e *Entry) caller(n int, rpc []uintptr, fullpath bool) {
+func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 	if n < 1 {
 		return
 	}
-	frame, _ := runtime.CallersFrames(rpc).Next()
+	rpc := [1]uintptr{pc}
+	frame, _ := runtime.CallersFrames(rpc[:]).Next()
 	file := frame.File
 	if !fullpath {
 		var i int
@@ -2138,8 +2139,8 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 		if caller < 0 {
 			caller, full = -caller, true
 		}
-		var rpc [1]uintptr
-		e.caller(callers(caller+2, rpc[:]), rpc[:], full)
+		var pc uintptr
+		e.caller(caller1(caller+2, &pc, 1, 1), pc, full)
 	}
 	e.Msg(b2s(p))
 	return len(p), nil
@@ -2209,3 +2210,7 @@ func absClock(abs uint64) (hour, min, sec int)
 //go:noescape
 //go:linkname callers runtime.callers
 func callers(skip int, pcbuf []uintptr) int
+
+//go:noescape
+//go:linkname caller1 runtime.callers
+func caller1(skip int, pc *uintptr, len, cap int) int //nolint:predeclared
