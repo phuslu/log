@@ -281,6 +281,15 @@ func (e *TSVEntry) NetIPPrefix(pfx netip.Prefix) *TSVEntry {
 	return e
 }
 
+// Encode encodes bytes using enc.AppendEncode to the entry.
+func (e *TSVEntry) Encode(key string, val []byte, enc interface {
+	AppendEncode(dst, src []byte) []byte
+}) *TSVEntry {
+	e.buf = enc.AppendEncode(e.buf, val)
+	e.buf = append(e.buf, e.sep)
+	return e
+}
+
 // Msg sends the entry.
 func (e *TSVEntry) Msg() {
 	if len(e.buf) != 0 {

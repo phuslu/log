@@ -1486,6 +1486,21 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	return e
 }
 
+// Encode encodes bytes using enc.AppendEncode to the entry.
+func (e *Entry) Encode(key string, val []byte, enc interface {
+	AppendEncode(dst, src []byte) []byte
+}) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = enc.AppendEncode(e.buf, val)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // Xid adds the field key with xid.ID as a base32 string to the entry.
 func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 	if e == nil {
