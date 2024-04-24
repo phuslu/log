@@ -828,7 +828,7 @@ import (
 const msg = "The quick brown fox jumps over the lazy dog"
 var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
-func BenchmarkDisableZap(b *testing.B) {
+func BenchmarkZapDisable(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -839,22 +839,7 @@ func BenchmarkDisableZap(b *testing.B) {
 	}
 }
 
-func BenchmarkDisableZeroLog(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkDisablePhusLog(b *testing.B) {
-	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkNormalZap(b *testing.B) {
+func BenchmarkZapNormal(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -865,21 +850,7 @@ func BenchmarkNormalZap(b *testing.B) {
 	}
 }
 
-func BenchmarkNormalZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkNormalPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkPrintfZap(b *testing.B) {
+func BenchmarkZapPrintf(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -890,21 +861,7 @@ func BenchmarkPrintfZap(b *testing.B) {
 	}
 }
 
-func BenchmarkPrintfZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
-}
-
-func BenchmarkPrintfPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
-}
-
-func BenchmarkCallerZap(b *testing.B) {
+func BenchmarkZapCaller(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -916,21 +873,7 @@ func BenchmarkCallerZap(b *testing.B) {
 	}
 }
 
-func BenchmarkCallerZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Caller().Timestamp().Logger()
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkCallerPhusLog(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkInterfaceZap(b *testing.B) {
+func BenchmarkZapInterface(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -941,14 +884,71 @@ func BenchmarkInterfaceZap(b *testing.B) {
 	}
 }
 
-func BenchmarkInterfaceZeroLog(b *testing.B) {
+func BenchmarkZeroLogDisable(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZeroLogNormal(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZeroLogPrintf(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkZeroLogCaller(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Caller().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZeroLogInterface(b *testing.B) {
 	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Interface("object", &obj).Msg(msg)
 	}
 }
 
-func BenchmarkInterfacePhusLog(b *testing.B) {
+func BenchmarkPhusLogDisable(b *testing.B) {
+	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogNormal(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogPrintf(b *testing.B) {
+	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkPhusLogCaller(b *testing.B) {
+	logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogInterface(b *testing.B) {
 	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Interface("object", &obj).Msg(msg)
@@ -961,28 +961,25 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkDisableZap-4         	187467127	        63.99 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4     	1000000000	         9.936 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4     	1000000000	         9.602 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapDisable-4         	192830028	        62.29 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZapNormal-4          	16530172	       719.9 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZapPrintf-4          	12584353	       950.7 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4          	 5897379	      2044 ns/op	     440 B/op	       3 allocs/op
+BenchmarkZapInterface-4       	11210505	      1062 ns/op	     224 B/op	       2 allocs/op
 
-BenchmarkNormalZap-4          	16856031	       710.0 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4      	36454795	       328.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	49532997	       241.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogDisable-4     	1000000000	         9.913 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogNormal-4      	36171573	       333.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4      	18433204	       651.0 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4      	 9489646	      1264 ns/op	     280 B/op	       3 allocs/op
+BenchmarkZeroLogInterface-4   	19415158	       619.9 ns/op	      48 B/op	       1 allocs/op
 
-BenchmarkPrintfZap-4          	12649004	       957.7 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	18361533	       649.2 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfPhusLog-4      	24578334	       489.7 ns/op	       0 B/op	       0 allocs/op
-
-BenchmarkCallerZap-4          	 5903000	      2031 ns/op	     440 B/op	       3 allocs/op
-BenchmarkCallerZeroLog-4      	 9284752	      1298 ns/op	     304 B/op	       4 allocs/op
-BenchmarkCallerPhusLog-4      	24503794	       491.8 ns/op	       0 B/op	       0 allocs/op
-
-BenchmarkInterfaceZap-4       	11321617	      1066 ns/op	     224 B/op	       2 allocs/op
-BenchmarkInterfaceZeroLog-4   	19416906	       612.9 ns/op	      48 B/op	       1 allocs/op
-BenchmarkInterfacePhusLog-4   	22791286	       526.5 ns/op	       0 B/op	       0 allocs/op
-
+BenchmarkPhusLogDisable-4     	1000000000	         9.594 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogNormal-4      	49606279	       243.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4      	24305824	       494.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4      	24334389	       490.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogInterface-4   	22904642	       532.7 ns/op	       0 B/op	       0 allocs/op
 PASS
-ok  	bench	193.531s
+ok  	bench	193.471s
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
