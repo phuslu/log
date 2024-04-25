@@ -21,6 +21,15 @@ type funcInfo struct {
 	datap unsafe.Pointer
 }
 
+//go:linkname findfunc runtime.findfunc
+func findfunc(pc uintptr) funcInfo
+
+//go:linkname funcInfoEntry runtime.funcInfo.entry
+func funcInfoEntry(f funcInfo) uintptr
+
+//go:linkname funcline1 runtime.funcline1
+func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
+
 func pcFileLine(pc uintptr) (file string, line int32) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
@@ -40,19 +49,8 @@ func pcFileLine(pc uintptr) (file string, line int32) {
 	return funcline1(funcInfo, pc, false)
 }
 
-//go:linkname findfunc runtime.findfunc
-func findfunc(pc uintptr) funcInfo
-
-//go:linkname funcInfoEntry runtime.funcInfo.entry
-func funcInfoEntry(f funcInfo) uintptr
-
-//go:linkname funcline1 runtime.funcline1
-func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
-
-type funcID uint8
-
 type inlinedCall struct {
-	funcID    funcID // type of the called function
+	funcID    uint8 // type of the called function
 	_         [3]byte
 	nameOff   int32 // offset into pclntab for name of called function
 	parentPc  int32 // position of an instruction whose source position is the call site (offset from entry)
@@ -73,10 +71,10 @@ type srcFunc struct {
 	datap     *uintptr
 	nameOff   int32
 	startLine int32
-	funcID    funcID
+	funcID    uint8
 }
 
-func pcNameFileLine(pc uintptr) (name, file string, line int) {
+func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return
@@ -96,10 +94,10 @@ func pcNameFileLine(pc uintptr) (name, file string, line int) {
 	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
 	u, uf := newInlineUnwinder(funcInfo, pc)
 	sf := inlineUnwinder_srcFunc(&u, uf)
-	name = funcNameForPrint(srcFunc_name(sf))
+	name = srcFunc_name(sf)
+	// name = funcNameForPrint(srcFunc_name(sf))
 
-	file, line32 := funcline1(funcInfo, pc, false)
-	line = int(line32)
+	file, line = funcline1(funcInfo, pc, false)
 
 	return
 }

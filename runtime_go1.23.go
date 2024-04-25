@@ -1,5 +1,5 @@
-//go:build go1.23 && !go1.24
-// +build go1.23,!go1.24
+//go:build go1.23
+// +build go1.23
 
 // MIT license, copy and modify from https://github.com/tlog-dev/loc
 
@@ -13,13 +13,22 @@ import (
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //
 //go:noescape
-//go:linkname Fastrandn runtime.fastrandn
+//go:linkname Fastrandn runtime.cheaprandn
 func Fastrandn(x uint32) uint32
 
 type funcInfo struct {
 	_func *uintptr
 	datap unsafe.Pointer
 }
+
+//go:linkname findfunc runtime.findfunc
+func findfunc(pc uintptr) funcInfo
+
+//go:linkname funcInfoEntry runtime.funcInfo.entry
+func funcInfoEntry(f funcInfo) uintptr
+
+//go:linkname funcline1 runtime.funcline1
+func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
 
 func pcFileLine(pc uintptr) (file string, line int32) {
 	funcInfo := findfunc(pc)
@@ -39,12 +48,3 @@ func pcFileLine(pc uintptr) (file string, line int32) {
 
 	return funcline1(funcInfo, pc, false)
 }
-
-//go:linkname findfunc runtime.findfunc
-func findfunc(pc uintptr) funcInfo
-
-//go:linkname funcInfoEntry runtime.funcInfo.entry
-func funcInfoEntry(f funcInfo) uintptr
-
-//go:linkname funcline1 runtime.funcline1
-func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
