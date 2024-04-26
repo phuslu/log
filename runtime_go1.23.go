@@ -7,30 +7,36 @@
 package log
 
 import (
-	"unsafe"
+	_ "unsafe"
 )
 
-// Fastrandn returns a pseudorandom uint32 in [0,n).
-//
-//go:noescape
-//go:linkname Fastrandn runtime.cheaprandn
-func Fastrandn(x uint32) uint32
-
-type funcInfo struct {
-	_func *uintptr
-	datap unsafe.Pointer
+// inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.
+type inlinedCall struct {
+	funcID    uint8 // type of the called function
+	_         [3]byte
+	nameOff   int32 // offset into pclntab for name of called function
+	parentPc  int32 // position of an instruction whose source position is the call site (offset from entry)
+	startLine int32 // line number of start of function (func keyword/TEXT directive)
 }
 
-//go:linkname findfunc runtime.findfunc
-func findfunc(pc uintptr) funcInfo
+type inlineUnwinder struct {
+	f       funcInfo
+	inlTree *[1 << 20]inlinedCall
+}
 
-//go:linkname funcInfoEntry runtime.funcInfo.entry
-func funcInfoEntry(f funcInfo) uintptr
+type inlineFrame struct {
+	pc    uintptr
+	index int32
+}
 
-//go:linkname funcline1 runtime.funcline1
-func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
+type srcFunc struct {
+	datap     *uintptr
+	nameOff   int32
+	startLine int32
+	funcID    uint8
+}
 
-func pcFileLine(pc uintptr) (file string, line int32) {
+func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return
@@ -46,5 +52,35 @@ func pcFileLine(pc uintptr) (file string, line int32) {
 		pc--
 	}
 
-	return funcline1(funcInfo, pc, false)
+	file, line = funcline1(funcInfo, pc, false)
+
+	// It's important that interpret pc non-strictly as cgoTraceback may
+	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
+	u, uf := newInlineUnwinder(funcInfo, pc)
+	sf := inlineUnwinder_srcFunc(&u, uf)
+	name = srcFunc_name(sf)
+	// name = funcNameForPrint(srcFunc_name(sf))
+
+	return
 }
+
+//go:linkname newInlineUnwinder runtime.newInlineUnwinder
+func newInlineUnwinder(f funcInfo, pc uintptr) (inlineUnwinder, inlineFrame)
+
+//go:linkname inlineUnwinder_srcFunc runtime.(*inlineUnwinder).srcFunc
+func inlineUnwinder_srcFunc(*inlineUnwinder, inlineFrame) srcFunc
+
+//go:linkname inlineUnwinder_isInlined runtime.(*inlineUnwinder).isInlined
+func inlineUnwinder_isInlined(*inlineUnwinder, inlineFrame) bool
+
+//go:linkname srcFunc_name runtime.srcFunc.name
+func srcFunc_name(srcFunc) string
+
+//go:linkname funcNameForPrint runtime.funcNameForPrint
+func funcNameForPrint(name string) string
+
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(x uint32) uint32
