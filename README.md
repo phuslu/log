@@ -161,7 +161,7 @@ type FileWriter struct {
 *Highlights*:
 - FileWriter implements log.Writer and io.Writer interfaces both, it is a recommended alternative to [lumberjack][lumberjack].
 - FileWriter creates a symlink to the current logging file, it requires administrator privileges on Windows.
-- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) then reach its MaxSize.
+- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) until reach its MaxSize.
 
 ## Getting Started
 
@@ -809,7 +809,8 @@ func main() {
 
 ### High Performance
 
-The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog, which runs on [github actions][benchmark]:
+<details>
+  <summary>The most common benchmarks(disable/normal/caller/printf/interface) against slog/zap/zerolog</summary>
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
@@ -817,6 +818,8 @@ package main
 
 import (
 	"io"
+	stdlog "log"
+	"log/slog"
 	"testing"
 
 	"github.com/phuslu/log"
@@ -828,14 +831,49 @@ import (
 const msg = "The quick brown fox jumps over the lazy dog"
 var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
+func BenchmarkSlogDisable(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Debug(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogNormal(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogPrintf(b *testing.B) {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(io.Discard, nil)))
+	for i := 0; i < b.N; i++ {
+		stdlog.Printf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkSlogCaller(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, &slog.HandlerOptions{AddSource: true}))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogInterface(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "object", &obj)
+	}
+}
+
 func BenchmarkZapDisable(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
-	))
+	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Debug(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Debugw(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
@@ -844,9 +882,9 @@ func BenchmarkZapNormal(b *testing.B) {
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
-	))
+	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Infow(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
@@ -867,9 +905,9 @@ func BenchmarkZapCaller(b *testing.B) {
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel),
 		zap.AddCaller(),
-	)
+	).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Infow(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
@@ -955,36 +993,44 @@ func BenchmarkPhusLogInterface(b *testing.B) {
 	}
 }
 ```
+
+</details>
+
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
 goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkZapDisable-4         	192830028	        62.29 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZapNormal-4          	16530172	       719.9 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZapPrintf-4          	12584353	       950.7 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZapCaller-4          	 5897379	      2044 ns/op	     440 B/op	       3 allocs/op
-BenchmarkZapInterface-4       	11210505	      1062 ns/op	     224 B/op	       2 allocs/op
+BenchmarkSlogDisable-4        	1000000000	         8.438 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogNormal-4         	 8976294	      1337 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogPrintf-4         	11826330	      1020 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4         	 5401592	      2202 ns/op	     688 B/op	       9 allocs/op
+BenchmarkSlogInterface-4      	 9175490	      1306 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkZeroLogDisable-4     	1000000000	         9.913 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogNormal-4      	36171573	       333.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogPrintf-4      	18433204	       651.0 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZeroLogCaller-4      	 9489646	      1264 ns/op	     280 B/op	       3 allocs/op
-BenchmarkZeroLogInterface-4   	19415158	       619.9 ns/op	      48 B/op	       1 allocs/op
+BenchmarkZapDisable-4         	192014136	        62.76 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZapNormal-4          	16954477	       712.5 ns/op	     192 B/op	       1 allocs/op
+BenchmarkZapPrintf-4          	12580900	       948.9 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4          	 5984283	      2011 ns/op	     440 B/op	       3 allocs/op
+BenchmarkZapInterface-4       	11327323	      1055 ns/op	     224 B/op	       2 allocs/op
 
-BenchmarkPhusLogDisable-4     	1000000000	         9.594 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogNormal-4      	49606279	       243.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogPrintf-4      	24305824	       494.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogCaller-4      	24334389	       490.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogInterface-4   	22904642	       532.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogDisable-4     	1000000000	         9.940 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogNormal-4      	36321386	       331.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4      	18025590	       656.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4      	 9181623	      1311 ns/op	     304 B/op	       4 allocs/op
+BenchmarkZeroLogInterface-4   	19666522	       611.6 ns/op	      48 B/op	       1 allocs/op
+
+BenchmarkPhusLogDisable-4     	1000000000	         9.599 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogNormal-4      	51243552	       233.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4      	23395036	       510.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4      	23624828	       506.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogInterface-4   	21708657	       554.7 ns/op	       0 B/op	       0 allocs/op
+
 PASS
-ok  	bench	193.471s
+ok  	bench	256.505s
 ```
-This library uses the following special techniques to achieve better performance,
-1. handwriting time formatting
-1. manual inlining
-1. unrolled functions
+
+In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
 
 ## A Real World Example
 
