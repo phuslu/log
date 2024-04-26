@@ -2207,9 +2207,5 @@ func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday i
 func absClock(abs uint64) (hour, min, sec int)
 
 //go:noescape
-//go:linkname callers runtime.callers
-func callers(skip int, pcbuf []uintptr) int
-
-//go:noescape
 //go:linkname caller1 runtime.callers
-func caller1(skip int, pc *uintptr, len, cap int) int //nolint:predeclared
+func caller1(skip int, pc *uintptr, len, cap int) int

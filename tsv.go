@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/netip"
 	"os"
-	"runtime"
 	"strconv"
 	"sync"
 )
@@ -115,13 +114,12 @@ func (e *TSVEntry) TimestampMS() *TSVEntry {
 
 // Caller adds the file:line of to the entry.
 func (e *TSVEntry) Caller(depth int) *TSVEntry {
-	var rpc [1]uintptr
-	i := callers(depth, rpc[:])
+	var pc uintptr
+	i := caller1(depth, &pc, 1, 1)
 	if i < 1 {
 		return e
 	}
-	frame, _ := runtime.CallersFrames(rpc[:]).Next()
-	file := frame.File
+	file, line := pcFileLine(pc)
 	for i = len(file) - 1; i >= 0; i-- {
 		if file[i] == '/' {
 			break
@@ -132,7 +130,7 @@ func (e *TSVEntry) Caller(depth int) *TSVEntry {
 	}
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
-	e.buf = strconv.AppendInt(e.buf, int64(frame.Line), 10)
+	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
 	e.buf = append(e.buf, e.sep)
 	return e
 }

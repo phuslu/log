@@ -1113,7 +1113,7 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
 [build]: https://github.com/phuslu/log/actions
 [stability-img]: https://img.shields.io/badge/stability-maintenance-green.svg
-[high-performance]: https://github.com/phuslu/log#high-performance
+[high-performance]: https://github.com/phuslu/log?tab=readme-ov-file#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-WudQ__2rGj7R-29BEB0?style=flat&logo=go
