@@ -10,12 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go_version: ['1.22', '1.21', '1.20', '1.19', '1.18']
+        go-version: ['tip', '1.22', '1.21', '1.20', '1.19', '1.18']
     steps:
-      - uses: actions/setup-go@v4
+      - name: Setup Go
+        if: matrix.go-version != 'tip'
+        uses: actions/setup-go@master
         with:
-          go-version: ${{ matrix.go_version }}
-          check-latest: true
+          go-version: ${{ matrix.go-version }}
+      - name: Setup Go tip if needed
+        if: matrix.go-version == 'tip'
+        run: |
+          set -ex
+          commit=$(git ls-remote https://github.com/golang/go.git HEAD | awk '{print $1}')
+          curl -LOJ https://storage.googleapis.com/go-build-snap/go/linux-amd64/${commit}.tar.gz
+          rm -rf /usr/local/go
+          sudo tar xzf ${commit}.tar.gz -C /usr/local
+          sudo ln -sf /usr/local/go/bin/go /usr/bin/go
+          go version
       - uses: actions/checkout@v4
       - name: Build
         run: go build -v -race
