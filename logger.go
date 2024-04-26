@@ -1744,13 +1744,21 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 
 	file, line := pcFileLine(pc)
 	if !fullpath {
-		var i int
+		var i, j int
 		for i = len(file) - 1; i >= 0; i-- {
 			if file[i] == '/' {
 				break
 			}
 		}
 		if i > 0 {
+			for j = i - 1; j >= 0; j-- {
+				if file[j] == '/' {
+					break
+				}
+			}
+			if j > 0 {
+				i = j
+			}
 			file = file[i+1:]
 		}
 	}
