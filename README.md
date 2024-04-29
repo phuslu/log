@@ -813,16 +813,16 @@ func main() {
   <summary>The most common benchmarks(disable/normal/caller/printf/interface) against slog/zap/zerolog</summary>
 
 ```go
-// go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
+// go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem bench_test.go
 package main
 
 import (
 	"io"
-	stdlog "log"
+	"log"
 	"log/slog"
 	"testing"
 
-	"github.com/phuslu/log"
+	phuslog "github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -848,7 +848,7 @@ func BenchmarkSlogNormal(b *testing.B) {
 func BenchmarkSlogPrintf(b *testing.B) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	for i := 0; i < b.N; i++ {
-		stdlog.Printf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+		log.Printf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
@@ -959,35 +959,35 @@ func BenchmarkZeroLogInterface(b *testing.B) {
 }
 
 func BenchmarkPhusLogDisable(b *testing.B) {
-	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
+	logger := phuslog.Logger{Level: phuslog.InfoLevel, Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
 func BenchmarkPhusLogNormal(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
 func BenchmarkPhusLogPrintf(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
 func BenchmarkPhusLogCaller(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
+	logger := phuslog.Logger{Caller: 1, Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
 func BenchmarkPhusLogInterface(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Interface("object", &obj).Msg(msg)
 	}
@@ -1028,6 +1028,118 @@ BenchmarkPhusLogInterface-4   	21407361	       558.8 ns/op	       0 B/op	       
 
 PASS
 ok  	bench	246.926s
+```
+
+<details>
+  <summary>As slog handlers, comparing with stdlib/zap/zerolog implementations</summary>
+
+```go
+// go test -v -cpu=1 -run=none -bench=. -benchtime=10s -benchmem bench_test.go
+package bench
+
+import (
+	"io"
+	"log/slog"
+	"testing"
+
+	"github.com/phsym/zeroslog"
+	phuslog "github.com/phuslu/log"
+	"go.uber.org/zap"
+	"go.uber.org/zap/exp/zapslog"
+	"go.uber.org/zap/zapcore"
+)
+
+const msg = "The quick brown fox jumps over the lazy dog"
+
+func BenchmarkSlogNormalStd(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupStd(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogNormalZap(b *testing.B) {
+	logcore := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)
+	logger := slog.New(zapslog.NewHandler(logcore, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupZap(b *testing.B) {
+	logcore := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)
+	logger := slog.New(zapslog.NewHandler(logcore, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogNormalZerolog(b *testing.B) {
+	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo}))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupZerolog(b *testing.B) {
+	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo})).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogNormalPhuslog(b *testing.B) {
+	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler())
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupPhuslog(b *testing.B) {
+	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler()).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+```
+
+</details>
+
+A Performance result as below, for daily benchmark results see [github actions][benchmark]
+```
+goos: linux
+goarch: amd64
+cpu: AMD EPYC 7763 64-Core Processor
+
+BenchmarkSlogNormalStd     	 4358460	      1422 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupStd      	 4122886	      1467 ns/op	     120 B/op	       3 allocs/op
+
+BenchmarkSlogNormalZap     	 4803654	      1259 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupZap      	 4735993	      1254 ns/op	     192 B/op	       1 allocs/op
+
+BenchmarkSlogNormalZerolog 	 7361766	       809.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupZerolog  	 5416699	      1118 ns/op	     288 B/op	       1 allocs/op
+
+BenchmarkSlogNormalPhuslog 	 8336017	       717.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupPhuslog  	 8357283	       727.1 ns/op	       0 B/op	       0 allocs/op
+
+PASS
+ok  	bench	57.120s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.

@@ -20,11 +20,31 @@ jobs:
         run: |
           mkdir bench
           cd bench
-          awk '{if($0 ~ "// go test -v"){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' ../README.md | tee bench_test.go
+          awk '{if($0 ~ "// go test -v -cpu=4 "){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' ../README.md | tee bench_test.go
           go mod init bench
           go mod tidy
           go mod edit -replace github.com/phuslu/log=../
       - name: Throughput benchmarks
         working-directory: ./bench
         run: |
-          go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem
+          go test -v -cpu=4 -run=none -bench=. -benchtime=5s -benchmem
+  sloghanders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+          check-latest: true
+      - uses: actions/checkout@v4
+      - name: go mod tidy
+        run: |
+          mkdir bench
+          cd bench
+          awk '{if($0 ~ "// go test -v -cpu=1 "){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' ../README.md | tee bench_test.go
+          go mod init bench
+          go mod tidy
+          go mod edit -replace github.com/phuslu/log=../
+      - name: Throughput benchmarks
+        working-directory: ./bench
+        run: |
+          go test -v -cpu=1 -run=none -bench=. -benchtime=5s -benchmem
