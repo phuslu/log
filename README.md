@@ -1,4 +1,4 @@
-# phuslog - High performance structured logging
+# phuslog - Fastest structured logging
 
 [![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
@@ -272,7 +272,7 @@ func (l *Glog) Errorf(fmt string, a ...any) { l.Logger.Error().Msgf(fmt, a...) }
 
 var glog = &Glog{log.Logger{
 	Level:      log.InfoLevel,
-	Caller:     1,
+	Caller:     2,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{Formatter: func(w io.Writer, a *log.FormatterArgs) (int, error) {
 		return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message, a.Stack)
@@ -691,9 +691,9 @@ func main() {
 }
 ```
 
-### log/slog Adapter
+### slog Adapter
 
-Using wrapped loggers for log/slog. [![playground][play-slog-img]][play-slog]
+Using wrapped loggers for slog. [![playground][play-slog-img]][play-slog]
 
 ```go
 package main
@@ -705,18 +705,18 @@ import (
 )
 
 func main() {
-	slog.SetDefault((&log.Logger{
+	var logger *slog.Logger = (&log.Logger{
 		Level:      log.InfoLevel,
 		TimeField:  "date",
 		TimeFormat: "2006-01-02",
 		Caller:     1,
-		Context:    log.NewContext(nil).Str("logger", "my_slog").Int("myid", 42).Value(),
-	}).Slog())
+	}).Slog()
 
-	slog.Debug("hello from slog Info")
-	slog.Info("hello from slog Info")
-	slog.Warn("hello from slog Warn")
-	slog.Error("hello from slog Error")
+	logger = logger.With("logger", "a_test_slog").With("everything", 42)
+
+	logger.Info("hello from slog Info")
+	logger.Warn("hello from slog Warn")
+	logger.Error("hello from slog Error")
 }
 ```
 
@@ -1002,32 +1002,32 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogDisable-4        	1000000000	         8.438 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogNormal-4         	 8976294	      1337 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogPrintf-4         	11826330	      1020 ns/op	      80 B/op	       1 allocs/op
-BenchmarkSlogCaller-4         	 5401592	      2202 ns/op	     688 B/op	       9 allocs/op
-BenchmarkSlogInterface-4      	 9175490	      1306 ns/op	     112 B/op	       2 allocs/op
+BenchmarkSlogDisable-4        	1000000000	         8.404 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogNormal-4         	 9004674	      1332 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogPrintf-4         	11932806	      1011 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4         	 5491897	      2184 ns/op	     688 B/op	       9 allocs/op
+BenchmarkSlogInterface-4      	 9200828	      1299 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkZapDisable-4         	192014136	        62.76 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZapNormal-4          	16954477	       712.5 ns/op	     192 B/op	       1 allocs/op
-BenchmarkZapPrintf-4          	12580900	       948.9 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZapCaller-4          	 5984283	      2011 ns/op	     440 B/op	       3 allocs/op
-BenchmarkZapInterface-4       	11327323	      1055 ns/op	     224 B/op	       2 allocs/op
+BenchmarkZapDisable-4         	1000000000	         8.099 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapNormal-4          	13027324	       912.5 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapPrintf-4          	12789286	       949.7 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4          	 7093309	      1681 ns/op	     632 B/op	       3 allocs/op
+BenchmarkZapInterface-4       	11350916	      1046 ns/op	     224 B/op	       2 allocs/op
 
-BenchmarkZeroLogDisable-4     	1000000000	         9.940 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogNormal-4      	36321386	       331.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogPrintf-4      	18025590	       656.6 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZeroLogCaller-4      	 9181623	      1311 ns/op	     304 B/op	       4 allocs/op
-BenchmarkZeroLogInterface-4   	19666522	       611.6 ns/op	      48 B/op	       1 allocs/op
+BenchmarkZeroLogDisable-4     	1000000000	         9.929 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogNormal-4      	36481122	       327.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4      	17880010	       664.8 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4      	 9288362	      1293 ns/op	     304 B/op	       4 allocs/op
+BenchmarkZeroLogInterface-4   	19508446	       614.7 ns/op	      48 B/op	       1 allocs/op
 
-BenchmarkPhusLogDisable-4     	1000000000	         9.599 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogNormal-4      	51243552	       233.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogPrintf-4      	23395036	       510.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogCaller-4      	23624828	       506.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogInterface-4   	21708657	       554.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogDisable-4     	1000000000	         9.610 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogNormal-4      	51244849	       236.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4      	23559231	       509.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4      	23906091	       508.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogInterface-4   	21407361	       558.8 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	256.505s
+ok  	bench	246.926s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
@@ -1158,35 +1158,35 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
 [build]: https://github.com/phuslu/log/actions
-[stability-img]: https://img.shields.io/badge/stability-maintenance-green.svg
+[stability-img]: https://img.shields.io/badge/stability-stable-green.svg
 [high-performance]: https://github.com/phuslu/log?tab=readme-ov-file#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
-[play-customize-img]: https://img.shields.io/badge/playground-WudQ__2rGj7R-29BEB0?style=flat&logo=go
-[play-customize]: https://go.dev/play/p/WudQ_2rGj7R
+[play-customize-img]: https://img.shields.io/badge/playground-p9ZSSL4--IaK-29BEB0?style=flat&logo=go
+[play-customize]: https://go.dev/play/p/p9ZSSL4-IaK
 [play-multiio-img]: https://img.shields.io/badge/playground-MH--J3Je--KEq-29BEB0?style=flat&logo=go
 [play-multiio]: https://go.dev/play/p/MH-J3Je-KEq
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
 [play-combined]: https://go.dev/play/p/24d4eDIpDeR
-[play-file-img]: https://img.shields.io/badge/playground-__tqZqJla1IE-29BEB0?style=flat&logo=go
-[play-file]: https://go.dev/play/p/_tqZqJla1IE
+[play-file-img]: https://img.shields.io/badge/playground-tjMc97E2EpW-29BEB0?style=flat&logo=go
+[play-file]: https://go.dev/play/p/tjMc97E2EpW
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
 [play-pretty]: https://go.dev/play/p/SCcXG33esvI
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
-[play-glog-img]: https://img.shields.io/badge/playground-6pEThv3WO7W-29BEB0?style=flat&logo=go
-[play-glog]: https://go.dev/play/p/6pEThv3WO7W
-[play-logfmt-img]: https://img.shields.io/badge/playground-7aSa--rxHmqw-29BEB0?style=flat&logo=go
-[play-logfmt]: https://go.dev/play/p/7aSa-rxHmqw
+[play-glog-img]: https://img.shields.io/badge/playground-oxSyv3ra5W5-29BEB0?style=flat&logo=go
+[play-glog]: https://go.dev/play/p/oxSyv3ra5W5
+[play-logfmt-img]: https://img.shields.io/badge/playground-8ZsrWnsWBep-29BEB0?style=flat&logo=go
+[play-logfmt]: https://go.dev/play/p/8ZsrWnsWBep
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://go.dev/play/p/oAVAo302faf
 [play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go
 [play-context-add]: https://go.dev/play/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
 [play-marshal]: https://go.dev/play/p/SoQdwQOaQR2
-[play-stdlog]: https://go.dev/play/p/DnKyE92LEEm
-[play-stdlog-img]: https://img.shields.io/badge/playground-DnKyE92LEEm-29BEB0?style=flat&logo=go
-[play-slog]: https://go.dev/play/p/ez_yIPOXBQF
-[play-slog-img]: https://img.shields.io/badge/playground-ez__yIPOXBQF-29BEB0?style=flat&logo=go
+[play-stdlog]: https://go.dev/play/p/LU8vQruS7-S
+[play-stdlog-img]: https://img.shields.io/badge/playground-LU8vQruS7--S-29BEB0?style=flat&logo=go
+[play-slog]: https://go.dev/play/p/JW3Ts6FcB40
+[play-slog-img]: https://img.shields.io/badge/playground-JW3Ts6FcB40-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
