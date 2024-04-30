@@ -1116,6 +1116,20 @@ func BenchmarkSlogGroupPhuslog(b *testing.B) {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
+
+func BenchmarkSlogNormalPhuslogStd(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupPhuslogStd(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
 ```
 
 </details>
@@ -1126,20 +1140,23 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogNormalStd     	 4358460	      1422 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogGroupStd      	 4122886	      1467 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogNormalStd        	 4408033	      1383 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupStd         	 4298301	      1398 ns/op	     120 B/op	       3 allocs/op
 
-BenchmarkSlogNormalZap     	 4803654	      1259 ns/op	     192 B/op	       1 allocs/op
-BenchmarkSlogGroupZap      	 4735993	      1254 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogNormalZap        	 4753046	      1273 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupZap         	 4724052	      1257 ns/op	     192 B/op	       1 allocs/op
 
-BenchmarkSlogNormalZerolog 	 7361766	       809.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupZerolog  	 5416699	      1118 ns/op	     288 B/op	       1 allocs/op
+BenchmarkSlogNormalZerolog    	 7548705	       789.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupZerolog     	 5592763	      1076 ns/op	     288 B/op	       1 allocs/op
 
-BenchmarkSlogNormalPhuslog 	 8336017	       717.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupPhuslog  	 8357283	       727.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogNormalPhuslog    	 8318289	       720.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupPhuslog     	 8175591	       737.8 ns/op	       0 B/op	       0 allocs/op
+
+BenchmarkSlogNormalPhuslogStd 	 7978171	       755.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupPhuslogStd  	 7728466	       775.4 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	57.120s
+ok  	bench	70.366s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
