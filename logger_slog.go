@@ -9,10 +9,23 @@ import (
 )
 
 func slogAttrEval(e *Entry, a slog.Attr) *Entry {
+	if a.Equal(slog.Attr{}) {
+		return e
+	}
 	value := a.Value.Resolve()
 	switch value.Kind() {
 	case slog.KindGroup:
-		return e.Dict(a.Key, slogAttrEval(NewContext(nil), value.Group()[0]).Value())
+		b := bbpool.Get().(*bb)
+		defer bbpool.Put(b)
+		c := NewContext(b.B[:0])
+		for _, attr := range value.Group() {
+			c = slogAttrEval(c, attr)
+		}
+		if a.Key != "" {
+			return e.Dict(a.Key, c.Value())
+		} else {
+			return e.Context(c.Value())
+		}
 	case slog.KindBool:
 		return e.Bool(a.Key, value.Bool())
 	case slog.KindDuration:
@@ -49,6 +62,7 @@ func (group *slogGroup) lastChild() *slogGroup {
 
 func (group *slogGroup) WithAttrs(attrs []slog.Attr) {
 	if child := group.lastChild(); child == nil {
+		group.attrs = append([]any{}, group.attrs...)
 		for _, attr := range attrs {
 			group.attrs = append(group.attrs, attr)
 		}
@@ -59,6 +73,7 @@ func (group *slogGroup) WithAttrs(attrs []slog.Attr) {
 
 func (group *slogGroup) WithGroup(name string) {
 	if child := group.lastChild(); child == nil {
+		group.attrs = append([]any{}, group.attrs...)
 		group.attrs = append(group.attrs, &slogGroup{name: name})
 	} else {
 		child.WithGroup(name)
@@ -71,7 +86,9 @@ func (group *slogGroup) Eval(e *Entry) *Entry {
 		case slog.Attr:
 			e = slogAttrEval(e, v)
 		case *slogGroup:
-			e = e.Dict(v.name, v.Eval(NewContext(nil)).Value())
+			if c := v.Eval(NewContext(nil)).Value(); len(c) != 0 {
+				e = e.Dict(v.name, c)
+			}
 		}
 	}
 	return e
@@ -90,8 +107,9 @@ func (h slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h slogHandler) WithGroup(name string) slog.Handler {
-	h.group.WithGroup(name)
-	h.context = h.group.Eval(NewContext(nil)).Value()
+	if name != "" {
+		h.group.WithGroup(name)
+	}
 	return &h
 }
 
