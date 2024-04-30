@@ -96,6 +96,7 @@ func (group *slogGroup) Eval(e *Entry) *Entry {
 
 type slogHandler struct {
 	logger  Logger
+	caller  int
 	group   slogGroup
 	context Context
 }
@@ -142,6 +143,10 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 		e = h.logger.Log()
 	}
 
+	if h.caller != 0 {
+		e.caller(1, r.PC, h.caller < 0)
+	}
+
 	if len(h.group.attrs) != 0 {
 		e = e.Context(h.context)
 	}
@@ -156,12 +161,12 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 
 // Slog wraps the Logger to provide *slog.Logger
 func (l *Logger) Slog() *slog.Logger {
-	logger := *l
-	switch {
-	case logger.Caller > 0:
-		logger.Caller += 3
-	case logger.Caller < 0:
-		logger.Caller -= 3
+	h := &slogHandler{
+		logger: *l,
+		caller: l.Caller,
 	}
-	return slog.New(&slogHandler{logger: logger})
+
+	h.logger.Caller = 0
+
+	return slog.New(h)
 }

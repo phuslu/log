@@ -26,7 +26,7 @@ func TestSlogAttrs(t *testing.T) {
 		Level:      InfoLevel,
 		TimeField:  "date",
 		TimeFormat: "2006-01-02",
-		Caller:     1,
+		Caller:     -1,
 	}).Slog()
 
 	sublogger := logger.With("logger", "attr_logger").With("everything", 42)
