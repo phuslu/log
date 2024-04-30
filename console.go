@@ -16,7 +16,8 @@ func IsTerminal(fd uintptr) bool {
 // IMPORTANT: Don't use ConsoleWriter on critical path of a high concurrency and low latency application.
 //
 // Default output format:
-//     {Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
+//
+//	{Time} {Level} {Goid} {Caller} > {Message} {Key}={Value} {Key}={Value}
 //
 // Note: The performance of ConsoleWriter is not good enough, because it will
 // parses JSON input into structured records, then output in a specific order.
@@ -151,7 +152,10 @@ func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err e
 		// key and values
 		for _, kv := range args.KeyValues {
 			if w.QuoteString && kv.ValueType == 's' {
-				fmt.Fprintf(b, " %s=%s", kv.Key, strconv.Quote(kv.Value))
+				b.B = append(b.B, ' ')
+				b.B = append(b.B, kv.Key...)
+				b.B = append(b.B, '=')
+				b.B = strconv.AppendQuote(b.B, kv.Value)
 			} else {
 				fmt.Fprintf(b, " %s=%s", kv.Key, kv.Value)
 			}
@@ -189,10 +193,14 @@ func (f LogfmtFormatter) Formatter(out io.Writer, args *FormatterArgs) (n int, e
 		fmt.Fprintf(b, "level=%s ", args.Level)
 	}
 	if args.Caller != "" {
-		fmt.Fprintf(b, "goid=%s caller=%s ", args.Goid, strconv.Quote(args.Caller))
+		fmt.Fprintf(b, "goid=%s caller=", args.Goid)
+		b.B = strconv.AppendQuote(b.B, args.Caller)
+		b.B = append(b.B, ' ')
 	}
 	if args.Stack != "" {
-		fmt.Fprintf(b, "stack=%s ", strconv.Quote(args.Stack))
+		b.B = append(b.B, "stack="...)
+		b.B = strconv.AppendQuote(b.B, args.Stack)
+		b.B = append(b.B, ' ')
 	}
 	// key and values
 	for _, kv := range args.KeyValues {
@@ -206,13 +214,17 @@ func (f LogfmtFormatter) Formatter(out io.Writer, args *FormatterArgs) (n int, e
 		case 'S':
 			fmt.Fprintf(b, "%s=%s ", kv.Key, kv.Value)
 		case 's':
-			fmt.Fprintf(b, "%s=%s ", kv.Key, strconv.Quote(kv.Value))
+			fallthrough
 		default:
-			fmt.Fprintf(b, "%s=%s ", kv.Key, strconv.Quote(kv.Value))
+			b.B = append(b.B, kv.Key...)
+			b.B = append(b.B, '=')
+			b.B = strconv.AppendQuote(b.B, kv.Value)
+			b.B = append(b.B, ' ')
 		}
 	}
 	// message
-	fmt.Fprintf(b, "%s\n", strconv.Quote(args.Message))
+	b.B = strconv.AppendQuote(b.B, args.Message)
+	b.B = append(b.B, '\n')
 
 	return out.Write(b.B)
 }
