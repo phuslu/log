@@ -124,12 +124,12 @@ func Trace() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(TraceLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -140,12 +140,12 @@ func Debug() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(DebugLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -156,12 +156,12 @@ func Info() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(InfoLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -172,12 +172,12 @@ func Warn() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(WarnLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -188,12 +188,12 @@ func Error() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(ErrorLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -204,12 +204,12 @@ func Fatal() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(FatalLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -220,12 +220,12 @@ func Panic() (e *Entry) {
 		return nil
 	}
 	e = DefaultLogger.header(PanicLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -233,12 +233,12 @@ func Panic() (e *Entry) {
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
-	if caller := DefaultLogger.Caller; caller != 0 {
+	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, DefaultLogger.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	e.Msgf(format, v...)
 }
@@ -249,12 +249,12 @@ func (l *Logger) Trace() (e *Entry) {
 		return nil
 	}
 	e = l.header(TraceLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -265,12 +265,12 @@ func (l *Logger) Debug() (e *Entry) {
 		return nil
 	}
 	e = l.header(DebugLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -281,12 +281,12 @@ func (l *Logger) Info() (e *Entry) {
 		return nil
 	}
 	e = l.header(InfoLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -297,12 +297,12 @@ func (l *Logger) Warn() (e *Entry) {
 		return nil
 	}
 	e = l.header(WarnLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -313,12 +313,12 @@ func (l *Logger) Error() (e *Entry) {
 		return nil
 	}
 	e = l.header(ErrorLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -329,12 +329,12 @@ func (l *Logger) Fatal() (e *Entry) {
 		return nil
 	}
 	e = l.header(FatalLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -345,12 +345,12 @@ func (l *Logger) Panic() (e *Entry) {
 		return nil
 	}
 	e = l.header(PanicLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -358,12 +358,12 @@ func (l *Logger) Panic() (e *Entry) {
 // Log starts a new message with no level.
 func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -374,12 +374,12 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 		return nil
 	}
 	e = l.header(level)
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -400,12 +400,12 @@ func (l *Logger) Err(err error) (e *Entry) {
 	if level == ErrorLevel {
 		e = e.Err(err)
 	}
-	if caller := l.Caller; caller != 0 {
+	if caller, full := l.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+		e.caller(caller1(caller, &pc, 1, 1), pc, full)
 	}
 	return
 }
@@ -419,12 +419,12 @@ func (l *Logger) SetLevel(level Level) {
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(noLevel)
 	if e != nil {
-		if caller := l.Caller; caller != 0 {
+		if caller, full := l.Caller, false; caller != 0 {
 			if caller < 0 {
-				caller = -caller
+				caller, full = -caller, true
 			}
 			var pc uintptr
-			e.caller(caller1(caller, &pc, 1, 1), pc, l.Caller < 0)
+			e.caller(caller1(caller, &pc, 1, 1), pc, full)
 		}
 	}
 	e.Msgf(format, v...)

@@ -13,12 +13,12 @@ func (w *stdLogWriter) Write(p []byte) (int, error) {
 		return 0, nil
 	}
 	e := w.Logger.header(w.Level)
-	if caller := w.Logger.Caller; caller != 0 {
+	if caller, full := w.Logger.Caller, false; caller != 0 {
 		if caller < 0 {
-			caller = -caller
+			caller, full = -caller, true
 		}
 		var pc uintptr
-		e.caller(caller1(caller+2, &pc, 1, 1), pc, w.Logger.Caller < 0)
+		e.caller(caller1(caller+2, &pc, 1, 1), pc, full)
 	}
 	e.Msg(b2s(p))
 	return len(p), nil
