@@ -5,8 +5,6 @@ package log
 
 import (
 	"encoding/binary"
-	"fmt"
-	"io"
 	"net"
 	"os"
 	"strings"
@@ -72,13 +70,26 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	b.B = b.B[:0]
 	defer bbpool.Put(b)
 
-	print := func(w io.Writer, name, value string) {
-		if strings.ContainsRune(value, '\n') {
-			fmt.Fprintln(w, name)
-			_ = binary.Write(w, binary.LittleEndian, uint64(len(value)))
-			fmt.Fprintln(w, value)
+	print := func(upper bool, name, value string) {
+		if upper {
+			for _, c := range []byte(name) {
+				if 'a' <= c && c <= 'z' {
+					c -= 'a' - 'A'
+				}
+				b.B = append(b.B, c)
+			}
 		} else {
-			fmt.Fprintf(w, "%s=%s\n", name, value)
+			b.B = append(b.B, name...)
+		}
+		if strings.ContainsRune(value, '\n') {
+			b.B = append(b.B, '\n')
+			_ = binary.Write(b, binary.LittleEndian, uint64(len(value)))
+			b.B = append(b.B, value...)
+			b.B = append(b.B, '\n')
+		} else {
+			b.B = append(b.B, '=')
+			b.B = append(b.B, value...)
+			b.B = append(b.B, '\n')
 		}
 	}
 
@@ -102,17 +113,32 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 	default:
 		priority = "5" // Notice
 	}
-	print(b, "PRIORITY", priority)
+	print(false, "PRIORITY", priority)
 
 	// message
-	print(b, "MESSAGE", args.Message)
+	print(false, "MESSAGE", args.Message)
+
+	// caller
+	if args.Caller != "" {
+		print(false, "CALLER", args.Caller)
+	}
+
+	// goid
+	if args.Goid != "" {
+		print(false, "GOID", args.Goid)
+	}
+
+	// stack
+	if args.Stack != "" {
+		print(false, "STACK", args.Stack)
+	}
 
 	// fields
 	for _, kv := range args.KeyValues {
-		print(b, strings.ToUpper(kv.Key), kv.Value)
+		print(true, kv.Key, kv.Value)
 	}
 
-	print(b, "JSON", b2s(e.buf))
+	print(false, "JSON", b2s(e.buf))
 
 	// write
 	n, _, err = w.conn.WriteMsgUnix(b.B, nil, w.addr)
