@@ -1535,6 +1535,7 @@ func (e *Entry) IPAddr(key string, ip net.IP) *Entry {
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
 	if ip4 := ip.To4(); ip4 != nil {
+		_ = ip4[3]
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[0]), 10)
 		e.buf = append(e.buf, '.')
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[1]), 10)
@@ -1542,8 +1543,8 @@ func (e *Entry) IPAddr(key string, ip net.IP) *Entry {
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[2]), 10)
 		e.buf = append(e.buf, '.')
 		e.buf = strconv.AppendInt(e.buf, int64(ip4[3]), 10)
-	} else {
-		e.buf = append(e.buf, ip.String()...)
+	} else if a, ok := netip.AddrFromSlice(ip); ok {
+		e.buf = a.AppendTo(e.buf)
 	}
 	e.buf = append(e.buf, '"')
 	return e
