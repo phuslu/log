@@ -39,6 +39,17 @@ type Writer interface {
 	WriteEntry(*Entry) (int, error)
 }
 
+// The WriterFunc type is an adapter to allow the use of
+// ordinary functions as log writers. If f is a function
+// with the appropriate signature, WriterFunc(f) is a
+// [Writer] that calls f.
+type WriterFunc func(*Entry) (int, error)
+
+// WriteEntry calls f(e).
+func (f WriterFunc) WriteEntry(e *Entry) (int, error) {
+	return f(e)
+}
+
 // IOWriter wraps an io.Writer to Writer.
 type IOWriter struct {
 	io.Writer

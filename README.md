@@ -221,6 +221,25 @@ func main() {
 //    {"ts":1257894000000,"foo":"bar"}
 ```
 
+### Customize the log writer
+
+To allow the use of ordinary functions as log writers, use `WriterFunc`.
+
+```go
+logger := log.Logger{
+	Writer: log.WriterFunc(func(e *log.Entry) (int, error) {
+		if e.Level >= log.ErrorLevel {
+			return os.Stderr.Write(e.Value())
+		} else {
+			return os.Stdout.Write(e.Value())
+		}
+	}),
+}
+
+logger.Info().Msg("a stdout entry")
+logger.Error().Msg("a stderr entry")
+```
+
 ### Pretty Console Writer
 
 To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]

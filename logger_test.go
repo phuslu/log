@@ -521,6 +521,21 @@ func TestStdWriter(t *testing.T) {
 	fmt.Fprintf(w, "hello from stdLog debug %s", "Printf")
 }
 
+func TestWriterFunc(t *testing.T) {
+	logger := Logger{
+		Writer: WriterFunc(func(e *Entry) (int, error) {
+			if e.Level >= ErrorLevel {
+				return os.Stderr.Write(e.Value())
+			} else {
+				return os.Stdout.Write(e.Value())
+			}
+		}),
+	}
+
+	logger.Info().Msg("a stdout entry")
+	logger.Error().Msg("a stderr entry")
+}
+
 func TestStdLogger(t *testing.T) {
 	logger := Logger{
 		Level:   DebugLevel,
