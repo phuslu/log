@@ -166,16 +166,19 @@ func (w *ConsoleWriter) format(out io.Writer, args *FormatterArgs) (n int, err e
 		}
 	}
 
+	// add line break if needed
+	if b.B[len(b.B)-1] != '\n' {
+		b.B = append(b.B, '\n')
+	}
+
 	// stack
 	if args.Stack != "" {
-		b.B = append(b.B, '\n')
 		b.B = append(b.B, args.Stack...)
 		if args.Stack[len(args.Stack)-1] != '\n' {
 			b.B = append(b.B, '\n')
 		}
-	} else {
-		b.B = append(b.B, '\n')
 	}
+
 	return out.Write(b.B)
 }
 
