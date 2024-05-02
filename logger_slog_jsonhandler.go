@@ -119,9 +119,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 		// with
 		if !h.group.empty() {
 			h.once.Do(func() {
-				b := bbpool.Get().(*bb)
-				h.context = h.group.Eval(NewContext(b.B[:0])).Value()
-				bbpool.Put(b)
+				h.context = h.group.Eval(NewContext(nil)).Value()
 				i := bytes.LastIndexByte(h.context, '{')
 				if i > 0 {
 					h.brackets = append(h.brackets, h.context[i+1:]...)
@@ -159,9 +157,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 		// with
 		if !h.group.empty() {
 			h.once.Do(func() {
-				b := bbpool.Get().(*bb)
-				h.context = h.group.Eval(NewContext(b.B[:0])).Value()
-				bbpool.Put(b)
+				h.context = h.group.Eval(NewContext(nil)).Value()
 			})
 			e = e.Context(h.context)
 		}

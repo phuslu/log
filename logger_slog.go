@@ -16,9 +16,7 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 	value := a.Value.Resolve()
 	switch value.Kind() {
 	case slog.KindGroup:
-		b := bbpool.Get().(*bb)
-		defer bbpool.Put(b)
-		c := NewContext(b.B[:0])
+		c := NewContext(nil)
 		for _, attr := range value.Group() {
 			c = slogAttrEval(c, attr)
 		}
@@ -80,9 +78,7 @@ func (group *slogGroup) Eval(e *Entry) *Entry {
 		e = slogAttrEval(e, attr)
 	}
 	if group.child != nil {
-		b := bbpool.Get().(*bb)
-		e = e.Dict(group.child.name, group.child.Eval(NewContext(b.B[:0])).Value())
-		bbpool.Put(b)
+		e = e.Dict(group.child.name, group.child.Eval(NewContext(nil)).Value())
 	}
 	return e
 }
@@ -145,9 +141,7 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 
 	if !h.group.empty() {
 		h.once.Do(func() {
-			b := bbpool.Get().(*bb)
-			h.context = h.group.Eval(NewContext(b.B[:0])).Value()
-			bbpool.Put(b)
+			h.context = h.group.Eval(NewContext(nil)).Value()
 		})
 		e = e.Context(h.context)
 	}
