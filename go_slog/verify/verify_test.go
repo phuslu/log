@@ -17,7 +17,6 @@ func TestVerifyPhusluSlog(t *testing.T) {
 	slogSuite.WarnOnly(warning.Duplicates)
 	slogSuite.WarnOnly(warning.DurationMillis)
 	slogSuite.WarnOnly(warning.GroupAttrMsgTop)
-	slogSuite.WarnOnly(warning.LevelVar)
 	slogSuite.WarnOnly(warning.TimeMillis)
 	slogSuite.WarnOnly(warning.ZeroPC)
 	suite.Run(t, slogSuite)
