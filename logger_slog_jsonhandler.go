@@ -8,35 +8,42 @@ import (
 	"io"
 	"log/slog"
 	"strconv"
+	"sync"
 	"time"
 )
 
 type slogJSONHandler struct {
-	writer  io.Writer
-	level   slog.Level
-	options *slog.HandlerOptions
+	writer   io.Writer
+	level    slog.Leveler
+	options  *slog.HandlerOptions
+	fallback slog.Handler
 
 	group    slogGroup
 	grouping bool
+	once     sync.Once
 	context  Context
-
-	fallback slog.Handler
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return h.level <= level
+	return h.level.Level() <= level
 }
 
+// nolint:govet // disable copylocks lint
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	h.fallback = h.fallback.WithAttrs(attrs)
+	if h.options != nil && h.options.ReplaceAttr != nil {
+		h.fallback = h.fallback.WithAttrs(attrs)
+	}
 	h.group.WithAttrs(attrs)
 	h.grouping = false
-	h.context = h.group.Eval(NewContext(nil)).Value()
+	h.once = sync.Once{}
 	return &h
 }
 
+// nolint:govet // disable copylocks lint
 func (h slogJSONHandler) WithGroup(name string) slog.Handler {
-	h.fallback = h.fallback.WithGroup(name)
+	if h.options != nil && h.options.ReplaceAttr != nil {
+		h.fallback = h.fallback.WithGroup(name)
+	}
 	if name != "" {
 		h.group.WithGroup(name)
 		h.grouping = true
@@ -45,10 +52,10 @@ func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 }
 
 func (h *slogJSONHandler) Handle(ctx context.Context, r slog.Record) error {
-	if h.options == nil || h.options.ReplaceAttr == nil {
-		return h.handle(ctx, r)
+	if h.options != nil && h.options.ReplaceAttr != nil {
+		return h.fallback.Handle(ctx, r)
 	}
-	return h.fallback.Handle(ctx, r)
+	return h.handle(ctx, r)
 }
 
 func (h *slogJSONHandler) addSource(e *Entry, pc uintptr) *Entry {
@@ -123,6 +130,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	} else {
 		// with
 		if len(h.group.attrs) != 0 {
+			h.once.Do(func() { h.context = h.group.Eval(NewContext(nil)).Value() })
 			e = e.Context(h.context)
 		}
 
@@ -152,7 +160,7 @@ func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Han
 		fallback: slog.NewJSONHandler(writer, options),
 	}
 	if h.options != nil && h.options.Level != nil {
-		h.level = h.options.Level.Level()
+		h.level = h.options.Level
 	}
 	return h
 }

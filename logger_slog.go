@@ -6,6 +6,7 @@ package log
 import (
 	"context"
 	"log/slog"
+	"sync"
 )
 
 func slogAttrEval(e *Entry, a slog.Attr) *Entry {
@@ -81,14 +82,14 @@ func (group *slogGroup) WithGroup(name string) {
 }
 
 func (group *slogGroup) Eval(e *Entry) *Entry {
+	b := bbpool.Get().(*bb)
+	defer bbpool.Put(b)
 	for _, v := range group.attrs {
 		switch v := v.(type) {
 		case slog.Attr:
 			e = slogAttrEval(e, v)
 		case *slogGroup:
-			if c := v.Eval(NewContext(nil)).Value(); len(c) != 0 {
-				e = e.Dict(v.name, c)
-			}
+			e = e.Dict(v.name, v.Eval(NewContext(b.B[:0])).Value())
 		}
 	}
 	return e
@@ -98,15 +99,18 @@ type slogHandler struct {
 	logger  Logger
 	caller  int
 	group   slogGroup
+	once    sync.Once
 	context Context
 }
 
+// nolint:govet // disable copylocks lint
 func (h slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	h.group.WithAttrs(attrs)
-	h.context = h.group.Eval(NewContext(nil)).Value()
+	h.once = sync.Once{}
 	return &h
 }
 
+// nolint:govet // disable copylocks lint
 func (h slogHandler) WithGroup(name string) slog.Handler {
 	if name != "" {
 		h.group.WithGroup(name)
@@ -148,6 +152,7 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 	}
 
 	if len(h.group.attrs) != 0 {
+		h.once.Do(func() { h.context = h.group.Eval(NewContext(nil)).Value() })
 		e = e.Context(h.context)
 	}
 
