@@ -4,12 +4,10 @@
 package log
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"log/slog"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -19,36 +17,48 @@ type slogJSONHandler struct {
 	options  *slog.HandlerOptions
 	fallback slog.Handler
 
-	group    slogGroup
 	grouping bool
-	once     sync.Once
-	context  Context
-	brackets Context
+	groups   int
+	entry    Entry
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return h.level.Level() <= level
 }
 
-// nolint:govet // disable copylocks lint
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if h.options != nil && h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithAttrs(attrs)
 	}
-	h.group.WithAttrs(attrs)
+	if len(attrs) == 0 {
+		return &h
+	}
+	i := len(h.entry.buf)
+	for _, attr := range attrs {
+		h.entry = *slogAttrEval(&h.entry, attr)
+	}
+	if h.grouping {
+		h.entry.buf[i] = '{'
+	}
 	h.grouping = false
-	h.once = sync.Once{}
 	return &h
 }
 
-// nolint:govet // disable copylocks lint
 func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 	if h.options != nil && h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithGroup(name)
 	}
 	if name != "" {
-		h.group.WithGroup(name)
+		if h.grouping {
+			h.entry.buf = append(h.entry.buf, '{')
+		} else {
+			h.entry.buf = append(h.entry.buf, ',')
+		}
+		h.entry.buf = append(h.entry.buf, '"')
+		h.entry.buf = append(h.entry.buf, name...)
+		h.entry.buf = append(h.entry.buf, '"', ':')
 		h.grouping = true
+		h.groups++
 	}
 	return &h
 }
@@ -115,58 +125,47 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	// msg
 	e = e.Str(slog.MessageKey, r.Message)
 
-	if h.grouping {
-		// with
-		if !h.group.empty() {
-			h.once.Do(func() {
-				h.context = h.group.Eval(NewContext(nil)).Value()
-				i := bytes.LastIndexByte(h.context, '{')
-				if i > 0 {
-					h.brackets = append(h.brackets, h.context[i+1:]...)
-					h.context = h.context[:i]
-				}
-			})
-			e = e.Context(h.context)
+	// with
+	if b := h.entry.buf; len(b) != 0 {
+		e = e.Context(b)
+	}
+	i := len(e.buf)
+
+	// attrs
+	r.Attrs(func(attr slog.Attr) bool {
+		e = slogAttrEval(e, attr)
+		return true
+	})
+
+	lastindex := func(buf []byte) int {
+		for i := len(buf) - 3; i >= 1; i-- {
+			if buf[i] == '"' && (buf[i-1] == ',' || buf[i-1] == '{') {
+				return i
+			}
 		}
+		return -1
+	}
 
-		i := len(e.buf)
-
-		// attrs
-		r.Attrs(func(attr slog.Attr) bool {
-			e = slogAttrEval(e, attr)
-			return true
-		})
-
-		var chomp bool
+	// group attrs
+	if h.grouping {
 		if r.NumAttrs() > 0 {
 			e.buf[i] = '{'
-		} else if j := bytes.LastIndex(e.buf, []byte(`,"`)); j > 0 {
-			e.buf = e.buf[:j]
-			chomp = true
+		} else if i = lastindex(e.buf); i > 0 {
+			e.buf = e.buf[:i-1]
+			h.groups--
+			for e.buf[len(e.buf)-1] == ':' {
+				if i = lastindex(e.buf); i > 0 {
+					e.buf = e.buf[:i-1]
+					h.groups--
+				}
+			}
 		} else {
 			e.buf = append(e.buf, '{')
 		}
+	}
 
-		if len(h.brackets) > 0 {
-			e.buf = append(e.buf, h.brackets...)
-			if chomp {
-				e.buf = e.buf[:len(e.buf)-1]
-			}
-		}
-	} else {
-		// with
-		if !h.group.empty() {
-			h.once.Do(func() {
-				h.context = h.group.Eval(NewContext(nil)).Value()
-			})
-			e = e.Context(h.context)
-		}
-
-		// attrs
-		r.Attrs(func(attr slog.Attr) bool {
-			e = slogAttrEval(e, attr)
-			return true
-		})
+	for i := 0; i < h.groups; i++ {
+		e.buf = append(e.buf, '}')
 	}
 
 	e.buf = append(e.buf, '}', '\n')
@@ -186,6 +185,7 @@ func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Han
 		level:    slog.LevelInfo,
 		options:  options,
 		fallback: slog.NewJSONHandler(writer, options),
+		entry:    *NewContext(nil),
 	}
 	if h.options != nil && h.options.Level != nil {
 		h.level = h.options.Level
