@@ -4,6 +4,7 @@
 package log
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log/slog"
@@ -22,6 +23,7 @@ type slogJSONHandler struct {
 	grouping bool
 	once     sync.Once
 	context  Context
+	brackets Context
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
@@ -114,23 +116,42 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	e = e.Str(slog.MessageKey, r.Message)
 
 	if h.grouping {
-		// attrs
-		var attrs []slog.Attr
-		r.Attrs(func(attr slog.Attr) bool {
-			attrs = append(attrs, attr)
-			return true
-		})
-		h.group.WithAttrs(attrs)
-		h.context = h.group.Eval(NewContext(nil)).Value()
-
 		// with
 		if len(h.group.attrs) != 0 {
+			h.once.Do(func() {
+				h.context = h.group.Eval(NewContext(nil)).Value()
+				i := bytes.LastIndexByte(h.context, '{')
+				if i > 0 {
+					h.brackets = append(h.brackets, h.context[i+1:]...)
+					h.context = h.context[:i]
+				}
+			})
 			e = e.Context(h.context)
+		}
+
+		i := len(e.buf)
+
+		// attrs
+		r.Attrs(func(attr slog.Attr) bool {
+			e = slogAttrEval(e, attr)
+			return true
+		})
+
+		if r.NumAttrs() > 0 {
+			e.buf[i] = '{'
+		} else {
+			e.buf = append(e.buf, '{')
+		}
+
+		if len(h.brackets) > 0 {
+			e.buf = append(e.buf, h.brackets...)
 		}
 	} else {
 		// with
 		if len(h.group.attrs) != 0 {
-			h.once.Do(func() { h.context = h.group.Eval(NewContext(nil)).Value() })
+			h.once.Do(func() {
+				h.context = h.group.Eval(NewContext(nil)).Value()
+			})
 			e = e.Context(h.context)
 		}
 

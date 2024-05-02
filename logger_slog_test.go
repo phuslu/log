@@ -72,3 +72,12 @@ func TestSlogJsonHandler(t *testing.T) {
 	logger1.Info("hello from group slog 1", "number", 42)
 	logger1.WithGroup("group").Info("hello from group slog 2", "number", 42)
 }
+
+func TestSlogJsonHandlerClosed(t *testing.T) {
+	logger := slog.New(SlogNewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: false}))
+
+	logger1 := logger.WithGroup("g").With("number", 42).WithGroup("g1")
+	logger1.Info("hello from group slog 1", "a", 1, "b", 2)
+	logger1.With("x", "1", "y", "2").Info("hello from group slog 2", "a", 1, "b", 2)
+	logger1.Info("hello from group slog 3")
+}
