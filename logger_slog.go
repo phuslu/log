@@ -50,47 +50,39 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 
 type slogGroup struct {
 	name  string
-	attrs []any // slog.Attr or *slogGroup
+	attrs []slog.Attr
+	child *slogGroup
 }
 
-func (group *slogGroup) lastChild() *slogGroup {
-	if len(group.attrs) == 0 {
-		return nil
-	}
-	child, _ := group.attrs[len(group.attrs)-1].(*slogGroup)
-	return child
+func (group *slogGroup) empty() bool {
+	return len(group.attrs) == 0 && group.child == nil
 }
 
 func (group *slogGroup) WithAttrs(attrs []slog.Attr) {
-	if child := group.lastChild(); child == nil {
-		group.attrs = append([]any{}, group.attrs...)
-		for _, attr := range attrs {
-			group.attrs = append(group.attrs, attr)
-		}
+	if group.child == nil {
+		group.attrs = append([]slog.Attr{}, group.attrs...)
+		group.attrs = append(group.attrs, attrs...)
 	} else {
-		child.WithAttrs(attrs)
+		group.child.WithAttrs(attrs)
 	}
 }
 
 func (group *slogGroup) WithGroup(name string) {
-	if child := group.lastChild(); child == nil {
-		group.attrs = append([]any{}, group.attrs...)
-		group.attrs = append(group.attrs, &slogGroup{name: name})
+	if group.child == nil {
+		group.child = &slogGroup{name: name}
 	} else {
-		child.WithGroup(name)
+		group.child.WithGroup(name)
 	}
 }
 
 func (group *slogGroup) Eval(e *Entry) *Entry {
-	b := bbpool.Get().(*bb)
-	defer bbpool.Put(b)
-	for _, v := range group.attrs {
-		switch v := v.(type) {
-		case slog.Attr:
-			e = slogAttrEval(e, v)
-		case *slogGroup:
-			e = e.Dict(v.name, v.Eval(NewContext(b.B[:0])).Value())
-		}
+	for _, attr := range group.attrs {
+		e = slogAttrEval(e, attr)
+	}
+	if group.child != nil {
+		b := bbpool.Get().(*bb)
+		e = e.Dict(group.child.name, group.child.Eval(NewContext(b.B[:0])).Value())
+		bbpool.Put(b)
 	}
 	return e
 }
@@ -151,8 +143,12 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 		e.caller(1, r.PC, h.caller < 0)
 	}
 
-	if len(h.group.attrs) != 0 {
-		h.once.Do(func() { h.context = h.group.Eval(NewContext(nil)).Value() })
+	if !h.group.empty() {
+		h.once.Do(func() {
+			b := bbpool.Get().(*bb)
+			h.context = h.group.Eval(NewContext(b.B[:0])).Value()
+			bbpool.Put(b)
+		})
 		e = e.Context(h.context)
 	}
 

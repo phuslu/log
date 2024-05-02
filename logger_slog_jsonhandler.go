@@ -117,9 +117,11 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 
 	if h.grouping {
 		// with
-		if len(h.group.attrs) != 0 {
+		if !h.group.empty() {
 			h.once.Do(func() {
-				h.context = h.group.Eval(NewContext(nil)).Value()
+				b := bbpool.Get().(*bb)
+				h.context = h.group.Eval(NewContext(b.B[:0])).Value()
+				bbpool.Put(b)
 				i := bytes.LastIndexByte(h.context, '{')
 				if i > 0 {
 					h.brackets = append(h.brackets, h.context[i+1:]...)
@@ -137,20 +139,29 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 			return true
 		})
 
+		var chomp bool
 		if r.NumAttrs() > 0 {
 			e.buf[i] = '{'
+		} else if j := bytes.LastIndex(e.buf, []byte(`,"`)); j > 0 {
+			e.buf = e.buf[:j]
+			chomp = true
 		} else {
 			e.buf = append(e.buf, '{')
 		}
 
 		if len(h.brackets) > 0 {
 			e.buf = append(e.buf, h.brackets...)
+			if chomp {
+				e.buf = e.buf[:len(e.buf)-1]
+			}
 		}
 	} else {
 		// with
-		if len(h.group.attrs) != 0 {
+		if !h.group.empty() {
 			h.once.Do(func() {
-				h.context = h.group.Eval(NewContext(nil)).Value()
+				b := bbpool.Get().(*bb)
+				h.context = h.group.Eval(NewContext(b.B[:0])).Value()
+				bbpool.Put(b)
 			})
 			e = e.Context(h.context)
 		}

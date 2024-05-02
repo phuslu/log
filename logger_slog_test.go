@@ -30,8 +30,9 @@ func TestSlogAttrs(t *testing.T) {
 		Caller:     -1,
 	}).Slog()
 
-	sublogger := logger.With("logger", "attr_logger").With("everything", 42)
-	sublogger.Info("hello from attr slog")
+	sublogger := logger.With("logger_name", "sub_logger").WithGroup("g").With("everything", 42)
+	sublogger.Info("hello from sub attr slog")
+	logger.Info("hello from origin slog")
 }
 
 func TestSlogGroup(t *testing.T) {
