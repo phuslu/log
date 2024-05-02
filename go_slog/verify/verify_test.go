@@ -22,3 +22,7 @@ func TestVerifyPhusluSlog(t *testing.T) {
 	slogSuite.WarnOnly(warning.ZeroPC)
 	suite.Run(t, slogSuite)
 }
+
+func TestMain(m *testing.M) {
+	warning.WithWarnings(m)
+}
