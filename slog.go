@@ -60,7 +60,6 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 
 type slogJSONHandler struct {
 	writer   io.Writer
-	level    slog.Leveler
 	options  *slog.HandlerOptions
 	fallback slog.Handler
 
@@ -71,11 +70,14 @@ type slogJSONHandler struct {
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return h.level.Level() <= level
+	if h.options.Level != nil {
+		return h.options.Level.Level() <= level
+	}
+	return slog.LevelInfo <= level
 }
 
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	if h.options != nil && h.options.ReplaceAttr != nil {
+	if h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithAttrs(attrs)
 		return &h
 	}
@@ -94,7 +96,7 @@ func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h slogJSONHandler) WithGroup(name string) slog.Handler {
-	if h.options != nil && h.options.ReplaceAttr != nil {
+	if h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithGroup(name)
 		return &h
 	}
@@ -115,7 +117,7 @@ func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 }
 
 func (h *slogJSONHandler) Handle(ctx context.Context, r slog.Record) error {
-	if h.options != nil && h.options.ReplaceAttr != nil {
+	if h.options.ReplaceAttr != nil {
 		return h.fallback.Handle(ctx, r)
 	}
 	return h.handle(ctx, r)
@@ -155,7 +157,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	}
 
 	// source
-	if h.options != nil && h.options.AddSource && r.PC != 0 {
+	if h.options.AddSource && r.PC != 0 {
 		name, file, line := pcNameFileLine(r.PC)
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, slog.SourceKey...)
@@ -241,13 +243,12 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Handler {
 	h := &slogJSONHandler{
 		writer:   writer,
-		level:    slog.LevelInfo,
 		options:  options,
 		fallback: slog.NewJSONHandler(writer, options),
 		entry:    *NewContext(nil),
 	}
-	if h.options != nil && h.options.Level != nil {
-		h.level = h.options.Level
+	if h.options == nil {
+		h.options = new(slog.HandlerOptions)
 	}
 	return h
 }
