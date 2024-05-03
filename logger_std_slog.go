@@ -15,19 +15,24 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 	value := a.Value.Resolve()
 	switch value.Kind() {
 	case slog.KindGroup:
-		if a.Key != "" {
-			b := bbpool.Get().(*bb)
-			c := NewContext(b.B[:0])
-			for _, attr := range value.Group() {
-				c = slogAttrEval(c, attr)
-			}
-			e = e.Dict(a.Key, c.Value())
-			bbpool.Put(b)
-		} else {
+		if len(value.Group()) == 0 {
+			return e
+		}
+		if a.Key == "" {
 			for _, attr := range value.Group() {
 				e = slogAttrEval(e, attr)
 			}
+			return e
 		}
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, a.Key...)
+		e.buf = append(e.buf, '"', ':')
+		i := len(e.buf)
+		for _, attr := range value.Group() {
+			e = slogAttrEval(e, attr)
+		}
+		e.buf[i] = '{'
+		e.buf = append(e.buf, '}')
 		return e
 	case slog.KindBool:
 		return e.Bool(a.Key, value.Bool())
