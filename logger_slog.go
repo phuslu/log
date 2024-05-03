@@ -159,8 +159,22 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 		}
 	}
 
-	for i := 0; i < h.groups; i++ {
+	// brackets closing
+	switch h.groups {
+	case 0:
+		break
+	case 1:
 		e.buf = append(e.buf, '}')
+	case 2:
+		e.buf = append(e.buf, '}', '}')
+	case 3:
+		e.buf = append(e.buf, '}', '}', '}')
+	case 4:
+		e.buf = append(e.buf, '}', '}', '}', '}')
+	default:
+		for i := 0; i < h.groups; i++ {
+			e.buf = append(e.buf, '}')
+		}
 	}
 
 	e.Msg("")

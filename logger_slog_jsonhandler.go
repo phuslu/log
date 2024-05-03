@@ -164,11 +164,24 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 		}
 	}
 
-	for i := 0; i < h.groups; i++ {
-		e.buf = append(e.buf, '}')
+	// brackets closing
+	switch h.groups {
+	case 0:
+		e.buf = append(e.buf, '}', '\n')
+	case 1:
+		e.buf = append(e.buf, '}', '}', '\n')
+	case 2:
+		e.buf = append(e.buf, '}', '}', '}', '\n')
+	case 3:
+		e.buf = append(e.buf, '}', '}', '}', '}', '\n')
+	case 4:
+		e.buf = append(e.buf, '}', '}', '}', '}', '}', '\n')
+	default:
+		for i := 0; i <= h.groups; i++ {
+			e.buf = append(e.buf, '}')
+		}
+		e.buf = append(e.buf, '\n')
 	}
-
-	e.buf = append(e.buf, '}', '\n')
 
 	_, err := h.writer.Write(e.buf)
 
