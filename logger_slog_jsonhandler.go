@@ -11,6 +11,48 @@ import (
 	"time"
 )
 
+func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
+	if a.Equal(slog.Attr{}) {
+		return e
+	}
+	value := a.Value.Resolve()
+	switch value.Kind() {
+	case slog.KindGroup:
+		if a.Key != "" {
+			b := bbpool.Get().(*bb)
+			c := NewContext(b.B[:0])
+			for _, attr := range value.Group() {
+				c = slogJSONAttrEval(c, attr)
+			}
+			e = e.Dict(a.Key, c.Value())
+			bbpool.Put(b)
+		} else {
+			for _, attr := range value.Group() {
+				e = slogJSONAttrEval(e, attr)
+			}
+		}
+		return e
+	case slog.KindBool:
+		return e.Bool(a.Key, value.Bool())
+	case slog.KindDuration:
+		return e.Int64(a.Key, int64(value.Duration()))
+	case slog.KindFloat64:
+		return e.Float64(a.Key, value.Float64())
+	case slog.KindInt64:
+		return e.Int64(a.Key, value.Int64())
+	case slog.KindString:
+		return e.Str(a.Key, value.String())
+	case slog.KindTime:
+		return e.TimeFormat(a.Key, time.RFC3339Nano, value.Time())
+	case slog.KindUint64:
+		return e.Uint64(a.Key, value.Uint64())
+	case slog.KindAny:
+		fallthrough
+	default:
+		return e.Any(a.Key, value.Any())
+	}
+}
+
 type slogJSONHandler struct {
 	writer   io.Writer
 	level    slog.Leveler
@@ -37,7 +79,7 @@ func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	}
 	i := len(h.entry.buf)
 	for _, attr := range attrs {
-		h.entry = *slogAttrEval(&h.entry, attr)
+		h.entry = *slogJSONAttrEval(&h.entry, attr)
 	}
 	if h.grouping {
 		h.entry.buf[i] = '{'
@@ -132,7 +174,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 
 	// attrs
 	r.Attrs(func(attr slog.Attr) bool {
-		e = slogAttrEval(e, attr)
+		e = slogJSONAttrEval(e, attr)
 		return true
 	})
 
