@@ -17,6 +17,20 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 	}
 	value := a.Value.Resolve()
 	switch value.Kind() {
+	case slog.KindBool:
+		return e.Bool(a.Key, value.Bool())
+	case slog.KindInt64:
+		return e.Int64(a.Key, value.Int64())
+	case slog.KindUint64:
+		return e.Uint64(a.Key, value.Uint64())
+	case slog.KindFloat64:
+		return e.Float64(a.Key, value.Float64())
+	case slog.KindString:
+		return e.Str(a.Key, value.String())
+	case slog.KindTime:
+		return e.TimeFormat(a.Key, time.RFC3339Nano, value.Time())
+	case slog.KindDuration:
+		return e.Int64(a.Key, int64(value.Duration()))
 	case slog.KindGroup:
 		if len(value.Group()) == 0 {
 			return e
@@ -37,22 +51,8 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 		e.buf[i] = '{'
 		e.buf = append(e.buf, '}')
 		return e
-	case slog.KindBool:
-		return e.Bool(a.Key, value.Bool())
-	case slog.KindDuration:
-		return e.Int64(a.Key, int64(value.Duration()))
-	case slog.KindFloat64:
-		return e.Float64(a.Key, value.Float64())
-	case slog.KindInt64:
-		return e.Int64(a.Key, value.Int64())
-	case slog.KindString:
-		return e.Str(a.Key, value.String())
-	case slog.KindTime:
-		return e.TimeFormat(a.Key, time.RFC3339Nano, value.Time())
-	case slog.KindUint64:
-		return e.Uint64(a.Key, value.Uint64())
 	case slog.KindAny:
-		fallthrough
+		return e.Any(a.Key, value.Any())
 	default:
 		return e.Any(a.Key, value.Any())
 	}
