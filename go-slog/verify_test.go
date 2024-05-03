@@ -13,8 +13,7 @@ import (
 func TestVerifyPhusluSlog(t *testing.T) {
 	slogSuite := tests.NewSlogTestSuite(creatorPhusluSlog())
 	slogSuite.WarnOnly(warning.Duplicates)
-	// FIXME: still confused about this warning, comment it to make github action happy.
-	// slogSuite.WarnOnly(warning.GroupAttrMsgTop)
+	slogSuite.WarnOnly(warning.StringAny)
 	suite.Run(t, slogSuite)
 }
 
