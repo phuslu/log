@@ -2080,7 +2080,27 @@ func (e *Entry) Any(key string, value interface{}) *Entry {
 	case fmt.Stringer:
 		e.Stringer(key, value)
 	default:
-		e.Interface(key, value)
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, '"', ':')
+		b := bbpool.Get().(*bb)
+		b.B = b.B[:0]
+		enc := json.NewEncoder(b)
+		enc.SetEscapeHTML(false)
+		err := enc.Encode(value)
+		if err != nil {
+			b.B = b.B[:0]
+			fmt.Fprintf(b, `marshaling error: %+v`, err)
+			e.buf = append(e.buf, '"')
+			e.bytes(b.B)
+			e.buf = append(e.buf, '"')
+		} else {
+			b.B = b.B[:len(b.B)-1]
+			e.buf = append(e.buf, b.B...)
+		}
+		if cap(b.B) <= bbcap {
+			bbpool.Put(b)
+		}
 	}
 	return e
 }

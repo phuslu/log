@@ -42,3 +42,17 @@ func TestSlogJsonHandlerGroups(t *testing.T) {
 	logger.WithGroup("group1").WithGroup("group2").Info("hello from slog groups", slog.Group("subGroup"))
 	logger.WithGroup("group1").WithGroup("group2").Info("hello from slog groups")
 }
+
+func TestSlogJsonHandlerAny(t *testing.T) {
+	logger := slog.New(SlogNewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: true}))
+
+	var obj = struct {
+		Rate string
+		Low  int
+		High float32
+	}{"15", 16, 123.2}
+
+	logger.Info("hello from slog any", "good object", obj)
+
+	logger.Info("hello from slog any", "bad object", logger.Info)
+}
