@@ -2,8 +2,6 @@ module go_slog
 
 go 1.21.5
 
-toolchain go1.22.2
-
 require (
 	github.com/madkins23/go-slog v0.9.8-beta-8
 	github.com/phuslu/log v1.0.93

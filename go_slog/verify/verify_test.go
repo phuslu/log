@@ -15,10 +15,8 @@ import (
 func TestVerifyPhusluSlog(t *testing.T) {
 	slogSuite := tests.NewSlogTestSuite(creator.PhusluSlog())
 	slogSuite.WarnOnly(warning.Duplicates)
-	slogSuite.WarnOnly(warning.DurationMillis)
-	slogSuite.WarnOnly(warning.GroupAttrMsgTop)
-	slogSuite.WarnOnly(warning.TimeMillis)
-	slogSuite.WarnOnly(warning.ZeroPC)
+	// FIXME: still confused about this warning, comment it to make github action happy.
+	// slogSuite.WarnOnly(warning.GroupAttrMsgTop)
 	suite.Run(t, slogSuite)
 }
 
