@@ -1,4 +1,4 @@
-name: go_slog
+name: go-slog
 
 on:
   push:
@@ -15,8 +15,8 @@ jobs:
           check-latest: true
       - uses: actions/checkout@v4
       - name: Verify
-        working-directory: ./go_slog
-        run: go test -v ./verify -args -useWarnings
+        working-directory: ./go-slog
+        run: go test -v -args -useWarnings creator.go verify_test.go
   bench:
     runs-on: ubuntu-latest
     steps:
@@ -26,5 +26,5 @@ jobs:
           check-latest: true
       - uses: actions/checkout@v4
       - name: Benchmark
-        working-directory: ./go_slog
-        run: go test -bench=. ./bench
+        working-directory: ./go-slog
+        run: go test -v -bench=. creator.go bench_test.go

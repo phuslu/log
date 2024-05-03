@@ -1,6 +1,6 @@
-module go_slog
+module _go_slog
 
-go 1.21.5
+go 1.22
 
 require (
 	github.com/madkins23/go-slog v0.9.8-beta-8
