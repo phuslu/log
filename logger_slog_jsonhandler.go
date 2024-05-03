@@ -17,9 +17,10 @@ type slogJSONHandler struct {
 	options  *slog.HandlerOptions
 	fallback slog.Handler
 
+	entry Entry
+
 	grouping bool
 	groups   int
-	entry    Entry
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
@@ -29,6 +30,7 @@ func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if h.options != nil && h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithAttrs(attrs)
+		return &h
 	}
 	if len(attrs) == 0 {
 		return &h
@@ -47,19 +49,21 @@ func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 	if h.options != nil && h.options.ReplaceAttr != nil {
 		h.fallback = h.fallback.WithGroup(name)
+		return &h
 	}
-	if name != "" {
-		if h.grouping {
-			h.entry.buf = append(h.entry.buf, '{')
-		} else {
-			h.entry.buf = append(h.entry.buf, ',')
-		}
-		h.entry.buf = append(h.entry.buf, '"')
-		h.entry.buf = append(h.entry.buf, name...)
-		h.entry.buf = append(h.entry.buf, '"', ':')
-		h.grouping = true
-		h.groups++
+	if name == "" {
+		return &h
 	}
+	if h.grouping {
+		h.entry.buf = append(h.entry.buf, '{')
+	} else {
+		h.entry.buf = append(h.entry.buf, ',')
+	}
+	h.entry.buf = append(h.entry.buf, '"')
+	h.entry.buf = append(h.entry.buf, name...)
+	h.entry.buf = append(h.entry.buf, '"', ':')
+	h.grouping = true
+	h.groups++
 	return &h
 }
 
@@ -68,20 +72,6 @@ func (h *slogJSONHandler) Handle(ctx context.Context, r slog.Record) error {
 		return h.fallback.Handle(ctx, r)
 	}
 	return h.handle(ctx, r)
-}
-
-func (h *slogJSONHandler) addSource(e *Entry, pc uintptr) *Entry {
-	name, file, line := pcNameFileLine(pc)
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, slog.SourceKey...)
-	e.buf = append(e.buf, `":{"function":"`...)
-	e.buf = append(e.buf, name...)
-	e.buf = append(e.buf, `","file":"`...)
-	e.buf = append(e.buf, file...)
-	e.buf = append(e.buf, `","line":`...)
-	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.buf = append(e.buf, '}')
-	return e
 }
 
 func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
@@ -118,8 +108,17 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	}
 
 	// source
-	if h.options != nil && h.options.AddSource {
-		e = h.addSource(e, r.PC)
+	if h.options != nil && h.options.AddSource && r.PC != 0 {
+		name, file, line := pcNameFileLine(r.PC)
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, slog.SourceKey...)
+		e.buf = append(e.buf, `":{"function":"`...)
+		e.buf = append(e.buf, name...)
+		e.buf = append(e.buf, `","file":"`...)
+		e.buf = append(e.buf, file...)
+		e.buf = append(e.buf, `","line":`...)
+		e.buf = strconv.AppendInt(e.buf, int64(line), 10)
+		e.buf = append(e.buf, '}')
 	}
 
 	// msg
