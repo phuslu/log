@@ -1,0 +1,30 @@
+name: go_slog
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+          check-latest: true
+      - uses: actions/checkout@v4
+      - name: Verify
+        working-directory: ./go_slog
+        run: go test -v ./verify -args -useWarnings
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+          check-latest: true
+      - uses: actions/checkout@v4
+      - name: Benchmark
+        working-directory: ./go_slog
+        run: go test -bench=. ./bench
