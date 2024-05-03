@@ -8,7 +8,7 @@ import (
 	"github.com/madkins23/go-slog/infra/warning"
 	"github.com/madkins23/go-slog/verify/tests"
 
-	"github.com/phuslu/log/go_slog/creator"
+	"go_slog/creator"
 )
 
 // TestVerifyPhusluSlog runs tests for the phuslu/slog handler.
