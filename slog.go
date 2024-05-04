@@ -60,6 +60,7 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 
 type slogJSONHandler struct {
 	writer   io.Writer
+	level    slog.Leveler
 	options  *slog.HandlerOptions
 	fallback slog.Handler
 
@@ -70,8 +71,8 @@ type slogJSONHandler struct {
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
-	if h.options.Level != nil {
-		return h.options.Level.Level() <= level
+	if h.level != nil {
+		return h.level.Level() <= level
 	}
 	return slog.LevelInfo <= level
 }
@@ -245,9 +246,10 @@ func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Han
 		writer:   writer,
 		options:  options,
 		fallback: slog.NewJSONHandler(writer, options),
-		entry:    *NewContext(nil),
 	}
-	if h.options == nil {
+	if h.options != nil {
+		h.level = h.options.Level
+	} else {
 		h.options = new(slog.HandlerOptions)
 	}
 	return h

@@ -58,9 +58,9 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 type slogHandler struct {
 	logger   Logger
 	caller   int
+	entry    Entry
 	grouping bool
 	groups   int
-	entry    Entry
 }
 
 func (h slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
