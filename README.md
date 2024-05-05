@@ -34,6 +34,7 @@
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
     - `Printf(fmt string, a ...interface{})`, *printf logging*
+    - `SlogNewJSONHandler(io.Writer, *slog.HandlerOptions)`, *drop-in replacement of slog.JSONHandler*
 * High Performance
     - [Significantly faster][high-performance] than all other json loggers.
 

@@ -241,6 +241,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	return err
 }
 
+// SlogNewJSONHandler returns a drop-in replacement of slog.NewJSONHandler.
 func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Handler {
 	h := &slogJSONHandler{
 		writer:   writer,
