@@ -7,7 +7,7 @@
 package log
 
 import (
-	_ "unsafe"
+	"unsafe"
 )
 
 // inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.
@@ -30,7 +30,7 @@ type inlineFrame struct {
 }
 
 type srcFunc struct {
-	datap     *uintptr
+	datap     unsafe.Pointer
 	nameOff   int32
 	startLine int32
 	funcID    uint8
@@ -59,7 +59,6 @@ func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 	u, uf := newInlineUnwinder(funcInfo, pc)
 	sf := inlineUnwinder_srcFunc(&u, uf)
 	name = srcFunc_name(sf)
-	// name = funcNameForPrint(srcFunc_name(sf))
 
 	return
 }
@@ -70,14 +69,8 @@ func newInlineUnwinder(f funcInfo, pc uintptr) (inlineUnwinder, inlineFrame)
 //go:linkname inlineUnwinder_srcFunc runtime.(*inlineUnwinder).srcFunc
 func inlineUnwinder_srcFunc(*inlineUnwinder, inlineFrame) srcFunc
 
-//go:linkname inlineUnwinder_isInlined runtime.(*inlineUnwinder).isInlined
-func inlineUnwinder_isInlined(*inlineUnwinder, inlineFrame) bool
-
 //go:linkname srcFunc_name runtime.srcFunc.name
 func srcFunc_name(srcFunc) string
-
-//go:linkname funcNameForPrint runtime.funcNameForPrint
-func funcNameForPrint(name string) string
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //

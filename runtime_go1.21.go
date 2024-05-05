@@ -37,6 +37,25 @@ type srcFunc struct {
 	funcID    uint8
 }
 
+type _func struct {
+	entryOff uint32 // start pc, as offset from moduledata.text/pcHeader.textStart
+	nameOff  int32  // function name, as index into moduledata.funcnametab.
+
+	args        int32  // in/out args size
+	deferreturn uint32 // offset of start of a deferreturn call instruction from entry, if any.
+
+	pcsp      uint32
+	pcfile    uint32
+	pcln      uint32
+	npcdata   uint32
+	cuOffset  uint32 // runtime.cutab offset of this function's CU
+	startLine int32  // line number of start of function (func keyword/TEXT directive)
+	funcID    uint8  // set for certain special runtime functions
+	flag      uint8
+	_         [1]byte // pad
+	nfuncdata uint8   // must be last, must end on a uint32-aligned boundary
+}
+
 func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
@@ -58,9 +77,15 @@ func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 	// It's important that interpret pc non-strictly as cgoTraceback may
 	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
 	u, uf := newInlineUnwinder(funcInfo, pc, nil)
-	sf := inlineUnwinder_srcFunc(&u, uf)
+	var sf srcFunc
+	if uf.index < 0 {
+		f := (*_func)(funcInfo._func)
+		sf = srcFunc{funcInfo.datap, f.nameOff, f.startLine, f.funcID}
+	} else {
+		t := &u.inlTree[uf.index]
+		sf = srcFunc{u.f.datap, t.nameOff, t.startLine, t.funcID}
+	}
 	name = srcFunc_name(sf)
-	// name = funcNameForPrint(srcFunc_name(sf))
 
 	return
 }
@@ -68,17 +93,8 @@ func pcNameFileLine(pc uintptr) (name, file string, line int32) {
 //go:linkname newInlineUnwinder runtime.newInlineUnwinder
 func newInlineUnwinder(f funcInfo, pc uintptr, cache unsafe.Pointer) (inlineUnwinder, inlineFrame)
 
-//go:linkname inlineUnwinder_srcFunc runtime.(*inlineUnwinder).srcFunc
-func inlineUnwinder_srcFunc(*inlineUnwinder, inlineFrame) srcFunc
-
-//go:linkname inlineUnwinder_isInlined runtime.(*inlineUnwinder).isInlined
-func inlineUnwinder_isInlined(*inlineUnwinder, inlineFrame) bool
-
 //go:linkname srcFunc_name runtime.srcFunc.name
 func srcFunc_name(srcFunc) string
-
-//go:linkname funcNameForPrint runtime.funcNameForPrint
-func funcNameForPrint(name string) string
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //

@@ -62,9 +62,6 @@ func funcname(f funcInfo) string
 //go:linkname funcdata runtime.funcdata
 func funcdata(f funcInfo, i uint8) unsafe.Pointer
 
-//go:linkname pcdatavalue runtime.pcdatavalue
-func pcdatavalue(f funcInfo, table int32, targetpc uintptr, cache unsafe.Pointer) int32
-
 //go:linkname pcdatavalue1 runtime.pcdatavalue1
 func pcdatavalue1(f funcInfo, table int32, targetpc uintptr, cache unsafe.Pointer, strict bool) int32
 

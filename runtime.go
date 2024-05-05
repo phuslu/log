@@ -5,7 +5,7 @@ import (
 )
 
 type funcInfo struct {
-	_func *uintptr
+	_func unsafe.Pointer
 	datap unsafe.Pointer //nolint:unused
 }
 
