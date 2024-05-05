@@ -32,6 +32,8 @@ jobs:
         run: go build -v -race
       - name: Test
         run: go test -v
+      - name: Bench
+        run: go test -v -run=none -bench=.
   lint:
     runs-on: ubuntu-latest
     steps:
