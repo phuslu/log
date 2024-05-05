@@ -1094,37 +1094,86 @@ func (e *Entry) Uint64(key string, i uint64) *Entry {
 
 // Int adds the field key with i as a int to the entry.
 func (e *Entry) Int(key string, i int) *Entry {
-	return e.Int64(key, int64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendInt(e.buf, int64(i), 10)
+	return e
 }
 
 // Int32 adds the field key with i as a int32 to the entry.
 func (e *Entry) Int32(key string, i int32) *Entry {
-	return e.Int64(key, int64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendInt(e.buf, int64(i), 10)
+	return e
 }
 
 // Int16 adds the field key with i as a int16 to the entry.
 func (e *Entry) Int16(key string, i int16) *Entry {
-	return e.Int64(key, int64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendInt(e.buf, int64(i), 10)
+	return e
 }
 
 // Int8 adds the field key with i as a int8 to the entry.
 func (e *Entry) Int8(key string, i int8) *Entry {
-	return e.Int64(key, int64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendInt(e.buf, int64(i), 10)
+	return e
 }
 
 // Uint32 adds the field key with i as a uint32 to the entry.
 func (e *Entry) Uint32(key string, i uint32) *Entry {
-	return e.Uint64(key, uint64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendUint(e.buf, uint64(i), 10)
+	return e
 }
 
 // Uint16 adds the field key with i as a uint16 to the entry.
 func (e *Entry) Uint16(key string, i uint16) *Entry {
-	return e.Uint64(key, uint64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendUint(e.buf, uint64(i), 10)
+	return e
 }
 
 // Uint8 adds the field key with i as a uint8 to the entry.
 func (e *Entry) Uint8(key string, i uint8) *Entry {
-	return e.Uint64(key, uint64(i))
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':')
+	e.buf = strconv.AppendUint(e.buf, uint64(i), 10)
+	return e
 }
 
 // Ints64 adds the field key with i as a []int64 to the entry.
