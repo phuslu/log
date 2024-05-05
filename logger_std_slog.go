@@ -8,19 +8,33 @@ import (
 	"log/slog"
 )
 
-func slogAttrEval(e *Entry, a slog.Attr) *Entry {
+func stdSlogAttrEval(e *Entry, a slog.Attr) *Entry {
 	if a.Equal(slog.Attr{}) {
 		return e
 	}
 	value := a.Value.Resolve()
 	switch value.Kind() {
+	case slog.KindBool:
+		return e.Bool(a.Key, value.Bool())
+	case slog.KindInt64:
+		return e.Int64(a.Key, value.Int64())
+	case slog.KindUint64:
+		return e.Uint64(a.Key, value.Uint64())
+	case slog.KindString:
+		return e.Str(a.Key, value.String())
+	case slog.KindFloat64:
+		return e.Float64(a.Key, value.Float64())
+	case slog.KindDuration:
+		return e.Dur(a.Key, value.Duration())
+	case slog.KindTime:
+		return e.Time(a.Key, value.Time())
 	case slog.KindGroup:
 		if len(value.Group()) == 0 {
 			return e
 		}
 		if a.Key == "" {
 			for _, attr := range value.Group() {
-				e = slogAttrEval(e, attr)
+				e = stdSlogAttrEval(e, attr)
 			}
 			return e
 		}
@@ -29,25 +43,11 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 		e.buf = append(e.buf, '"', ':')
 		i := len(e.buf)
 		for _, attr := range value.Group() {
-			e = slogAttrEval(e, attr)
+			e = stdSlogAttrEval(e, attr)
 		}
 		e.buf[i] = '{'
 		e.buf = append(e.buf, '}')
 		return e
-	case slog.KindBool:
-		return e.Bool(a.Key, value.Bool())
-	case slog.KindDuration:
-		return e.Dur(a.Key, value.Duration())
-	case slog.KindFloat64:
-		return e.Float64(a.Key, value.Float64())
-	case slog.KindInt64:
-		return e.Int64(a.Key, value.Int64())
-	case slog.KindString:
-		return e.Str(a.Key, value.String())
-	case slog.KindTime:
-		return e.Time(a.Key, value.Time())
-	case slog.KindUint64:
-		return e.Uint64(a.Key, value.Uint64())
 	case slog.KindAny:
 		fallthrough
 	default:
@@ -55,21 +55,22 @@ func slogAttrEval(e *Entry, a slog.Attr) *Entry {
 	}
 }
 
-type slogHandler struct {
-	logger   Logger
-	caller   int
+type stdSlogHandler struct {
+	logger Logger
+	caller int
+
 	entry    Entry
 	grouping bool
 	groups   int
 }
 
-func (h slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+func (h stdSlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return &h
 	}
 	i := len(h.entry.buf)
 	for _, attr := range attrs {
-		h.entry = *slogAttrEval(&h.entry, attr)
+		h.entry = *stdSlogAttrEval(&h.entry, attr)
 	}
 	if h.grouping {
 		h.entry.buf[i] = '{'
@@ -78,23 +79,24 @@ func (h slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &h
 }
 
-func (h slogHandler) WithGroup(name string) slog.Handler {
-	if name != "" {
-		if h.grouping {
-			h.entry.buf = append(h.entry.buf, '{')
-		} else {
-			h.entry.buf = append(h.entry.buf, ',')
-		}
-		h.entry.buf = append(h.entry.buf, '"')
-		h.entry.buf = append(h.entry.buf, name...)
-		h.entry.buf = append(h.entry.buf, '"', ':')
-		h.grouping = true
-		h.groups++
+func (h stdSlogHandler) WithGroup(name string) slog.Handler {
+	if name == "" {
+		return &h
 	}
+	if h.grouping {
+		h.entry.buf = append(h.entry.buf, '{')
+	} else {
+		h.entry.buf = append(h.entry.buf, ',')
+	}
+	h.entry.buf = append(h.entry.buf, '"')
+	h.entry.buf = append(h.entry.buf, name...)
+	h.entry.buf = append(h.entry.buf, '"', ':')
+	h.grouping = true
+	h.groups++
 	return &h
 }
 
-func (h *slogHandler) Enabled(_ context.Context, level slog.Level) bool {
+func (h *stdSlogHandler) Enabled(_ context.Context, level slog.Level) bool {
 	switch level {
 	case slog.LevelDebug:
 		return h.logger.Level <= DebugLevel
@@ -108,7 +110,7 @@ func (h *slogHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return false
 }
 
-func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
+func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 	var e *Entry
 	switch r.Level {
 	case slog.LevelDebug:
@@ -138,7 +140,7 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 
 	// attrs
 	r.Attrs(func(attr slog.Attr) bool {
-		e = slogAttrEval(e, attr)
+		e = stdSlogAttrEval(e, attr)
 		return true
 	})
 
@@ -193,7 +195,7 @@ func (h *slogHandler) Handle(_ context.Context, r slog.Record) error {
 
 // Slog wraps the Logger to provide *slog.Logger
 func (l *Logger) Slog() *slog.Logger {
-	h := &slogHandler{
+	h := &stdSlogHandler{
 		logger: *l,
 		caller: l.Caller,
 	}
