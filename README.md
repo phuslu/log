@@ -1064,6 +1064,7 @@ import (
 
 	"github.com/phsym/zeroslog"
 	phuslog "github.com/phuslu/log"
+	seankhliao "go.seankhliao.com/svcrunner/v3/jsonlog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/exp/zapslog"
 	"go.uber.org/zap/zapcore"
@@ -1123,6 +1124,20 @@ func BenchmarkSlogGroupZerolog(b *testing.B) {
 	}
 }
 
+func BenchmarkSlogNormalSeankhliao(b *testing.B) {
+	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupSeankhliao(b *testing.B) {
+	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
 func BenchmarkSlogNormalPhuslog(b *testing.B) {
 	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler())
 	for i := 0; i < b.N; i++ {
@@ -1158,25 +1173,28 @@ A Performance result as below, for daily benchmark results see [github actions][
 ```
 goos: linux
 goarch: amd64
-cpu: AMD EPYC 7763 64-Core Processor
+cpu: AMD EPYC 7763 64-Core Processor                
 
-BenchmarkSlogNormalStd        	 4408033	      1383 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogGroupStd         	 4298301	      1398 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogNormalStd        	 4272934	      1423 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupStd         	 4143343	      1450 ns/op	     120 B/op	       3 allocs/op
 
-BenchmarkSlogNormalZap        	 4753046	      1273 ns/op	     192 B/op	       1 allocs/op
-BenchmarkSlogGroupZap         	 4724052	      1257 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogNormalZap        	 4776193	      1257 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupZap         	 4751304	      1272 ns/op	     192 B/op	       1 allocs/op
 
-BenchmarkSlogNormalZerolog    	 7548705	       789.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupZerolog     	 5592763	      1076 ns/op	     288 B/op	       1 allocs/op
+BenchmarkSlogNormalZerolog    	 7583500	       797.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupZerolog     	 5459755	      1111 ns/op	     288 B/op	       1 allocs/op
 
-BenchmarkSlogNormalPhuslog    	 8318289	       720.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupPhuslog     	 8175591	       737.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogNormalSeankhliao 	 7103692	       844.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupSeankhliao  	 6321853	       941.7 ns/op	      16 B/op	       2 allocs/op
 
-BenchmarkSlogNormalPhuslogStd 	 7978171	       755.0 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupPhuslogStd  	 7728466	       775.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogNormalPhuslog    	 8381883	       719.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupPhuslog     	 8314545	       727.6 ns/op	       0 B/op	       0 allocs/op
+
+BenchmarkSlogNormalPhuslogStd 	 8361526	       723.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupPhuslogStd  	 8047856	       744.7 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	70.366s
+ok  	bench	84.415s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
