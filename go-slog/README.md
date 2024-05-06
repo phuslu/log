@@ -11,5 +11,5 @@ go test -v -args -useWarnings
 
 Benchmark
 ```
-go test -v -run=none -bench=.
+go test -v -run=none -bench=. -args -useWarnings
 ```
