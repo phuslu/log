@@ -129,41 +129,47 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 
-	e.buf = append(e.buf, '{')
-
 	// time
 	if !r.Time.IsZero() {
-		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, slog.TimeKey...)
-		e.buf = append(e.buf, `":"`...)
+		e.buf = append(e.buf, (`{"` + slog.TimeKey + `":"`)...)
 		e.buf = r.Time.AppendFormat(e.buf, time.RFC3339Nano)
-		e.buf = append(e.buf, `",`...)
-	}
-
-	// level
-	e.buf = append(e.buf, '"')
-	e.buf = append(e.buf, slog.LevelKey...)
-	switch r.Level {
-	case slog.LevelDebug:
-		e.buf = append(e.buf, `":"DEBUG"`...)
-	case slog.LevelInfo:
-		e.buf = append(e.buf, `":"INFO"`...)
-	case slog.LevelWarn:
-		e.buf = append(e.buf, `":"WARN"`...)
-	case slog.LevelError:
-		e.buf = append(e.buf, `":"ERROR"`...)
-	default:
-		e.buf = append(e.buf, `":"`...)
-		e.buf = append(e.buf, r.Level.String()...)
-		e.buf = append(e.buf, '"')
+		// level
+		switch r.Level {
+		case slog.LevelDebug:
+			e.buf = append(e.buf, (`","` + slog.LevelKey + `":"DEBUG"`)...)
+		case slog.LevelInfo:
+			e.buf = append(e.buf, (`","` + slog.LevelKey + `":"INFO"`)...)
+		case slog.LevelWarn:
+			e.buf = append(e.buf, (`","` + slog.LevelKey + `":"WARN"`)...)
+		case slog.LevelError:
+			e.buf = append(e.buf, (`","` + slog.LevelKey + `":"ERROR"`)...)
+		default:
+			e.buf = append(e.buf, (`","` + slog.LevelKey + `":"`)...)
+			e.buf = append(e.buf, r.Level.String()...)
+			e.buf = append(e.buf, '"')
+		}
+	} else {
+		// level
+		switch r.Level {
+		case slog.LevelDebug:
+			e.buf = append(e.buf, (`{"` + slog.LevelKey + `":"DEBUG"`)...)
+		case slog.LevelInfo:
+			e.buf = append(e.buf, (`{"` + slog.LevelKey + `":"INFO"`)...)
+		case slog.LevelWarn:
+			e.buf = append(e.buf, (`{"` + slog.LevelKey + `":"WARN"`)...)
+		case slog.LevelError:
+			e.buf = append(e.buf, (`{"` + slog.LevelKey + `":"ERROR"`)...)
+		default:
+			e.buf = append(e.buf, (`{"` + slog.LevelKey + `":"`)...)
+			e.buf = append(e.buf, r.Level.String()...)
+			e.buf = append(e.buf, '"')
+		}
 	}
 
 	// source
 	if h.options.AddSource && r.PC != 0 {
 		name, file, line := pcNameFileLine(r.PC)
-		e.buf = append(e.buf, ',', '"')
-		e.buf = append(e.buf, slog.SourceKey...)
-		e.buf = append(e.buf, `":{"function":"`...)
+		e.buf = append(e.buf, (`,"` + slog.SourceKey + `":{"function":"`)...)
 		e.buf = append(e.buf, name...)
 		e.buf = append(e.buf, `","file":"`...)
 		e.buf = append(e.buf, file...)
@@ -173,7 +179,9 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	}
 
 	// msg
-	e = e.Str(slog.MessageKey, r.Message)
+	e.buf = append(e.buf, (`,"` + slog.MessageKey + `":"`)...)
+	e.string(r.Message)
+	e.buf = append(e.buf, '"')
 
 	// with
 	if b := h.entry.buf; len(b) != 0 {
