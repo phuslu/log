@@ -27,4 +27,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: Benchmark
         working-directory: ./go-slog
-        run: go test -v -run=none -bench=.
+        run: go test -v -run=none -bench=. -args -useWarnings

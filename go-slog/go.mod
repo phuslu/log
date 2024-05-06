@@ -3,8 +3,8 @@ module _go_slog
 go 1.22
 
 require (
-	github.com/madkins23/go-slog v0.9.8-beta-8
-	github.com/phuslu/log v1.0.93
+	github.com/madkins23/go-slog v0.9.11-beta-11
+	github.com/phuslu/log v1.0.96
 	github.com/stretchr/testify v1.9.0
 )
 
