@@ -32,11 +32,12 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 	case slog.KindDuration:
 		return e.Int64(a.Key, int64(value.Duration()))
 	case slog.KindGroup:
-		if len(value.Group()) == 0 {
+		attrs := value.Group()
+		if len(attrs) == 0 {
 			return e
 		}
 		if a.Key == "" {
-			for _, attr := range value.Group() {
+			for _, attr := range attrs {
 				e = slogJSONAttrEval(e, attr)
 			}
 			return e
@@ -45,7 +46,7 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 		e.buf = append(e.buf, a.Key...)
 		e.buf = append(e.buf, '"', ':')
 		i := len(e.buf)
-		for _, attr := range value.Group() {
+		for _, attr := range attrs {
 			e = slogJSONAttrEval(e, attr)
 		}
 		e.buf[i] = '{'

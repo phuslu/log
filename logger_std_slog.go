@@ -29,11 +29,12 @@ func stdSlogAttrEval(e *Entry, a slog.Attr) *Entry {
 	case slog.KindTime:
 		return e.Time(a.Key, value.Time())
 	case slog.KindGroup:
-		if len(value.Group()) == 0 {
+		attrs := value.Group()
+		if len(attrs) == 0 {
 			return e
 		}
 		if a.Key == "" {
-			for _, attr := range value.Group() {
+			for _, attr := range attrs {
 				e = stdSlogAttrEval(e, attr)
 			}
 			return e
@@ -42,7 +43,7 @@ func stdSlogAttrEval(e *Entry, a slog.Attr) *Entry {
 		e.buf = append(e.buf, a.Key...)
 		e.buf = append(e.buf, '"', ':')
 		i := len(e.buf)
-		for _, attr := range value.Group() {
+		for _, attr := range attrs {
 			e = stdSlogAttrEval(e, attr)
 		}
 		e.buf[i] = '{'
