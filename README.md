@@ -830,7 +830,7 @@ func main() {
 ### High Performance
 
 <details>
-  <summary>The most common benchmarks(disable/normal/caller/printf/any) against slog/zap/zerolog</summary>
+  <summary>The most common benchmarks(disabled/simple/caller/printf/any) against slog/zap/zerolog</summary>
 
 ```go
 // go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem bench_test.go
@@ -851,14 +851,14 @@ import (
 const msg = "The quick brown fox jumps over the lazy dog"
 var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
-func BenchmarkSlogDisable(b *testing.B) {
+func BenchmarkSlogDisabled(b *testing.B) {
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
 		logger.Debug(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogNormal(b *testing.B) {
+func BenchmarkSlogSimple(b *testing.B) {
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
@@ -886,7 +886,7 @@ func BenchmarkSlogAny(b *testing.B) {
 	}
 }
 
-func BenchmarkZapDisable(b *testing.B) {
+func BenchmarkZapDisabled(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -897,7 +897,7 @@ func BenchmarkZapDisable(b *testing.B) {
 	}
 }
 
-func BenchmarkZapNormal(b *testing.B) {
+func BenchmarkZapSimple(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -942,7 +942,7 @@ func BenchmarkZapAny(b *testing.B) {
 	}
 }
 
-func BenchmarkZeroLogDisable(b *testing.B) {
+func BenchmarkZeroLogDisabled(b *testing.B) {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
@@ -950,7 +950,7 @@ func BenchmarkZeroLogDisable(b *testing.B) {
 	}
 }
 
-func BenchmarkZeroLogNormal(b *testing.B) {
+func BenchmarkZeroLogSimple(b *testing.B) {
 	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
@@ -978,14 +978,14 @@ func BenchmarkZeroLogAny(b *testing.B) {
 	}
 }
 
-func BenchmarkPhusLogDisable(b *testing.B) {
+func BenchmarkPhusLogDisabled(b *testing.B) {
 	logger := phuslog.Logger{Level: phuslog.InfoLevel, Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
-func BenchmarkPhusLogNormal(b *testing.B) {
+func BenchmarkPhusLogSimple(b *testing.B) {
 	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
@@ -1022,26 +1022,26 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogDisable-4      	716042575	         8.374 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogNormal-4       	 4449908	      1358 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogDisabled-4     	716042575	      8.374 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimple-4       	 4449908	      1358 ns/op	     120 B/op	       3 allocs/op
 BenchmarkSlogPrintf-4       	 5938717	      1020 ns/op	      80 B/op	       1 allocs/op
 BenchmarkSlogCaller-4       	 2709848	      2207 ns/op	     688 B/op	       9 allocs/op
 BenchmarkSlogAny-4          	 4517782	      1375 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkZapDisable-4       	740263599	         8.092 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZapNormal-4        	 6476355	       904.0 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapDisabled-4      	740263599	       8.092 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSimple-4        	 6476355	       904.0 ns/op	     384 B/op	       1 allocs/op
 BenchmarkZapPrintf-4        	 6385504	       921.7 ns/op	      80 B/op	       1 allocs/op
 BenchmarkZapCaller-4        	 3582214	      1668 ns/op	     632 B/op	       3 allocs/op
 BenchmarkZapAny-4           	 5755196	      1040 ns/op	     224 B/op	       2 allocs/op
 
-BenchmarkZeroLogDisable-4   	605330757	         9.918 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogNormal-4    	18566421	       324.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogDisabled-4  	605330757	       9.918 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogSimple-4    	18566421	       324.9 ns/op	       0 B/op	       0 allocs/op
 BenchmarkZeroLogPrintf-4    	 8926930	       667.6 ns/op	      80 B/op	       1 allocs/op
 BenchmarkZeroLogCaller-4    	 4698607	      1278 ns/op	     304 B/op	       4 allocs/op
 BenchmarkZeroLogAny-4       	 9611808	       615.5 ns/op	      48 B/op	       1 allocs/op
 
-BenchmarkPhusLogDisable-4   	625154964	         9.596 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogNormal-4    	24478976	       242.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogDisabled-4  	625154964	       9.596 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogSimple-4    	24478976	       242.1 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLogPrintf-4    	11565765	       523.1 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLogCaller-4    	12413442	       490.3 ns/op	       0 B/op	       0 allocs/op
 BenchmarkPhusLogAny-4       	12683826	       474.7 ns/op	       0 B/op	       0 allocs/op
@@ -1072,21 +1072,21 @@ import (
 
 const msg = "The quick brown fox jumps over the lazy dog"
 
-func BenchmarkSlogNormalStd(b *testing.B) {
+func BenchmarkSlogSimpleStd(b *testing.B) {
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogGroupStd(b *testing.B) {
+func BenchmarkSlogGroupsStd(b *testing.B) {
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogNormalZap(b *testing.B) {
+func BenchmarkSlogSimpleZap(b *testing.B) {
 	logcore := zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -1098,7 +1098,7 @@ func BenchmarkSlogNormalZap(b *testing.B) {
 	}
 }
 
-func BenchmarkSlogGroupZap(b *testing.B) {
+func BenchmarkSlogGroupsZap(b *testing.B) {
 	logcore := zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -1110,56 +1110,56 @@ func BenchmarkSlogGroupZap(b *testing.B) {
 	}
 }
 
-func BenchmarkSlogNormalZerolog(b *testing.B) {
+func BenchmarkSlogSimpleZerolog(b *testing.B) {
 	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo}))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogGroupZerolog(b *testing.B) {
+func BenchmarkSlogGroupsZerolog(b *testing.B) {
 	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo})).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogNormalSeankhliao(b *testing.B) {
+func BenchmarkSlogSimpleSeankhliao(b *testing.B) {
 	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogGroupSeankhliao(b *testing.B) {
+func BenchmarkSlogGroupsSeankhliao(b *testing.B) {
 	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard)).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogNormalPhuslog(b *testing.B) {
+func BenchmarkSlogSimplePhuslog(b *testing.B) {
 	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler())
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogGroupPhuslog(b *testing.B) {
+func BenchmarkSlogGroupsPhuslog(b *testing.B) {
 	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler()).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogNormalPhuslogStd(b *testing.B) {
+func BenchmarkSlogSimplePhuslogStd(b *testing.B) {
 	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkSlogGroupPhuslogStd(b *testing.B) {
+func BenchmarkSlogGroupsPhuslogStd(b *testing.B) {
 	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
@@ -1175,23 +1175,23 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor                
 
-BenchmarkSlogNormalStd        	 4272934	      1423 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogGroupStd         	 4143343	      1450 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogSimpleStd        	 4272934	      1423 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupsStd        	 4143343	      1450 ns/op	     120 B/op	       3 allocs/op
 
-BenchmarkSlogNormalZap        	 4776193	      1257 ns/op	     192 B/op	       1 allocs/op
-BenchmarkSlogGroupZap         	 4751304	      1272 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogSimpleZap        	 4776193	      1257 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupsZap        	 4751304	      1272 ns/op	     192 B/op	       1 allocs/op
 
-BenchmarkSlogNormalZerolog    	 7583500	       797.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupZerolog     	 5459755	      1111 ns/op	     288 B/op	       1 allocs/op
+BenchmarkSlogSimpleZerolog    	 7583500	       797.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsZerolog    	 5459755	      1111 ns/op	     288 B/op	       1 allocs/op
 
-BenchmarkSlogNormalSeankhliao 	 7103692	       844.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupSeankhliao  	 6321853	       941.7 ns/op	      16 B/op	       2 allocs/op
+BenchmarkSlogSimpleSeankhliao 	 7103692	       844.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsSeankhliao 	 6321853	       941.7 ns/op	      16 B/op	       2 allocs/op
 
-BenchmarkSlogNormalPhuslog    	 8381883	       719.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupPhuslog     	 8314545	       727.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimplePhuslog    	 8381883	       719.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslog    	 8314545	       727.6 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkSlogNormalPhuslogStd 	 8361526	       723.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupPhuslogStd  	 8047856	       744.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimplePhuslogStd 	 8361526	       723.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslogStd 	 8047856	       744.7 ns/op	       0 B/op	       0 allocs/op
 
 PASS
 ok  	bench	84.415s
