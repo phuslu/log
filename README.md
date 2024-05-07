@@ -882,7 +882,7 @@ func BenchmarkSlogCaller(b *testing.B) {
 func BenchmarkSlogAny(b *testing.B) {
 	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
-		logger.Info(msg, "object", &obj)
+		logger.Info(msg, "rate", "15", "low", 16, "object", &obj)
 	}
 }
 
@@ -938,7 +938,7 @@ func BenchmarkZapAny(b *testing.B) {
 		zapcore.InfoLevel,
 	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &obj)
+		logger.Infow(msg, "rate", "15", "low", 16, "object", &obj)
 	}
 }
 
@@ -974,7 +974,7 @@ func BenchmarkZeroLogCaller(b *testing.B) {
 func BenchmarkZeroLogAny(b *testing.B) {
 	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Any("object", &obj).Msg(msg)
+		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
 	}
 }
 
@@ -1009,7 +1009,7 @@ func BenchmarkPhusLogCaller(b *testing.B) {
 func BenchmarkPhusLogAny(b *testing.B) {
 	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
-		logger.Info().Any("object", &obj).Msg(msg)
+		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
 	}
 }
 ```
@@ -1022,32 +1022,32 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogDisabled-4     	716042575	      8.374 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogSimple-4       	 4449908	      1358 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogPrintf-4       	 5938717	      1020 ns/op	      80 B/op	       1 allocs/op
-BenchmarkSlogCaller-4       	 2709848	      2207 ns/op	     688 B/op	       9 allocs/op
-BenchmarkSlogAny-4          	 4517782	      1375 ns/op	     112 B/op	       2 allocs/op
+BenchmarkSlogDisabled-4      	715096197	         8.452 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimple-4        	 4394904	      1367 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogPrintf-4        	 5546492	      1053 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4        	 2708773	      2203 ns/op	     688 B/op	       9 allocs/op
+BenchmarkSlogAny-4           	 3936673	      1516 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkZapDisabled-4      	740263599	       8.092 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZapSimple-4        	 6476355	       904.0 ns/op	     384 B/op	       1 allocs/op
-BenchmarkZapPrintf-4        	 6385504	       921.7 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZapCaller-4        	 3582214	      1668 ns/op	     632 B/op	       3 allocs/op
-BenchmarkZapAny-4           	 5755196	      1040 ns/op	     224 B/op	       2 allocs/op
+BenchmarkZapDisabled-4       	662012907	         9.076 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSimple-4         	 6586341	       926.9 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapPrintf-4         	 6375831	       951.9 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4         	 3601339	      1673 ns/op	     632 B/op	       3 allocs/op
+BenchmarkZapAny-4            	 4649176	      1288 ns/op	     480 B/op	       2 allocs/op
 
-BenchmarkZeroLogDisabled-4  	605330757	       9.918 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogSimple-4    	18566421	       324.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogPrintf-4    	 8926930	       667.6 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZeroLogCaller-4    	 4698607	      1278 ns/op	     304 B/op	       4 allocs/op
-BenchmarkZeroLogAny-4       	 9611808	       615.5 ns/op	      48 B/op	       1 allocs/op
+BenchmarkZeroLogDisabled-4   	606002878	         9.908 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogSimple-4     	18342879	       328.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4     	 8904566	       669.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4     	 4687348	      1280 ns/op	     304 B/op	       4 allocs/op
+BenchmarkZeroLogAny-4        	 7031146	       851.2 ns/op	      64 B/op	       3 allocs/op
 
-BenchmarkPhusLogDisabled-4  	625154964	       9.596 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogSimple-4    	24478976	       242.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogPrintf-4    	11565765	       523.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogCaller-4    	12413442	       490.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogAny-4       	12683826	       474.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogDisabled-4   	624706401	         9.599 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogSimple-4     	22249552	       243.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4     	11471342	       524.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4     	12550828	       480.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogAny-4        	11623692	       516.4 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	138.928s
+ok  	bench	139.331s
 ```
 
 <details>
