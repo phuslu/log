@@ -201,6 +201,12 @@ func TestLoggerInterface(t *testing.T) {
 		Level: ParseLevel("debug"),
 	}
 
+	var normalStruct = struct {
+		Rate string
+		Low  int
+		High float32
+	}{"15", 16, 123.2}
+
 	var cyclicStruct struct {
 		Value interface{}
 	}
@@ -209,6 +215,10 @@ func TestLoggerInterface(t *testing.T) {
 
 	logger.Info().
 		Caller(-1).
+		Interface("a", 1).
+		Interface("b", 1.2).
+		Interface("c", "str").
+		Interface("a_normal_struct", normalStruct).
 		Interface("a_cyclic_struct", cyclicStruct).
 		Msgf("this is a cyclic struct test")
 }

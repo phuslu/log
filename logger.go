@@ -1983,7 +1983,7 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = append(e.buf, '"', ':')
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 	enc := json.NewEncoder(b)
@@ -1991,14 +1991,13 @@ func (e *Entry) Interface(key string, i interface{}) *Entry {
 	err := enc.Encode(i)
 	if err != nil {
 		b.B = b.B[:0]
-		fmt.Fprintf(b, "marshaling error: %+v", err)
+		fmt.Fprintf(b, `marshaling error: %+v`, err)
+		e.buf = append(e.buf, '"')
+		e.bytes(b.B)
+		e.buf = append(e.buf, '"')
 	} else {
 		b.B = b.B[:len(b.B)-1]
-	}
-	e.bytes(b.B)
-	e.buf = append(e.buf, '"')
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
+		e.buf = append(e.buf, b.B...)
 	}
 
 	return e
