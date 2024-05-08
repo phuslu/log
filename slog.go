@@ -160,7 +160,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 
 	// source
 	if h.options.AddSource && r.PC != 0 {
-		name, file, line := pcNameFileLine(r.PC)
+		file, line, name := pcFileLineName(r.PC)
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, slog.SourceKey...)
 		e.buf = append(e.buf, `":{"function":"`...)

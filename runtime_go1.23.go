@@ -36,7 +36,7 @@ type srcFunc struct {
 	funcID    uint8
 }
 
-func pcNameFileLine(pc uintptr) (name, file string, line int32) {
+func pcFileLineName(pc uintptr) (file string, line int32, name string) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return

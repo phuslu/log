@@ -55,7 +55,7 @@ type _func struct {
 	nfuncdata uint8   // must be last, must end on a uint32-aligned boundary
 }
 
-func pcNameFileLine(pc uintptr) (name, file string, line int32) {
+func pcFileLineName(pc uintptr) (file string, line int32, name string) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return

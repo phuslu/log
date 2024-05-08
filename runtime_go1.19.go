@@ -21,7 +21,7 @@ type inlinedCall struct {
 	parentPc int32 // position of an instruction whose source position is the call site (offset from entry)
 }
 
-func pcNameFileLine(pc uintptr) (name, file string, line int32) {
+func pcFileLineName(pc uintptr) (file string, line int32, name string) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return

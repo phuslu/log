@@ -19,7 +19,7 @@ type inlinedCall struct {
 	startLine int32 // line number of start of function (func keyword/TEXT directive)
 }
 
-func pcNameFileLine(pc uintptr) (name, file string, line int32) {
+func pcFileLineName(pc uintptr) (file string, line int32, name string) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
 		return

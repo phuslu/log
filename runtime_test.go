@@ -23,7 +23,7 @@ func TestPcFileLine(t *testing.T) {
 func TestPcNameFileLine(t *testing.T) {
 	var pcs [2]uintptr
 	runtime.Callers(1, pcs[:])
-	name1, file1, line1 := pcNameFileLine(pcs[0])
+	file1, line1, name1 := pcFileLineName(pcs[0])
 	t.Log(name1, file1, line1)
 	pc, file2, line2, _ := runtime.Caller(0)
 	frame, _ := runtime.CallersFrames([]uintptr{pc}).Next()
@@ -57,6 +57,6 @@ func BenchmarkPcNameFileLine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var pc uintptr
 		caller1(1, &pc, 1, 1)
-		pcNameFileLine(pc)
+		pcFileLineName(pc)
 	}
 }
