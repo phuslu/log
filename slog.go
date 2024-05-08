@@ -60,10 +60,9 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 }
 
 type slogJSONHandler struct {
-	writer   io.Writer
-	level    slog.Leveler
-	options  *slog.HandlerOptions
+	options  slog.HandlerOptions
 	fallback slog.Handler
+	writer   io.Writer
 
 	entry Entry
 
@@ -72,10 +71,7 @@ type slogJSONHandler struct {
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
-	if h.level != nil {
-		return h.level.Level() <= level
-	}
-	return slog.LevelInfo <= level
+	return h.options.Level.Level() <= level
 }
 
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
@@ -245,14 +241,14 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 // SlogNewJSONHandler returns a drop-in replacement of slog.NewJSONHandler.
 func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Handler {
 	h := &slogJSONHandler{
-		writer:   writer,
-		options:  options,
 		fallback: slog.NewJSONHandler(writer, options),
+		writer:   writer,
 	}
-	if h.options != nil {
-		h.level = h.options.Level
-	} else {
-		h.options = new(slog.HandlerOptions)
+	if options != nil {
+		h.options = *options
+	}
+	if h.options.Level == nil {
+		h.options.Level = slog.LevelInfo
 	}
 	return h
 }
