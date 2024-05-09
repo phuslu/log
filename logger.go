@@ -231,7 +231,7 @@ func Panic() (e *Entry) {
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
-func Printf(format string, v ...interface{}) {
+func Printf(format string, v ...any) {
 	e := DefaultLogger.header(noLevel)
 	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
@@ -416,7 +416,7 @@ func (l *Logger) SetLevel(level Level) {
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
-func (l *Logger) Printf(format string, v ...interface{}) {
+func (l *Logger) Printf(format string, v ...any) {
 	e := l.header(noLevel)
 	if e != nil {
 		if caller, full := l.Caller, false; caller != 0 {
@@ -431,7 +431,7 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 }
 
 var epool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &Entry{
 			buf: make([]byte, 0, 1024),
 		}
@@ -1670,7 +1670,7 @@ func (e *Entry) NetIPPrefix(key string, pfx netip.Prefix) *Entry {
 }
 
 // Type adds type of the key using reflection to the entry.
-func (e *Entry) Type(key string, v interface{}) *Entry {
+func (e *Entry) Type(key string, v any) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -1758,13 +1758,13 @@ func (b *bb) Write(p []byte) (int, error) {
 }
 
 var bbpool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(bb)
 	},
 }
 
 // Msgf sends the entry with formatted msg added as the message field if not empty.
-func (e *Entry) Msgf(format string, v ...interface{}) {
+func (e *Entry) Msgf(format string, v ...any) {
 	if e == nil {
 		return
 	}
@@ -1781,7 +1781,7 @@ func (e *Entry) Msgf(format string, v ...interface{}) {
 }
 
 // Msgs sends the entry with msgs added as the message field if not empty.
-func (e *Entry) Msgs(args ...interface{}) {
+func (e *Entry) Msgs(args ...any) {
 	if e == nil {
 		return
 	}
@@ -1972,7 +1972,7 @@ func (e *Entry) bytes(b []byte) {
 }
 
 // Interface adds the field key with i marshaled using reflection.
-func (e *Entry) Interface(key string, i interface{}) *Entry {
+func (e *Entry) Interface(key string, i any) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -2029,6 +2029,42 @@ func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 	return e
 }
 
+// Objects marshals a slice of objects that implement the ObjectMarshaler interface.
+func (e *Entry) Objects(key string, objects any) *Entry {
+	if e == nil {
+		return nil
+	}
+	values := reflect.ValueOf(objects)
+	if values.Kind() != reflect.Slice {
+		e.buf = append(e.buf, ',', '"')
+		e.buf = append(e.buf, key...)
+		e.buf = append(e.buf, `":null`...)
+		return e
+	}
+
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '[')
+	for i := 0; i < values.Len(); i++ {
+		if i != 0 {
+			e.buf = append(e.buf, ',')
+		}
+		value := values.Index(i)
+		if value.IsNil() {
+			e.buf = append(e.buf, "null"...)
+		} else if obj, ok := value.Interface().(ObjectMarshaler); ok {
+			i := len(e.buf)
+			obj.MarshalObject(e)
+			e.buf[i] = '{'
+			e.buf = append(e.buf, '}')
+		} else {
+			e.buf = append(e.buf, `null`...)
+		}
+	}
+	e.buf = append(e.buf, ']')
+	return e
+}
+
 // Func allows an anonymous func to run only if the entry is enabled.
 func (e *Entry) Func(f func(e *Entry)) *Entry {
 	if e != nil {
@@ -2050,7 +2086,7 @@ func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 }
 
 // Any adds the field key with f as an any value to the entry.
-func (e *Entry) Any(key string, value interface{}) *Entry {
+func (e *Entry) Any(key string, value any) *Entry {
 	if value == nil || (*[2]uintptr)(unsafe.Pointer(&value))[1] == 0 {
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, key...)
@@ -2154,7 +2190,7 @@ func (e *Entry) Any(key string, value interface{}) *Entry {
 }
 
 // KeysAndValues sends keysAndValues to Entry
-func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
+func (e *Entry) KeysAndValues(keysAndValues ...any) *Entry {
 	if e == nil {
 		return nil
 	}
@@ -2170,7 +2206,7 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 }
 
 // Fields type, used to pass to `Fields`.
-type Fields map[string]interface{}
+type Fields map[string]any
 
 // Fields is a helper function to use a map to set fields using type assertion.
 func (e *Entry) Fields(fields Fields) *Entry {
@@ -2247,7 +2283,7 @@ func stacks(all bool) (trace []byte) {
 }
 
 // wlprintf is a helper function for tests
-func wlprintf(w Writer, level Level, format string, args ...interface{}) (int, error) {
+func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 	return w.WriteEntry(&Entry{
 		Level: level,
 		buf:   []byte(fmt.Sprintf(format, args...)),

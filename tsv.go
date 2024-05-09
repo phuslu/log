@@ -23,7 +23,7 @@ type TSVEntry struct {
 }
 
 var tepool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(TSVEntry)
 	},
 }

@@ -208,7 +208,7 @@ func TestLoggerInterface(t *testing.T) {
 	}{"15", 16, 123.2}
 
 	var cyclicStruct struct {
-		Value interface{}
+		Value any
 	}
 
 	cyclicStruct.Value = &cyclicStruct
@@ -258,6 +258,41 @@ func TestLoggerObject(t *testing.T) {
 	var nilIface ObjectMarshaler = nilObjct
 	logger.Info().Object("null_object_2", nilIface).Msg("this is a null_object_2 test")
 	logger.Info().EmbedObject(nilIface).Msg("this is a null_object_2 test")
+}
+
+func TestLoggerObjects(t *testing.T) {
+	logger := Logger{
+		Level: ParseLevel("debug"),
+	}
+
+	logger.Info().Objects("bad_objects", "1234").Msg("this is a anys test")
+
+	objects1 := []*testMarshalObject{
+		&testMarshalObject{1, "foo"},
+		&testMarshalObject{2, "bar"},
+		nil,
+	}
+	logger.Info().Objects("objects1", objects1).Msg("this is a objects1 test")
+
+	var nullObject ObjectMarshaler
+	objects2 := []any{
+		nullObject,
+		&testMarshalObject{3, "ok"},
+		nil,
+		"1234",
+		&testMarshalObject{4, "haha"},
+	}
+	logger.Info().Objects("objects2", objects2).Msg("this is a objects2 test")
+
+	type TestObjects []*testMarshalObject
+	objects3 := TestObjects{
+		nil,
+		&testMarshalObject{3, "ok"},
+		nil,
+		&testMarshalObject{4, "haha"},
+		nil,
+	}
+	logger.Info().Objects("objects3", objects3).Msg("this is a objects2 test")
 }
 
 func TestLoggerLog(t *testing.T) {
