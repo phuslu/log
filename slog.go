@@ -60,25 +60,20 @@ func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
 }
 
 type slogJSONHandler struct {
-	options  slog.HandlerOptions
-	fallback slog.Handler
-	writer   io.Writer
-
-	entry Entry
-
+	level    slog.Level
+	entry    Entry
 	grouping bool
 	groups   int
+
+	writer  io.Writer
+	options *slog.HandlerOptions
 }
 
 func (h *slogJSONHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return h.options.Level.Level() <= level
+	return h.level <= level
 }
 
 func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	if h.options.ReplaceAttr != nil {
-		h.fallback = h.fallback.WithAttrs(attrs)
-		return &h
-	}
 	if len(attrs) == 0 {
 		return &h
 	}
@@ -94,10 +89,6 @@ func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h slogJSONHandler) WithGroup(name string) slog.Handler {
-	if h.options.ReplaceAttr != nil {
-		h.fallback = h.fallback.WithGroup(name)
-		return &h
-	}
 	if name == "" {
 		return &h
 	}
@@ -114,14 +105,7 @@ func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 	return &h
 }
 
-func (h *slogJSONHandler) Handle(ctx context.Context, r slog.Record) error {
-	if h.options.ReplaceAttr != nil {
-		return h.fallback.Handle(ctx, r)
-	}
-	return h.handle(ctx, r)
-}
-
-func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
+func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 
@@ -155,7 +139,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	}
 
 	// source
-	if h.options.AddSource && r.PC != 0 {
+	if h.options != nil && h.options.AddSource && r.PC != 0 {
 		file, line, name := pcFileLineName(r.PC)
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, slog.SourceKey...)
@@ -183,6 +167,7 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 		return true
 	})
 
+	// rollback helper
 	lastindex := func(buf []byte) int {
 		for i := len(buf) - 3; i >= 1; i-- {
 			if buf[i] == '"' && (buf[i-1] == ',' || buf[i-1] == '{') {
@@ -238,17 +223,52 @@ func (h *slogJSONHandler) handle(_ context.Context, r slog.Record) error {
 	return err
 }
 
+type slogLevelvarHandler struct {
+	handler slog.Handler
+	level   slog.Leveler
+}
+
+func (h *slogLevelvarHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return h.level.Level() <= level
+}
+
+func (h slogLevelvarHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	h.handler = h.handler.WithAttrs(attrs)
+	return &h
+}
+
+func (h slogLevelvarHandler) WithGroup(name string) slog.Handler {
+	h.handler = h.handler.WithGroup(name)
+	return &h
+}
+
+func (h *slogLevelvarHandler) Handle(ctx context.Context, r slog.Record) error {
+	return h.handler.Handle(ctx, r)
+}
+
 // SlogNewJSONHandler returns a drop-in replacement of slog.NewJSONHandler.
 func SlogNewJSONHandler(writer io.Writer, options *slog.HandlerOptions) slog.Handler {
-	h := &slogJSONHandler{
-		fallback: slog.NewJSONHandler(writer, options),
-		writer:   writer,
+	if options != nil && options.ReplaceAttr != nil {
+		// TODO: implement ReplaceAttr in a new handler.
+		return slog.NewJSONHandler(writer, options)
 	}
-	if options != nil {
-		h.options = *options
+
+	handler := &slogJSONHandler{
+		writer:  writer,
+		options: options,
 	}
-	if h.options.Level == nil {
-		h.options.Level = slog.LevelInfo
+
+	if handler.options == nil || handler.options.Level == nil {
+		return handler
 	}
-	return h
+
+	if level, ok := handler.options.Level.(slog.Level); ok {
+		handler.level = level
+		return handler
+	}
+
+	return &slogLevelvarHandler{
+		handler: handler,
+		level:   handler.options.Level,
+	}
 }
