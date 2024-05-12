@@ -886,6 +886,41 @@ func BenchmarkSlogAny(b *testing.B) {
 	}
 }
 
+func BenchmarkSlogPhusDisabled(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Debug(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogPhusSimple(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogPhusPrintf(b *testing.B) {
+	slog.SetDefault(slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil)))
+	for i := 0; i < b.N; i++ {
+		log.Printf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkSlogPhusCaller(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, &slog.HandlerOptions{AddSource: true}))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogPhusAny(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "object", &obj)
+	}
+}
+
 func BenchmarkZapDisabled(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
