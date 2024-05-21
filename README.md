@@ -1097,11 +1097,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 	"github.com/phsym/zeroslog"
 	phuslog "github.com/phuslu/log"
-	veqryn "github.com/veqryn/slog-json"
 	seankhliao "go.seankhliao.com/svcrunner/v3/jsonlog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/exp/zapslog"
@@ -1171,42 +1168,6 @@ func BenchmarkSlogSimpleSeankhliao(b *testing.B) {
 
 func BenchmarkSlogGroupsSeankhliao(b *testing.B) {
 	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard)).With("a", 1).WithGroup("g").With("b", 2)
-	for i := 0; i < b.N; i++ {
-		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
-	}
-}
-
-func BenchmarkSlogSimpleVeqryn(b *testing.B) {
-	logger := slog.New(veqryn.NewHandler(io.Discard, &veqryn.HandlerOptions{
-			AddSource:   false,
-			Level:       slog.LevelInfo,
-			JSONOptions: json.JoinOptions(
-				json.Deterministic(true),
-				jsontext.AllowDuplicateNames(true),
-				jsontext.AllowInvalidUTF8(true),
-				jsontext.EscapeForJS(true),
-				jsontext.SpaceAfterColon(false),
-				jsontext.SpaceAfterComma(true),
-			),
-		}))
-	for i := 0; i < b.N; i++ {
-		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
-	}
-}
-
-func BenchmarkSlogGroupsVeqryn(b *testing.B) {
-	logger := slog.New(veqryn.NewHandler(io.Discard, &veqryn.HandlerOptions{
-				AddSource:   false,
-				Level:       slog.LevelInfo,
-				JSONOptions: json.JoinOptions(
-					json.Deterministic(true),
-					jsontext.AllowDuplicateNames(true),
-					jsontext.AllowInvalidUTF8(true),
-					jsontext.EscapeForJS(true),
-					jsontext.SpaceAfterColon(false),
-					jsontext.SpaceAfterComma(true),
-				),
-			})).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
