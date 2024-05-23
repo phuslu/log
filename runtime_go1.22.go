@@ -10,6 +10,70 @@ import (
 	"unsafe"
 )
 
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(x uint32) uint32
+
+func pcFileLine(pc uintptr) (file string, line int32) {
+	funcInfo := findfunc(pc)
+	if funcInfo._func == nil {
+		return
+	}
+
+	entry := funcInfoEntry(funcInfo)
+
+	if pc > entry {
+		// We store the pc of the start of the instruction following
+		// the instruction in question (the call or the inline mark).
+		// This is done for historical reasons, and to make FuncForPC
+		// work correctly for entries in the result of runtime.Callers.
+		pc--
+	}
+
+	return funcline1(funcInfo, pc, false)
+}
+
+func pcFileLineName(pc uintptr) (file string, line int32, name string) {
+	funcInfo := findfunc(pc)
+	if funcInfo._func == nil {
+		return
+	}
+
+	entry := funcInfoEntry(funcInfo)
+
+	if pc > entry {
+		// We store the pc of the start of the instruction following
+		// the instruction in question (the call or the inline mark).
+		// This is done for historical reasons, and to make FuncForPC
+		// work correctly for entries in the result of runtime.Callers.
+		pc--
+	}
+
+	file, line = funcline1(funcInfo, pc, false)
+
+	// It's important that interpret pc non-strictly as cgoTraceback may
+	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
+	u, uf := newInlineUnwinder(funcInfo, pc)
+	var sf srcFunc
+	if uf.index < 0 {
+		f := (*_func)(funcInfo._func)
+		sf = srcFunc{funcInfo.datap, f.nameOff, f.startLine, f.funcID}
+	} else {
+		t := &u.inlTree[uf.index]
+		sf = srcFunc{u.f.datap, t.nameOff, t.startLine, t.funcID}
+	}
+	name = srcFunc_name(sf)
+
+	return
+}
+
+type funcInfo struct {
+	_func unsafe.Pointer
+	datap unsafe.Pointer //nolint:unused
+}
+
 // inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.
 type inlinedCall struct {
 	funcID    uint8 // type of the called function
@@ -55,48 +119,17 @@ type _func struct {
 	nfuncdata uint8   // must be last, must end on a uint32-aligned boundary
 }
 
-func pcFileLineName(pc uintptr) (file string, line int32, name string) {
-	funcInfo := findfunc(pc)
-	if funcInfo._func == nil {
-		return
-	}
+//go:linkname findfunc runtime.findfunc
+func findfunc(pc uintptr) funcInfo
 
-	entry := funcInfoEntry(funcInfo)
+//go:linkname funcInfoEntry runtime.funcInfo.entry
+func funcInfoEntry(f funcInfo) uintptr
 
-	if pc > entry {
-		// We store the pc of the start of the instruction following
-		// the instruction in question (the call or the inline mark).
-		// This is done for historical reasons, and to make FuncForPC
-		// work correctly for entries in the result of runtime.Callers.
-		pc--
-	}
-
-	file, line = funcline1(funcInfo, pc, false)
-
-	// It's important that interpret pc non-strictly as cgoTraceback may
-	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
-	u, uf := newInlineUnwinder(funcInfo, pc)
-	var sf srcFunc
-	if uf.index < 0 {
-		f := (*_func)(funcInfo._func)
-		sf = srcFunc{funcInfo.datap, f.nameOff, f.startLine, f.funcID}
-	} else {
-		t := &u.inlTree[uf.index]
-		sf = srcFunc{u.f.datap, t.nameOff, t.startLine, t.funcID}
-	}
-	name = srcFunc_name(sf)
-
-	return
-}
+//go:linkname funcline1 runtime.funcline1
+func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32)
 
 //go:linkname newInlineUnwinder runtime.newInlineUnwinder
 func newInlineUnwinder(f funcInfo, pc uintptr) (inlineUnwinder, inlineFrame)
 
 //go:linkname srcFunc_name runtime.srcFunc.name
 func srcFunc_name(srcFunc) string
-
-// Fastrandn returns a pseudorandom uint32 in [0,n).
-//
-//go:noescape
-//go:linkname Fastrandn runtime.cheaprandn
-func Fastrandn(x uint32) uint32
