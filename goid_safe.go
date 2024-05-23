@@ -1,5 +1,5 @@
-//go:build !amd64 && !arm64 && !arm && !386 && !mipsle
-// +build !amd64,!arm64,!arm,!386,!mipsle
+//go:build !amd64 && !arm64 && !arm && !386 && !mipsle && !riscv64
+// +build !amd64,!arm64,!arm,!386,!mipsle,!riscv64
 
 package log
 

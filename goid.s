@@ -42,3 +42,11 @@ TEXT ·goid(SB),NOSPLIT,$0-4
 	MOVW R7, ret+0(FP)
 	RET
 #endif
+
+#ifdef GOARCH_riscv64
+TEXT ·goid(SB),NOSPLIT,$0-8
+	MOV g, X11
+	MOV 160(X11), X12
+	MOV X12, ret+0(FP)
+	RET
+#endif
