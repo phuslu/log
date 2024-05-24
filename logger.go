@@ -96,7 +96,7 @@ type Logger struct {
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
-	// TimeLocation specifices that the location which TimeFormat used. It uses time.Local if empty.
+	// TimeLocation specifics that the location which TimeFormat used. It uses time.Local if empty.
 	TimeLocation *time.Location
 
 	// Context specifies an optional context of logger.

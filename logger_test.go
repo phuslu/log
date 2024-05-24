@@ -268,8 +268,8 @@ func TestLoggerObjects(t *testing.T) {
 	logger.Info().Objects("bad_objects", "1234").Msg("this is a anys test")
 
 	objects1 := []*testMarshalObject{
-		&testMarshalObject{1, "foo"},
-		&testMarshalObject{2, "bar"},
+		{1, "foo"},
+		{2, "bar"},
 		nil,
 	}
 	logger.Info().Objects("objects1", objects1).Msg("this is a objects1 test")
