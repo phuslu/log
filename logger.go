@@ -459,6 +459,7 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
+//go:nosplit
 func (l *Logger) header(level Level) *Entry {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
@@ -777,6 +778,8 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 }
 
 // Bool append append the val as a bool to the entry.
+//
+//go:nosplit
 func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
@@ -789,6 +792,8 @@ func (e *Entry) Bool(key string, b bool) *Entry {
 }
 
 // Bools adds the field key with val as a []bool to the entry.
+//
+//go:nosplit
 func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
@@ -1057,6 +1062,8 @@ func (e *Entry) Floats32(key string, f []float32) *Entry {
 }
 
 // Int64 adds the field key with i as a int64 to the entry.
+//
+//go:nosplit
 func (e *Entry) Int64(key string, i int64) *Entry {
 	if e == nil {
 		return nil
@@ -1069,6 +1076,8 @@ func (e *Entry) Int64(key string, i int64) *Entry {
 }
 
 // Uint adds the field key with i as a uint to the entry.
+//
+//go:nosplit
 func (e *Entry) Uint(key string, i uint) *Entry {
 	if e == nil {
 		return nil
@@ -1081,6 +1090,8 @@ func (e *Entry) Uint(key string, i uint) *Entry {
 }
 
 // Uint64 adds the field key with i as a uint64 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uint64(key string, i uint64) *Entry {
 	if e == nil {
 		return nil
@@ -1093,6 +1104,8 @@ func (e *Entry) Uint64(key string, i uint64) *Entry {
 }
 
 // Int adds the field key with i as a int to the entry.
+//
+//go:nosplit
 func (e *Entry) Int(key string, i int) *Entry {
 	if e == nil {
 		return nil
@@ -1105,6 +1118,8 @@ func (e *Entry) Int(key string, i int) *Entry {
 }
 
 // Int32 adds the field key with i as a int32 to the entry.
+//
+//go:nosplit
 func (e *Entry) Int32(key string, i int32) *Entry {
 	if e == nil {
 		return nil
@@ -1117,6 +1132,8 @@ func (e *Entry) Int32(key string, i int32) *Entry {
 }
 
 // Int16 adds the field key with i as a int16 to the entry.
+//
+//go:nosplit
 func (e *Entry) Int16(key string, i int16) *Entry {
 	if e == nil {
 		return nil
@@ -1129,6 +1146,8 @@ func (e *Entry) Int16(key string, i int16) *Entry {
 }
 
 // Int8 adds the field key with i as a int8 to the entry.
+//
+//go:nosplit
 func (e *Entry) Int8(key string, i int8) *Entry {
 	if e == nil {
 		return nil
@@ -1141,6 +1160,8 @@ func (e *Entry) Int8(key string, i int8) *Entry {
 }
 
 // Uint32 adds the field key with i as a uint32 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uint32(key string, i uint32) *Entry {
 	if e == nil {
 		return nil
@@ -1153,6 +1174,8 @@ func (e *Entry) Uint32(key string, i uint32) *Entry {
 }
 
 // Uint16 adds the field key with i as a uint16 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uint16(key string, i uint16) *Entry {
 	if e == nil {
 		return nil
@@ -1165,6 +1188,8 @@ func (e *Entry) Uint16(key string, i uint16) *Entry {
 }
 
 // Uint8 adds the field key with i as a uint8 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uint8(key string, i uint8) *Entry {
 	if e == nil {
 		return nil
@@ -1177,6 +1202,8 @@ func (e *Entry) Uint8(key string, i uint8) *Entry {
 }
 
 // Ints64 adds the field key with i as a []int64 to the entry.
+//
+//go:nosplit
 func (e *Entry) Ints64(key string, a []int64) *Entry {
 	if e == nil {
 		return nil
@@ -1195,6 +1222,8 @@ func (e *Entry) Ints64(key string, a []int64) *Entry {
 }
 
 // Ints32 adds the field key with i as a []int32 to the entry.
+//
+//go:nosplit
 func (e *Entry) Ints32(key string, a []int32) *Entry {
 	if e == nil {
 		return nil
@@ -1213,6 +1242,8 @@ func (e *Entry) Ints32(key string, a []int32) *Entry {
 }
 
 // Ints16 adds the field key with i as a []int16 to the entry.
+//
+//go:nosplit
 func (e *Entry) Ints16(key string, a []int16) *Entry {
 	if e == nil {
 		return nil
@@ -1231,6 +1262,8 @@ func (e *Entry) Ints16(key string, a []int16) *Entry {
 }
 
 // Ints8 adds the field key with i as a []int8 to the entry.
+//
+//go:nosplit
 func (e *Entry) Ints8(key string, a []int8) *Entry {
 	if e == nil {
 		return nil
@@ -1249,6 +1282,8 @@ func (e *Entry) Ints8(key string, a []int8) *Entry {
 }
 
 // Ints adds the field key with i as a []int to the entry.
+//
+//go:nosplit
 func (e *Entry) Ints(key string, a []int) *Entry {
 	if e == nil {
 		return nil
@@ -1267,6 +1302,8 @@ func (e *Entry) Ints(key string, a []int) *Entry {
 }
 
 // Uints64 adds the field key with i as a []uint64 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uints64(key string, a []uint64) *Entry {
 	if e == nil {
 		return nil
@@ -1285,6 +1322,8 @@ func (e *Entry) Uints64(key string, a []uint64) *Entry {
 }
 
 // Uints32 adds the field key with i as a []uint32 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uints32(key string, a []uint32) *Entry {
 	if e == nil {
 		return nil
@@ -1303,6 +1342,8 @@ func (e *Entry) Uints32(key string, a []uint32) *Entry {
 }
 
 // Uints16 adds the field key with i as a []uint16 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uints16(key string, a []uint16) *Entry {
 	if e == nil {
 		return nil
@@ -1321,6 +1362,8 @@ func (e *Entry) Uints16(key string, a []uint16) *Entry {
 }
 
 // Uints8 adds the field key with i as a []uint8 to the entry.
+//
+//go:nosplit
 func (e *Entry) Uints8(key string, a []uint8) *Entry {
 	if e == nil {
 		return nil
@@ -1339,6 +1382,8 @@ func (e *Entry) Uints8(key string, a []uint8) *Entry {
 }
 
 // Uints adds the field key with i as a []uint to the entry.
+//
+//go:nosplit
 func (e *Entry) Uints(key string, a []uint) *Entry {
 	if e == nil {
 		return nil
@@ -1357,6 +1402,8 @@ func (e *Entry) Uints(key string, a []uint) *Entry {
 }
 
 // RawJSON adds already encoded JSON to the log line under key.
+//
+//go:nosplit
 func (e *Entry) RawJSON(key string, b []byte) *Entry {
 	if e == nil {
 		return nil
@@ -1369,6 +1416,8 @@ func (e *Entry) RawJSON(key string, b []byte) *Entry {
 }
 
 // RawJSONStr adds already encoded JSON String to the log line under key.
+//
+//go:nosplit
 func (e *Entry) RawJSONStr(key string, s string) *Entry {
 	if e == nil {
 		return nil
@@ -1381,6 +1430,8 @@ func (e *Entry) RawJSONStr(key string, s string) *Entry {
 }
 
 // Str adds the field key with val as a string to the entry.
+//
+//go:nosplit
 func (e *Entry) Str(key string, val string) *Entry {
 	if e == nil {
 		return nil
@@ -1394,6 +1445,8 @@ func (e *Entry) Str(key string, val string) *Entry {
 }
 
 // StrInt adds the field key with integer val as a string to the entry.
+//
+//go:nosplit
 func (e *Entry) StrInt(key string, val int64) *Entry {
 	if e == nil {
 		return nil
@@ -1463,6 +1516,8 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 }
 
 // Byte adds the field key with val as a byte to the entry.
+//
+//go:nosplit
 func (e *Entry) Byte(key string, val byte) *Entry {
 	if e == nil {
 		return nil
@@ -1498,6 +1553,8 @@ func (e *Entry) Byte(key string, val byte) *Entry {
 }
 
 // Bytes adds the field key with val as a string to the entry.
+//
+//go:nosplit
 func (e *Entry) Bytes(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
@@ -1511,6 +1568,8 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 }
 
 // BytesOrNil adds the field key with val as a string or nil to the entry.
+//
+//go:nosplit
 func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
@@ -1531,6 +1590,8 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 const hex = "0123456789abcdef"
 
 // Hex adds the field key with val as a hex string to the entry.
+//
+//go:nosplit
 func (e *Entry) Hex(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
@@ -1843,6 +1904,7 @@ var escapes = [256]bool{
 	'\t': true,
 }
 
+//go:nosplit
 func (e *Entry) escapeb(b []byte) {
 	n := len(b)
 	j := 0
@@ -1897,6 +1959,7 @@ func (e *Entry) escapeb(b []byte) {
 	e.buf = append(e.buf, b[j:]...)
 }
 
+//go:nosplit
 func (e *Entry) escapes(s string) {
 	n := len(s)
 	j := 0
@@ -1951,6 +2014,7 @@ func (e *Entry) escapes(s string) {
 	e.buf = append(e.buf, s[j:]...)
 }
 
+//go:nosplit
 func (e *Entry) string(s string) {
 	for _, c := range []byte(s) {
 		if escapes[c] {
@@ -1961,6 +2025,7 @@ func (e *Entry) string(s string) {
 	e.buf = append(e.buf, s...)
 }
 
+//go:nosplit
 func (e *Entry) bytes(b []byte) {
 	for _, c := range b {
 		if escapes[c] {
@@ -2238,6 +2303,8 @@ func (e *Entry) Value() Context {
 }
 
 // Context sends the contextual fields to entry.
+//
+//go:nosplit
 func (e *Entry) Context(ctx Context) *Entry {
 	if e == nil {
 		return nil
