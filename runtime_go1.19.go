@@ -10,6 +10,12 @@ import (
 	"unsafe"
 )
 
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.fastrandn
+func Fastrandn(n uint32) uint32
+
 func pcFileLine(pc uintptr) (file string, line int32) {
 	funcInfo := findfunc(pc)
 	if funcInfo._func == nil {
