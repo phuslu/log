@@ -71,10 +71,8 @@ func TestStdSlogAttrs(t *testing.T) {
 
 func TestStdSlogGroup(t *testing.T) {
 	var logger *slog.Logger = (&Logger{
-		Level:      InfoLevel,
-		TimeField:  "date",
-		TimeFormat: "2006-01-02",
-		Caller:     1,
+		Level:  InfoLevel,
+		Caller: 1,
 	}).Slog()
 
 	logger1 := logger.WithGroup("g").With("1", "2").With("3", "4")
