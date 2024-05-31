@@ -116,7 +116,84 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 		e.buf = append(e.buf, '"')
 		e.buf = append(e.buf, slog.TimeKey...)
 		e.buf = append(e.buf, `":"`...)
-		e.buf = r.Time.AppendFormat(e.buf, time.RFC3339Nano)
+		if timeOffset == 0 || r.Time.Location() == time.Local {
+			sec, nsec := r.Time.Unix(), r.Time.Nanosecond()
+			var tmp [35]byte
+			var buf []byte
+			if timeOffset == 0 {
+				// 2006-01-02T15:04:05.999Z
+				tmp[29] = 'Z'
+				buf = tmp[:30]
+			} else {
+				// 2006-01-02T15:04:05.999999999Z07:00
+				tmp[34] = timeZone[5]
+				tmp[33] = timeZone[4]
+				tmp[32] = timeZone[3]
+				tmp[31] = timeZone[2]
+				tmp[30] = timeZone[1]
+				tmp[29] = timeZone[0]
+				buf = tmp[:35]
+			}
+			// date time
+			sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
+			year, month, day, _ := absDate(uint64(sec), true)
+			hour, minute, second := absClock(uint64(sec))
+			// year
+			a := year / 100 * 2
+			b := year % 100 * 2
+			tmp[0] = smallsString[a]
+			tmp[1] = smallsString[a+1]
+			tmp[2] = smallsString[b]
+			tmp[3] = smallsString[b+1]
+			// month
+			month *= 2
+			tmp[4] = '-'
+			tmp[5] = smallsString[month]
+			tmp[6] = smallsString[month+1]
+			// day
+			day *= 2
+			tmp[7] = '-'
+			tmp[8] = smallsString[day]
+			tmp[9] = smallsString[day+1]
+			// hour
+			hour *= 2
+			tmp[10] = 'T'
+			tmp[11] = smallsString[hour]
+			tmp[12] = smallsString[hour+1]
+			// minute
+			minute *= 2
+			tmp[13] = ':'
+			tmp[14] = smallsString[minute]
+			tmp[15] = smallsString[minute+1]
+			// second
+			second *= 2
+			tmp[16] = ':'
+			tmp[17] = smallsString[second]
+			tmp[18] = smallsString[second+1]
+			tmp[19] = '.'
+			// nano seconds
+			a = int(nsec)
+			b = a % 100 * 2
+			a /= 100
+			tmp[28] = smallsString[b+1]
+			tmp[27] = smallsString[b]
+			b = a % 100 * 2
+			a /= 100
+			tmp[26] = smallsString[b+1]
+			tmp[25] = smallsString[b]
+			b = a % 100 * 2
+			a /= 100
+			tmp[24] = smallsString[b+1]
+			tmp[23] = smallsString[b]
+			b = a % 100 * 2
+			tmp[22] = smallsString[b+1]
+			tmp[21] = smallsString[b]
+			tmp[20] = byte('0' + a/100)
+			// append to e.buf
+			e.buf = append(e.buf, buf...)
+		} else {
+			e.buf = r.Time.AppendFormat(e.buf, time.RFC3339Nano)
+		}
 		e.buf = append(e.buf, `",`...)
 	}
 
