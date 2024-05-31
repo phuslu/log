@@ -1210,23 +1210,20 @@ goos: linux
 goarch: amd64
 cpu: AMD EPYC 7763 64-Core Processor                
 
-BenchmarkSlogSimpleStd        	 4272934	      1423 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogGroupsStd        	 4143343	      1450 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogSimpleStd        	 4314817	      1413 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupsStd        	 4167734	      1462 ns/op	     120 B/op	       3 allocs/op
 
-BenchmarkSlogSimpleZap        	 4776193	      1257 ns/op	     192 B/op	       1 allocs/op
-BenchmarkSlogGroupsZap        	 4751304	      1272 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogSimpleZap        	 4824007	      1245 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupsZap        	 4800220	      1256 ns/op	     192 B/op	       1 allocs/op
 
-BenchmarkSlogSimpleZerolog    	 7583500	       797.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsZerolog    	 5459755	      1111 ns/op	     288 B/op	       1 allocs/op
+BenchmarkSlogSimpleZerolog    	 7713812	       783.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsZerolog    	 5506782	      1089 ns/op	     288 B/op	       1 allocs/op
 
-BenchmarkSlogSimpleSeankhliao 	 7103692	       844.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsSeankhliao 	 6321853	       941.7 ns/op	      16 B/op	       2 allocs/op
+BenchmarkSlogSimplePhuslog    	 8858504	       683.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslog    	 8615334	       694.0 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkSlogSimplePhuslog    	 8381883	       719.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsPhuslog    	 8314545	       727.6 ns/op	       0 B/op	       0 allocs/op
-
-BenchmarkSlogSimplePhuslogStd 	 8361526	       723.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsPhuslogStd 	 8047856	       744.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimplePhuslogStd 	 8889276	       666.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslogStd 	 8849634	       683.3 ns/op	       0 B/op	       0 allocs/op
 
 PASS
 ok  	bench	84.415s
