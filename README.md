@@ -13,11 +13,11 @@
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
+    - `AsyncWriter`, *asynchronously & performant*
     - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *memory efficient syslog*
     - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
-    - `AsyncWriter`, *asynchronously writing*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
     - `Logger.Slog`, *transform to log/slog instances*
@@ -187,7 +187,7 @@ func main() {
 ```
 > Note: By default log writes to `os.Stderr`
 
-### Customize the configuration and formatting:
+### Customize the logger fields:
 
 To customize logger filed name and format. [![playground][play-customize-img]][play-customize]
 ```go
@@ -477,6 +477,34 @@ func main() {
 }
 ```
 
+### AsyncWriter
+
+For maximum write performance with asynchronous logging, use `AsyncWriter`.
+
+```go
+logger := log.Logger{
+	Level: log.InfoLevel,
+	Writer: &log.AsyncWriter{
+		ChannelSize:   4096,
+		WritevEnabled: true,
+		Writer: &log.FileWriter{
+			Filename:   "main.log",
+			FileMode:   0600,
+			MaxSize:    50 * 1024 * 1024,
+			MaxBackups: 7,
+			LocalTime:  false,
+		},
+	},
+}
+
+logger.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
+logger.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
+logger.Writer.(io.Closer).Close()
+```
+*Highlights*:
+- To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
+- To boost write performance by up to 10x under high load, enable the `WritevEnabled` option.
+
 ### Random Sample Logger:
 
 To logging only 5% logs, use below idiom.
@@ -654,32 +682,6 @@ log.DefaultLogger.Writer = &log.EventlogWriter{
 
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
-
-### AsyncWriter
-
-To logging asynchronously for performance stability, use `AsyncWriter`.
-
-```go
-logger := log.Logger{
-	Level:  log.InfoLevel,
-	Writer: &log.AsyncWriter{
-		ChannelSize: 100,
-		Writer:      &log.FileWriter{
-			Filename:   "main.log",
-			FileMode:   0600,
-			MaxSize:    50*1024*1024,
-			MaxBackups: 7,
-			LocalTime:  false,
-		},
-	},
-}
-
-logger.Info().Int("number", 42).Str("foo", "bar").Msg("a async info log")
-logger.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
-logger.Writer.(io.Closer).Close()
-```
-
-> Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
 
 ### Stdlib Log Adapter
 
