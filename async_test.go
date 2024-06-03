@@ -32,19 +32,60 @@ func TestAsyncWriterSmall(t *testing.T) {
 	}
 }
 
-func BenchmarkAsyncWriter(b *testing.B) {
+func BenchmarkSyncFileWriter(b *testing.B) {
 	logger := Logger{
-		Writer: &AsyncWriter{
-			ChannelSize: 100,
-			Writer:      IOWriter{io.Discard},
+		Writer: &FileWriter{
+			Filename: "sync_file_test.log",
 		},
 	}
-	b.SetParallelism(1000)
+	defer logger.Writer.(io.Closer).Close()
+
 	b.ReportAllocs()
 	b.ResetTimer()
 	b.RunParallel(func(b *testing.PB) {
 		for b.Next() {
-			logger.Info().Msg("hello async writer")
+			logger.Info().Msg("hello file writer")
+		}
+	})
+}
+
+func BenchmarkAsyncFileWriter(b *testing.B) {
+	logger := Logger{
+		Writer: &AsyncWriter{
+			ChannelSize: 4096,
+			Writer: &FileWriter{
+				Filename: "async_file_test.log",
+			},
+		},
+	}
+	defer logger.Writer.(io.Closer).Close()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.RunParallel(func(b *testing.PB) {
+		for b.Next() {
+			logger.Info().Msg("hello file writer")
+		}
+	})
+}
+
+func BenchmarkAsyncFileWriterWriteV(b *testing.B) {
+	logger := Logger{
+		Writer: &AsyncWriter{
+			ChannelSize:   4096,
+			WritevEnabled: true,
+			Writer: &FileWriter{
+				Filename: "async_file_test2.log",
+			},
+		},
+	}
+	defer logger.Writer.(io.Closer).Close()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.RunParallel(func(b *testing.PB) {
+		for b.Next() {
+			logger.Info().Msg("hello file writer")
 		}
 	})
 }
