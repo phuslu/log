@@ -13,10 +13,10 @@
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
-    - `AsyncWriter`, *asynchronously & performant*
+    - `Async File Writer`, *asynchronously & performant*
     - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *memory efficient syslog*
-    - `JournalWriter`, *linux systemd logging*
+   file  - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
@@ -477,17 +477,16 @@ func main() {
 }
 ```
 
-### AsyncWriter
+### Async File Writer
 
-For maximum write performance with asynchronous logging, use `AsyncWriter`.
+For maximum write performance with asynchronous file logging, use `AsyncWriter`.
 
 ```go
 logger := log.Logger{
 	Level: log.InfoLevel,
 	Writer: &log.AsyncWriter{
 		ChannelSize:   4096,
-		WritevEnabled: true,
-		Writer: &log.FileWriter{
+		Writer:        &log.FileWriter{
 			Filename:   "main.log",
 			FileMode:   0600,
 			MaxSize:    50 * 1024 * 1024,
@@ -502,8 +501,8 @@ logger.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 logger.Writer.(io.Closer).Close()
 ```
 *Highlights*:
-- To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
-- To boost write performance by up to 10x under high load, enable the `WritevEnabled` option.
+- To flush data and quit safely, call `.Close()` method explicitly.
+- Write performance improves up to 10x under high load with automatic `writev` enabling.
 
 ### Random Sample Logger:
 

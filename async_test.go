@@ -52,7 +52,8 @@ func BenchmarkSyncFileWriter(b *testing.B) {
 func BenchmarkAsyncFileWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
-			ChannelSize: 4096,
+			ChannelSize:    4096,
+			WritevDisabled: true,
 			Writer: &FileWriter{
 				Filename: "async_file_test.log",
 			},
@@ -72,8 +73,8 @@ func BenchmarkAsyncFileWriter(b *testing.B) {
 func BenchmarkAsyncFileWriterWriteV(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
-			ChannelSize:   4096,
-			WritevEnabled: true,
+			ChannelSize:    4096,
+			WritevDisabled: false,
 			Writer: &FileWriter{
 				Filename: "async_file_test2.log",
 			},

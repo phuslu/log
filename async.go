@@ -11,8 +11,8 @@ type AsyncWriter struct {
 	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize uint
 
-	// WritevEnabled enables the writev syscall if the Writer is a FileWriter.
-	WritevEnabled bool
+	// WritevDisabled disables the writev syscall if the Writer is a FileWriter.
+	WritevDisabled bool
 
 	// Writer specifies the writer of output.
 	Writer Writer
@@ -42,7 +42,7 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 		w.ch = make(chan *Entry, w.ChannelSize)
 		w.chClose = make(chan error)
 		w.file, _ = w.Writer.(*FileWriter)
-		if w.file != nil && w.WritevEnabled && runtime.GOOS == "linux" {
+		if w.file != nil && runtime.GOOS == "linux" && !w.WritevDisabled {
 			go w.vwriter()
 		} else {
 			go w.writer()
