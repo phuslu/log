@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"io"
 	"runtime"
 	"sync"
@@ -10,6 +11,9 @@ import (
 type AsyncWriter struct {
 	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize uint
+
+	// DiscardOnFull determines whether to discard new entry when the channel is full.
+	DiscardOnFull bool
 
 	// WritevDisabled disables the writev syscall if the Writer is a FileWriter.
 	WritevDisabled bool
@@ -35,6 +39,8 @@ func (w *AsyncWriter) Close() (err error) {
 	return
 }
 
+var ErrAsyncWriterFull = errors.New("async writer is full")
+
 // WriteEntry implements Writer.
 func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 	w.once.Do(func() {
@@ -54,8 +60,17 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 	entry.Level = e.Level
 	entry.buf, e.buf = e.buf, entry.buf
 
-	w.ch <- entry
-	return len(entry.buf), nil
+	if w.DiscardOnFull {
+		select {
+		case w.ch <- entry:
+			return len(entry.buf), nil
+		default:
+			return 0, nil
+		}
+	} else {
+		w.ch <- entry
+		return len(entry.buf), nil
+	}
 }
 
 func (w *AsyncWriter) writer() {
