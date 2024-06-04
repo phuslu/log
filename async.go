@@ -65,7 +65,7 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 		case w.ch <- entry:
 			return len(entry.buf), nil
 		default:
-			return 0, nil
+			return 0, ErrAsyncWriterFull
 		}
 	} else {
 		w.ch <- entry

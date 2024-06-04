@@ -13,7 +13,7 @@
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
-    - `Async File Writer`, *asynchronously & performant*
+    - `AsyncWriter`, *asynchronously & performant*
     - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *memory efficient syslog*
    file  - `JournalWriter`, *linux systemd logging*

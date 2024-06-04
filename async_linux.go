@@ -41,9 +41,7 @@ func (w *AsyncWriter) vwriter() {
 		}
 		// writev
 		_, err = w.file.WriteV(iovs[:n])
-		// if err != nil {
-		// 	quit = true
-		// }
+		// quic = err != nil
 		// return entries to pool
 		for i := 0; i < n; i++ {
 			epool.Put(es[i])

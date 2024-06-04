@@ -53,28 +53,8 @@ func BenchmarkAsyncFileWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
 			ChannelSize:    4096,
-			WritevDisabled: true,
-			Writer: &FileWriter{
-				Filename: "async_file_test.log",
-			},
-		},
-	}
-	defer logger.Writer.(io.Closer).Close()
-
-	b.ReportAllocs()
-	b.ResetTimer()
-	b.RunParallel(func(b *testing.PB) {
-		for b.Next() {
-			logger.Info().Msg("hello file writer")
-		}
-	})
-}
-
-func BenchmarkAsyncFileWriterWriteV(b *testing.B) {
-	logger := Logger{
-		Writer: &AsyncWriter{
-			ChannelSize:    4096,
 			WritevDisabled: false,
+			DiscardOnFull:  false,
 			Writer: &FileWriter{
 				Filename: "async_file_test2.log",
 			},
