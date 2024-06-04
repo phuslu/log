@@ -21,10 +21,11 @@ jobs:
         if: matrix.go-version == 'tip'
         run: |
           set -ex
-          commit=$(git ls-remote https://github.com/golang/go.git HEAD | awk '{print $1}')
-          curl -LOJ https://storage.googleapis.com/go-build-snap/go/linux-amd64/${commit}.tar.gz
+          curl --head https://github.com/phuslu/go/releases/download/v0.0.0/gotip.linux-amd64.tar.xz
+          sleep 1
+          curl -LOJ https://github.com/phuslu/go/releases/download/v0.0.0/gotip.linux-amd64.tar.xz
           rm -rf /usr/local/go
-          sudo tar xzf ${commit}.tar.gz -C /usr/local
+          sudo tar xJf gotip.linux-amd64.tar.xz -C /usr/local
           sudo ln -sf /usr/local/go/bin/go /usr/bin/go
           go version
       - uses: actions/checkout@v4
