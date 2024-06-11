@@ -32,6 +32,54 @@ func TestAsyncWriterSmall(t *testing.T) {
 	}
 }
 
+func TestAsyncWriterSize(t *testing.T) {
+	writer1 := &FileWriter{
+		Filename: "async_file_test1.log",
+	}
+
+	writer2 := &AsyncWriter{
+		ChannelSize:    4096,
+		WritevDisabled: false,
+		DiscardOnFull:  false,
+		Writer: &FileWriter{
+			Filename: "async_file_test2.log",
+		},
+	}
+
+	logger := Logger{
+		Writer: &MultiEntryWriter{
+			writer1,
+			writer2,
+		},
+	}
+
+	for i := 0; i < 100000; i++ {
+		logger.Info().Msg("hello file writer")
+	}
+
+	if err := writer1.Close(); err != nil {
+		t.Errorf("file writer close error: %+v", err)
+	}
+
+	if err := writer2.Close(); err != nil {
+		t.Errorf("async file writer close error: %+v", err)
+	}
+
+	fi1, err := os.Stat(writer1.Filename)
+	if err != nil {
+		t.Errorf("file writer stat error: %+v", err)
+	}
+
+	fi2, err := os.Stat(writer2.Writer.(*FileWriter).Filename)
+	if err != nil {
+		t.Errorf("async file writer stat error: %+v", err)
+	}
+
+	if fi1.Size() != fi2.Size() {
+		t.Errorf("filesize not equal: %v != %v", fi1.Size(), fi2.Size())
+	}
+}
+
 func BenchmarkSyncFileWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &FileWriter{
