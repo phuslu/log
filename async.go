@@ -49,7 +49,7 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 		w.chClose = make(chan error)
 		w.file, _ = w.Writer.(*FileWriter)
 		if w.file != nil && runtime.GOOS == "linux" && !w.WritevDisabled {
-			go w.vwriter()
+			go w.writever()
 		} else {
 			go w.writer()
 		}

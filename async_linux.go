@@ -7,7 +7,7 @@ import (
 	"syscall"
 )
 
-func (w *AsyncWriter) vwriter() {
+func (w *AsyncWriter) writever() {
 	// https://github.com/golang/go/blob/master/src/internal/poll/writev.go#L29
 	const IOV_MAX = 1024
 
@@ -41,7 +41,7 @@ func (w *AsyncWriter) vwriter() {
 		}
 		// writev
 		_, err = w.file.WriteV(iovs[:n])
-		// quic = err != nil
+		// quit = err != nil
 		// return entries to pool
 		for i := 0; i < n; i++ {
 			epool.Put(es[i])

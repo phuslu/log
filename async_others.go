@@ -3,6 +3,6 @@
 
 package log
 
-func (w *AsyncWriter) vwriter() {
+func (w *AsyncWriter) writever() {
 	panic("not_implemented")
 }
