@@ -5,6 +5,7 @@ import (
 	"io"
 	"runtime"
 	"sync"
+	"unsafe"
 )
 
 // AsyncWriter is an Writer that writes asynchronously.
@@ -48,7 +49,7 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 		w.ch = make(chan *Entry, w.ChannelSize)
 		w.chClose = make(chan error)
 		w.file, _ = w.Writer.(*FileWriter)
-		if w.file != nil && runtime.GOOS == "linux" && !w.WritevDisabled {
+		if w.file != nil && runtime.GOOS == "linux" && unsafe.Sizeof(uintptr(0)) == 8 && !w.WritevDisabled {
 			go w.writever()
 		} else {
 			go w.writer()
