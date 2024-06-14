@@ -10,6 +10,9 @@ import (
 
 // AsyncWriter is an Writer that writes asynchronously.
 type AsyncWriter struct {
+	// Writer specifies the writer of output.
+	Writer Writer
+
 	// ChannelSize is the size of the data channel, the default size is 1.
 	ChannelSize uint
 
@@ -18,9 +21,6 @@ type AsyncWriter struct {
 
 	// WritevDisabled disables the writev syscall if the Writer is a FileWriter.
 	WritevDisabled bool
-
-	// Writer specifies the writer of output.
-	Writer Writer
 
 	once    sync.Once
 	ch      chan *Entry

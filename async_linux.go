@@ -46,6 +46,8 @@ func (w *AsyncWriter) writever() {
 		// return entries to pool
 		for i := 0; i < n; i++ {
 			epool.Put(es[i])
+			es[i] = nil
+			iovs[i].Base = nil
 		}
 	}
 	w.chClose <- err
