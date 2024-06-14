@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// AsyncWriter is an Writer that writes asynchronously.
+// AsyncWriter is a Writer that writes asynchronously.
 type AsyncWriter struct {
 	// Writer specifies the writer of output.
 	Writer Writer
@@ -41,6 +41,24 @@ func (w *AsyncWriter) Close() (err error) {
 }
 
 var ErrAsyncWriterFull = errors.New("async writer is full")
+
+var eepool = sync.Pool{
+	New: func() any {
+		return &Entry{
+			Level: InfoLevel,
+		}
+	},
+}
+
+// Write implements io.Writer.
+func (w *AsyncWriter) Write(p []byte) (n int, err error) {
+	e := eepool.Get().(*Entry)
+	e.buf = p
+	n, err = w.WriteEntry(e)
+	e.buf = nil
+	eepool.Put(e)
+	return
+}
 
 // WriteEntry implements Writer.
 func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
@@ -87,3 +105,4 @@ func (w *AsyncWriter) writer() {
 }
 
 var _ Writer = (*AsyncWriter)(nil)
+var _ io.Writer = (*AsyncWriter)(nil)

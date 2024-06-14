@@ -16,8 +16,6 @@
     - `AsyncWriter`, *asynchronously & performant*
     - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *memory efficient syslog*
-   file  - `JournalWriter`, *linux systemd logging*
-    - `EventlogWriter`, *windows system event*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
     - `Logger.Slog`, *transform to log/slog instances*

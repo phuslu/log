@@ -118,3 +118,25 @@ func BenchmarkAsyncFileWriter(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkAsyncIOWriter(b *testing.B) {
+	logger := TSVLogger{
+		Writer: &AsyncWriter{
+			ChannelSize:    4096,
+			WritevDisabled: false,
+			DiscardOnFull:  false,
+			Writer: &FileWriter{
+				Filename: "async_file_test3.log",
+			},
+		},
+	}
+	defer logger.Writer.(io.Closer).Close()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.RunParallel(func(b *testing.PB) {
+		for b.Next() {
+			logger.New().Str("hello file writer").Msg()
+		}
+	})
+}
