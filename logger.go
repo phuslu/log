@@ -690,6 +690,7 @@ func (e *Entry) Time(key string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -703,6 +704,7 @@ func (e *Entry) TimeFormat(key string, timefmt string, t time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -728,6 +730,7 @@ func (e *Entry) Times(key string, a []time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -749,6 +752,7 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -781,6 +785,7 @@ func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -793,6 +798,7 @@ func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -811,6 +817,7 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -843,8 +850,9 @@ func (e *Entry) Dur(key string, d time.Duration) *Entry {
 // Duration format follows the same principle as Dur().
 func (e *Entry) TimeDiff(key string, t time.Time, start time.Time) *Entry {
 	if e == nil {
-		return e
+		return nil
 	}
+
 	var d time.Duration
 	if t.After(start) {
 		d = t.Sub(start)
@@ -877,6 +885,7 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1001,6 +1010,7 @@ func (e *Entry) Float64(key string, f float64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1013,6 +1023,7 @@ func (e *Entry) Float32(key string, f float32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1025,6 +1036,7 @@ func (e *Entry) Floats64(key string, f []float64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1043,6 +1055,7 @@ func (e *Entry) Floats32(key string, f []float32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1061,6 +1074,7 @@ func (e *Entry) Int64(key string, i int64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1073,6 +1087,7 @@ func (e *Entry) Uint(key string, i uint) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1085,6 +1100,7 @@ func (e *Entry) Uint64(key string, i uint64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1097,6 +1113,7 @@ func (e *Entry) Int(key string, i int) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1109,6 +1126,7 @@ func (e *Entry) Int32(key string, i int32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1121,6 +1139,7 @@ func (e *Entry) Int16(key string, i int16) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1133,6 +1152,7 @@ func (e *Entry) Int8(key string, i int8) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1145,6 +1165,7 @@ func (e *Entry) Uint32(key string, i uint32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1157,6 +1178,7 @@ func (e *Entry) Uint16(key string, i uint16) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1169,6 +1191,7 @@ func (e *Entry) Uint8(key string, i uint8) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1181,6 +1204,7 @@ func (e *Entry) Ints64(key string, a []int64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1199,6 +1223,7 @@ func (e *Entry) Ints32(key string, a []int32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1217,6 +1242,7 @@ func (e *Entry) Ints16(key string, a []int16) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1235,6 +1261,7 @@ func (e *Entry) Ints8(key string, a []int8) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1253,6 +1280,7 @@ func (e *Entry) Ints(key string, a []int) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1271,6 +1299,7 @@ func (e *Entry) Uints64(key string, a []uint64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1289,6 +1318,7 @@ func (e *Entry) Uints32(key string, a []uint32) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1307,6 +1337,7 @@ func (e *Entry) Uints16(key string, a []uint16) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1325,6 +1356,7 @@ func (e *Entry) Uints8(key string, a []uint8) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1343,6 +1375,7 @@ func (e *Entry) Uints(key string, a []uint) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1361,6 +1394,7 @@ func (e *Entry) RawJSON(key string, b []byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1373,6 +1407,7 @@ func (e *Entry) RawJSONStr(key string, s string) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1385,6 +1420,7 @@ func (e *Entry) Str(key string, val string) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1398,6 +1434,7 @@ func (e *Entry) StrInt(key string, val int64) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1411,6 +1448,7 @@ func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1429,6 +1467,7 @@ func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1447,6 +1486,7 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
@@ -1467,6 +1507,7 @@ func (e *Entry) Byte(key string, val byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1502,6 +1543,7 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1515,6 +1557,7 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
@@ -1535,6 +1578,7 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1552,6 +1596,7 @@ func (e *Entry) Encode(key string, val []byte, enc interface {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1565,6 +1610,7 @@ func (e *Entry) Xid(key string, xid [12]byte) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1579,6 +1625,7 @@ func (e *Entry) IPAddr(key string, ip net.IP) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1603,6 +1650,7 @@ func (e *Entry) IPPrefix(key string, pfx net.IPNet) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1616,6 +1664,7 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1635,6 +1684,7 @@ func (e *Entry) NetIPAddr(key string, ip netip.Addr) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1648,6 +1698,7 @@ func (e *Entry) NetIPAddrPort(key string, ipPort netip.AddrPort) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1661,6 +1712,7 @@ func (e *Entry) NetIPPrefix(key string, pfx netip.Prefix) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1674,6 +1726,7 @@ func (e *Entry) Type(key string, v any) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
@@ -1685,24 +1738,28 @@ func (e *Entry) Type(key string, v any) *Entry {
 // Caller adds the file:line of the "caller" key.
 // If depth is negative, adds the full /path/to/file:line of the "caller" key.
 func (e *Entry) Caller(depth int) *Entry {
-	if e != nil {
-		var full bool
-		var pc uintptr
-		if depth < 0 {
-			depth, full = -depth, true
-		}
-		e.caller(caller1(depth, &pc, 1, 1), pc, full)
+	if e == nil {
+		return nil
 	}
+
+	var full bool
+	var pc uintptr
+	if depth < 0 {
+		depth, full = -depth, true
+	}
+	e.caller(caller1(depth, &pc, 1, 1), pc, full)
 	return e
 }
 
 // Stack enables stack trace printing for the error passed to Err().
 func (e *Entry) Stack() *Entry {
-	if e != nil {
-		e.buf = append(e.buf, ",\"stack\":\""...)
-		e.bytes(stacks(false))
-		e.buf = append(e.buf, '"')
+	if e == nil {
+		return nil
 	}
+
+	e.buf = append(e.buf, ",\"stack\":\""...)
+	e.bytes(stacks(false))
+	e.buf = append(e.buf, '"')
 	return e
 }
 
@@ -1716,6 +1773,7 @@ func (e *Entry) Discard() *Entry {
 	if e == nil {
 		return e
 	}
+
 	if cap(e.buf) <= bbcap {
 		epool.Put(e)
 	}
@@ -1729,6 +1787,7 @@ func (e *Entry) Msg(msg string) {
 	if e == nil {
 		return
 	}
+
 	if msg != "" {
 		e.buf = append(e.buf, ",\"message\":\""...)
 		e.string(msg)
@@ -1768,6 +1827,7 @@ func (e *Entry) Msgf(format string, v ...any) {
 	if e == nil {
 		return
 	}
+
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 	e.buf = append(e.buf, ",\"message\":\""...)
@@ -1785,6 +1845,7 @@ func (e *Entry) Msgs(args ...any) {
 	if e == nil {
 		return
 	}
+
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
 	e.buf = append(e.buf, ",\"message\":\""...)
@@ -2034,6 +2095,7 @@ func (e *Entry) Objects(key string, objects any) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	values := reflect.ValueOf(objects)
 	if values.Kind() != reflect.Slice {
 		e.buf = append(e.buf, ',', '"')
@@ -2198,6 +2260,7 @@ func (e *Entry) KeysAndValues(keysAndValues ...any) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	var key string
 	for i, v := range keysAndValues {
 		if i%2 == 0 {
@@ -2217,6 +2280,7 @@ func (e *Entry) Fields(fields Fields) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	for key, value := range fields {
 		e.Any(key, value)
 	}
@@ -2246,6 +2310,7 @@ func (e *Entry) Context(ctx Context) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	if len(ctx) != 0 {
 		e.buf = append(e.buf, ctx...)
 	}
@@ -2257,6 +2322,7 @@ func (e *Entry) Dict(key string, ctx Context) *Entry {
 	if e == nil {
 		return nil
 	}
+
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '{')
