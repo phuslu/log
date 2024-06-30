@@ -2087,6 +2087,10 @@ func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 
 // Any adds the field key with f as an any value to the entry.
 func (e *Entry) Any(key string, value any) *Entry {
+	if e == nil {
+		return nil
+	}
+
 	if value == nil || (*[2]uintptr)(unsafe.Pointer(&value))[1] == 0 {
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, key...)
