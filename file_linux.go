@@ -16,7 +16,10 @@ func (w *FileWriter) WriteV(iovs []syscall.Iovec) (n uintptr, err error) {
 
 	if w.file == nil {
 		if w.Filename == "" {
-			n, _, err = syscall.Syscall(syscall.SYS_WRITEV, uintptr(2), uintptr(unsafe.Pointer(&iovs[0])), uintptr(len(iovs)))
+			n, err = writev(syscall.Stderr, iovs)
+			if n == ^uintptr(0) { // -1 means aborted
+				n = 0
+			}
 			return
 		}
 		if w.EnsureFolder {
@@ -31,10 +34,11 @@ func (w *FileWriter) WriteV(iovs []syscall.Iovec) (n uintptr, err error) {
 		}
 	}
 
-	var errno syscall.Errno
-	n, _, errno = syscall.Syscall(syscall.SYS_WRITEV, uintptr(w.file.Fd()), uintptr(unsafe.Pointer(&iovs[0])), uintptr(len(iovs)))
-	if errno != 0 {
-		err = errno
+	n, err = writev(int(w.file.Fd()), iovs)
+	if n == ^uintptr(0) { // -1 means aborted
+		n = 0
+	}
+	if err != nil {
 		return
 	}
 
@@ -44,4 +48,22 @@ func (w *FileWriter) WriteV(iovs []syscall.Iovec) (n uintptr, err error) {
 	}
 
 	return
+}
+
+// from https://github.com/golang/go/blob/master/src/internal/poll/fd_writev_unix.go
+func writev(fd int, iovecs []syscall.Iovec) (uintptr, error) {
+	var (
+		r uintptr
+		e syscall.Errno
+	)
+	for {
+		r, _, e = syscall.Syscall(syscall.SYS_WRITEV, uintptr(fd), uintptr(unsafe.Pointer(&iovecs[0])), uintptr(len(iovecs)))
+		if e != syscall.EINTR {
+			break
+		}
+	}
+	if e != 0 {
+		return r, e
+	}
+	return r, nil
 }
