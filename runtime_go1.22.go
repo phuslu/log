@@ -1,5 +1,4 @@
 //go:build go1.22 && !go1.23
-// +build go1.22,!go1.23
 
 // MIT license, copy and modify from https://github.com/tlog-dev/loc
 
