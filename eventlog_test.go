@@ -19,3 +19,18 @@ func TestEventlogWriter(t *testing.T) {
 		}
 	}
 }
+
+func TestEventlogWriter_WriteEntry(t *testing.T) {
+	t.Run("test init err", func(t *testing.T) {
+		w := &EventlogWriter{
+			Source: "",
+			ID:     0, // trigger init err
+		}
+		if _, err := w.WriteEntry(&Entry{Level: InfoLevel, buf: []byte("foo")}); err == nil {
+			t.Errorf("expect init err, got nil")
+		}
+		if _, err := w.WriteEntry(&Entry{Level: InfoLevel, buf: []byte("bar")}); err == nil {
+			t.Errorf("expect init err, got nil")
+		}
+	})
+}
