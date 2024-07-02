@@ -4,12 +4,11 @@ package log
 
 import (
 	"errors"
-	"sync"
 	"syscall"
 	"unsafe"
 )
 
-// EventlogWriter is an Writer that writes logs to windows event log.
+// EventlogWriter is a Writer that writes logs to windows event log.
 type EventlogWriter struct {
 	// Event Source, must not be empty
 	Source string
@@ -20,14 +19,13 @@ type EventlogWriter struct {
 	// Event Host, optional
 	Host string
 
-	once       sync.Once
 	register   *syscall.LazyProc
 	deregister *syscall.LazyProc
 	report     *syscall.LazyProc
 	handle     uintptr
 }
 
-// Write implements io.Closer.
+// Close implements io.Closer.
 func (w *EventlogWriter) Close() (err error) {
 	var ret uintptr
 	ret, _, err = syscall.Syscall(w.deregister.Addr(), 1, w.handle, 0, 0)
@@ -37,38 +35,65 @@ func (w *EventlogWriter) Close() (err error) {
 	return
 }
 
+// MustNewEventlogWriter creates a new EventlogWriter.
+// It panics if an error occurs.
+func MustNewEventlogWriter(source string, id int, host string) *EventlogWriter {
+	w, err := NewEventlogWriter(source, id, host)
+	if err != nil {
+		panic(err)
+	}
+	return w
+}
+
+// NewEventlogWriter creates a new EventlogWriter.
+func NewEventlogWriter(source string, id int, host string) (*EventlogWriter, error) {
+	var err error
+
+	if id == 0 {
+		return nil, errors.New("Specify eventlog default id")
+	}
+
+	var sourcePtr *uint16
+	if source == "" {
+		return nil, errors.New("Specify eventlog source")
+	}
+	sourcePtr, err = syscall.UTF16PtrFromString(source)
+	if err != nil {
+		return nil, err
+	}
+
+	var hostPtr *uint16
+	if host != "" {
+		hostPtr, err = syscall.UTF16PtrFromString(host)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	w := EventlogWriter{
+		ID:     uintptr(id),
+		Source: source,
+		Host:   host,
+	}
+
+	advapi32 := syscall.NewLazyDLL("advapi32.dll")
+	w.register = advapi32.NewProc("RegisterEventSourceW")
+	w.deregister = advapi32.NewProc("DeregisterEventSource")
+	w.report = advapi32.NewProc("ReportEventW")
+
+	w.handle, _, err = syscall.Syscall(w.register.Addr(), 2, uintptr(unsafe.Pointer(hostPtr)), uintptr(unsafe.Pointer(sourcePtr)), 0)
+	if w.handle != 0 {
+		err = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &w, nil
+}
+
 // WriteEntry implements Writer.
 func (w *EventlogWriter) WriteEntry(e *Entry) (n int, err error) {
-	w.once.Do(func() {
-		if w.ID == 0 {
-			err = errors.New("Specify eventlog default id")
-			return
-		}
-
-		if w.Source == "" {
-			err = errors.New("Specify eventlog source")
-			return
-		}
-
-		var s *uint16
-		if w.Host != "" {
-			s = syscall.StringToUTF16Ptr(w.Host)
-		}
-
-		advapi32 := syscall.NewLazyDLL("advapi32.dll")
-		w.register = advapi32.NewProc("RegisterEventSourceW")
-		w.deregister = advapi32.NewProc("DeregisterEventSource")
-		w.report = advapi32.NewProc("ReportEventW")
-
-		w.handle, _, err = syscall.Syscall(w.register.Addr(), 2, uintptr(unsafe.Pointer(s)), uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(w.Source))), 0)
-		if w.handle != 0 {
-			err = nil
-		}
-	})
-
-	if err != nil {
-		return
-	}
 
 	const (
 		EVENTLOG_SUCCESS          = 0x0000

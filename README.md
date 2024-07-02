@@ -536,7 +536,7 @@ To log to different writers, use `MultiEntryWriter`.
 log.DefaultLogger.Writer = &log.MultiEntryWriter{
 	&log.ConsoleWriter{ColorOutput: true},
 	&log.FileWriter{Filename: "main.log", MaxSize: 100<<20},
-	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000},
+	log.MustNewEventlogWriter(".NET Runtime", 1000, ""),
 }
 
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
@@ -672,10 +672,7 @@ log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 To log to windows system event, using `EventlogWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.EventlogWriter{
-	Source: ".NET Runtime",
-	ID:     1000,
-}
+log.DefaultLogger.Writer = log.MustNewEventlogWriter(".NET Runtime", 1000, "")
 
 log.Info().Int("number", 42).Str("foo", "bar").Msg("hello world")
 ```
