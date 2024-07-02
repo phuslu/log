@@ -9,7 +9,7 @@ import (
 	"unsafe"
 )
 
-// EventlogWriter is an Writer that writes logs to windows event log.
+// EventlogWriter is a Writer that writes logs to windows event log.
 type EventlogWriter struct {
 	// Event Source, must not be empty
 	Source string
@@ -21,13 +21,14 @@ type EventlogWriter struct {
 	Host string
 
 	once       sync.Once
+	err        error // init err
 	register   *syscall.LazyProc
 	deregister *syscall.LazyProc
 	report     *syscall.LazyProc
 	handle     uintptr
 }
 
-// Write implements io.Closer.
+// Close implements io.Closer.
 func (w *EventlogWriter) Close() (err error) {
 	var ret uintptr
 	ret, _, err = syscall.Syscall(w.deregister.Addr(), 1, w.handle, 0, 0)
@@ -37,36 +38,43 @@ func (w *EventlogWriter) Close() (err error) {
 	return
 }
 
+// must be called under once.Do
+func (w *EventlogWriter) lazyInit() {
+	if w.ID == 0 {
+		w.err = errors.New("Specify eventlog default id")
+		return
+	}
+
+	if w.Source == "" {
+		w.err = errors.New("Specify eventlog source")
+		return
+	}
+	sourcePtr := syscall.StringToUTF16Ptr(w.Source)
+
+	var hostPtr *uint16
+	if w.Host != "" {
+		hostPtr = syscall.StringToUTF16Ptr(w.Host) // TODO: Use UTF16PtrFromString instead
+	}
+
+	advapi32 := syscall.NewLazyDLL("advapi32.dll")
+	w.register = advapi32.NewProc("RegisterEventSourceW")
+	w.deregister = advapi32.NewProc("DeregisterEventSource")
+	w.report = advapi32.NewProc("ReportEventW")
+
+	w.handle, _, w.err = syscall.Syscall(w.register.Addr(), 2, uintptr(unsafe.Pointer(hostPtr)), uintptr(unsafe.Pointer(sourcePtr)), 0)
+	if w.handle != 0 {
+		w.err = nil
+	}
+}
+
 // WriteEntry implements Writer.
 func (w *EventlogWriter) WriteEntry(e *Entry) (n int, err error) {
 	w.once.Do(func() {
-		if w.ID == 0 {
-			err = errors.New("Specify eventlog default id")
-			return
-		}
-
-		if w.Source == "" {
-			err = errors.New("Specify eventlog source")
-			return
-		}
-
-		var s *uint16
-		if w.Host != "" {
-			s = syscall.StringToUTF16Ptr(w.Host)
-		}
-
-		advapi32 := syscall.NewLazyDLL("advapi32.dll")
-		w.register = advapi32.NewProc("RegisterEventSourceW")
-		w.deregister = advapi32.NewProc("DeregisterEventSource")
-		w.report = advapi32.NewProc("ReportEventW")
-
-		w.handle, _, err = syscall.Syscall(w.register.Addr(), 2, uintptr(unsafe.Pointer(s)), uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(w.Source))), 0)
-		if w.handle != 0 {
-			err = nil
-		}
+		w.lazyInit()
 	})
 
-	if err != nil {
+	if w.err != nil {
+		err = w.err
 		return
 	}
 
