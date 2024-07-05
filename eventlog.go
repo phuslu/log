@@ -5,6 +5,7 @@ package log
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 )
@@ -71,8 +72,10 @@ func (w *EventlogWriter) connect() (err error) {
 		return
 	}
 
-	w.handle, _, err = syscall.Syscall(procRegisterEventSourceW.Addr(), 2, uintptr(unsafe.Pointer(host)), uintptr(unsafe.Pointer(source)), 0)
-	if w.handle != 0 {
+	var handle uintptr
+	handle, _, err = syscall.Syscall(procRegisterEventSourceW.Addr(), 2, uintptr(unsafe.Pointer(host)), uintptr(unsafe.Pointer(source)), 0)
+	if handle != 0 {
+		atomic.StoreUintptr(&w.handle, handle)
 		err = nil
 	}
 
@@ -81,7 +84,7 @@ func (w *EventlogWriter) connect() (err error) {
 
 // WriteEntry implements Writer.
 func (w *EventlogWriter) WriteEntry(e *Entry) (n int, err error) {
-	if w.handle == 0 {
+	if atomic.LoadUintptr(&w.handle) != 0 {
 		w.mu.Lock()
 		if w.handle == 0 {
 			err = w.connect()
