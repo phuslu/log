@@ -1,5 +1,7 @@
 //go:build go1.23
 
+// MIT license, copy and modify from https://github.com/tlog-dev/loc
+
 //nolint:unused
 package log
 
@@ -11,15 +13,9 @@ import (
 
 // Fastrandn returns a pseudorandom uint32 in [0,n).
 //
-//go:nosplit
-func Fastrandn(n uint32) uint32 {
-	// See https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
-	return uint32((uint64(cheaprand()) * uint64(n)) >> 32)
-}
-
 //go:noescape
-//go:linkname cheaprand runtime.cheaprand
-func cheaprand() uint32
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(n uint32) uint32
 
 func pcFileLine(pc uintptr) (file string, line int) {
 	f := findfunc(pc)
