@@ -1,12 +1,14 @@
 name: go-slog
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
   push:
     branches:
       - master
 
 jobs:
-  verify:
+  benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v4
@@ -14,17 +16,16 @@ jobs:
           go-version: '1.22'
           check-latest: true
       - uses: actions/checkout@v4
-      - name: Verify
-        working-directory: ./go-slog
-        run: go test -v -args -useWarnings
-  bench:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.22'
-          check-latest: true
-      - uses: actions/checkout@v4
-      - name: Benchmark
-        working-directory: ./go-slog
-        run: go test -v -run=none -bench=. -args -useWarnings
+      - name: go mod tidy
+        run: |
+          mkdir bench
+          cd bench
+          awk '{if($0 ~ "// go test -v -args -useWarnings "){a=1;b=1};if($0 ~ "```" && b=1){b=0};if (a&&b) {print}}' ../README.md | tee bench_test.go
+          go mod init bench
+          go mod tidy
+          go mod edit -replace github.com/phuslu/log=../
+      - name: go-slog benchmarks
+        working-directory: ./bench
+        run: |
+          go test -v -args -useWarnings
+          go test -v -run=none -bench=. -args -useWarnings

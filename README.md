@@ -18,7 +18,8 @@
     - `SyslogWriter`, *memory efficient syslog*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
-    - `Logger.Slog`, *transform to log/slog instances*
+    - `Logger.Slog`, *transform to slog instances*
+    - `SlogNewJSONHandler`, *drop-in replacement of slog.NewJSONHandler*
 * Third-party Logger Interceptor
     - `logr`, *logr interceptor*
     - `gin`, *gin logging middleware*
@@ -32,7 +33,6 @@
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
     - `Printf(fmt string, a ...any)`, *printf logging*
-    - `SlogNewJSONHandler(io.Writer, *slog.HandlerOptions)`, *drop-in replacement of slog.JSONHandler*
 * High Performance
     - [Significantly faster][high-performance] than all other json loggers.
 
@@ -739,6 +739,27 @@ func main() {
 }
 ```
 
+### slog.JSONHandler replacement
+
+Using as a high performance version of slog.JSONHandler. [![playground][play-phusluslog-img]][play-phusluslog]
+
+```go
+package main
+
+import (
+	"log/slog"
+	"os"
+
+	phuslog "github.com/phuslu/log"
+)
+
+func main() {
+	slog.SetDefault(slog.New(phuslog.SlogNewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: true})))
+
+	slog.Info("hello from phuslog", "a", 1, "b", 2)
+}
+```
+
 ### Third-party Logger Interceptor
 
 | Logger | Interceptor |
@@ -1228,6 +1249,106 @@ PASS
 ok  	bench	84.415s
 ```
 
+<details>
+  <summary>As a drop-in replacement for slog.JSONHandler, it provides 50% to 100% speedup and full compatibility.</summary>
+
+```go
+// go test -v -args -useWarnings && go test -v -run=none -bench=. -args -useWarnings
+// a special thanks to @madkins23 for the help, with reference to https://github.com/phuslu/log/pull/70
+package bench
+
+import (
+	"io"
+	"log/slog"
+	"testing"
+
+	benchtests "github.com/madkins23/go-slog/bench/tests"
+	"github.com/madkins23/go-slog/infra"
+	"github.com/madkins23/go-slog/infra/warning"
+	verifytests "github.com/madkins23/go-slog/verify/tests"
+	"github.com/phuslu/log"
+	"github.com/stretchr/testify/suite"
+)
+
+func BenchmarkSlogJSON(b *testing.B) {
+	slogNewJSONHandler := func(w io.Writer, options *slog.HandlerOptions) slog.Handler {
+		return slog.NewJSONHandler(w, options)
+	}
+	creator := infra.NewCreator("slog/JSONHandler", slogNewJSONHandler, nil,
+		`^slog/JSONHandler^ is the JSON handler provided with the ^slog^ library.
+		It is fast and as a part of the Go distribution it is used
+		along with published documentation as a model for ^slog.Handler^ behavior.`,
+		map[string]string{
+			"slog/JSONHandler": "https://pkg.go.dev/log/slog#JSONHandler",
+		})
+	slogSuite := benchtests.NewSlogBenchmarkSuite(creator)
+	benchtests.Run(b, slogSuite)
+}
+
+func BenchmarkPhusluSlog(b *testing.B) {
+	creator := infra.NewCreator("phuslu/slog", log.SlogNewJSONHandler, nil,
+		`^phuslu/slog^ is a wrapper around the pre-existing ^phuslu/log^ logging library.`,
+		map[string]string{
+			"phuslu/log": "https://github.com/phuslu/log",
+		})
+	slogSuite := benchtests.NewSlogBenchmarkSuite(creator)
+	benchtests.Run(b, slogSuite)
+}
+
+func TestVerifyPhusluSlog(t *testing.T) {
+	creator := infra.NewCreator("phuslu/slog", log.SlogNewJSONHandler, nil,
+		`^phuslu/slog^ is a wrapper around the pre-existing ^phuslu/log^ logging library.`,
+		map[string]string{
+			"phuslu/log": "https://github.com/phuslu/log",
+		})
+	slogSuite := verifytests.NewSlogTestSuite(creator)
+	slogSuite.WarnOnly(warning.Duplicates)
+	suite.Run(t, slogSuite)
+}
+
+func TestMain(m *testing.M) {
+	warning.WithWarnings(m)
+}
+```
+
+</details>
+
+A Performance result as below, for daily go-slog results see [github actions][go-slog]
+```
+goos: linux
+goarch: amd64
+cpu: AMD EPYC 7763 64-Core Processor                
+
+BenchmarkSlogJSON/BenchmarkAttributes-4         	  870120	      1441 ns/op	 290.15 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkBigGroup-4           	   10000	    102796 ns/op	 225.45 MB/s	  112990 B/op	      14 allocs/op
+BenchmarkSlogJSON/BenchmarkDisabled-4           	309658138	         3.876 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkKeyValues-4          	  793542	      1509 ns/op	 277.01 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkLogging-4            	   42348	     27256 ns/op	 322.61 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkSimple-4             	 4208820	       286.2 ns/op	 289.98 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkSimpleSource-4       	 1388956	       867.6 ns/op	 359.61 MB/s	     568 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsAttributes-4         	  789448	      1468 ns/op	 534.76 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsKeyValues-4          	  746674	      1603 ns/op	 489.56 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsSimple-4             	 3369094	       315.5 ns/op	1426.53 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkWithGroupAttributes-4         	  653076	      1536 ns/op	 281.32 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkWithGroupKeyValues-4          	  806590	      1529 ns/op	 282.48 MB/s	     472 B/op	       6 allocs/op
+
+BenchmarkPhusluSlog/BenchmarkAttributes-4                	 1358455	       901.1 ns/op	 480.53 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkBigGroup-4                  	   50872	     23419 ns/op	 989.60 MB/s	      48 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkDisabled-4                  	406019344	         2.947 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkKeyValues-4                 	 1292756	       960.2 ns/op	 450.93 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkLogging-4                   	   84048	     14283 ns/op	 616.25 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkSimple-4                    	 7523289	       159.0 ns/op	 521.87 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkSimpleSource-4              	 5962424	       201.8 ns/op	1546.16 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsAttributes-4       	 1300897	       910.9 ns/op	 894.68 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsKeyValues-4        	 1269901	       948.3 ns/op	 859.42 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsSimple-4           	 7303563	       166.9 ns/op	2786.27 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithGroupAttributes-4       	 1328126	       896.8 ns/op	 498.45 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithGroupKeyValues-4        	 1294560	       951.7 ns/op	 469.70 MB/s	     240 B/op	       1 allocs/op
+
+PASS
+ok  	bench	37.548s
+```
+
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
 
 ## A Real World Example
@@ -1385,7 +1506,10 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-stdlog-img]: https://img.shields.io/badge/playground-LU8vQruS7--S-29BEB0?style=flat&logo=go
 [play-slog]: https://go.dev/play/p/JW3Ts6FcB40
 [play-slog-img]: https://img.shields.io/badge/playground-JW3Ts6FcB40-29BEB0?style=flat&logo=go
+[play-phusluslog]: https://go.dev/play/p/KzGInrdzByD
+[play-phusluslog-img]: https://img.shields.io/badge/playground-KzGInrdzByD-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
+[go-slog]: https://github.com/phuslu/log/actions?query=workflow%3Ago-slog
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog
 [gjson]: https://github.com/tidwall/gjson
