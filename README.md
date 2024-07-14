@@ -8,47 +8,33 @@
 ## Features
 
 * Dependency Free
-* Simple and Clean API
-* Consistent Writer
+* Clean API
+* Comprehensive Writers
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
     - `AsyncWriter`, *asynchronously & performant*
     - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *memory efficient syslog*
-* Stdlib Log Adapter
+    - `JournalWriter`, *linux journal logging*
+    - `EventlogWriter`, *windows eventlog logging*
+* Stdlib Interoperability
     - `Logger.Std`, *transform to std log instances*
     - `Logger.Slog`, *transform to slog instances*
     - `SlogNewJSONHandler`, *drop-in replacement of slog.NewJSONHandler*
-* Third-party Logger Interceptor
-    - `logr`, *logr interceptor*
-    - `gin`, *gin logging middleware*
-    - `gorm`, *gorm logger interface*
-    - `fiber`, *fiber logging handler*
-    - `grpc`, *grpc logger interceptor*
-    - `grpcgateway`, *grpcgateway logger interceptor*
-* Useful utility function
+* Utility Functions
     - `Goid()`, *the goroutine id matches stack trace*
     - `NewXID()`, *create a tracing id*
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
     - `Printf(fmt string, a ...any)`, *printf logging*
-* High Performance
+* Extreme Performance
     - [Significantly faster][high-performance] than all other json loggers.
 
 ## Interfaces
 
 ### Logger
 ```go
-// DefaultLogger is the global logger.
-var DefaultLogger = Logger{
-	Level:      DebugLevel,
-	Caller:     0,
-	TimeField:  "",
-	TimeFormat: "",
-	Writer:     &IOWriter{os.Stderr},
-}
-
 // Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
 	// Level defines log levels.
@@ -62,6 +48,7 @@ type Logger struct {
 	TimeField string
 
 	// TimeFormat specifies the time format in output. Uses RFC3339 with millisecond if empty.
+	// Strongly recommended to leave TimeFormat empty for optimal built-in log formatting performance.
 	// If set to `TimeFormatUnix/TimeFormatUnixMs`, timestamps will be formatted.
 	TimeFormat string
 
@@ -69,7 +56,16 @@ type Logger struct {
 	TimeLocation *time.Location
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
-	Writer Writer
+	Writer log.Writer
+}
+
+// DefaultLogger is the global logger.
+var DefaultLogger = Logger{
+	Level:      DebugLevel,
+	Caller:     0,
+	TimeField:  "",
+	TimeFormat: "",
+	Writer:     &log.IOWriter{os.Stderr},
 }
 ```
 
@@ -158,9 +154,9 @@ type FileWriter struct {
 }
 ```
 *Highlights*:
-- FileWriter implements log.Writer and io.Writer interfaces both, it is a recommended alternative to [lumberjack][lumberjack].
-- FileWriter creates a symlink to the current logging file, it requires administrator privileges on Windows.
-- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) until reach its MaxSize.
+- FileWriter uses a symlink to point to the current log file with a timestamp, instead of renaming for rotation. On Windows, this may require administrator privileges.
+- FileWriter `.Rotate()` method does not rotate logs based on broad TimeFormat values (e.g., daily or monthly) until the file reaches its `MaxSize`.
+- FileWriter combined with `AsyncWriter` can maximize performance and throughput on Linux, see [AsyncWriter](https://github.com/phuslu/log?tab=readme-ov-file#async-file-writer) section.
 
 ## Getting Started
 
@@ -499,8 +495,8 @@ logger.Warn().Int("number", 42).Str("foo", "bar").Msg("a async warn log")
 logger.Writer.(io.Closer).Close()
 ```
 *Highlights*:
-- To flush data and quit safely, call `.Close()` method explicitly.
-- Write performance improves up to 10x under high load with automatic `writev` enabling.
+- To flush data and shut down safely, explicitly call the .Close() method.
+- The automatic `writev` enabling can boost write performance by up to 10x under high load.
 
 ### Random Sample Logger:
 
@@ -760,17 +756,6 @@ func main() {
 }
 ```
 
-### Third-party Logger Interceptor
-
-| Logger | Interceptor |
-|---|---|
-| logr |  https://github.com/phuslu/log-contrib/tree/master/logr |
-| gin |  https://github.com/phuslu/log-contrib/tree/master/gin |
-| fiber |  https://github.com/phuslu/log-contrib/tree/master/fiber |
-| gorm |  https://github.com/phuslu/log-contrib/tree/master/gorm |
-| grpc |  https://github.com/phuslu/log-contrib/tree/master/grpc |
-| grpcgateway |  https://github.com/phuslu/log-contrib/tree/master/grpcgateway |
-
 ### User-defined Data Structure
 
 To log with user-defined struct effectively, implements `MarshalObject`. [![playground][play-marshal-img]][play-marshal]
@@ -846,6 +831,17 @@ func main() {
 //   {"time":"2021-06-14T06:36:42.905+02:00","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
 //   {"time":"2021-06-14T06:36:42.906+02:00","level":"debug","no3":3,"message":"no context"}
 ```
+
+### Third-party Logger Interceptor
+
+| Logger | Interceptor |
+|---|---|
+| logr |  https://github.com/phuslu/log-contrib/tree/master/logr |
+| gin |  https://github.com/phuslu/log-contrib/tree/master/gin |
+| fiber |  https://github.com/phuslu/log-contrib/tree/master/fiber |
+| gorm |  https://github.com/phuslu/log-contrib/tree/master/gorm |
+| grpc |  https://github.com/phuslu/log-contrib/tree/master/grpc |
+| grpcgateway |  https://github.com/phuslu/log-contrib/tree/master/grpcgateway |
 
 ### High Performance
 
@@ -1350,123 +1346,6 @@ ok  	bench	37.548s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
-
-## A Real World Example
-
-The example starts a geoip http server which supports change log level dynamically
-```go
-package main
-
-import (
-	"encoding/json"
-	"fmt"
-	"net"
-	"net/http"
-	"os"
-
-	"github.com/phuslu/iploc"
-	"github.com/phuslu/log"
-)
-
-type Config struct {
-	Listen struct {
-		Tcp string
-	}
-	Log struct {
-		Level   string
-		Maxsize int64
-		Backups int
-	}
-}
-
-type Handler struct {
-	Config       *Config
-	AccessLogger log.Logger
-}
-
-func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	reqID := log.NewXID()
-	remoteIP, _, _ := net.SplitHostPort(req.RemoteAddr)
-	geo := iploc.Country(net.ParseIP(remoteIP))
-
-	h.AccessLogger.Log().
-		Xid("req_id", reqID).
-		Str("host", req.Host).
-		Bytes("geo", geo).
-		Str("remote_ip", remoteIP).
-		Str("request_uri", req.RequestURI).
-		Str("user_agent", req.UserAgent()).
-		Str("referer", req.Referer()).
-		Msg("access log")
-
-	switch req.RequestURI {
-	case "/debug", "/info", "/warn", "/error":
-		log.DefaultLogger.SetLevel(log.ParseLevel(req.RequestURI[1:]))
-	default:
-		fmt.Fprintf(rw, `{"req_id":"%s","ip":"%s","geo":"%s"}`, reqID, remoteIP, geo)
-	}
-}
-
-func main() {
-	config := new(Config)
-	err := json.Unmarshal([]byte(`{
-		"listen": {
-			"tcp": ":8080"
-		},
-		"log": {
-			"level": "debug",
-			"maxsize": 1073741824,
-			"backups": 5
-		}
-	}`), config)
-	if err != nil {
-		log.Fatal().Msgf("json.Unmarshal error: %+v", err)
-	}
-
-	handler := &Handler{
-		Config: config,
-		AccessLogger: log.Logger{
-			Writer: &log.FileWriter{
-				Filename:   "access.log",
-				MaxSize:    config.Log.Maxsize,
-				MaxBackups: config.Log.Backups,
-				LocalTime:  true,
-			},
-		},
-	}
-
-	if log.IsTerminal(os.Stderr.Fd()) {
-		log.DefaultLogger = log.Logger{
-			Level:      log.ParseLevel(config.Log.Level),
-			Caller:     1,
-			TimeFormat: "15:04:05",
-			Writer: &log.ConsoleWriter{
-				ColorOutput:    true,
-				EndWithMessage: true,
-			},
-		}
-		handler.AccessLogger = log.DefaultLogger
-	} else {
-		log.DefaultLogger = log.Logger{
-			Level: log.ParseLevel(config.Log.Level),
-			Writer: &log.FileWriter{
-				Filename:   "main.log",
-				MaxSize:    config.Log.Maxsize,
-				MaxBackups: config.Log.Backups,
-				LocalTime:  true,
-			},
-		}
-	}
-
-	server := &http.Server{
-		Addr:     config.Listen.Tcp,
-		ErrorLog: log.DefaultLogger.Std(log.ErrorLevel, nil, "", 0),
-		Handler:  handler,
-	}
-
-	log.Fatal().Err(server.ListenAndServe()).Msg("listen failed")
-}
-```
 
 ## Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].

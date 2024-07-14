@@ -93,6 +93,7 @@ type Logger struct {
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
+	// Strongly recommended to leave TimeFormat empty for optimal built-in log formatting performance.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
 
