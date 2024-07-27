@@ -38,9 +38,9 @@ func TestAsyncWriterSize(t *testing.T) {
 	}
 
 	writer2 := &AsyncWriter{
-		ChannelSize:    4096,
-		WritevDisabled: false,
-		DiscardOnFull:  false,
+		ChannelSize:   4096,
+		DisableWritev: false,
+		DiscardOnFull: false,
 		Writer: &FileWriter{
 			Filename: "async_file_test2.log",
 		},
@@ -100,9 +100,9 @@ func BenchmarkSyncFileWriter(b *testing.B) {
 func BenchmarkAsyncFileWriter(b *testing.B) {
 	logger := Logger{
 		Writer: &AsyncWriter{
-			ChannelSize:    4096,
-			WritevDisabled: false,
-			DiscardOnFull:  false,
+			ChannelSize:   4096,
+			DisableWritev: false,
+			DiscardOnFull: false,
 			Writer: &FileWriter{
 				Filename: "async_file_test2.log",
 			},
@@ -122,9 +122,9 @@ func BenchmarkAsyncFileWriter(b *testing.B) {
 func BenchmarkAsyncIOWriter(b *testing.B) {
 	logger := TSVLogger{
 		Writer: &AsyncWriter{
-			ChannelSize:    4096,
-			WritevDisabled: false,
-			DiscardOnFull:  false,
+			ChannelSize:   4096,
+			DisableWritev: false,
+			DiscardOnFull: false,
 			Writer: &FileWriter{
 				Filename: "async_file_test3.log",
 			},
