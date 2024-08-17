@@ -2277,6 +2277,8 @@ func (e *Entry) KeysAndValues(keysAndValues ...any) *Entry {
 type Fields map[string]any
 
 // Fields is a helper function to use a map to set fields using type assertion.
+//
+//go:noinline
 func (e *Entry) Fields(fields Fields) *Entry {
 	if e == nil {
 		return nil
