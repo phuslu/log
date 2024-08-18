@@ -782,6 +782,8 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 }
 
 // Bool append append the val as a bool to the entry.
+//
+//go:noinline
 func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
@@ -795,6 +797,8 @@ func (e *Entry) Bool(key string, b bool) *Entry {
 }
 
 // Bools adds the field key with val as a []bool to the entry.
+//
+//go:noinline
 func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
@@ -921,6 +925,8 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 }
 
 // Err adds the field "error" with serialized err to the entry.
+//
+//go:noinline
 func (e *Entry) Err(err error) *Entry {
 	return e.AnErr("error", err)
 }
@@ -2129,8 +2135,10 @@ func (e *Entry) Objects(key string, objects any) *Entry {
 }
 
 // Func allows an anonymous func to run only if the entry is enabled.
+//
+//go:nonline
 func (e *Entry) Func(f func(e *Entry)) *Entry {
-	if e != nil {
+	if e != nil && f != nil {
 		f(e)
 	}
 	return e
@@ -2309,6 +2317,8 @@ func (e *Entry) Value() Context {
 }
 
 // Context sends the contextual fields to entry.
+//
+//go:noinline
 func (e *Entry) Context(ctx Context) *Entry {
 	if e == nil {
 		return nil
