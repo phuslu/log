@@ -782,8 +782,6 @@ func (e *Entry) TimesFormat(key string, timefmt string, a []time.Time) *Entry {
 }
 
 // Bool append append the val as a bool to the entry.
-//
-//go:noinline
 func (e *Entry) Bool(key string, b bool) *Entry {
 	if e == nil {
 		return nil
@@ -797,8 +795,6 @@ func (e *Entry) Bool(key string, b bool) *Entry {
 }
 
 // Bools adds the field key with val as a []bool to the entry.
-//
-//go:noinline
 func (e *Entry) Bools(key string, b []bool) *Entry {
 	if e == nil {
 		return nil
@@ -925,8 +921,6 @@ func (e *Entry) Durs(key string, d []time.Duration) *Entry {
 }
 
 // Err adds the field "error" with serialized err to the entry.
-//
-//go:noinline
 func (e *Entry) Err(err error) *Entry {
 	return e.AnErr("error", err)
 }
@@ -2285,8 +2279,6 @@ func (e *Entry) KeysAndValues(keysAndValues ...any) *Entry {
 type Fields map[string]any
 
 // Fields is a helper function to use a map to set fields using type assertion.
-//
-//go:noinline
 func (e *Entry) Fields(fields Fields) *Entry {
 	if e == nil {
 		return nil
@@ -2317,8 +2309,6 @@ func (e *Entry) Value() Context {
 }
 
 // Context sends the contextual fields to entry.
-//
-//go:noinline
 func (e *Entry) Context(ctx Context) *Entry {
 	if e == nil {
 		return nil
