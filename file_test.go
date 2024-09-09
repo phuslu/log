@@ -9,8 +9,8 @@ import (
 )
 
 func TestFileWriter(t *testing.T) {
-	filename := "file-output.log"
-	text := "hello file writer!\n"
+	const filename string = "file-output.log"
+	const text string = "hello file writer!\n"
 
 	w := &FileWriter{
 		Filename: filename,
@@ -49,7 +49,7 @@ func TestFileWriter(t *testing.T) {
 }
 
 func TestFileWriterStderr(t *testing.T) {
-	text1 := "hello file writer!\n"
+	const text1 string = "hello file writer!\n"
 
 	w := &FileWriter{}
 
@@ -60,7 +60,7 @@ func TestFileWriterStderr(t *testing.T) {
 }
 
 func TestFileWriterCreate(t *testing.T) {
-	text1 := "hello file writer!\n"
+	const text1 string = "hello file writer!\n"
 
 	w := &FileWriter{
 		Filename: "/nonexists/output.log",
@@ -112,9 +112,9 @@ func TestFileWriterEnsureFolder(t *testing.T) {
 }
 
 func TestFileWriterHostname(t *testing.T) {
-	filename := "file-hostname.log"
-	text1 := "1. hello file writer!\n"
-	text2 := "2. hello file writer!\n"
+	const filename string = "file-hostname.log"
+	const text1 string = "1. hello file writer!\n"
+	const text2 string = "2. hello file writer!\n"
 
 	for _, hostname := range []bool{false, true} {
 		for _, pid := range []bool{false, true} {
@@ -152,10 +152,10 @@ func TestFileWriterHostname(t *testing.T) {
 }
 
 func TestFileWriterRotate(t *testing.T) {
-	filename := "file-rotate.log"
-	header := "# I AM A FILEWRITER HEADER\n"
-	text1 := "hello file writer!\n"
-	text2 := "hello rotated file writer!\n"
+	const filename string = "file-rotate.log"
+	const header string = "# I AM A FILEWRITER HEADER\n"
+	const text1 string = "hello file writer!\n"
+	const text2 string = "hello rotated file writer!\n"
 
 	// trigger chown
 	os.Setenv("USER", "root")
@@ -222,8 +222,8 @@ func TestFileWriterRotate(t *testing.T) {
 }
 
 func TestFileWriterRotateBySize(t *testing.T) {
-	filename := "file-rotate-by-size.log"
-	text := "hello file writer!\n"
+	const filename string = "file-rotate-by-size.log"
+	const text string = "hello file writer!\n"
 
 	w := &FileWriter{
 		Filename:   filename,
@@ -295,7 +295,7 @@ func TestFileWriterRotateBySize(t *testing.T) {
 }
 
 func TestFileWriterBackups(t *testing.T) {
-	filename := "file-backup.log"
+	const filename string = "file-backup.log"
 
 	w := &FileWriter{
 		Filename:   filename,
