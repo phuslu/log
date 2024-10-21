@@ -98,6 +98,18 @@ func TestFileWriterEnsureFolder(t *testing.T) {
 		t.Logf("file writer return error: %+v", err)
 	}
 
+	remove(filepath.Dir(filename))
+
+	_, err = fmt.Fprint(w, text1)
+	if err != nil {
+		t.Logf("file writer return error: %+v", err)
+	}
+
+	err = w.Rotate()
+	if err != nil {
+		t.Logf("file writer rotate error: %+v", err)
+	}
+
 	_, err = fmt.Fprint(w, text2)
 	if err != nil {
 		t.Logf("file writer return error: %+v", err)
