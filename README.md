@@ -96,15 +96,17 @@ type ConsoleWriter struct {
 
 // FormatterArgs is a parsed sturct from json input
 type FormatterArgs struct {
-	Time      string // "2019-07-10T05:35:54.277Z"
-	Message   string // "a structure message"
-	Level     string // "info"
-	Caller    string // "main.go:123"
-	Goid      string // "1"
-	Stack     string // "<stack string>"
-	KeyValues []struct {
+	Time       string // "2019-07-10T05:35:54.277Z"
+	Level      string // "info"
+	Caller     string // "prog.go:42"
+	CallerFunc string // "main.main"
+	Goid       string // "123"
+	Stack      string // "<stack string>"
+	Message    string // "a structure message"
+	KeyValues  []struct {
 		Key       string // "foo"
 		Value     string // "bar"
+		ValueType byte   // 's'
 	}
 }
 ```
@@ -480,6 +482,7 @@ logger := log.Logger{
 	Level: log.InfoLevel,
 	Writer: &log.AsyncWriter{
 		ChannelSize:   4096,
+		DiscardOnFull: false,
 		Writer:        &log.FileWriter{
 			Filename:   "main.log",
 			FileMode:   0600,
