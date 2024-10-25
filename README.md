@@ -1146,7 +1146,7 @@ func BenchmarkSlogSimpleZap(b *testing.B) {
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)
-	logger := slog.New(zapslog.NewHandler(logcore, nil))
+	logger := slog.New(zapslog.NewHandler(logcore))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
@@ -1158,7 +1158,7 @@ func BenchmarkSlogGroupsZap(b *testing.B) {
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)
-	logger := slog.New(zapslog.NewHandler(logcore, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	logger := slog.New(zapslog.NewHandler(logcore)).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
