@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/netip"
 	"os"
 	"strings"
 	"testing"
@@ -107,6 +108,7 @@ func TestLoggerInfo(t *testing.T) {
 		IPAddr("ip6", net.ParseIP("2001:4860:4860::8888")).
 		IPAddr("ip4", ipv4Addr).
 		IPPrefix("ip_prefix", *ipv4Net).
+		NetIPAddrs("netip_addr", []netip.Addr{netip.MustParseAddr("1.1.1.1"), netip.MustParseAddr("2001:4860:4860::8888")}).
 		MACAddr("mac", net.HardwareAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}).
 		Xid("xid", NewXID()).
 		Errs("errors", []error{errors.New("error1"), nil, errors.New("error3")}).
