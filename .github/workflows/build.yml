@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['tip', '1.22', '1.21', '1.20', '1.19', '1.18']
+        go-version: ['tip', '1.24', '1.23', '1.22', '1.21', '1.20', '1.19', '1.18']
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -42,9 +42,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          check-latest: true
-          cache-dependency-path: go.mod
-      - name: Lint
+      - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.57.2
+          version: v1.60
