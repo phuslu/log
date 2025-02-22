@@ -433,7 +433,7 @@ func (l *Logger) Categorized(name string) *Logger {
 		TimeField:    l.TimeField,
 		TimeFormat:   l.TimeFormat,
 		TimeLocation: l.TimeLocation,
-		Context:      l.Context,
+		Context:      NewContext(l.Context).Str("category", name).Value(),
 		Writer:       l.Writer,
 	}
 	categorizedLoggers.Store(name, n)

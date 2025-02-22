@@ -602,6 +602,9 @@ func TestLoggerCategorizedLogLevels(t *testing.T) {
 	if !strings.Contains(b.String(), `"cat1Logger debug here"`) {
 		t.Fatal("cat1Logger.Debug must be logged")
 	}
+	if !strings.Contains(b.String(), `"category":"cat1"`) {
+		t.Fatal("cat1Logger.Debug is missing category")
+	}
 
 	// Changing loglevel on category must not change base logger
 	b.Reset()
@@ -621,6 +624,9 @@ func TestLoggerCategorizedLogLevels(t *testing.T) {
 	cat2Logger.Trace().Msg("cat2Logger trace here")
 	if !strings.Contains(b.String(), `"cat2Logger trace here"`) {
 		t.Fatal("logger.Debug for category cat2 must be logged")
+	}
+	if !strings.Contains(b.String(), `"category":"cat2"`) {
+		t.Fatal("cat2Logger.Debug is missing category")
 	}
 }
 
