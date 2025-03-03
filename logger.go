@@ -27,8 +27,6 @@ var DefaultLogger = Logger{
 	Writer:     IOWriter{os.Stderr},
 }
 
-var categorizedLoggers sync.Map // key: string, value: *Logger
-
 // Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Entry struct {
 	buf   []byte
@@ -418,26 +416,6 @@ func (l *Logger) Err(err error) (e *Entry) {
 func (l *Logger) SetLevel(level Level) *Logger {
 	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
 	return l
-}
-
-// Categorized returns a cloned logger for category `name`.
-func (l *Logger) Categorized(name string) *Logger {
-	// Inherit logger with added context
-	v, ok := categorizedLoggers.Load(name)
-	if ok {
-		return v.(*Logger)
-	}
-	n := &Logger{
-		Level:        l.Level,
-		Caller:       l.Caller,
-		TimeField:    l.TimeField,
-		TimeFormat:   l.TimeFormat,
-		TimeLocation: l.TimeLocation,
-		Context:      NewContext(l.Context).Str("category", name).Value(),
-		Writer:       l.Writer,
-	}
-	categorizedLoggers.Store(name, n)
-	return n
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
