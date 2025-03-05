@@ -413,9 +413,8 @@ func (l *Logger) Err(err error) (e *Entry) {
 }
 
 // SetLevel changes logger default level.
-func (l *Logger) SetLevel(level Level) *Logger {
+func (l *Logger) SetLevel(level Level) {
 	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
-	return l
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
