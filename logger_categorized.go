@@ -2,7 +2,6 @@ package log
 
 import (
 	"sync"
-	"sync/atomic"
 )
 
 var categorizedLoggers sync.Map // key: string, value: *Logger
@@ -10,12 +9,6 @@ var categorizedLoggers sync.Map // key: string, value: *Logger
 type CategorizedLogger struct {
 	Logger
 	Category string
-}
-
-// SetLevel changes logger default level.
-func (l *CategorizedLogger) SetLevel(level Level) *CategorizedLogger {
-	atomic.StoreUint32((*uint32)(&l.Level), uint32(level))
-	return l
 }
 
 // Categorized returns a cloned logger for category `name`.

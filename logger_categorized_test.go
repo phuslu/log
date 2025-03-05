@@ -12,7 +12,8 @@ func TestLoggerCategorizedLogLevels(t *testing.T) {
 	logger := Logger{Level: DebugLevel, Writer: &IOWriter{Writer: &b}}
 
 	// Categorized logger must be indepented of base logger
-	cat1Logger := logger.Categorized("cat1").SetLevel(TraceLevel)
+	cat1Logger := logger.Categorized("cat1")
+	cat1Logger.SetLevel(TraceLevel)
 	logger.Debug().Msg("logger debug here")
 	cat1Logger.Debug().Msg("cat1Logger debug here")
 	if !strings.Contains(b.String(), `"logger debug here"`) {
@@ -39,7 +40,8 @@ func TestLoggerCategorizedLogLevels(t *testing.T) {
 
 	// Loglevel on other categorized logger has own loglevel
 	b.Reset()
-	cat2Logger := logger.Categorized("cat2").SetLevel(TraceLevel)
+	cat2Logger := logger.Categorized("cat2")
+	cat2Logger.SetLevel(TraceLevel)
 	cat2Logger.Trace().Msg("cat2Logger trace here")
 	if !strings.Contains(b.String(), `"cat2Logger trace here"`) {
 		t.Fatal("logger.Debug for category cat2 must be logged")
