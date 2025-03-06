@@ -67,3 +67,17 @@ func BenchmarkCategorizedLogger(b *testing.B) {
 		catLogger.Debug().Str("foo", "bar").Msgf("hello %s", "world")
 	}
 }
+
+func BenchmarkCategorizedLoggerBadUsage(b *testing.B) {
+	logger := Logger{
+		TimeFormat: TimeFormatUnix,
+		Level:      DebugLevel,
+		Writer:     IOWriter{io.Discard},
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Categorized("one").Info().Str("foo", "bar").Msgf("hello %s", "world")
+	}
+}
