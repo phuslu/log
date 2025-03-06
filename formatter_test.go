@@ -20,6 +20,29 @@ func TestFormatterParse(t *testing.T) {
 	}
 }
 
+func TestFormatterArgsParse(t *testing.T) {
+	timestamp := "2019-07-10T05:35:54.277Z"
+	level := "debug"
+	msg := "hello json console color writer\t123"
+	category := "cat1"
+	var json = `{"time":"` + timestamp + `","level":"` + level + `","category":"` + category + `","message":"` + msg + `"}`
+
+	var args FormatterArgs
+	parseFormatterArgs([]byte(json), &args)
+	if args.Time != timestamp {
+		t.Fatalf("Failed to parse timestamp: %s != %s", args.Time, timestamp)
+	}
+	if args.Level != level {
+		t.Fatalf("Failed to parse level: %s != %s", args.Level, level)
+	}
+	if args.Category != category {
+		t.Fatalf("Failed to parse category: %s != %s", args.Category, category)
+	}
+	if args.Message != msg {
+		t.Fatalf("Failed to parse messae: %s != %s", args.Message, msg)
+	}
+}
+
 func TestFormatterDefault(t *testing.T) {
 	DefaultLogger.Writer = &ConsoleWriter{
 		Formatter: func(w io.Writer, a *FormatterArgs) (int, error) {
