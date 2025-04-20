@@ -379,3 +379,135 @@ func TestFileWriterFileargs(t *testing.T) {
 		}
 	})
 }
+
+func TestFileWriter_MaxSizeRotation_SingleVsMultiInstance(t *testing.T) {
+	tempDir := t.TempDir()
+	baseFilename := filepath.Join(tempDir, "rotation-test.log")
+
+	type testCase struct {
+		name           string
+		timeFormat     string
+		hostName       bool
+		processID      bool
+		expectFiles    int
+		allowOversize  bool
+		singleInstance bool
+	}
+
+	testCases := []testCase{
+		{"_DayPrecision_MultiInstance", "2006-01-02", false, false, 1, true, false},
+		{"_DayPrecision_SingleInstance", "2006-01-02", false, false, 1, true, true},
+		{"_MsPrecision_MultiInstance", "2006-01-02T15-04-05.000", false, false, 4, false, false},
+		{"_MsPrecision_SingleInstance", "2006-01-02T15-04-05", false, false, 1, true, true},
+		{"HostName_DayPrecision_MultiInstance", "2006-01-02", true, false, 1, true, false},
+		{"HostName_DayPrecision_SingleInstance", "2006-01-02", true, false, 1, true, true},
+		{"HostName_MsPrecision_MultiInstance", "2006-01-02T15-04-05.000", true, false, 4, false, false},
+		{"HostName_MsPrecision_SingleInstance", "2006-01-02T15-04-05", true, false, 1, true, true},
+		{"ProcessID_DayPrecision_MultiInstance", "2006-01-02", false, true, 1, true, false},
+		{"ProcessID_DayPrecision_SingleInstance", "2006-01-02", false, true, 1, true, true},
+		{"ProcessID_MsPrecision_MultiInstance", "2006-01-02T15-04-05.000", false, true, 4, false, false},
+		{"ProcessID_MsPrecision_SingleInstance", "2006-01-02T15-04-05", false, true, 1, true, true},
+		{"HostNameProcessID_DayPrecision_MultiInstance", "2006-01-02", true, true, 1, true, false},
+		{"HostNameProcessID_DayPrecision_SingleInstance", "2006-01-02", true, true, 1, true, true},
+		{"HostNameProcessID_MsPrecision_MultiInstance", "2006-01-02T15-04-05.000", true, true, 4, false, false},
+		{"HostNameProcessID_MsPrecision_SingleInstance", "2006-01-02T15-04-05", true, true, 1, true, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			os.Remove(baseFilename)
+			matches, _ := filepath.Glob(filepath.Join(tempDir, "rotation-test.*"))
+			for _, m := range matches {
+				os.Remove(m)
+			}
+
+			maxSize := int64(1024)
+			maxBackups := 3
+			dataChunkSize := 500
+			iterations := 10
+			dataChunk := make([]byte, dataChunkSize)
+			for i := range dataChunk {
+				dataChunk[i] = byte('A' + (i % 26))
+			}
+			dataChunk[dataChunkSize-1] = '\n'
+
+			if tc.singleInstance {
+				w := &FileWriter{
+					Filename:   baseFilename,
+					MaxSize:    maxSize,
+					MaxBackups: maxBackups,
+					TimeFormat: tc.timeFormat,
+					HostName:   tc.hostName,
+					ProcessID:  tc.processID,
+				}
+				for i := 0; i < iterations; i++ {
+					_, err := w.Write(dataChunk)
+					if err != nil {
+						t.Fatalf("iteration %d: file write error: %+v", i, err)
+					}
+				}
+				err := w.Close()
+				if err != nil {
+					t.Fatalf("error closing writer: %+v", err)
+				}
+			} else {
+				for i := 0; i < iterations; i++ {
+					w := &FileWriter{
+						Filename:   baseFilename,
+						MaxSize:    maxSize,
+						MaxBackups: maxBackups,
+						TimeFormat: tc.timeFormat,
+						HostName:   tc.hostName,
+						ProcessID:  tc.processID,
+					}
+					_, err := w.Write(dataChunk)
+					if err != nil {
+						t.Fatalf("iteration %d: file write error: %+v", i, err)
+					}
+					err = w.Close()
+					if err != nil {
+						t.Fatalf("iteration %d: error closing writer: %+v", i, err)
+					}
+					time.Sleep(10 * time.Millisecond)
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
+
+			pattern := filepath.Join(tempDir, "rotation-test*")
+			matches, err := filepath.Glob(pattern)
+			if err != nil {
+				t.Fatalf("filepath glob error: %+v", err)
+			}
+
+			// Discard possible symlink (main log file symlink)
+			filtered := matches[:0]
+			for _, m := range matches {
+				info, err := os.Lstat(m)
+				if err == nil && (info.Mode()&os.ModeSymlink == 0) {
+					filtered = append(filtered, m)
+				}
+			}
+			matches = filtered
+
+			if len(matches) != tc.expectFiles {
+				t.Errorf("Expected %d log files, found %d. Files: %v", tc.expectFiles, len(matches), matches)
+			}
+
+			largestFileSize := int64(0)
+			var largestFileName string
+			for _, m := range matches {
+				info, err := os.Stat(m)
+				if err == nil && info.Size() > largestFileSize {
+					largestFileSize = info.Size()
+					largestFileName = filepath.Base(m)
+				}
+			}
+			if !tc.allowOversize && largestFileSize > maxSize {
+				t.Errorf("File %q size (%d bytes) exceeds MaxSize (%d bytes)", largestFileName, largestFileSize, maxSize)
+			}
+			if tc.allowOversize && largestFileSize <= maxSize {
+				t.Errorf("Expected at least one oversized file, but largest file is %d bytes", largestFileSize)
+			}
+		})
+	}
+}
