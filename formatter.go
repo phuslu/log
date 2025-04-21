@@ -17,7 +17,6 @@ type FormatterArgs struct {
 	Goid       string // "123"
 	Stack      string // "<stack string>"
 	Message    string // "a structure message"
-	Category   string // "cat1"
 	KeyValues  []struct {
 		Key       string // "foo"
 		Value     string // "bar"
@@ -53,8 +52,6 @@ func formatterArgsPos(key string) (pos int) {
 		pos = 6
 	case "message", "msg":
 		pos = 7
-	case "category":
-		pos = 8
 	}
 	return
 }

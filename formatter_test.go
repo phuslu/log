@@ -35,9 +35,6 @@ func TestFormatterArgsParse(t *testing.T) {
 	if args.Level != level {
 		t.Fatalf("Failed to parse level: %s != %s", args.Level, level)
 	}
-	if args.Category != category {
-		t.Fatalf("Failed to parse category: %s != %s", args.Category, category)
-	}
 	if args.Message != msg {
 		t.Fatalf("Failed to parse messae: %s != %s", args.Message, msg)
 	}
