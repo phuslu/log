@@ -23,7 +23,7 @@ func TestIsTerminal(t *testing.T) {
 	// signal.Ignore(syscall.SIGSYS)
 
 	// Mute "function not implemented" and "undefined: syscall.SIGSYS" for non linux_amd64 platforms
-	if !(runtime.GOOS == "linux" && runtime.GOARCH == "amd64") {
+	if !(runtime.GOOS == "linux" && runtime.GOARCH == "amd64") { //nolint:staticcheck
 		return
 	}
 

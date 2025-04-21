@@ -1,5 +1,6 @@
 //go:build go1.21
 
+//nolint:staticcheck
 package log
 
 import (

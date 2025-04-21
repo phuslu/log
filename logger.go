@@ -67,7 +67,7 @@ type IOWriteCloser struct {
 
 // WriteEntry implements Writer.
 func (w IOWriteCloser) WriteEntry(e *Entry) (n int, err error) {
-	return w.WriteCloser.Write(e.buf)
+	return w.WriteCloser.Write(e.buf) //nolint:staticcheck
 }
 
 // Close implements Writer.
@@ -480,11 +480,12 @@ func (l *Logger) header(level Level) *Entry {
 	}
 	offset := timeOffset
 	if l.TimeLocation != nil {
-		if l.TimeLocation == time.UTC {
+		switch l.TimeLocation {
+		case time.UTC:
 			offset = 0
-		} else if l.TimeLocation == time.Local {
+		case time.Local:
 			offset = timeOffset
-		} else {
+		default:
 			format := l.TimeFormat
 			if format == "" {
 				format = "2006-01-02T15:04:05.999Z07:00"
