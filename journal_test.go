@@ -39,7 +39,7 @@ func TestJournalWriterError(t *testing.T) {
 			n, uaddr, err := conn.ReadFromUnix(buf)
 			if err != nil {
 				t.Logf("listen: error: %v\n", err)
-			} else {
+			} else if uaddr != nil {
 				t.Logf("listen: received %v bytes from %+v\n", n, uaddr)
 			}
 			time.Sleep(10 * time.Millisecond)
