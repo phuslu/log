@@ -1681,6 +1681,27 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 	return e
 }
 
+// NetAddr adds IPv4 or IPv4 Address to the entry.
+func (e *Entry) NetAddr(key string, addr net.Addr) *Entry {
+	if e == nil {
+		return nil
+	}
+
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	switch v := addr.(type) {
+	case *net.TCPAddr:
+		e.buf = v.AddrPort().AppendTo(e.buf)
+	case *net.UDPAddr:
+		e.buf = v.AddrPort().AppendTo(e.buf)
+	default:
+		e.buf = append(e.buf, addr.String()...)
+	}
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // NetIPAddr adds IPv4 or IPv6 Address to the entry.
 func (e *Entry) NetIPAddr(key string, ip netip.Addr) *Entry {
 	if e == nil {
