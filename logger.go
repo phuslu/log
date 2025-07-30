@@ -1692,9 +1692,35 @@ func (e *Entry) NetAddr(key string, addr net.Addr) *Entry {
 	e.buf = append(e.buf, '"', ':', '"')
 	switch v := addr.(type) {
 	case *net.TCPAddr:
-		e.buf = v.AddrPort().AppendTo(e.buf)
+		if len(v.IP) == 4 {
+			_ = v.IP[3]
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[0]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[1]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[2]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[3]), 10)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(v.Port), 10)
+		} else {
+			e.buf = v.AddrPort().AppendTo(e.buf)
+		}
 	case *net.UDPAddr:
-		e.buf = v.AddrPort().AppendTo(e.buf)
+		if len(v.IP) == 4 {
+			_ = v.IP[3]
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[0]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[1]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[2]), 10)
+			e.buf = append(e.buf, '.')
+			e.buf = strconv.AppendInt(e.buf, int64(v.IP[3]), 10)
+			e.buf = append(e.buf, ':')
+			e.buf = strconv.AppendInt(e.buf, int64(v.Port), 10)
+		} else {
+			e.buf = v.AddrPort().AppendTo(e.buf)
+		}
 	default:
 		e.buf = append(e.buf, addr.String()...)
 	}
