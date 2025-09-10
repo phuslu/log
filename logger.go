@@ -29,9 +29,10 @@ var DefaultLogger = Logger{
 
 // Entry represents a log entry. It is instanced by one of the level method of Logger and finalized by the Msg or Msgf method.
 type Entry struct {
-	buf   []byte
-	Level Level
-	w     Writer
+	buf    []byte
+	Level  Level
+	w      Writer
+	logger *Logger
 }
 
 // Writer defines an entry writer interface.
@@ -100,6 +101,9 @@ type Logger struct {
 
 	// TimeLocation specifics that the location which TimeFormat used. It uses time.Local if empty.
 	TimeLocation *time.Location
+
+	// MessageField defines the time field name in output.  It uses "message" in if empty.
+	MessageField string
 
 	// Context specifies an optional context of logger.
 	Context Context
@@ -465,6 +469,7 @@ func (l *Logger) header(level Level) *Entry {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
 	e.Level = level
+	e.logger = l
 	if l.Writer != nil {
 		e.w = l.Writer
 	} else {
@@ -1859,7 +1864,13 @@ func (e *Entry) Msg(msg string) {
 	}
 
 	if msg != "" {
-		e.buf = append(e.buf, ",\"message\":\""...)
+		messageField := "message"
+		if e.logger != nil && e.logger.MessageField != "" {
+			messageField = e.logger.MessageField
+		}
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, messageField...)
+		e.buf = append(e.buf, "\":\""...)
 		e.string(msg)
 		e.buf = append(e.buf, "\"}\n"...)
 	} else {
@@ -1900,7 +1911,13 @@ func (e *Entry) Msgf(format string, v ...any) {
 
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
-	e.buf = append(e.buf, ",\"message\":\""...)
+	messageField := "message"
+	if e.logger != nil && e.logger.MessageField != "" {
+		messageField = e.logger.MessageField
+	}
+	e.buf = append(e.buf, ",\""...)
+	e.buf = append(e.buf, messageField...)
+	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprintf(b, format, v...)
 	e.bytes(b.B)
 	e.buf = append(e.buf, '"')
@@ -1918,7 +1935,13 @@ func (e *Entry) Msgs(args ...any) {
 
 	b := bbpool.Get().(*bb)
 	b.B = b.B[:0]
-	e.buf = append(e.buf, ",\"message\":\""...)
+	messageField := "message"
+	if e.logger != nil && e.logger.MessageField != "" {
+		messageField = e.logger.MessageField
+	}
+	e.buf = append(e.buf, ",\""...)
+	e.buf = append(e.buf, messageField...)
+	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprint(b, args...)
 	e.bytes(b.B)
 	e.buf = append(e.buf, '"')
