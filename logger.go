@@ -2326,7 +2326,7 @@ func (e *Entry) Any(key string, value any) *Entry {
 		err := enc.Encode(value)
 		if err != nil {
 			b.B = b.B[:0]
-			fmt.Fprintf(b, `marshaling error: %+v`, err)
+			fmt.Fprintf(b, `%+v`, value)
 			e.buf = append(e.buf, '"')
 			e.bytes(b.B)
 			e.buf = append(e.buf, '"')
