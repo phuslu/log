@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['tip', '1.24', '1.23', '1.22', '1.21', '1.20', '1.19', '1.18']
+        go-version: ['tip', '1.25', '1.24', '1.23', '1.22', '1.21', '1.20', '1.19', '1.18']
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
