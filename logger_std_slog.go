@@ -328,7 +328,7 @@ func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 	}
 
 	// msg
-	e = e.Str("message", r.Message)
+	e = e.Str(MessageKey, r.Message)
 
 	// with
 	if b := h.entry.buf; len(b) != 0 {
