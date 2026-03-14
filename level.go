@@ -22,24 +22,12 @@ const (
 	noLevel Level = 8
 )
 
-// String return lowe case string of Level
+// String returns the string representation of the Level.
 func (l Level) String() (s string) {
-	switch l {
-	case TraceLevel:
-		s = "trace"
-	case DebugLevel:
-		s = "debug"
-	case InfoLevel:
-		s = "info"
-	case WarnLevel:
-		s = "warn"
-	case ErrorLevel:
-		s = "error"
-	case FatalLevel:
-		s = "fatal"
-	case PanicLevel:
-		s = "panic"
-	default:
+	if int(l) < len(LevelString) {
+		s = LevelString[l]
+	}
+	if s == "" {
 		s = "????"
 	}
 	return

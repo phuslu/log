@@ -472,7 +472,9 @@ func (l *Logger) header(level Level) *Entry {
 	}
 	// time
 	if l.TimeField == "" {
-		e.buf = append(e.buf, "{\"time\":"...)
+		e.buf = append(e.buf, "{\""...)
+		e.buf = append(e.buf, TimeKey...)
+		e.buf = append(e.buf, "\":"...)
 	} else {
 		e.buf = append(e.buf, '{', '"')
 		e.buf = append(e.buf, l.TimeField...)
@@ -664,21 +666,12 @@ func (l *Logger) header(level Level) *Entry {
 	}
 headerlevel:
 	// level
-	switch level {
-	case DebugLevel:
-		e.buf = append(e.buf, ",\"level\":\"debug\""...)
-	case InfoLevel:
-		e.buf = append(e.buf, ",\"level\":\"info\""...)
-	case WarnLevel:
-		e.buf = append(e.buf, ",\"level\":\"warn\""...)
-	case ErrorLevel:
-		e.buf = append(e.buf, ",\"level\":\"error\""...)
-	case TraceLevel:
-		e.buf = append(e.buf, ",\"level\":\"trace\""...)
-	case FatalLevel:
-		e.buf = append(e.buf, ",\"level\":\"fatal\""...)
-	case PanicLevel:
-		e.buf = append(e.buf, ",\"level\":\"panic\""...)
+	if int(level) < len(LevelString) && LevelString[level] != "" {
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, LevelString[level]...)
+		e.buf = append(e.buf, '"')
 	}
 	// context
 	if l.Context != nil {
@@ -1827,7 +1820,9 @@ func (e *Entry) Stack() *Entry {
 		return nil
 	}
 
-	e.buf = append(e.buf, ",\"stack\":\""...)
+	e.buf = append(e.buf, ",\""...)
+	e.buf = append(e.buf, StackKey...)
+	e.buf = append(e.buf, "\":\""...)
 	e.bytes(stacks(false))
 	e.buf = append(e.buf, '"')
 	return e
@@ -1852,8 +1847,37 @@ func (e *Entry) Discard() *Entry {
 
 var notTest = true
 
-// TimeFormatUnixWithMs defines the message key that makes message fields can be customized.
+// TimeKey defines the field name for the time field.
+var TimeKey = "time"
+
+// MessageKey defines the field name for the message field.
 var MessageKey = "message"
+
+// LevelKey defines the field name for the level field.
+var LevelKey = "level"
+
+// CallerKey defines the field name for the caller field.
+var CallerKey = "caller"
+
+// CallerFuncKey defines the field name for the caller function field.
+var CallerFuncKey = "callerfunc"
+
+// GoidKey defines the field name for the goroutine id field.
+var GoidKey = "goid"
+
+// StackKey defines the field name for the stack field.
+var StackKey = "stack"
+
+// LevelString defines the string representation for each level in JSON output.
+var LevelString = [8]string{
+	TraceLevel: "trace",
+	DebugLevel: "debug",
+	InfoLevel:  "info",
+	WarnLevel:  "warn",
+	ErrorLevel: "error",
+	FatalLevel: "fatal",
+	PanicLevel: "panic",
+}
 
 // Msg sends the entry with msg added as the message field if not empty.
 func (e *Entry) Msg(msg string) {
@@ -1966,13 +1990,19 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 		}
 	}
 
-	e.buf = append(e.buf, ",\"caller\":\""...)
+	e.buf = append(e.buf, ",\""...)
+	e.buf = append(e.buf, CallerKey...)
+	e.buf = append(e.buf, "\":\""...)
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
 	e.buf = strconv.AppendInt(e.buf, int64(line), 10)
-	e.buf = append(e.buf, "\",\"callerfunc\":\""...)
+	e.buf = append(e.buf, "\",\""...)
+	e.buf = append(e.buf, CallerFuncKey...)
+	e.buf = append(e.buf, "\":\""...)
 	e.buf = append(e.buf, name...)
-	e.buf = append(e.buf, "\",\"goid\":"...)
+	e.buf = append(e.buf, "\",\""...)
+	e.buf = append(e.buf, GoidKey...)
+	e.buf = append(e.buf, "\":"...)
 	e.buf = strconv.AppendInt(e.buf, int64(goid()), 10)
 }
 
