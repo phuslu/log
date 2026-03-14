@@ -121,7 +121,9 @@ func (h *stdSlogHandler) header(now time.Time) *Entry {
 	}
 	// time
 	if h.logger.TimeField == "" {
-		e.buf = append(e.buf, "{\"time\":"...)
+		e.buf = append(e.buf, "{\""...)
+		e.buf = append(e.buf, TimeKey...)
+		e.buf = append(e.buf, "\":"...)
 	} else {
 		e.buf = append(e.buf, '{', '"')
 		e.buf = append(e.buf, h.logger.TimeField...)
@@ -304,18 +306,21 @@ func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 	switch r.Level {
 	case slog.LevelDebug:
 		e.Level = DebugLevel
-		e.buf = append(e.buf, ",\"level\":\"debug\""...)
 	case slog.LevelInfo:
 		e.Level = InfoLevel
-		e.buf = append(e.buf, ",\"level\":\"info\""...)
 	case slog.LevelWarn:
 		e.Level = WarnLevel
-		e.buf = append(e.buf, ",\"level\":\"warn\""...)
 	case slog.LevelError:
 		e.Level = ErrorLevel
-		e.buf = append(e.buf, ",\"level\":\"error\""...)
 	default:
 		e.Level = noLevel
+	}
+	if int(e.Level) < len(LevelString) && LevelString[e.Level] != "" {
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, LevelString[e.Level]...)
+		e.buf = append(e.buf, '"')
 	}
 
 	if caller := h.logger.Caller; caller != 0 && r.PC != 0 {

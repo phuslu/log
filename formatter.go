@@ -37,20 +37,20 @@ func (args *FormatterArgs) Get(key string) (value string) {
 }
 
 func formatterArgsPos(key string) (pos int) {
-	switch key {
-	case "time":
+	switch {
+	case key == "time" || key == TimeKey:
 		pos = 1
-	case "level":
+	case key == "level" || key == LevelKey:
 		pos = 2
-	case "caller":
+	case key == "caller" || key == CallerKey:
 		pos = 3
-	case "callerfunc":
+	case key == "callerfunc" || key == CallerFuncKey:
 		pos = 4
-	case "goid":
+	case key == "goid" || key == GoidKey:
 		pos = 5
-	case "stack":
+	case key == "stack" || key == StackKey:
 		pos = 6
-	case "message", "msg", "_msg", MessageKey:
+	case key == "message" || key == "msg" || key == "_msg" || key == MessageKey:
 		pos = 7
 	}
 	return
