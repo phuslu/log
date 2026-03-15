@@ -114,7 +114,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 	// time
 	if !r.Time.IsZero() {
 		e.buf = append(e.buf, '"')
-		e.buf = append(e.buf, TimeKey...)
+		e.buf = append(e.buf, slog.TimeKey...)
 		e.buf = append(e.buf, `":"`...)
 		if timeOffset == 0 || r.Time.Location() == time.Local {
 			sec, nsec := r.Time.Unix(), r.Time.Nanosecond()
@@ -199,7 +199,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 
 	// level
 	e.buf = append(e.buf, '"')
-	e.buf = append(e.buf, LevelKey...)
+	e.buf = append(e.buf, slog.LevelKey...)
 	switch r.Level {
 	case slog.LevelDebug:
 		e.buf = append(e.buf, `":"DEBUG"`...)
@@ -235,7 +235,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 	}
 
 	// msg
-	e = e.Str(MessageKey, r.Message)
+	e = e.Str(slog.MessageKey, r.Message)
 
 	// with
 	if b := h.entry.buf; len(b) != 0 {
