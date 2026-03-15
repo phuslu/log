@@ -306,21 +306,34 @@ func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 	switch r.Level {
 	case slog.LevelDebug:
 		e.Level = DebugLevel
-	case slog.LevelInfo:
-		e.Level = InfoLevel
-	case slog.LevelWarn:
-		e.Level = WarnLevel
-	case slog.LevelError:
-		e.Level = ErrorLevel
-	default:
-		e.Level = noLevel
-	}
-	if int(e.Level) < len(LevelString) && LevelString[e.Level] != "" {
 		e.buf = append(e.buf, ",\""...)
 		e.buf = append(e.buf, LevelKey...)
 		e.buf = append(e.buf, "\":\""...)
-		e.buf = append(e.buf, LevelString[e.Level]...)
+		e.buf = append(e.buf, DebugLevelString...)
 		e.buf = append(e.buf, '"')
+	case slog.LevelInfo:
+		e.Level = InfoLevel
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, InfoLevelString...)
+		e.buf = append(e.buf, '"')
+	case slog.LevelWarn:
+		e.Level = WarnLevel
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, WarnLevelString...)
+		e.buf = append(e.buf, '"')
+	case slog.LevelError:
+		e.Level = ErrorLevel
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, ErrorLevelString...)
+		e.buf = append(e.buf, '"')
+	default:
+		e.Level = noLevel
 	}
 
 	if caller := h.logger.Caller; caller != 0 && r.PC != 0 {

@@ -666,11 +666,48 @@ func (l *Logger) header(level Level) *Entry {
 	}
 headerlevel:
 	// level
-	if int(level) < len(LevelString) && LevelString[level] != "" {
+	switch level {
+	case DebugLevel:
 		e.buf = append(e.buf, ",\""...)
 		e.buf = append(e.buf, LevelKey...)
 		e.buf = append(e.buf, "\":\""...)
-		e.buf = append(e.buf, LevelString[level]...)
+		e.buf = append(e.buf, DebugLevelString...)
+		e.buf = append(e.buf, '"')
+	case InfoLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, InfoLevelString...)
+		e.buf = append(e.buf, '"')
+	case WarnLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, WarnLevelString...)
+		e.buf = append(e.buf, '"')
+	case ErrorLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, ErrorLevelString...)
+		e.buf = append(e.buf, '"')
+	case TraceLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, TraceLevelString...)
+		e.buf = append(e.buf, '"')
+	case FatalLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, FatalLevelString...)
+		e.buf = append(e.buf, '"')
+	case PanicLevel:
+		e.buf = append(e.buf, ",\""...)
+		e.buf = append(e.buf, LevelKey...)
+		e.buf = append(e.buf, "\":\""...)
+		e.buf = append(e.buf, PanicLevelString...)
 		e.buf = append(e.buf, '"')
 	}
 	// context
@@ -1867,17 +1904,6 @@ var GoidKey = "goid"
 
 // StackKey defines the field name for the stack field.
 var StackKey = "stack"
-
-// LevelString defines the string representation for each level in JSON output.
-var LevelString = [8]string{
-	TraceLevel: "trace",
-	DebugLevel: "debug",
-	InfoLevel:  "info",
-	WarnLevel:  "warn",
-	ErrorLevel: "error",
-	FatalLevel: "fatal",
-	PanicLevel: "panic",
-}
 
 // Msg sends the entry with msg added as the message field if not empty.
 func (e *Entry) Msg(msg string) {

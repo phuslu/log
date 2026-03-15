@@ -22,12 +22,35 @@ const (
 	noLevel Level = 8
 )
 
+// XXXLevelString defines the string representation.
+var (
+	TraceLevelString = "trace"
+	DebugLevelString = "debug"
+	InfoLevelString  = "info"
+	WarnLevelString  = "warn"
+	ErrorLevelString = "error"
+	FatalLevelString = "fatal"
+	PanicLevelString = "panic"
+)
+
 // String returns the string representation of the Level.
 func (l Level) String() (s string) {
-	if int(l) < len(LevelString) {
-		s = LevelString[l]
-	}
-	if s == "" {
+	switch l {
+	case TraceLevel:
+		s = TraceLevelString
+	case DebugLevel:
+		s = DebugLevelString
+	case InfoLevel:
+		s = InfoLevelString
+	case WarnLevel:
+		s = WarnLevelString
+	case ErrorLevel:
+		s = ErrorLevelString
+	case FatalLevel:
+		s = FatalLevelString
+	case PanicLevel:
+		s = PanicLevelString
+	default:
 		s = "????"
 	}
 	return
