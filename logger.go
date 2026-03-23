@@ -1994,8 +1994,11 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 
 	file, line, name := pcFileLineName(pc)
 	if !fullpath {
-		var i, j int
-		for i = len(file) - 1; i >= 0; i-- {
+		var i, j, k int
+		if k = strings.IndexByte(file, '@'); k <= 0 {
+			k = len(file) - 1
+		}
+		for i = k; i >= 0; i-- {
 			if file[i] == '/' {
 				break
 			}
