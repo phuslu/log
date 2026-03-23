@@ -611,6 +611,53 @@ func TestFixMissingErrEntry(t *testing.T) {
 	}
 }
 
+func TestShortenFile(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		// With '@' - extract last path segment before '@' + version + file
+		{"github.com/urfave/cli/v2@v2.27.7/command.go", "cli@v2.27.7/command.go"},
+		{"github.com/go-redis/redis/v8@v8.11.0/redis.go", "redis@v8.11.0/redis.go"},
+		{"golang.org/x/net@v0.10.0/http2/server.go", "net@v0.10.0/http2/server.go"},
+		{"github.com/user/project@v1.0.0/main.go", "project@v1.0.0/main.go"},
+		// Without '@' - keep last two path segments
+		{"github.com/user/project/pkg/handler.go", "pkg/handler.go"},
+		{"myapp/internal/service/user.go", "service/user.go"},
+		{"a/b/c/d/file.go", "d/file.go"},
+		// Edge cases
+		{"single.go", "single.go"},
+		{"dir/file.go", "file.go"},
+		{"@version/file.go", "file.go"}, // '@' at start, pkgStart=-1, returns file
+	}
+	for _, tt := range tests {
+		got := shortenFile(tt.input)
+		if got != tt.expected {
+			t.Errorf("shortenFile(%q) = %q, want %q", tt.input, got, tt.expected)
+		}
+	}
+}
+
+func TestShortenName(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		// Function name format: package/path.function, extract part after last '/'
+		{"github.com/user/project/pkg.function", "pkg.function"},
+		{"main.main", "main.main"}, // No '/', keep as is
+		{"runtime.main", "runtime.main"},
+		{"single", "single"},
+		{"golang.org/x/net/http.server", "http.server"},
+	}
+	for _, tt := range tests {
+		got := shortenName(tt.input)
+		if got != tt.expected {
+			t.Errorf("shortenName(%q) = %q, want %q", tt.input, got, tt.expected)
+		}
+	}
+}
+
 func BenchmarkLogger(b *testing.B) {
 	logger := Logger{
 		TimeFormat: TimeFormatUnix,
@@ -622,5 +669,42 @@ func BenchmarkLogger(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
+	}
+}
+
+func BenchmarkShortenFile(b *testing.B) {
+	files := []string{
+		"github.com/urfave/cli/v2@v2.27.7/command.go",
+		"github.com/go-redis/redis/v8@v8.11.0/redis.go",
+		"golang.org/x/net@v0.10.0/http2/server.go",
+		"github.com/user/project@v1.0.0/main.go",
+		"internal/service/handler.go",
+		"main.go",
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, f := range files {
+			_ = shortenFile(f)
+		}
+	}
+}
+
+func BenchmarkShortenName(b *testing.B) {
+	names := []string{
+		"github.com/urfave/cli/v2.(*Command).Run",
+		"github.com/go-redis/redis/v8.(*Client).Get",
+		"golang.org/x/net/http2.(*Server).ServeConn",
+		"main.main",
+		"runtime.main",
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, n := range names {
+			_ = shortenName(n)
+		}
 	}
 }

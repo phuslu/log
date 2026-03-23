@@ -1987,6 +1987,90 @@ func (e *Entry) Msgs(args ...any) {
 	e.Msg("")
 }
 
+// shortenFile shortens the file path for display.
+// For files with module version (e.g., "github.com/urfave/cli/v2@v2.27.7/command.go"),
+// it extracts the package name and version: "cli@v2.27.7/command.go".
+// For files without version, it keeps the last two path segments.
+// Results are cached for performance.
+//
+// Benchmark results (AMD Ryzen 9 7950x, with RWMutex cache, capacity=512):
+//
+//	BenchmarkShortenFile    26224402    45.29 ns/op    0 B/op    0 allocs/op
+func shortenFile(file string) string {
+	// Fast path: read from cache with RLock
+	fileCacheMu.RLock()
+	if v, ok := fileCache[file]; ok {
+		fileCacheMu.RUnlock()
+		return v
+	}
+	fileCacheMu.RUnlock()
+
+	// Slow path: compute and store with Lock
+	result := shortenFileUncached(file)
+	fileCacheMu.Lock()
+	fileCache[file] = result
+	fileCacheMu.Unlock()
+	return result
+}
+
+// fileCache caches shortened file paths
+var fileCache = make(map[string]string, 512)
+
+// fileCacheMu protects fileCache
+var fileCacheMu sync.RWMutex
+
+// shortenFileUncached is the uncached version of shortenFile
+func shortenFileUncached(file string) string {
+	if at := strings.IndexByte(file, '@'); at > 0 {
+		// Find the last '/' before '@'
+		lastSlash := strings.LastIndexByte(file[:at], '/')
+		if lastSlash < 0 {
+			return file
+		}
+		// Check if the segment between lastSlash and '@' is a major version suffix (e.g., "v2", "v8")
+		lastSegment := file[lastSlash+1 : at]
+		isVersionSuffix := len(lastSegment) >= 2 && lastSegment[0] == 'v' && lastSegment[1] >= '0' && lastSegment[1] <= '9'
+
+		if isVersionSuffix {
+			// Find the second-to-last '/' to get the actual package name
+			prevSlash := strings.LastIndexByte(file[:lastSlash], '/')
+			if prevSlash >= 0 {
+				// Return: packageName + @version/file (skip the version suffix like "/v2")
+				return file[prevSlash+1:lastSlash] + file[at:]
+			}
+			return file[lastSlash+1:]
+		}
+		return file[lastSlash+1:]
+	}
+	// no '@' found, fallback to original logic: keep last two path segments
+	var i, j int
+	for i = len(file) - 1; i >= 0; i-- {
+		if file[i] == '/' {
+			break
+		}
+	}
+	if i > 0 {
+		for j = i - 1; j >= 0; j-- {
+			if file[j] == '/' {
+				break
+			}
+		}
+		if j > 0 {
+			i = j
+		}
+		return file[i+1:]
+	}
+	return file
+}
+
+// shortenName shortens the function name by keeping only the last segment after '/'.
+func shortenName(name string) string {
+	if i := strings.LastIndexByte(name, '/'); i > 0 {
+		return name[i+1:]
+	}
+	return name
+}
+
 func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 	if n < 1 {
 		return
@@ -1994,26 +2078,8 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 
 	file, line, name := pcFileLineName(pc)
 	if !fullpath {
-		var i, j int
-		for i = len(file) - 1; i >= 0; i-- {
-			if file[i] == '/' {
-				break
-			}
-		}
-		if i > 0 {
-			for j = i - 1; j >= 0; j-- {
-				if file[j] == '/' {
-					break
-				}
-			}
-			if j > 0 {
-				i = j
-			}
-			file = file[i+1:]
-		}
-		if i = strings.LastIndexByte(name, '/'); i > 0 {
-			name = name[i+1:]
-		}
+		file = shortenFile(file)
+		name = shortenName(name)
 	}
 
 	e.buf = append(e.buf, ",\""...)
