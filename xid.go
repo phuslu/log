@@ -42,7 +42,7 @@ func NewXIDWithTime(timestamp int64) (x XID) {
 
 // Time returns the timestamp part of the id.
 func (x XID) Time() time.Time {
-	return time.Unix(int64(x[0])<<32|int64(x[1])<<16|int64(x[2])<<8|int64(x[3]), 0)
+	return time.Unix(int64(x[0])<<24|int64(x[1])<<16|int64(x[2])<<8|int64(x[3]), 0)
 }
 
 // Machine returns the 3-byte machine id part of the id.
