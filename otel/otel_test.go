@@ -6,12 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/phuslu/log"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	otellog "go.opentelemetry.io/otel/log"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
@@ -225,7 +229,9 @@ func BenchmarkLoggerEmitNestedValues(b *testing.B) {
 	}
 
 	var record otellog.Record
+	record.SetTimestamp(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC))
 	record.SetSeverity(otellog.SeverityInfo)
+	record.SetSeverityText("INFO")
 	record.SetBody(otellog.StringValue("bench"))
 	record.AddAttributes(
 		otellog.String("component", "payment"),
@@ -246,5 +252,44 @@ func BenchmarkLoggerEmitNestedValues(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Emit(context.Background(), record)
+	}
+}
+
+func BenchmarkOTelSlogHandlerNestedValues(b *testing.B) {
+	exporter, err := stdoutlog.New(stdoutlog.WithWriter(io.Discard))
+	if err != nil {
+		b.Fatalf("create stdoutlog exporter: %v", err)
+	}
+	provider := sdklog.NewLoggerProvider(sdklog.WithProcessor(sdklog.NewSimpleProcessor(exporter)))
+	b.Cleanup(func() {
+		if err := provider.Shutdown(context.Background()); err != nil {
+			b.Fatalf("shutdown stdoutlog provider: %v", err)
+		}
+	})
+	handler := otelslog.NewHandler("benchmark", otelslog.WithLoggerProvider(provider))
+	record := slog.NewRecord(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC), slog.LevelInfo, "bench", 0)
+	record.AddAttrs(
+		slog.String("component", "payment"),
+		slog.Int64("answer", 42),
+		slog.Any("mixed", []any{
+			"item",
+			int64(7),
+			2.5,
+			map[string]any{
+				"name":   "alice",
+				"scores": []int64{1, 2},
+			},
+		}),
+	)
+
+	if err := handler.Handle(context.Background(), record); err != nil {
+		b.Fatalf("handle warmup record: %v", err)
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if err := handler.Handle(context.Background(), record); err != nil {
+			b.Fatalf("handle record: %v", err)
+		}
 	}
 }
