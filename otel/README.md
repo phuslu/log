@@ -15,8 +15,8 @@ import (
 
 func main() {
 	logger := phuslogotel.Logger{
-		Logger: phuslog.Logger{
-			Level: phuslog.InfoLevel
+		Log: phuslog.Logger{
+			Level: phuslog.InfoLevel,
 		},
 	}
 
@@ -30,3 +30,23 @@ func main() {
 ```
 
 Use `LoggerProvider` when integrating with OpenTelemetry code that expects a `log.LoggerProvider`.
+
+## Performance
+
+Nested OpenTelemetry values are encoded without building `[]any` or
+`map[string]any` intermediates. This keeps slice values, including maps and
+nested slices, on the zero-allocation path.
+
+Measured with Go 1.26.2 on linux/arm64:
+
+```sh
+go test -run=^$ -bench=BenchmarkLoggerEmitNestedValues -benchmem -count=10
+```
+
+Representative result:
+
+```text
+BenchmarkLoggerEmitNestedValues-4  1754367  691.0 ns/op  0 B/op  0 allocs/op
+```
+
+Across 10 runs: `682.5-695.2 ns/op`, `0 B/op`, `0 allocs/op`.
