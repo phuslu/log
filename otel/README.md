@@ -14,7 +14,11 @@ import (
 )
 
 func main() {
-	logger := phuslogotel.NewLogger(&phuslog.Logger{Level: phuslog.InfoLevel})
+	logger := phuslogotel.Logger{
+		Logger: phuslog.Logger{
+			Level: phuslog.InfoLevel
+		},
+	}
 
 	var record otellog.Record
 	record.SetSeverity(otellog.SeverityInfo)
@@ -25,4 +29,4 @@ func main() {
 }
 ```
 
-Use `NewLoggerProvider` when integrating with OpenTelemetry code that expects a `log.LoggerProvider`.
+Use `LoggerProvider` when integrating with OpenTelemetry code that expects a `log.LoggerProvider`.

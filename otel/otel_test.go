@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	phuslog "github.com/phuslu/log"
+	"github.com/phuslu/log"
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	oteltrace "go.opentelemetry.io/otel/trace"
@@ -25,13 +25,15 @@ func decodeLog(t *testing.T, b *bytes.Buffer) map[string]any {
 
 func TestLoggerEmit(t *testing.T) {
 	var b bytes.Buffer
-	logger := NewLogger(&phuslog.Logger{
-		Level: phuslog.DebugLevel,
-		Context: phuslog.NewContext(nil).
-			Str("service", "checkout").
-			Value(),
-		Writer: phuslog.IOWriter{Writer: &b},
-	})
+	logger := Logger{
+		Log: log.Logger{
+			Level: log.DebugLevel,
+			Context: log.NewContext(nil).
+				Str("service", "checkout").
+				Value(),
+			Writer: log.IOWriter{Writer: &b},
+		},
+	}
 
 	var record otellog.Record
 	record.SetTimestamp(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC))
@@ -62,14 +64,14 @@ func TestLoggerEmit(t *testing.T) {
 	logger.Emit(ctx, record)
 	got := decodeLog(t, &b)
 
-	if got[phuslog.LevelKey] != phuslog.WarnLevelString {
-		t.Fatalf("level = %v", got[phuslog.LevelKey])
+	if got[log.LevelKey] != log.WarnLevelString {
+		t.Fatalf("level = %v", got[log.LevelKey])
 	}
 	if got["severity_text"] != "WARN2" {
 		t.Fatalf("severity_text = %v", got["severity_text"])
 	}
-	if got[phuslog.MessageKey] != "hello from otel" {
-		t.Fatalf("message = %v", got[phuslog.MessageKey])
+	if got[log.MessageKey] != "hello from otel" {
+		t.Fatalf("message = %v", got[log.MessageKey])
 	}
 	if got["service"] != "checkout" || got["component"] != "payment" {
 		t.Fatalf("context/attribute fields missing: %#v", got)
@@ -102,10 +104,12 @@ func TestLoggerEmit(t *testing.T) {
 
 func TestLoggerStructuredBody(t *testing.T) {
 	var b bytes.Buffer
-	logger := NewLogger(&phuslog.Logger{
-		Level:  phuslog.InfoLevel,
-		Writer: phuslog.IOWriter{Writer: &b},
-	})
+	logger := Logger{
+		Log: log.Logger{
+			Level:  log.InfoLevel,
+			Writer: log.IOWriter{Writer: &b},
+		},
+	}
 
 	var record otellog.Record
 	record.SetSeverity(otellog.SeverityInfo)
@@ -117,9 +121,9 @@ func TestLoggerStructuredBody(t *testing.T) {
 	logger.Emit(context.Background(), record)
 	got := decodeLog(t, &b)
 
-	body, ok := got[phuslog.MessageKey].(map[string]any)
+	body, ok := got[log.MessageKey].(map[string]any)
 	if !ok {
-		t.Fatalf("structured body = %#v", got[phuslog.MessageKey])
+		t.Fatalf("structured body = %#v", got[log.MessageKey])
 	}
 	if body["event"] != "cache_miss" || body["attempt"] != float64(2) {
 		t.Fatalf("structured body fields = %#v", body)
@@ -128,10 +132,12 @@ func TestLoggerStructuredBody(t *testing.T) {
 
 func TestLoggerEnabledAndFatalNoExit(t *testing.T) {
 	var b bytes.Buffer
-	logger := NewLogger(&phuslog.Logger{
-		Level:  phuslog.ErrorLevel,
-		Writer: phuslog.IOWriter{Writer: &b},
-	})
+	logger := Logger{
+		Log: log.Logger{
+			Level:  log.ErrorLevel,
+			Writer: log.IOWriter{Writer: &b},
+		},
+	}
 
 	var info otellog.Record
 	info.SetSeverity(otellog.SeverityInfo)
@@ -152,17 +158,19 @@ func TestLoggerEnabledAndFatalNoExit(t *testing.T) {
 	}
 	logger.Emit(context.Background(), fatal)
 	got := decodeLog(t, &b)
-	if got[phuslog.LevelKey] != phuslog.FatalLevelString {
-		t.Fatalf("fatal level = %v", got[phuslog.LevelKey])
+	if got[log.LevelKey] != log.FatalLevelString {
+		t.Fatalf("fatal level = %v", got[log.LevelKey])
 	}
 }
 
 func TestLoggerProviderScope(t *testing.T) {
 	var b bytes.Buffer
-	provider := NewLoggerProvider(&phuslog.Logger{
-		Level:  phuslog.InfoLevel,
-		Writer: phuslog.IOWriter{Writer: &b},
-	})
+	provider := LoggerProvider{
+		Log: log.Logger{
+			Level:  log.InfoLevel,
+			Writer: log.IOWriter{Writer: &b},
+		},
+	}
 	logger := provider.Logger(
 		"github.com/example/instrumentation",
 		otellog.WithInstrumentationVersion("v1.2.3"),

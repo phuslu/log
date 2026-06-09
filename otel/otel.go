@@ -3,7 +3,7 @@ package otel
 import (
 	"context"
 
-	phuslog "github.com/phuslu/log"
+	"github.com/phuslu/log"
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/embedded"
@@ -25,21 +25,22 @@ type FieldNames struct {
 	ScopeAttributes string
 }
 
-type config struct {
-	fields       FieldNames
-	traceContext bool
-	scopeFields  bool
-}
-
-// Option configures the OpenTelemetry-to-phuslog adapter.
-type Option func(*config)
-
 // Logger bridges OpenTelemetry log records into a phuslog Logger.
 type Logger struct {
 	embedded.Logger
 
-	logger       phuslog.Logger
-	config       config
+	// Logger specifies the output logger.
+	Log log.Logger
+
+	// FieldNames overrides non-empty OpenTelemetry metadata field names.
+	FieldNames FieldNames
+
+	// DisableTraceContext disables trace_id, span_id, and trace_flags extraction.
+	DisableTraceContext bool
+
+	// DisableScopeFields disables instrumentation scope fields from LoggerProvider.
+	DisableScopeFields bool
+
 	scopeName    string
 	scopeVersion string
 	scopeSchema  string
@@ -50,209 +51,171 @@ type Logger struct {
 type LoggerProvider struct {
 	embedded.LoggerProvider
 
-	logger phuslog.Logger
-	config config
+	// Log specifies the output logger.
+	Log log.Logger
+
+	// FieldNames overrides non-empty OpenTelemetry metadata field names.
+	FieldNames FieldNames
+
+	// DisableTraceContext disables trace_id, span_id, and trace_flags extraction.
+	DisableTraceContext bool
+
+	// DisableScopeFields disables instrumentation scope fields.
+	DisableScopeFields bool
 }
 
-func defaultConfig() config {
-	return config{
-		fields: FieldNames{
-			Timestamp:       "timestamp",
-			ObservedTime:    "observed_time",
-			EventName:       "event_name",
-			SeverityText:    "severity_text",
-			TraceID:         "trace_id",
-			SpanID:          "span_id",
-			TraceFlags:      "trace_flags",
-			ScopeName:       "scope_name",
-			ScopeVersion:    "scope_version",
-			ScopeSchemaURL:  "scope_schema_url",
-			ScopeAttributes: "scope_attributes",
-		},
-		traceContext: true,
-		scopeFields:  true,
-	}
+var defaultFieldNames = FieldNames{
+	Timestamp:       "timestamp",
+	ObservedTime:    "observed_time",
+	EventName:       "event_name",
+	SeverityText:    "severity_text",
+	TraceID:         "trace_id",
+	SpanID:          "span_id",
+	TraceFlags:      "trace_flags",
+	ScopeName:       "scope_name",
+	ScopeVersion:    "scope_version",
+	ScopeSchemaURL:  "scope_schema_url",
+	ScopeAttributes: "scope_attributes",
 }
 
-func applyOptions(options []Option) config {
-	c := defaultConfig()
-	for _, option := range options {
-		if option != nil {
-			option(&c)
-		}
+func fieldNames(names FieldNames) FieldNames {
+	fields := defaultFieldNames
+	if names.Timestamp != "" {
+		fields.Timestamp = names.Timestamp
 	}
-	return c
+	if names.ObservedTime != "" {
+		fields.ObservedTime = names.ObservedTime
+	}
+	if names.EventName != "" {
+		fields.EventName = names.EventName
+	}
+	if names.SeverityText != "" {
+		fields.SeverityText = names.SeverityText
+	}
+	if names.TraceID != "" {
+		fields.TraceID = names.TraceID
+	}
+	if names.SpanID != "" {
+		fields.SpanID = names.SpanID
+	}
+	if names.TraceFlags != "" {
+		fields.TraceFlags = names.TraceFlags
+	}
+	if names.ScopeName != "" {
+		fields.ScopeName = names.ScopeName
+	}
+	if names.ScopeVersion != "" {
+		fields.ScopeVersion = names.ScopeVersion
+	}
+	if names.ScopeSchemaURL != "" {
+		fields.ScopeSchemaURL = names.ScopeSchemaURL
+	}
+	if names.ScopeAttributes != "" {
+		fields.ScopeAttributes = names.ScopeAttributes
+	}
+	return fields
 }
 
-func loggerValue(logger *phuslog.Logger) phuslog.Logger {
-	if logger == nil {
-		return phuslog.DefaultLogger
-	}
-	l := *logger
+func (l Logger) log() log.Logger {
+	logger := l.Log
 	// OpenTelemetry records do not carry a program counter. Keeping Caller on
 	// would report this adapter instead of the application call site.
-	l.Caller = 0
-	return l
-}
-
-// WithFieldNames overrides non-empty OpenTelemetry metadata field names.
-func WithFieldNames(names FieldNames) Option {
-	return func(c *config) {
-		if names.Timestamp != "" {
-			c.fields.Timestamp = names.Timestamp
-		}
-		if names.ObservedTime != "" {
-			c.fields.ObservedTime = names.ObservedTime
-		}
-		if names.EventName != "" {
-			c.fields.EventName = names.EventName
-		}
-		if names.SeverityText != "" {
-			c.fields.SeverityText = names.SeverityText
-		}
-		if names.TraceID != "" {
-			c.fields.TraceID = names.TraceID
-		}
-		if names.SpanID != "" {
-			c.fields.SpanID = names.SpanID
-		}
-		if names.TraceFlags != "" {
-			c.fields.TraceFlags = names.TraceFlags
-		}
-		if names.ScopeName != "" {
-			c.fields.ScopeName = names.ScopeName
-		}
-		if names.ScopeVersion != "" {
-			c.fields.ScopeVersion = names.ScopeVersion
-		}
-		if names.ScopeSchemaURL != "" {
-			c.fields.ScopeSchemaURL = names.ScopeSchemaURL
-		}
-		if names.ScopeAttributes != "" {
-			c.fields.ScopeAttributes = names.ScopeAttributes
-		}
-	}
-}
-
-// WithoutTraceContext disables trace_id, span_id, and trace_flags extraction.
-func WithoutTraceContext() Option {
-	return func(c *config) {
-		c.traceContext = false
-	}
-}
-
-// WithoutScopeFields disables instrumentation scope fields from LoggerProvider.
-func WithoutScopeFields() Option {
-	return func(c *config) {
-		c.scopeFields = false
-	}
-}
-
-// NewLogger returns an OpenTelemetry Logs API logger backed by logger.
-func NewLogger(logger *phuslog.Logger, options ...Option) *Logger {
-	return &Logger{
-		logger: loggerValue(logger),
-		config: applyOptions(options),
-	}
-}
-
-// NewLoggerProvider returns an OpenTelemetry Logs API provider backed by logger.
-func NewLoggerProvider(logger *phuslog.Logger, options ...Option) *LoggerProvider {
-	return &LoggerProvider{
-		logger: loggerValue(logger),
-		config: applyOptions(options),
-	}
+	logger.Caller = 0
+	return logger
 }
 
 // Logger returns a scoped OpenTelemetry logger.
-func (p *LoggerProvider) Logger(name string, options ...otellog.LoggerOption) otellog.Logger {
+func (p LoggerProvider) Logger(name string, options ...otellog.LoggerOption) otellog.Logger {
 	cfg := otellog.NewLoggerConfig(options...)
 	attrs := cfg.InstrumentationAttributes()
-	return &Logger{
-		logger:       p.logger,
-		config:       p.config,
-		scopeName:    name,
-		scopeVersion: cfg.InstrumentationVersion(),
-		scopeSchema:  cfg.SchemaURL(),
-		scopeAttrs:   attrs.ToSlice(),
+	return Logger{
+		Log:                 p.Log,
+		FieldNames:          p.FieldNames,
+		DisableTraceContext: p.DisableTraceContext,
+		DisableScopeFields:  p.DisableScopeFields,
+		scopeName:           name,
+		scopeVersion:        cfg.InstrumentationVersion(),
+		scopeSchema:         cfg.SchemaURL(),
+		scopeAttrs:          attrs.ToSlice(),
 	}
 }
 
-func phuslogLevel(severity otellog.Severity) (phuslog.Level, bool) {
+func logLevel(severity otellog.Severity) (log.Level, bool) {
 	switch {
 	case severity >= otellog.SeverityFatal1:
-		return phuslog.FatalLevel, true
+		return log.FatalLevel, true
 	case severity >= otellog.SeverityError1:
-		return phuslog.ErrorLevel, true
+		return log.ErrorLevel, true
 	case severity >= otellog.SeverityWarn1:
-		return phuslog.WarnLevel, true
+		return log.WarnLevel, true
 	case severity >= otellog.SeverityInfo1:
-		return phuslog.InfoLevel, true
+		return log.InfoLevel, true
 	case severity >= otellog.SeverityDebug1:
-		return phuslog.DebugLevel, true
+		return log.DebugLevel, true
 	case severity >= otellog.SeverityTrace1:
-		return phuslog.TraceLevel, true
+		return log.TraceLevel, true
 	default:
 		return 0, false
 	}
 }
 
-func levelString(level phuslog.Level) string {
+func levelString(level log.Level) string {
 	switch level {
-	case phuslog.TraceLevel:
-		return phuslog.TraceLevelString
-	case phuslog.DebugLevel:
-		return phuslog.DebugLevelString
-	case phuslog.InfoLevel:
-		return phuslog.InfoLevelString
-	case phuslog.WarnLevel:
-		return phuslog.WarnLevelString
-	case phuslog.ErrorLevel:
-		return phuslog.ErrorLevelString
-	case phuslog.FatalLevel:
-		return phuslog.FatalLevelString
-	case phuslog.PanicLevel:
-		return phuslog.PanicLevelString
+	case log.TraceLevel:
+		return log.TraceLevelString
+	case log.DebugLevel:
+		return log.DebugLevelString
+	case log.InfoLevel:
+		return log.InfoLevelString
+	case log.WarnLevel:
+		return log.WarnLevelString
+	case log.ErrorLevel:
+		return log.ErrorLevelString
+	case log.FatalLevel:
+		return log.FatalLevelString
+	case log.PanicLevel:
+		return log.PanicLevelString
 	default:
 		return ""
 	}
 }
 
-func (l *Logger) enabled(level phuslog.Level, ok bool) bool {
-	return !ok || level >= l.logger.Level
+func (l Logger) enabled(level log.Level, ok bool) bool {
+	return !ok || level >= l.Log.Level
 }
 
-func (l *Logger) newEntry(level phuslog.Level, ok bool) *phuslog.Entry {
+func (l Logger) newEntry(level log.Level, ok bool) *log.Entry {
+	logger := l.log()
 	if !ok {
-		return l.logger.Log()
+		return logger.Log()
 	}
 	if !l.enabled(level, ok) {
 		return nil
 	}
-	if level == phuslog.FatalLevel || level == phuslog.PanicLevel {
-		return l.logger.Log().Str(phuslog.LevelKey, levelString(level))
+	if level == log.FatalLevel || level == log.PanicLevel {
+		return logger.Log().Str(log.LevelKey, levelString(level))
 	}
-	return l.logger.WithLevel(level)
+	return logger.WithLevel(level)
 }
 
 // Enabled reports whether the logger would emit a record with param.
-func (l *Logger) Enabled(_ context.Context, param otellog.EnabledParameters) bool {
-	level, ok := phuslogLevel(param.Severity)
+func (l Logger) Enabled(_ context.Context, param otellog.EnabledParameters) bool {
+	level, ok := logLevel(param.Severity)
 	return l.enabled(level, ok)
 }
 
-// Emit emits an OpenTelemetry log record to phuslog.
-func (l *Logger) Emit(ctx context.Context, record otellog.Record) {
-	level, ok := phuslogLevel(record.Severity())
+// Emit emits an OpenTelemetry log record to log.
+func (l Logger) Emit(ctx context.Context, record otellog.Record) {
+	level, ok := logLevel(record.Severity())
 	e := l.newEntry(level, ok)
 	if e == nil {
 		return
 	}
 
-	fields := l.config.fields
+	fields := fieldNames(l.FieldNames)
 	if !ok {
 		if text := record.SeverityText(); text != "" {
-			e = e.Str(phuslog.LevelKey, text)
+			e = e.Str(log.LevelKey, text)
 		}
 	} else if text := record.SeverityText(); text != "" && fields.SeverityText != "" {
 		e = e.Str(fields.SeverityText, text)
@@ -271,7 +234,7 @@ func (l *Logger) Emit(ctx context.Context, record otellog.Record) {
 		e = e.Err(err)
 	}
 
-	if l.config.scopeFields {
+	if !l.DisableScopeFields {
 		if l.scopeName != "" && fields.ScopeName != "" {
 			e = e.Str(fields.ScopeName, l.scopeName)
 		}
@@ -286,7 +249,7 @@ func (l *Logger) Emit(ctx context.Context, record otellog.Record) {
 		}
 	}
 
-	if l.config.traceContext {
+	if !l.DisableTraceContext {
 		if sc := oteltrace.SpanContextFromContext(ctx); sc.IsValid() {
 			if fields.TraceID != "" {
 				e = e.Str(fields.TraceID, sc.TraceID().String())
@@ -301,7 +264,7 @@ func (l *Logger) Emit(ctx context.Context, record otellog.Record) {
 	}
 
 	if body := record.Body(); !body.Empty() {
-		e = appendValue(e, phuslog.MessageKey, body)
+		e = appendValue(e, log.MessageKey, body)
 	}
 	record.WalkAttributes(func(kv otellog.KeyValue) bool {
 		e = appendValue(e, kv.Key, kv.Value)
@@ -310,7 +273,7 @@ func (l *Logger) Emit(ctx context.Context, record otellog.Record) {
 	e.Msg("")
 }
 
-func appendValue(e *phuslog.Entry, key string, value otellog.Value) *phuslog.Entry {
+func appendValue(e *log.Entry, key string, value otellog.Value) *log.Entry {
 	switch value.Kind() {
 	case otellog.KindBool:
 		return e.Bool(key, value.AsBool())
@@ -368,7 +331,7 @@ func anyValue(value otellog.Value) any {
 
 type mapValue []otellog.KeyValue
 
-func (m mapValue) MarshalObject(e *phuslog.Entry) {
+func (m mapValue) MarshalObject(e *log.Entry) {
 	for _, kv := range m {
 		e = appendValue(e, kv.Key, kv.Value)
 	}
@@ -376,13 +339,13 @@ func (m mapValue) MarshalObject(e *phuslog.Entry) {
 
 type attributeMap []attribute.KeyValue
 
-func (m attributeMap) MarshalObject(e *phuslog.Entry) {
+func (m attributeMap) MarshalObject(e *log.Entry) {
 	for _, kv := range m {
 		e = e.Any(string(kv.Key), kv.Value.AsInterface())
 	}
 }
 
 var (
-	_ otellog.Logger         = (*Logger)(nil)
-	_ otellog.LoggerProvider = (*LoggerProvider)(nil)
+	_ otellog.Logger         = Logger{}
+	_ otellog.LoggerProvider = LoggerProvider{}
 )
