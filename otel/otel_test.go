@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
@@ -50,6 +51,11 @@ func TestLoggerEmit(t *testing.T) {
 		otellog.Map("nested",
 			otellog.String("name", "alice"),
 			otellog.Slice("scores", otellog.Int64Value(1), otellog.Float64Value(2.5)),
+		),
+		otellog.Slice("mixed",
+			otellog.StringValue("item"),
+			otellog.MapValue(otellog.Bool("enabled", true)),
+			otellog.SliceValue(otellog.Int64Value(7), otellog.StringValue("inner")),
 		),
 	)
 
@@ -99,6 +105,21 @@ func TestLoggerEmit(t *testing.T) {
 	scores, ok := nested["scores"].([]any)
 	if !ok || len(scores) != 2 || scores[0] != float64(1) || scores[1] != 2.5 {
 		t.Fatalf("nested.scores = %#v", nested["scores"])
+	}
+	mixed, ok := got["mixed"].([]any)
+	if !ok || len(mixed) != 3 {
+		t.Fatalf("mixed = %#v", got["mixed"])
+	}
+	if mixed[0] != "item" {
+		t.Fatalf("mixed[0] = %#v", mixed[0])
+	}
+	mixedMap, ok := mixed[1].(map[string]any)
+	if !ok || mixedMap["enabled"] != true {
+		t.Fatalf("mixed[1] = %#v", mixed[1])
+	}
+	mixedSlice, ok := mixed[2].([]any)
+	if !ok || len(mixedSlice) != 2 || mixedSlice[0] != float64(7) || mixedSlice[1] != "inner" {
+		t.Fatalf("mixed[2] = %#v", mixed[2])
 	}
 }
 
@@ -192,5 +213,38 @@ func TestLoggerProviderScope(t *testing.T) {
 	scopeAttrs, ok := got["scope_attributes"].(map[string]any)
 	if !ok || scopeAttrs["library.language"] != "go" {
 		t.Fatalf("scope attributes missing: %#v", got["scope_attributes"])
+	}
+}
+
+func BenchmarkLoggerEmitNestedValues(b *testing.B) {
+	logger := Logger{
+		Log: log.Logger{
+			Level:  log.InfoLevel,
+			Writer: log.IOWriter{Writer: io.Discard},
+		},
+	}
+
+	var record otellog.Record
+	record.SetSeverity(otellog.SeverityInfo)
+	record.SetBody(otellog.StringValue("bench"))
+	record.AddAttributes(
+		otellog.String("component", "payment"),
+		otellog.Int64("answer", 42),
+		otellog.Slice("mixed",
+			otellog.StringValue("item"),
+			otellog.Int64Value(7),
+			otellog.Float64Value(2.5),
+			otellog.MapValue(
+				otellog.String("name", "alice"),
+				otellog.Slice("scores", otellog.Int64Value(1), otellog.Int64Value(2)),
+			),
+		),
+	)
+
+	logger.Emit(context.Background(), record)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Emit(context.Background(), record)
 	}
 }
