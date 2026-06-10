@@ -360,6 +360,14 @@ func appendJSONMap(b *[]byte, values []otellog.KeyValue) {
 }
 
 func appendJSONFloat(b []byte, f float64, bits int) []byte {
+	switch {
+	case math.IsNaN(f):
+		return append(b, `"NaN"`...)
+	case math.IsInf(f, 1):
+		return append(b, `"+Inf"`...)
+	case math.IsInf(f, -1):
+		return append(b, `"-Inf"`...)
+	}
 	abs := math.Abs(f)
 	fmt := byte('f')
 	if abs != 0 {
