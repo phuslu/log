@@ -42,32 +42,29 @@ Use `LoggerProvider` when integrating with OpenTelemetry code that expects a `lo
 
 ## Performance
 
-Nested OpenTelemetry values are encoded without building `[]any` or
-`map[string]any` intermediates. This keeps direct `otellog.Record` slice
-values, including maps and nested slices, on the zero-allocation path.
-
-The slog comparison uses the official
-`go.opentelemetry.io/contrib/bridges/otelslog` handler with the official
-OpenTelemetry Logs SDK `LoggerProvider`, `SimpleProcessor`, and `stdoutlog`
-JSON exporter writing to `io.Discard`. This keeps both paths on synchronous JSON
-encoding and discard-output paths.
+Benchmarks compare this adapter with the official OpenTelemetry `stdoutlog`
+exporter, both writing equivalent nested log records as JSON to `io.Discard`.
+The `stdoutlog` benchmark is an exporter-only lower bound; it skips the SDK
+logger and processor path.
+In this nested-record benchmark, the direct adapter path runs with `0 B/op` and
+`0 allocs/op`.
 
 Measured with Go 1.26.2 on linux/arm64:
 
 ```sh
-go test -run=^$ -bench='Benchmark(LoggerEmitNestedValues|OTelSlogHandlerNestedValues)$' -benchmem -count=10
+go test -run=^$ -bench='Benchmark(PhusluLoggerEmitNestedValues|OTelStdoutExporterNestedValues)$' -benchmem -count=10
 ```
 
 Representative result:
 
 ```text
-BenchmarkLoggerEmitNestedValues-4        1261096    954.4 ns/op     0 B/op   0 allocs/op
-BenchmarkOTelSlogHandlerNestedValues-4     36734  32775 ns/op    3896 B/op  69 allocs/op
+BenchmarkPhusluLoggerEmitNestedValues-4         1000000    1008 ns/op       0 B/op   0 allocs/op
+BenchmarkOTelStdoutExporterNestedValues-4         67358   18098 ns/op    2178 B/op  41 allocs/op
 ```
 
 Across 10 runs:
 
 | Benchmark | Path | Result range |
 | --- | --- | --- |
-| `BenchmarkLoggerEmitNestedValues` | prebuilt `otellog.Record` to phuslog JSON writer | `947.8-976.3 ns/op`, `0 B/op`, `0 allocs/op` |
-| `BenchmarkOTelSlogHandlerNestedValues` | prebuilt `slog.Record` through `otelslog`, SDK provider, `SimpleProcessor`, and `stdoutlog` JSON exporter | `31747-33334 ns/op`, `3895-3896 B/op`, `69 allocs/op` |
+| `BenchmarkPhusluLoggerEmitNestedValues` | `otellog.Record` to phuslog JSON | `1000-1015 ns/op`, `0 B/op`, `0 allocs/op` |
+| `BenchmarkOTelStdoutExporterNestedValues` | `sdklog.Record` through `stdoutlog` | `17964-18289 ns/op`, `2177-2178 B/op`, `41 allocs/op` |

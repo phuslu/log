@@ -6,12 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/phuslu/log"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	otellog "go.opentelemetry.io/otel/log"
@@ -250,14 +248,7 @@ func TestLoggerProviderScope(t *testing.T) {
 	}
 }
 
-func BenchmarkLoggerEmitNestedValues(b *testing.B) {
-	logger := Logger{
-		Log: log.Logger{
-			Level:  log.InfoLevel,
-			Writer: log.IOWriter{Writer: io.Discard},
-		},
-	}
-
+func nestedBenchmarkRecord() otellog.Record {
 	var record otellog.Record
 	record.SetTimestamp(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC))
 	record.SetSeverity(otellog.SeverityInfo)
@@ -276,6 +267,39 @@ func BenchmarkLoggerEmitNestedValues(b *testing.B) {
 			),
 		),
 	)
+	return record
+}
+
+func nestedBenchmarkSDKRecord() sdklog.Record {
+	var record sdklog.Record
+	record.SetTimestamp(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC))
+	record.SetSeverity(otellog.SeverityInfo)
+	record.SetSeverityText("INFO")
+	record.SetBody(otellog.StringValue("bench"))
+	record.SetAttributes(
+		otellog.String("component", "payment"),
+		otellog.Int64("answer", 42),
+		otellog.Slice("mixed",
+			otellog.StringValue("item"),
+			otellog.Int64Value(7),
+			otellog.Float64Value(2.5),
+			otellog.MapValue(
+				otellog.String("name", "alice"),
+				otellog.Slice("scores", otellog.Int64Value(1), otellog.Int64Value(2)),
+			),
+		),
+	)
+	return record
+}
+
+func BenchmarkPhusluLoggerEmitNestedValues(b *testing.B) {
+	logger := Logger{
+		Log: log.Logger{
+			Level:  log.InfoLevel,
+			Writer: log.IOWriter{Writer: io.Discard},
+		},
+	}
+	record := nestedBenchmarkRecord()
 
 	logger.Emit(context.Background(), record)
 	b.ReportAllocs()
@@ -285,41 +309,26 @@ func BenchmarkLoggerEmitNestedValues(b *testing.B) {
 	}
 }
 
-func BenchmarkOTelSlogHandlerNestedValues(b *testing.B) {
+func BenchmarkOTelStdoutExporterNestedValues(b *testing.B) {
 	exporter, err := stdoutlog.New(stdoutlog.WithWriter(io.Discard))
 	if err != nil {
 		b.Fatalf("create stdoutlog exporter: %v", err)
 	}
-	provider := sdklog.NewLoggerProvider(sdklog.WithProcessor(sdklog.NewSimpleProcessor(exporter)))
 	b.Cleanup(func() {
-		if err := provider.Shutdown(context.Background()); err != nil {
-			b.Fatalf("shutdown stdoutlog provider: %v", err)
+		if err := exporter.Shutdown(context.Background()); err != nil {
+			b.Fatalf("shutdown stdoutlog exporter: %v", err)
 		}
 	})
-	handler := otelslog.NewHandler("benchmark", otelslog.WithLoggerProvider(provider))
-	record := slog.NewRecord(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC), slog.LevelInfo, "bench", 0)
-	record.AddAttrs(
-		slog.String("component", "payment"),
-		slog.Int64("answer", 42),
-		slog.Any("mixed", []any{
-			"item",
-			int64(7),
-			2.5,
-			map[string]any{
-				"name":   "alice",
-				"scores": []int64{1, 2},
-			},
-		}),
-	)
+	records := []sdklog.Record{nestedBenchmarkSDKRecord()}
 
-	if err := handler.Handle(context.Background(), record); err != nil {
-		b.Fatalf("handle warmup record: %v", err)
+	if err := exporter.Export(context.Background(), records); err != nil {
+		b.Fatalf("export warmup record: %v", err)
 	}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := handler.Handle(context.Background(), record); err != nil {
-			b.Fatalf("handle record: %v", err)
+		if err := exporter.Export(context.Background(), records); err != nil {
+			b.Fatalf("export record: %v", err)
 		}
 	}
 }
