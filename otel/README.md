@@ -1,6 +1,15 @@
 # phuslog OpenTelemetry Logs Adapter
 
-This submodule bridges OpenTelemetry Logs API records to `github.com/phuslu/log`.
+This submodule is for applications that want OpenTelemetry Logs API
+compatibility while keeping phuslog JSON as the log output format. It bridges
+OpenTelemetry Logs API records to `github.com/phuslu/log`, preserving common
+OpenTelemetry metadata such as severity, trace context, scope, and attributes as
+JSON fields.
+
+It is not an OTLP exporter and does not implement the OpenTelemetry SDK
+pipeline. To send logs to an OpenTelemetry Collector, write phuslog JSON to
+stdout or a file and configure a Collector receiver, or use an OpenTelemetry SDK
+exporter separately.
 
 ```go
 package main
