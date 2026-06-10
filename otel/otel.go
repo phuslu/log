@@ -4,7 +4,7 @@ import (
 	"context"
 	"math"
 	"strconv"
-	"sync"
+	_ "unsafe"
 
 	"github.com/phuslu/log"
 	"go.opentelemetry.io/otel/attribute"
@@ -12,6 +12,9 @@ import (
 	"go.opentelemetry.io/otel/log/embedded"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
+
+//go:linkname entrybuf github.com/phuslu/log.entrybuf
+func entrybuf(e *log.Entry) *[]byte
 
 // FieldNames controls the phuslog fields used for OpenTelemetry metadata.
 type FieldNames struct {
@@ -299,78 +302,61 @@ func appendValue(e *log.Entry, key string, value otellog.Value) *log.Entry {
 	}
 }
 
-type valueBuffer struct {
-	B []byte
-}
-
-var valueBufferPool = sync.Pool{
-	New: func() any {
-		return &valueBuffer{B: make([]byte, 0, 1024)}
-	},
-}
-
-const valueBufferCap = 1 << 16
-
 func appendSlice(e *log.Entry, key string, values []otellog.Value) *log.Entry {
 	if e == nil {
 		return nil
 	}
-	if len(values) == 0 {
-		return e.RawJSONStr(key, "[]")
-	}
-
-	b := valueBufferPool.Get().(*valueBuffer)
-	b.B = appendJSONSlice(b.B[:0], values)
-	e = e.RawJSON(key, b.B)
-	if cap(b.B) <= valueBufferCap {
-		valueBufferPool.Put(b)
-	}
+	b := entrybuf(e)
+	*b = append(*b, ',', '"')
+	*b = append(*b, key...)
+	*b = append(*b, '"', ':')
+	appendJSONSlice(b, values)
 	return e
 }
 
-func appendJSONValue(b []byte, value otellog.Value) []byte {
+func appendJSONValue(b *[]byte, value otellog.Value) {
 	switch value.Kind() {
 	case otellog.KindBool:
-		return strconv.AppendBool(b, value.AsBool())
+		*b = strconv.AppendBool(*b, value.AsBool())
 	case otellog.KindFloat64:
-		return appendJSONFloat(b, value.AsFloat64(), 64)
+		*b = appendJSONFloat(*b, value.AsFloat64(), 64)
 	case otellog.KindInt64:
-		return strconv.AppendInt(b, value.AsInt64(), 10)
+		*b = strconv.AppendInt(*b, value.AsInt64(), 10)
 	case otellog.KindString:
-		return appendJSONString(b, value.AsString())
+		appendJSONString(b, value.AsString())
 	case otellog.KindBytes:
-		return appendJSONBytes(b, value.AsBytes())
+		appendJSONBytes(b, value.AsBytes())
 	case otellog.KindSlice:
-		return appendJSONSlice(b, value.AsSlice())
+		appendJSONSlice(b, value.AsSlice())
 	case otellog.KindMap:
-		return appendJSONMap(b, value.AsMap())
+		appendJSONMap(b, value.AsMap())
 	default:
-		return append(b, "null"...)
+		*b = append(*b, "null"...)
 	}
 }
 
-func appendJSONSlice(b []byte, values []otellog.Value) []byte {
-	b = append(b, '[')
+func appendJSONSlice(b *[]byte, values []otellog.Value) {
+	*b = append(*b, '[')
 	for i, value := range values {
 		if i != 0 {
-			b = append(b, ',')
+			*b = append(*b, ',')
 		}
-		b = appendJSONValue(b, value)
+		appendJSONValue(b, value)
 	}
-	return append(b, ']')
+	*b = append(*b, ']')
 }
 
-func appendJSONMap(b []byte, values []otellog.KeyValue) []byte {
-	b = append(b, '{')
+func appendJSONMap(b *[]byte, values []otellog.KeyValue) {
+	*b = append(*b, '{')
 	for i, kv := range values {
 		if i != 0 {
-			b = append(b, ',')
+			*b = append(*b, ',')
 		}
-		b = appendJSONString(b, kv.Key)
-		b = append(b, ':')
-		b = appendJSONValue(b, kv.Value)
+		appendJSONString(b, kv.Key)
+		*b = append(*b, ':')
+		appendJSONValue(b, kv.Value)
 	}
-	return append(b, '}')
+	*b = append(*b, '}')
 }
 
 func appendJSONFloat(b []byte, f float64, bits int) []byte {
@@ -392,57 +378,55 @@ func appendJSONFloat(b []byte, f float64, bits int) []byte {
 	return b
 }
 
-func appendJSONString(b []byte, s string) []byte {
-	b = append(b, '"')
+func appendJSONString(b *[]byte, s string) {
+	*b = append(*b, '"')
 	start := 0
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		if c >= 0x20 && c != '"' && c != '\\' {
 			continue
 		}
-		b = append(b, s[start:i]...)
-		b = appendJSONEscape(b, c)
+		*b = append(*b, s[start:i]...)
+		appendJSONEscape(b, c)
 		start = i + 1
 	}
-	b = append(b, s[start:]...)
-	b = append(b, '"')
-	return b
+	*b = append(*b, s[start:]...)
+	*b = append(*b, '"')
 }
 
-func appendJSONBytes(b []byte, values []byte) []byte {
-	b = append(b, '"')
+func appendJSONBytes(b *[]byte, values []byte) {
+	*b = append(*b, '"')
 	start := 0
 	for i, c := range values {
 		if c >= 0x20 && c != '"' && c != '\\' {
 			continue
 		}
-		b = append(b, values[start:i]...)
-		b = appendJSONEscape(b, c)
+		*b = append(*b, values[start:i]...)
+		appendJSONEscape(b, c)
 		start = i + 1
 	}
-	b = append(b, values[start:]...)
-	b = append(b, '"')
-	return b
+	*b = append(*b, values[start:]...)
+	*b = append(*b, '"')
 }
 
-func appendJSONEscape(b []byte, c byte) []byte {
+func appendJSONEscape(b *[]byte, c byte) {
 	switch c {
 	case '"':
-		return append(b, '\\', '"')
+		*b = append(*b, '\\', '"')
 	case '\\':
-		return append(b, '\\', '\\')
+		*b = append(*b, '\\', '\\')
 	case '\b':
-		return append(b, '\\', 'b')
+		*b = append(*b, '\\', 'b')
 	case '\f':
-		return append(b, '\\', 'f')
+		*b = append(*b, '\\', 'f')
 	case '\n':
-		return append(b, '\\', 'n')
+		*b = append(*b, '\\', 'n')
 	case '\r':
-		return append(b, '\\', 'r')
+		*b = append(*b, '\\', 'r')
 	case '\t':
-		return append(b, '\\', 't')
+		*b = append(*b, '\\', 't')
 	default:
-		return append(b, '\\', 'u', '0', '0', hex[c>>4], hex[c&0xf])
+		*b = append(*b, '\\', 'u', '0', '0', hex[c>>4], hex[c&0xf])
 	}
 }
 

@@ -2497,6 +2497,12 @@ func stacks(all bool) (trace []byte) {
 	return
 }
 
+// entrybuf is a helper function for otel sub module
+//
+//nolint:unused
+//go:linkname entrybuf
+func entrybuf(e *Entry) *[]byte { return &e.buf }
+
 // wlprintf is a helper function for tests
 func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 	return w.WriteEntry(&Entry{

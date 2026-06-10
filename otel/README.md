@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	logger := phuslogotel.Logger{
+	var logger otellog.Logger = phuslogotel.Logger{
 		Log: phuslog.Logger{
 			Level: phuslog.InfoLevel,
 		},
@@ -52,13 +52,13 @@ go test -run=^$ -bench='Benchmark(LoggerEmitNestedValues|OTelSlogHandlerNestedVa
 Representative result:
 
 ```text
-BenchmarkLoggerEmitNestedValues-4        1256209    951.7 ns/op     0 B/op   0 allocs/op
-BenchmarkOTelSlogHandlerNestedValues-4     38079  31641 ns/op    3896 B/op  69 allocs/op
+BenchmarkLoggerEmitNestedValues-4        1261096    954.4 ns/op     0 B/op   0 allocs/op
+BenchmarkOTelSlogHandlerNestedValues-4     36734  32775 ns/op    3896 B/op  69 allocs/op
 ```
 
 Across 10 runs:
 
 | Benchmark | Path | Result range |
 | --- | --- | --- |
-| `BenchmarkLoggerEmitNestedValues` | prebuilt `otellog.Record` to phuslog JSON writer | `951.7-958.7 ns/op`, `0 B/op`, `0 allocs/op` |
-| `BenchmarkOTelSlogHandlerNestedValues` | prebuilt `slog.Record` through `otelslog`, SDK provider, `SimpleProcessor`, and `stdoutlog` JSON exporter | `31641-33516 ns/op`, `3895-3897 B/op`, `69 allocs/op` |
+| `BenchmarkLoggerEmitNestedValues` | prebuilt `otellog.Record` to phuslog JSON writer | `947.8-976.3 ns/op`, `0 B/op`, `0 allocs/op` |
+| `BenchmarkOTelSlogHandlerNestedValues` | prebuilt `slog.Record` through `otelslog`, SDK provider, `SimpleProcessor`, and `stdoutlog` JSON exporter | `31747-33334 ns/op`, `3895-3896 B/op`, `69 allocs/op` |
