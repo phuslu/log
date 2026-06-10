@@ -21,6 +21,7 @@ type FieldNames struct {
 	Timestamp       string
 	ObservedTime    string
 	EventName       string
+	SeverityNumber  string
 	SeverityText    string
 	TraceID         string
 	SpanID          string
@@ -74,6 +75,7 @@ var defaultFieldNames = FieldNames{
 	Timestamp:       "timestamp",
 	ObservedTime:    "observed_time",
 	EventName:       "event_name",
+	SeverityNumber:  "severity_number",
 	SeverityText:    "severity_text",
 	TraceID:         "trace_id",
 	SpanID:          "span_id",
@@ -94,6 +96,9 @@ func fieldNames(names FieldNames) FieldNames {
 	}
 	if names.EventName != "" {
 		fields.EventName = names.EventName
+	}
+	if names.SeverityNumber != "" {
+		fields.SeverityNumber = names.SeverityNumber
 	}
 	if names.SeverityText != "" {
 		fields.SeverityText = names.SeverityText
@@ -219,6 +224,9 @@ func (l Logger) Emit(ctx context.Context, record otellog.Record) {
 	}
 
 	fields := fieldNames(l.FieldNames)
+	if fields.SeverityNumber != "" {
+		e = e.Int(fields.SeverityNumber, int(record.Severity()))
+	}
 	if !ok {
 		if text := record.SeverityText(); text != "" {
 			e = e.Str(log.LevelKey, text)

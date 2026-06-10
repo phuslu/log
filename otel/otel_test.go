@@ -80,6 +80,9 @@ func TestLoggerEmit(t *testing.T) {
 	if got["severity_text"] != "WARN2" {
 		t.Fatalf("severity_text = %v", got["severity_text"])
 	}
+	if got["severity_number"] != float64(14) {
+		t.Fatalf("severity_number = %v", got["severity_number"])
+	}
 	if got[log.MessageKey] != "hello from otel" {
 		t.Fatalf("message = %v", got[log.MessageKey])
 	}
@@ -124,6 +127,33 @@ func TestLoggerEmit(t *testing.T) {
 	mixedSlice, ok := mixed[2].([]any)
 	if !ok || len(mixedSlice) != 2 || mixedSlice[0] != float64(7) || mixedSlice[1] != "inner" {
 		t.Fatalf("mixed[2] = %#v", mixed[2])
+	}
+}
+
+func TestLoggerEmitSeverityNumberWithoutText(t *testing.T) {
+	var b bytes.Buffer
+	logger := Logger{
+		Log: log.Logger{
+			Level:  log.DebugLevel,
+			Writer: log.IOWriter{Writer: &b},
+		},
+	}
+
+	var record otellog.Record
+	record.SetSeverity(otellog.SeverityWarn3)
+	record.SetBody(otellog.StringValue("warn without text"))
+
+	logger.Emit(context.Background(), record)
+	got := decodeLog(t, &b)
+
+	if got[log.LevelKey] != log.WarnLevelString {
+		t.Fatalf("level = %v", got[log.LevelKey])
+	}
+	if got["severity_number"] != float64(15) {
+		t.Fatalf("severity_number = %v", got["severity_number"])
+	}
+	if _, ok := got["severity_text"]; ok {
+		t.Fatalf("unexpected severity_text = %v", got["severity_text"])
 	}
 }
 
