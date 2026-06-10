@@ -444,7 +444,30 @@ type attributeMap []attribute.KeyValue
 
 func (m attributeMap) MarshalObject(e *log.Entry) {
 	for _, kv := range m {
-		e = e.Any(string(kv.Key), kv.Value.AsInterface())
+		switch kv.Value.Type() {
+		case attribute.BOOL:
+			e = e.Bool(string(kv.Key), kv.Value.AsBool())
+		case attribute.INT64:
+			e = e.Int64(string(kv.Key), kv.Value.AsInt64())
+		case attribute.FLOAT64:
+			e = e.Float64(string(kv.Key), kv.Value.AsFloat64())
+		case attribute.STRING:
+			e = e.Str(string(kv.Key), kv.Value.AsString())
+		case attribute.BOOLSLICE:
+			e = e.Bools(string(kv.Key), kv.Value.AsBoolSlice())
+		case attribute.INT64SLICE:
+			e = e.Ints64(string(kv.Key), kv.Value.AsInt64Slice())
+		case attribute.FLOAT64SLICE:
+			e = e.Floats64(string(kv.Key), kv.Value.AsFloat64Slice())
+		case attribute.STRINGSLICE:
+			e = e.Strs(string(kv.Key), kv.Value.AsStringSlice())
+		case attribute.BYTESLICE:
+			e = e.Bytes(string(kv.Key), kv.Value.AsByteSlice())
+		case attribute.EMPTY:
+			e = e.Any(string(kv.Key), nil)
+		default:
+			e = e.Any(string(kv.Key), kv.Value.AsInterface())
+		}
 	}
 }
 
