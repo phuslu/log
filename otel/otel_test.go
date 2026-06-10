@@ -11,9 +11,7 @@ import (
 
 	"github.com/phuslu/log"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	otellog "go.opentelemetry.io/otel/log"
-	sdklog "go.opentelemetry.io/otel/sdk/log"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
@@ -270,28 +268,6 @@ func nestedBenchmarkRecord() otellog.Record {
 	return record
 }
 
-func nestedBenchmarkSDKRecord() sdklog.Record {
-	var record sdklog.Record
-	record.SetTimestamp(time.Date(2026, 6, 8, 10, 11, 12, 123000000, time.UTC))
-	record.SetSeverity(otellog.SeverityInfo)
-	record.SetSeverityText("INFO")
-	record.SetBody(otellog.StringValue("bench"))
-	record.SetAttributes(
-		otellog.String("component", "payment"),
-		otellog.Int64("answer", 42),
-		otellog.Slice("mixed",
-			otellog.StringValue("item"),
-			otellog.Int64Value(7),
-			otellog.Float64Value(2.5),
-			otellog.MapValue(
-				otellog.String("name", "alice"),
-				otellog.Slice("scores", otellog.Int64Value(1), otellog.Int64Value(2)),
-			),
-		),
-	)
-	return record
-}
-
 func BenchmarkPhusluLoggerEmitNestedValues(b *testing.B) {
 	logger := Logger{
 		Log: log.Logger{
@@ -306,29 +282,5 @@ func BenchmarkPhusluLoggerEmitNestedValues(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Emit(context.Background(), record)
-	}
-}
-
-func BenchmarkOTelStdoutExporterNestedValues(b *testing.B) {
-	exporter, err := stdoutlog.New(stdoutlog.WithWriter(io.Discard))
-	if err != nil {
-		b.Fatalf("create stdoutlog exporter: %v", err)
-	}
-	b.Cleanup(func() {
-		if err := exporter.Shutdown(context.Background()); err != nil {
-			b.Fatalf("shutdown stdoutlog exporter: %v", err)
-		}
-	})
-	records := []sdklog.Record{nestedBenchmarkSDKRecord()}
-
-	if err := exporter.Export(context.Background(), records); err != nil {
-		b.Fatalf("export warmup record: %v", err)
-	}
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		if err := exporter.Export(context.Background(), records); err != nil {
-			b.Fatalf("export record: %v", err)
-		}
 	}
 }
