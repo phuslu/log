@@ -1,4 +1,4 @@
-module otel
+module github.com/phuslu/log/otel
 
 go 1.25.0
 
