@@ -1,4 +1,4 @@
-//go:build amd64 || arm64 || arm || 386 || mipsle || riscv64
+//go:build gc && (amd64 || arm64 || arm || 386 || mipsle || riscv64)
 
 package log
 

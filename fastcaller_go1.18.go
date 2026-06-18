@@ -1,4 +1,4 @@
-//go:build go1.18 && !go1.19
+//go:build gc && go1.18 && !go1.19
 
 // MIT license, copy and modify from https://github.com/tlog-dev/loc
 
