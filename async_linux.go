@@ -21,7 +21,7 @@ func (w *AsyncWriter) writever() {
 			break
 		}
 		iovs[0].Base = &es[0].buf[0]
-		iovs[0].Len = uint64(len(es[0].buf))
+		iovs[0].SetLen(len(es[0].buf))
 		// drain the channel
 		length := len(w.ch)
 		if length > IOV_MAX-1 {
@@ -35,7 +35,7 @@ func (w *AsyncWriter) writever() {
 				break
 			}
 			iovs[n].Base = &es[n].buf[0]
-			iovs[n].Len = uint64(len(es[n].buf))
+			iovs[n].SetLen(len(es[n].buf))
 			n++
 		}
 		// writev
