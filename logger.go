@@ -1943,7 +1943,7 @@ func (b *bb) Write(p []byte) (int, error) {
 
 var bbpool = sync.Pool{
 	New: func() any {
-		return new(bb)
+		return &bb{B: make([]byte, 0, 512)}
 	},
 }
 
@@ -2203,6 +2203,7 @@ func (e *Entry) Interface(key string, i any) *Entry {
 		b.B = b.B[:len(b.B)-1]
 		e.buf = append(e.buf, b.B...)
 	}
+	bbpool.Put(b)
 
 	return e
 }
