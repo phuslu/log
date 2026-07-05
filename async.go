@@ -81,16 +81,22 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 	entry.Level = e.Level
 	entry.buf, e.buf = e.buf, entry.buf
 
+	// snapshot length before sending, entry is owned by the writer goroutine afterwards
+	n := len(entry.buf)
+
 	if w.DiscardOnFull {
 		select {
 		case w.ch <- entry:
-			return len(entry.buf), nil
+			return n, nil
 		default:
+			if cap(entry.buf) <= bbcap {
+				epool.Put(entry)
+			}
 			return 0, ErrAsyncWriterFull
 		}
 	} else {
 		w.ch <- entry
-		return len(entry.buf), nil
+		return n, nil
 	}
 }
 
