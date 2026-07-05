@@ -2203,7 +2203,9 @@ func (e *Entry) Interface(key string, i any) *Entry {
 		b.B = b.B[:len(b.B)-1]
 		e.buf = append(e.buf, b.B...)
 	}
-	bbpool.Put(b)
+	if cap(b.B) <= bbcap {
+		bbpool.Put(b)
+	}
 
 	return e
 }
