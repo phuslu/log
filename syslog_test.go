@@ -10,9 +10,15 @@ import (
 )
 
 func TestSyslogWriterTCP(t *testing.T) {
+	conn, err := net.ListenPacket("udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen UDP: %v", err)
+	}
+	defer conn.Close()
+
 	w := &SyslogWriter{
 		Network: "udp",
-		Address: "10.0.0.2:543",
+		Address: conn.LocalAddr().String(),
 		Tag:     "",
 		Dial:    net.Dial,
 	}
@@ -23,7 +29,7 @@ func TestSyslogWriterTCP(t *testing.T) {
 		_, _ = wlprintf(w, ParseLevel(level), `{"ts":1234567890,"level":"%s","caller":"test.go:42","error":"i am test error","foo":"bar","n":42,"message":"hello journal writer"}`+"\n", level)
 	}
 
-	_, err := wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
+	_, err = wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	if err != nil {
 		t.Errorf("write syslog writer error: %+v", err)
 	}
