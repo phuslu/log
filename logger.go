@@ -997,7 +997,14 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
 	if o, ok := err.(ObjectMarshaler); ok {
+		n := len(e.buf)
 		o.MarshalObject(e)
+		if n < len(e.buf) {
+			e.buf[n] = '{'
+			e.buf = append(e.buf, '}')
+		} else {
+			e.buf = append(e.buf, "null"...)
+		}
 	} else {
 		e.buf = append(e.buf, '"')
 		e.string(err.Error())

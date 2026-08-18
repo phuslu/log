@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -608,6 +609,35 @@ func TestFixMissingErrEntry(t *testing.T) {
 	logger.Err(nil).Msg("log info here")
 	if !strings.Contains(b.String(), `"level":"info"`) {
 		t.Fatal("logger.Err need info level if err == nil")
+	}
+}
+
+// marshalObjectError implements both error and ObjectMarshaler.
+type marshalObjectError struct {
+	Code int
+	Msg  string
+}
+
+func (e *marshalObjectError) Error() string { return e.Msg }
+
+func (e *marshalObjectError) MarshalObject(entry *Entry) {
+	entry.Int("code", e.Code).Str("message", e.Msg)
+}
+
+func TestAnErrObjectMarshaler(t *testing.T) {
+	var b bytes.Buffer
+	logger := Logger{Level: TraceLevel, Writer: &IOWriter{Writer: &b}}
+	logger.Info().Err(&marshalObjectError{Code: 500, Msg: "boom"}).Msg("log object error here")
+
+	out := b.Bytes()
+	if !json.Valid(out) {
+		t.Fatalf("Err(ObjectMarshaler) must emit valid JSON, got: %s", out)
+	}
+	if !strings.Contains(b.String(), `"error":{"code":500,"message":"boom"}`) {
+		t.Fatalf("Err(ObjectMarshaler) must nest the object under error, got: %s", out)
+	}
+	if strings.Contains(b.String(), `"error":,`) {
+		t.Fatalf("Err(ObjectMarshaler) leaked a leading comma, got: %s", out)
 	}
 }
 
