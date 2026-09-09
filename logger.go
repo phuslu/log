@@ -461,6 +461,19 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
+// timeHeader holds the "YYYY-MM-DDTHH:MM:SS." rendering of a single
+// absolute second. Consecutive log lines almost always share the same second,
+// so caching lets header skip absDate/absClock and the 19 digit writes.
+type timeHeader struct {
+	sec int64
+	b   [20]byte // "2006-01-02T15:04:05."
+}
+
+var timeHeaderPointers struct {
+	utc   unsafe.Pointer
+	local unsafe.Pointer
+}
+
 func (l *Logger) header(level Level) *Entry {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
@@ -500,68 +513,79 @@ func (l *Logger) header(level Level) *Entry {
 	switch l.TimeFormat {
 	case "":
 		sec, nsec, _ := now()
+		var tp *unsafe.Pointer
 		var tmp [32]byte
 		var buf []byte
 		if offset == 0 {
 			// "2006-01-02T15:04:05.999Z"
-			tmp[25] = '"'
+			tp = &timeHeaderPointers.utc
 			tmp[24] = 'Z'
+			tmp[25] = '"'
 			buf = tmp[:26]
 		} else {
 			// "2006-01-02T15:04:05.999Z07:00"
-			tmp[30] = '"'
+			tp = &timeHeaderPointers.local
 			tmp[29] = timeZone[5]
 			tmp[28] = timeZone[4]
 			tmp[27] = timeZone[3]
 			tmp[26] = timeZone[2]
 			tmp[25] = timeZone[1]
 			tmp[24] = timeZone[0]
+			tmp[30] = '"'
 			buf = tmp[:31]
 		}
-		// date time
-		sec += 9223372028715321600 + offset // unixToInternal + internalToAbsolute + timeOffset
-		year, month, day, _ := absDate(uint64(sec), true)
-		hour, minute, second := absClock(uint64(sec))
-		// year
-		a := year / 100 * 2
-		b := year % 100 * 2
 		tmp[0] = '"'
-		tmp[1] = smallsString[a]
-		tmp[2] = smallsString[a+1]
-		tmp[3] = smallsString[b]
-		tmp[4] = smallsString[b+1]
-		// month
-		month *= 2
-		tmp[5] = '-'
-		tmp[6] = smallsString[month]
-		tmp[7] = smallsString[month+1]
-		// day
-		day *= 2
-		tmp[8] = '-'
-		tmp[9] = smallsString[day]
-		tmp[10] = smallsString[day+1]
-		// hour
-		hour *= 2
-		tmp[11] = 'T'
-		tmp[12] = smallsString[hour]
-		tmp[13] = smallsString[hour+1]
-		// minute
-		minute *= 2
-		tmp[14] = ':'
-		tmp[15] = smallsString[minute]
-		tmp[16] = smallsString[minute+1]
-		// second
-		second *= 2
-		tmp[17] = ':'
-		tmp[18] = smallsString[second]
-		tmp[19] = smallsString[second+1]
+		if c := (*timeHeader)(atomic.LoadPointer(tp)); c != nil && c.sec == sec {
+			copy(tmp[1:21], c.b[:])
+		} else {
+			// date time
+			abs := uint64(sec + 9223372028715321600 + offset) // unixToInternal + internalToAbsolute + timeOffset
+			year, month, day, _ := absDate(abs, true)
+			hour, minute, second := absClock(abs)
+			nc := &timeHeader{sec: sec}
+			// year
+			a := year / 100 * 2
+			b := year % 100 * 2
+			nc.b[0] = smallsString[a]
+			nc.b[1] = smallsString[a+1]
+			nc.b[2] = smallsString[b]
+			nc.b[3] = smallsString[b+1]
+			// month
+			month *= 2
+			nc.b[4] = '-'
+			nc.b[5] = smallsString[month]
+			nc.b[6] = smallsString[month+1]
+			// day
+			day *= 2
+			nc.b[7] = '-'
+			nc.b[8] = smallsString[day]
+			nc.b[9] = smallsString[day+1]
+			// hour
+			hour *= 2
+			nc.b[10] = 'T'
+			nc.b[11] = smallsString[hour]
+			nc.b[12] = smallsString[hour+1]
+			// minute
+			minute *= 2
+			nc.b[13] = ':'
+			nc.b[14] = smallsString[minute]
+			nc.b[15] = smallsString[minute+1]
+			// second
+			second *= 2
+			nc.b[16] = ':'
+			nc.b[17] = smallsString[second]
+			nc.b[18] = smallsString[second+1]
+			nc.b[19] = '.'
+			// publish for the next line
+			copy(tmp[1:21], nc.b[:])
+			atomic.StorePointer(tp, unsafe.Pointer(nc))
+		}
 		// milli seconds
-		a = int(nsec) / 1000000
-		b = a % 100 * 2
-		tmp[20] = '.'
-		tmp[21] = byte('0' + a/100)
-		tmp[22] = smallsString[b]
-		tmp[23] = smallsString[b+1]
+		ms := int(nsec) / 1000000
+		mb := ms % 100 * 2
+		tmp[21] = byte('0' + ms/100)
+		tmp[22] = smallsString[mb]
+		tmp[23] = smallsString[mb+1]
 		// append to e.buf
 		e.buf = append(e.buf, buf...)
 	case TimeFormatUnix:
