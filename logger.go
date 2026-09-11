@@ -461,12 +461,15 @@ var timeOffset, timeZone = func() (int64, string) {
 	return int64(n), s
 }()
 
-// timeHeader holds the "YYYY-MM-DDTHH:MM:SS." rendering of a single
-// absolute second. Consecutive log lines almost always share the same second,
-// so caching lets header skip absDate/absClock and the 19 digit writes.
+// timeHeader holds the "YYYY-MM-DDTHH:MM:SS" rendering of a single absolute
+// second. Consecutive log lines almost always share the same second, so
+// caching the date-time prefix lets the time formatting skip absDate/absClock
+// and the 19 digit writes, and lets several TimeFormat values (the empty
+// default, time.RFC3339 and time.RFC3339Nano) share the same cache slot since
+// only the fractional part and the timezone differ between them.
 type timeHeader struct {
 	sec int64
-	b   [20]byte // "2006-01-02T15:04:05."
+	b   [19]byte // "2006-01-02T15:04:05"
 }
 
 var timeHeaderPointers struct {
@@ -511,32 +514,18 @@ func (l *Logger) header(level Level) *Entry {
 		}
 	}
 	switch l.TimeFormat {
-	case "":
+	case "", time.RFC3339, time.RFC3339Nano:
 		sec, nsec, _ := now()
 		var tp *unsafe.Pointer
-		var tmp [32]byte
-		var buf []byte
 		if offset == 0 {
-			// "2006-01-02T15:04:05.999Z"
 			tp = &timeHeaderPointers.utc
-			tmp[24] = 'Z'
-			tmp[25] = '"'
-			buf = tmp[:26]
 		} else {
-			// "2006-01-02T15:04:05.999Z07:00"
 			tp = &timeHeaderPointers.local
-			tmp[29] = timeZone[5]
-			tmp[28] = timeZone[4]
-			tmp[27] = timeZone[3]
-			tmp[26] = timeZone[2]
-			tmp[25] = timeZone[1]
-			tmp[24] = timeZone[0]
-			tmp[30] = '"'
-			buf = tmp[:31]
 		}
+		var tmp [40]byte // up to 37 bytes, e.g. "2006-01-02T15:04:05.999999999Z07:00"
 		tmp[0] = '"'
 		if c := (*timeHeader)(atomic.LoadPointer(tp)); c != nil && c.sec == sec {
-			copy(tmp[1:21], c.b[:])
+			copy(tmp[1:20], c.b[:])
 		} else {
 			// date time
 			abs := uint64(sec + 9223372028715321600 + offset) // unixToInternal + internalToAbsolute + timeOffset
@@ -575,19 +564,61 @@ func (l *Logger) header(level Level) *Entry {
 			nc.b[16] = ':'
 			nc.b[17] = smallsString[second]
 			nc.b[18] = smallsString[second+1]
-			nc.b[19] = '.'
 			// publish for the next line
-			copy(tmp[1:21], nc.b[:])
+			copy(tmp[1:20], nc.b[:])
 			atomic.StorePointer(tp, unsafe.Pointer(nc))
 		}
-		// milli seconds
-		ms := int(nsec) / 1000000
-		mb := ms % 100 * 2
-		tmp[21] = byte('0' + ms/100)
-		tmp[22] = smallsString[mb]
-		tmp[23] = smallsString[mb+1]
+		// fractional seconds and timezone, which differ between formats
+		i := 20
+		switch l.TimeFormat {
+		case time.RFC3339:
+			// "2006-01-02T15:04:05Z07:00", no fractional seconds
+		case time.RFC3339Nano:
+			// "2006-01-02T15:04:05.999999999Z07:00", fixed 9 digits
+			a := int(nsec)
+			b := a % 100 * 2
+			a /= 100
+			tmp[i+9] = smallsString[b+1]
+			tmp[i+8] = smallsString[b]
+			b = a % 100 * 2
+			a /= 100
+			tmp[i+7] = smallsString[b+1]
+			tmp[i+6] = smallsString[b]
+			b = a % 100 * 2
+			a /= 100
+			tmp[i+5] = smallsString[b+1]
+			tmp[i+4] = smallsString[b]
+			b = a % 100 * 2
+			tmp[i+3] = smallsString[b+1]
+			tmp[i+2] = smallsString[b]
+			tmp[i+1] = byte('0' + a/100)
+			tmp[i] = '.'
+			i += 10
+		default: // "", "2006-01-02T15:04:05.999Z07:00"
+			ms := int(nsec) / 1000000
+			mb := ms % 100 * 2
+			tmp[i] = '.'
+			tmp[i+1] = byte('0' + ms/100)
+			tmp[i+2] = smallsString[mb]
+			tmp[i+3] = smallsString[mb+1]
+			i += 4
+		}
+		if offset == 0 {
+			tmp[i] = 'Z'
+			i++
+		} else {
+			tmp[i] = timeZone[0]
+			tmp[i+1] = timeZone[1]
+			tmp[i+2] = timeZone[2]
+			tmp[i+3] = timeZone[3]
+			tmp[i+4] = timeZone[4]
+			tmp[i+5] = timeZone[5]
+			i += 6
+		}
+		tmp[i] = '"'
+		i++
 		// append to e.buf
-		e.buf = append(e.buf, buf...)
+		e.buf = append(e.buf, tmp[:i]...)
 	case TimeFormatUnix:
 		sec, _, _ := now()
 		// 1595759807
