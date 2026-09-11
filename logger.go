@@ -2381,10 +2381,7 @@ func (e *Entry) Any(key string, value any) *Entry {
 	}
 	switch value := value.(type) {
 	case ObjectMarshaler:
-		e.buf = append(e.buf, ',', '"')
-		e.buf = append(e.buf, key...)
-		e.buf = append(e.buf, '"', ':')
-		value.MarshalObject(e)
+		e.Object(key, value)
 	case Context:
 		e.Dict(key, value)
 	case []time.Duration:

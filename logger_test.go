@@ -654,3 +654,34 @@ func BenchmarkLogger(b *testing.B) {
 		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
 	}
 }
+
+type anyObjectMarshaler struct{ Code int }
+
+func (o *anyObjectMarshaler) MarshalObject(e *Entry) {
+	e.Int("code", o.Code)
+	e.Str("message", "boom")
+}
+
+type anyEmptyMarshaler struct{}
+
+func (o *anyEmptyMarshaler) MarshalObject(e *Entry) {}
+
+func TestAnyObjectMarshaler(t *testing.T) {
+	var buf bytes.Buffer
+	logger := Logger{Writer: &IOWriter{&buf}}
+	logger.Info().Any("payload", &anyObjectMarshaler{500}).Msg("")
+	got := string(bytes.TrimSpace(buf.Bytes()))
+	if !strings.Contains(got, `"payload":{"code":500,"message":"boom"}`) {
+		t.Fatalf("Any did not wrap the object: %s", got)
+	}
+	if !json.Valid([]byte(got)) {
+		t.Fatalf("Any emitted invalid json: %s", got)
+	}
+
+	buf.Reset()
+	logger.Info().Any("payload", &anyEmptyMarshaler{}).Msg("")
+	got = string(bytes.TrimSpace(buf.Bytes()))
+	if !strings.Contains(got, `"payload":null`) {
+		t.Fatalf("Any on an empty marshaler should match Object and write null: %s", got)
+	}
+}
