@@ -1,7 +1,6 @@
 # phuslog - Fastest structured logging
 
 [![godoc][godoc-img]][godoc]
-[![goreport][report-img]][report]
 [![build][build-img]][build]
 ![stability-stable][stability-img]
 
@@ -1087,34 +1086,34 @@ A Performance result as below, for daily benchmark results see [github actions][
 goos: linux
 goarch: amd64
 pkg: bench
-cpu: AMD EPYC 9V74 80-Core Processor                
+cpu: AMD EPYC 7763 64-Core Processor                
 
-BenchmarkSlogDisabled-4       	745541748	         7.765 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogSimple-4         	 4491186	      1329 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogPrintf-4         	 6430279	       933.7 ns/op	      80 B/op	       1 allocs/op
-BenchmarkSlogCaller-4         	 2736002	      2202 ns/op	     704 B/op	       9 allocs/op
-BenchmarkSlogAny-4            	 4013566	      1501 ns/op	     112 B/op	       2 allocs/op
+BenchmarkSlogDisabled-4       	802330342	         7.505 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimple-4         	 4585521	      1306 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogPrintf-4         	 6244802	       959.3 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4         	 2844895	      2107 ns/op	     704 B/op	       9 allocs/op
+BenchmarkSlogAny-4            	 4181658	      1448 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkZapDisabled-4        	852310731	         7.039 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZapSimple-4          	 7006852	       855.9 ns/op	     384 B/op	       1 allocs/op
-BenchmarkZapPrintf-4          	 7274275	       822.8 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZapCaller-4          	 3507892	      1704 ns/op	     648 B/op	       3 allocs/op
-BenchmarkZapAny-4             	 4755362	      1261 ns/op	     480 B/op	       2 allocs/op
+BenchmarkZapDisabled-4        	874216077	         6.866 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSimple-4          	 6389852	       944.4 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapPrintf-4          	 6712965	       897.2 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4          	 3539560	      1702 ns/op	     648 B/op	       3 allocs/op
+BenchmarkZapAny-4             	 4724102	      1266 ns/op	     480 B/op	       2 allocs/op
 
-BenchmarkZeroLogDisabled-4    	636616011	         9.495 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogSimple-4      	18501357	       325.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogPrintf-4      	 9974967	       597.0 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZeroLogCaller-4      	 3170115	      1905 ns/op	     320 B/op	       4 allocs/op
-BenchmarkZeroLogAny-4         	 6381082	       938.2 ns/op	     336 B/op	       6 allocs/op
+BenchmarkZeroLogDisabled-4    	662548482	         9.048 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogSimple-4      	14214250	       424.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4      	 8801782	       674.2 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4      	 3088701	      1949 ns/op	     320 B/op	       4 allocs/op
+BenchmarkZeroLogAny-4         	 5915271	      1015 ns/op	     336 B/op	       6 allocs/op
 
-BenchmarkPhusLogDisabled-4    	604393088	        10.26 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogSimple-4      	25086454	       237.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogPrintf-4      	12804498	       470.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogCaller-4      	11259207	       538.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogAny-4         	13537855	       434.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogDisabled-4    	621067651	         9.657 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogSimple-4      	26718013	       221.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4      	11627644	       522.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4      	10436329	       573.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogAny-4         	12390268	       487.4 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	173.163s
+ok  	bench	173.985s
 ```
 
 <details>
@@ -1385,8 +1384,6 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 
 [godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
 [godoc]: https://pkg.go.dev/github.com/phuslu/log
-[report-img]: https://goreportcard.com/badge/github.com/phuslu/log
-[report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
 [build]: https://github.com/phuslu/log/actions
 [stability-img]: https://img.shields.io/badge/stability-stable-green.svg
