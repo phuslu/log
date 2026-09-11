@@ -505,7 +505,7 @@ func (l *Logger) header(level Level) *Entry {
 		} else {
 			format := l.TimeFormat
 			if format == "" {
-				format = "2006-01-02T15:04:05.999Z07:00"
+				format = "2006-01-02T15:04:05.000Z07:00"
 			}
 			e.buf = append(e.buf, '"')
 			e.buf = timeNow().In(l.TimeLocation).AppendFormat(e.buf, format)
@@ -574,31 +574,39 @@ func (l *Logger) header(level Level) *Entry {
 		case time.RFC3339:
 			// "2006-01-02T15:04:05Z07:00", no fractional seconds
 		case time.RFC3339Nano:
-			// "2006-01-02T15:04:05.999999999Z07:00", fixed 9 digits
+			// "2006-01-02T15:04:05.999999999Z07:00", trailing zeros dropped
+			var fd [9]byte
 			a := int(nsec)
 			b := a % 100 * 2
 			a /= 100
-			tmp[i+9] = smallsString[b+1]
-			tmp[i+8] = smallsString[b]
+			fd[8] = smallsString[b+1]
+			fd[7] = smallsString[b]
 			b = a % 100 * 2
 			a /= 100
-			tmp[i+7] = smallsString[b+1]
-			tmp[i+6] = smallsString[b]
+			fd[6] = smallsString[b+1]
+			fd[5] = smallsString[b]
 			b = a % 100 * 2
 			a /= 100
-			tmp[i+5] = smallsString[b+1]
-			tmp[i+4] = smallsString[b]
+			fd[4] = smallsString[b+1]
+			fd[3] = smallsString[b]
 			b = a % 100 * 2
-			tmp[i+3] = smallsString[b+1]
-			tmp[i+2] = smallsString[b]
-			tmp[i+1] = byte('0' + a/100)
+			fd[2] = smallsString[b+1]
+			fd[1] = smallsString[b]
+			fd[0] = byte('0' + a/100)
+			n := 9
+			for n > 0 && fd[n-1] == '0' {
+				n--
+			}
+			if n > 0 {
+				tmp[i] = '.'
+				copy(tmp[i+1:], fd[:n])
+				i += n + 1
+			}
+		default: // "", "2006-01-02T15:04:05.000Z07:00", always 3 digits
+			f := int(nsec) / 1000000
+			mb := f % 100 * 2
 			tmp[i] = '.'
-			i += 10
-		default: // "", "2006-01-02T15:04:05.999Z07:00"
-			ms := int(nsec) / 1000000
-			mb := ms % 100 * 2
-			tmp[i] = '.'
-			tmp[i+1] = byte('0' + ms/100)
+			tmp[i+1] = byte('0' + f/100)
 			tmp[i+2] = smallsString[mb]
 			tmp[i+3] = smallsString[mb+1]
 			i += 4

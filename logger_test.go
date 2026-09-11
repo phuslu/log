@@ -654,3 +654,97 @@ func BenchmarkLogger(b *testing.B) {
 		logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
 	}
 }
+
+// TestLoggerTimeFormatHeader checks that the built-in header time fast path
+// emits exactly what time.AppendFormat would for the same instant, for the
+// empty default, time.RFC3339 and time.RFC3339Nano, across nil/time.UTC/
+// time.Local (fast path) and a custom location (AppendFormat fallback). The
+// empty default renders fixed millisecond digits, time.RFC3339Nano drops
+// trailing zeros.
+func TestLoggerTimeFormatHeader(t *testing.T) {
+	for _, c := range []struct {
+		format string
+		layout string
+		digits int  // fractional digits, 0 when the layout has none
+		trim   bool // true when trailing zeros are dropped
+	}{
+		{"", "2006-01-02T15:04:05.000Z07:00", 3, false},
+		{time.RFC3339, time.RFC3339, 0, false},
+		{time.RFC3339Nano, time.RFC3339Nano, 9, true},
+	} {
+		for _, loc := range []*time.Location{nil, time.UTC, time.Local, time.FixedZone("UTC+7", 7*3600)} {
+			var buf bytes.Buffer
+			logger := Logger{TimeFormat: c.format, TimeLocation: loc, Writer: IOWriter{&buf}}
+			trimmed := false
+			for i := 0; i < 20000; i++ {
+				buf.Reset()
+				logger.Info().Msg("x")
+				var m map[string]string
+				if err := json.Unmarshal(bytes.TrimSpace(buf.Bytes()), &m); err != nil {
+					t.Fatalf("TimeFormat=%q TimeLocation=%v: bad json %q: %v", c.format, loc, buf.String(), err)
+				}
+				s := m[TimeKey]
+				tm, err := time.Parse(time.RFC3339Nano, s)
+				if err != nil {
+					t.Fatalf("TimeFormat=%q TimeLocation=%v: %q is not a valid timestamp: %v", c.format, loc, s, err)
+				}
+				if want := tm.Format(c.layout); want != s {
+					t.Fatalf("TimeFormat=%q TimeLocation=%v: header time %q, but time.Format renders it as %q", c.format, loc, s, want)
+				}
+				if c.digits > 0 {
+					switch n := fractionDigits(s); {
+					case !c.trim && n != c.digits:
+						t.Fatalf("TimeFormat=%q TimeLocation=%v: expected %d fixed fractional digits, got %q", c.format, loc, c.digits, s)
+					case c.trim && n >= 0 && n < c.digits:
+						trimmed = true
+					}
+				}
+			}
+			if c.trim && !trimmed {
+				t.Fatalf("TimeFormat=%q TimeLocation=%v: trailing-zero trimming was not exercised", c.format, loc)
+			}
+		}
+	}
+}
+
+// fractionDigits returns the number of fractional-second digits in a header
+// time field, or -1 when it carries no fraction.
+func fractionDigits(s string) int {
+	i := strings.IndexByte(s, '.')
+	if i < 0 {
+		return -1
+	}
+	rest := s[i+1:]
+	if j := strings.IndexAny(rest, "Z+-"); j >= 0 {
+		rest = rest[:j]
+	}
+	return len(rest)
+}
+
+// BenchmarkLoggerTimeFormat compares the built-in header fast path
+// (TimeLocation nil/time.UTC/time.Local) with the time.AppendFormat fallback
+// (any other TimeLocation) for the same TimeFormat layout.
+func BenchmarkLoggerTimeFormat(b *testing.B) {
+	fallback := time.FixedZone("UTC+7", 7*3600)
+	for _, c := range []struct {
+		name   string
+		format string
+		loc    *time.Location
+	}{
+		{"default", "", time.UTC},
+		{"default_fallback", "", fallback},
+		{"rfc3339", time.RFC3339, time.UTC},
+		{"rfc3339_fallback", time.RFC3339, fallback},
+		{"rfc3339nano", time.RFC3339Nano, time.UTC},
+		{"rfc3339nano_fallback", time.RFC3339Nano, fallback},
+	} {
+		b.Run(c.name, func(b *testing.B) {
+			logger := Logger{TimeFormat: c.format, TimeLocation: c.loc, Level: DebugLevel, Writer: IOWriter{io.Discard}}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				logger.Info().Str("foo", "bar").Msgf("hello %s", "world")
+			}
+		})
+	}
+}
