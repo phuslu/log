@@ -47,8 +47,13 @@ loop:
 	SUBS	$16, R1, R1
 	BGT	loop
 
-	VUMAXV	V20.B16, V20
-	VMOV	V20.B[0], R8
+	// Fold the 16 accumulator bytes into one general register with two lane
+	// reads and an OR: the cross-lane reduction VUMAXV is only understood by
+	// the go1.27 assembler, while these instructions assemble on every
+	// supported toolchain.
+	VMOV	V20.D[0], R8
+	VMOV	V20.D[1], R9
+	ORR	R9, R8, R8
 	CMP	$0, R8
 	CSET	NE, R8
 	MOVB	R8, ret+16(FP)
