@@ -62,7 +62,8 @@ bad:
 //
 // Mirrors runtime.nanotime1: switch to the g0 stack, do one CLOCK_REALTIME vDSO
 // read, switch back. Like the arm64 version, a caller already on g0 or gsignal
-// fails deliberately and takes the now() fallback instead of a noswitch path.
+// fails deliberately, leaving walltime to return zero and its caller to fall
+// back to now(), instead of taking a noswitch path.
 TEXT ·vdsoCallG0(SB), NOSPLIT, $32-20
 	MOVQ	fn+0(FP), AX
 	MOVQ	ts+8(FP), R13

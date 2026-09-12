@@ -516,6 +516,9 @@ func (l *Logger) header(level Level) *Entry {
 	switch l.TimeFormat {
 	case "", time.RFC3339, time.RFC3339Nano:
 		sec, nsec := walltime()
+		if sec == 0 {
+			sec, nsec, _ = now()
+		}
 		var tp *unsafe.Pointer
 		if offset == 0 {
 			tp = &timeHeaderPointers.utc
@@ -629,6 +632,9 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:i]...)
 	case TimeFormatUnix:
 		sec, _ := walltime()
+		if sec == 0 {
+			sec, _, _ = now()
+		}
 		// 1595759807
 		var tmp [10]byte
 		// seconds
@@ -655,6 +661,9 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
 		sec, nsec := walltime()
+		if sec == 0 {
+			sec, nsec, _ = now()
+		}
 		// 1595759807105
 		var tmp [13]byte
 		// milli seconds
@@ -687,6 +696,9 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixWithMs:
 		sec, nsec := walltime()
+		if sec == 0 {
+			sec, nsec, _ = now()
+		}
 		// 1595759807.105
 		var tmp [14]byte
 		// milli seconds

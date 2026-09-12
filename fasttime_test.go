@@ -3,6 +3,8 @@
 package log
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"os/signal"
@@ -32,6 +34,32 @@ func checkFastClockValue(t *testing.T) {
 	}
 }
 
+// checkFastClockFallback logs one line through the built-in header fast path
+// and checks that the emitted time is the current wall clock. With walltime
+// returning zero the header has to reach now() itself, so this is what keeps
+// the fallback honest on platforms without a vDSO fast path.
+func checkFastClockFallback(t *testing.T) {
+	t.Helper()
+	if sec, nsec := walltime(); sec != 0 || nsec != 0 {
+		t.Fatalf("walltime returned %v, %v with the fast path disabled; want 0, 0", sec, nsec)
+	}
+	var buf bytes.Buffer
+	logger := Logger{TimeFormat: time.RFC3339Nano, TimeLocation: time.UTC, Writer: IOWriter{&buf}}
+	real := time.Now()
+	logger.Info().Msg("x")
+	var m map[string]string
+	if err := json.Unmarshal(bytes.TrimSpace(buf.Bytes()), &m); err != nil {
+		t.Fatalf("bad json %q: %v", buf.String(), err)
+	}
+	got, err := time.Parse(time.RFC3339Nano, m[TimeKey])
+	if err != nil {
+		t.Fatalf("header time %q is not a valid timestamp: %v", m[TimeKey], err)
+	}
+	if d := real.Sub(got); d < -time.Second || d > time.Second {
+		t.Fatalf("header time returned %v, %v off from %v", got, d, real)
+	}
+}
+
 func TestFastClockG0Layout(t *testing.T) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
@@ -48,7 +76,7 @@ func TestFastClockG0Layout(t *testing.T) {
 	if vdsoReady {
 		t.Fatal("vDSO fast path enabled with incompatible g/m offsets")
 	}
-	checkFastClockValue(t)
+	checkFastClockFallback(t)
 	t.Skip("g/m offsets do not match this toolchain; now() fallback verified")
 }
 
@@ -68,7 +96,7 @@ func TestFastClockFallback(t *testing.T) {
 	ready := vdsoReady
 	vdsoReady = false
 	t.Cleanup(func() { vdsoReady = ready })
-	checkFastClockValue(t)
+	checkFastClockFallback(t)
 }
 
 // TestFastClockSignalStress hammers walltime from many goroutines while

@@ -37,8 +37,9 @@ func runtimeGetm() uintptr
 // A caller that is not running on m.curg (already on g0 or gsignal) fails
 // deliberately: the runtime finds g through a stash on the gsignal stack when
 // a signal lands inside the vDSO, and this path only writes that stash when
-// switching stacks, so such callers are routed through now() instead, whose
-// runtime implementation does its own stack switch and signal bookkeeping.
+// switching stacks, so such callers are routed through the now() fallback in
+// walltime's callers instead, whose runtime implementation does its own stack
+// switch and signal bookkeeping.
 //
 // Unlike the runtime this does not set m.vdsoPC/m.vdsoSP. Doing that would
 // need two more hardcoded m offsets, and unlike the g0 offsets they could not
@@ -76,12 +77,16 @@ var vdsoReady = vdsoClockgettimeSym != 0 && g0LayoutOK(runtimeGetm())
 // signal handling the runtime normally arranges.
 //
 // When the vDSO is unavailable, the offsets no longer match this toolchain, or
-// the vDSO call fails, this falls back to now() and keeps the old behavior.
+// the vDSO call fails, it returns 0, 0 and leaves the now() fallback to the
+// caller. That keeps the body within the compiler's inlining budget of 80: a
+// call to a body-less function costs 57 on its own, so calling now() here would
+// make it too expensive, while the current body inlines into the header as one
+// extra branch. Adding a statement here drops the inlining again; check with
+// go build -gcflags=-m when touching this.
 func walltime() (sec int64, nsec int32) {
 	var ts timespec
 	if vdsoReady && vdsoCallG0(vdsoClockgettimeSym, &ts) == 0 {
 		return ts.sec, int32(ts.nsec)
 	}
-	sec, nsec, _ = now()
-	return
+	return 0, 0
 }

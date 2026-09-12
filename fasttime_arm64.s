@@ -60,11 +60,12 @@ bad:
 // stash is skipped under cgo, where the runtime loads g from TLS instead.
 //
 // Unlike runtime.walltime there is no noswitch path: a caller already on g0 or
-// gsignal fails deliberately and takes the now() fallback, because the runtime
-// reads the stash whenever a signal lands in the vDSO and this path only
-// writes it when switching stacks. The runtime's own vDSO calls stash on the
-// noswitch path too; falling back is simpler than mirroring that here, and the
-// logger is only ever called on ordinary goroutines.
+// gsignal fails deliberately, leaving walltime to return zero and its caller to
+// fall back to now(), because the runtime reads the stash whenever a signal
+// lands in the vDSO and this path only writes it when switching stacks. The
+// runtime's own vDSO calls stash on the noswitch path too; falling back is
+// simpler than mirroring that here, and the logger is only ever called on
+// ordinary goroutines.
 TEXT ·vdsoCallG0(SB), NOSPLIT, $32-20
 	MOVD	fn+0(FP), R2
 	MOVD	ts+8(FP), R25

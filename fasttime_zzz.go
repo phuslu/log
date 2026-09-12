@@ -4,9 +4,8 @@ package log
 
 // walltime has no vDSO fast path on this platform, with this compiler (gccgo
 // has no Go assembler and no runtime vdsoClockgettimeSym), or outside the Go
-// releases fasttime.go is written for, so it reads the same clock
-// time.now does.
+// releases fasttime.go is written for, so it returns zero and callers fall back
+// to now().
 func walltime() (sec int64, nsec int32) {
-	sec, nsec, _ = now()
-	return
+	return 0, 0
 }
