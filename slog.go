@@ -79,6 +79,9 @@ func (h slogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return &h
 	}
+	// Drop the spare capacity of the parent buffer, so that two handlers
+	// derived from the same parent do not append into the same backing array.
+	h.entry.buf = h.entry.buf[:len(h.entry.buf):len(h.entry.buf)]
 	i := len(h.entry.buf)
 	for _, attr := range attrs {
 		h.entry = *slogJSONAttrEval(&h.entry, attr)
@@ -94,6 +97,7 @@ func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return &h
 	}
+	h.entry.buf = h.entry.buf[:len(h.entry.buf):len(h.entry.buf)]
 	if h.grouping {
 		h.entry.buf = append(h.entry.buf, '{')
 	} else {
