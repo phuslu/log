@@ -84,6 +84,8 @@ func (h stdSlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return &h
 	}
+	// See slogJSONHandler.WithAttrs.
+	h.entry.buf = h.entry.buf[:len(h.entry.buf):len(h.entry.buf)]
 	i := len(h.entry.buf)
 	for _, attr := range attrs {
 		h.entry = *stdSlogAttrEval(&h.entry, attr)
@@ -99,6 +101,7 @@ func (h stdSlogHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return &h
 	}
+	h.entry.buf = h.entry.buf[:len(h.entry.buf):len(h.entry.buf)]
 	if h.grouping {
 		h.entry.buf = append(h.entry.buf, '{')
 	} else {
