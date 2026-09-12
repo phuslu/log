@@ -1086,34 +1086,34 @@ A Performance result as below, for daily benchmark results see [github actions][
 goos: linux
 goarch: amd64
 pkg: bench
-cpu: AMD EPYC 7763 64-Core Processor                
+cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogDisabled-4       	802330342	         7.505 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogSimple-4         	 4585521	      1306 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogPrintf-4         	 6244802	       959.3 ns/op	      80 B/op	       1 allocs/op
-BenchmarkSlogCaller-4         	 2844895	      2107 ns/op	     704 B/op	       9 allocs/op
-BenchmarkSlogAny-4            	 4181658	      1448 ns/op	     112 B/op	       2 allocs/op
+BenchmarkSlogDisabled-4       	832596027	         7.216 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimple-4         	 4683106	      1274 ns/op	      16 B/op	       2 allocs/op
+BenchmarkSlogPrintf-4         	 6664480	       898.9 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4         	 2747516	      2155 ns/op	     600 B/op	       8 allocs/op
+BenchmarkSlogAny-4            	 4102998	      1460 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkZapDisabled-4        	874216077	         6.866 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZapSimple-4          	 6389852	       944.4 ns/op	     384 B/op	       1 allocs/op
-BenchmarkZapPrintf-4          	 6712965	       897.2 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZapCaller-4          	 3539560	      1702 ns/op	     648 B/op	       3 allocs/op
-BenchmarkZapAny-4             	 4724102	      1266 ns/op	     480 B/op	       2 allocs/op
+BenchmarkZapDisabled-4        	1000000000	         5.626 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSimple-4          	 7254583	       823.7 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapPrintf-4          	 8547562	       703.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4          	 2655981	      2249 ns/op	     648 B/op	       3 allocs/op
+BenchmarkZapAny-4             	 4199594	      1418 ns/op	     624 B/op	       3 allocs/op
 
-BenchmarkZeroLogDisabled-4    	662548482	         9.048 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogSimple-4      	14214250	       424.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkZeroLogPrintf-4      	 8801782	       674.2 ns/op	      80 B/op	       1 allocs/op
-BenchmarkZeroLogCaller-4      	 3088701	      1949 ns/op	     320 B/op	       4 allocs/op
-BenchmarkZeroLogAny-4         	 5915271	      1015 ns/op	     336 B/op	       6 allocs/op
+BenchmarkZeroLogDisabled-4    	601615922	         9.980 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogSimple-4      	17752900	       337.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4      	11104765	       539.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4      	 4339143	      1375 ns/op	     320 B/op	       4 allocs/op
+BenchmarkZeroLogAny-4         	 4008674	      1501 ns/op	     696 B/op	      11 allocs/op
 
-BenchmarkPhusLogDisabled-4    	621067651	         9.657 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogSimple-4      	26718013	       221.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogPrintf-4      	11627644	       522.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogCaller-4      	10436329	       573.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusLogAny-4         	12390268	       487.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogDisabled-4    	620260744	         9.661 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogSimple-4      	28010372	       214.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4      	17410651	       343.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4      	11248803	       546.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogAny-4         	10583113	       567.8 ns/op	       0 B/op	       0 allocs/op
 
 PASS
-ok  	bench	173.985s
+ok  	bench	172.467s
 ```
 
 <details>
@@ -1252,27 +1252,25 @@ A Performance result as below, for daily benchmark results see [github actions][
 goos: linux
 goarch: amd64
 pkg: bench
-cpu: AMD EPYC 9V74 80-Core Processor                
-BenchmarkSlogSimpleStd
-BenchmarkSlogSimpleStd        	 4483060	      1365 ns/op	     120 B/op	       3 allocs/op
-BenchmarkSlogGroupsStd        	 4347547	      1371 ns/op	     120 B/op	       3 allocs/op
+cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogSimpleZap        	 4732180	      1262 ns/op	     192 B/op	       1 allocs/op
-BenchmarkSlogGroupsZap        	 4688366	      1271 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogSimpleStd        	 4433433	      1282 ns/op	      16 B/op	       2 allocs/op
+BenchmarkSlogGroupsStd        	 4600296	      1302 ns/op	      16 B/op	       2 allocs/op
 
-BenchmarkSlogSimpleZerolog    	 8147439	       747.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsZerolog    	 5724910	      1053 ns/op	     288 B/op	       1 allocs/op
+BenchmarkSlogSimpleZap        	 4900659	      1245 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupsZap        	 4780567	      1271 ns/op	     192 B/op	       1 allocs/op
 
-BenchmarkSlogSimpleSeankhliao 	 6473432	       914.4 ns/op	      80 B/op	       1 allocs/op
-BenchmarkSlogGroupsSeankhliao 	 6001908	       982.8 ns/op	      96 B/op	       3 allocs/op
+BenchmarkSlogSimpleZerolog    	 7286929	       833.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsZerolog    	 5979396	      1003 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkSlogSimplePhuslog    	 9534811	       622.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsPhuslog    	 9271638	       647.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimplePhuslog    	 8707195	       702.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslog    	 8724584	       691.0 ns/op	       0 B/op	       0 allocs/op
 
-BenchmarkSlogSimplePhuslogStd 	 9981680	       601.2 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogGroupsPhuslogStd 	10039770	       609.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimplePhuslogStd 	10154598	       590.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslogStd 	10054032	       604.5 ns/op	       0 B/op	       0 allocs/op
+
 PASS
-ok  	bench	83.600s
+ok  	bench	83.775s
 ```
 
 <details>
@@ -1343,37 +1341,36 @@ A Performance result as below, for daily go-slog results see [github actions][go
 ```
 goos: linux
 goarch: amd64
-cpu: Intel(R) Xeon(R) 6973P-C
+cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkSlogJSON/BenchmarkAttributes
-BenchmarkSlogJSON/BenchmarkAttributes-4         	 1297974	       965.5 ns/op	 431.91 MB/s	     472 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkBigGroup-4           	  572896	      3064 ns/op	 421.28 MB/s	      48 B/op	       1 allocs/op
-BenchmarkSlogJSON/BenchmarkDisabled-4           	522013723	         2.296 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON/BenchmarkKeyValues-4          	 1223793	       974.3 ns/op	 428.02 MB/s	     472 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkLogging-4            	   54139	     20432 ns/op	 430.55 MB/s	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON/BenchmarkSimple-4             	 4639028	       249.6 ns/op	 332.57 MB/s	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON/BenchmarkSimpleSource-4       	 1820600	       582.7 ns/op	 520.02 MB/s	     584 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkWithAttrsAttributes-4         	 1000000	      1007 ns/op	 777.65 MB/s	     472 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkWithAttrsKeyValues-4          	 1000000	      1034 ns/op	 757.44 MB/s	     472 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkWithAttrsSimple-4             	 4992144	       253.3 ns/op	1772.39 MB/s	       0 B/op	       0 allocs/op
-BenchmarkSlogJSON/BenchmarkWithGroupAttributes-4         	 1301882	       950.6 ns/op	 453.40 MB/s	     472 B/op	       6 allocs/op
-BenchmarkSlogJSON/BenchmarkWithGroupKeyValues-4          	 1000000	      1013 ns/op	 425.28 MB/s	     472 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkAttributes-4         	  788606	      1516 ns/op	 275.80 MB/s	     256 B/op	       3 allocs/op
+BenchmarkSlogJSON/BenchmarkBigGroup-4           	   35481	     34303 ns/op	 463.48 MB/s	      48 B/op	       1 allocs/op
+BenchmarkSlogJSON/BenchmarkDisabled-4           	262674124	         3.992 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkKeyValues-4          	  814696	      1676 ns/op	 249.33 MB/s	     256 B/op	       3 allocs/op
+BenchmarkSlogJSON/BenchmarkLogging-4            	   41451	     26383 ns/op	 333.36 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkSimple-4             	 4056388	       351.5 ns/op	 236.11 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkSimpleSource-4       	 1304044	       926.1 ns/op	 327.16 MB/s	     584 B/op	       6 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsAttributes-4         	  865826	      1542 ns/op	 509.07 MB/s	     256 B/op	       3 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsKeyValues-4          	  808782	      1565 ns/op	 501.71 MB/s	     256 B/op	       3 allocs/op
+BenchmarkSlogJSON/BenchmarkWithAttrsSimple-4             	 3993020	       303.2 ns/op	1484.30 MB/s	       0 B/op	       0 allocs/op
+BenchmarkSlogJSON/BenchmarkWithGroupAttributes-4         	  860944	      1541 ns/op	 280.40 MB/s	     256 B/op	       3 allocs/op
+BenchmarkSlogJSON/BenchmarkWithGroupKeyValues-4          	  740656	      1604 ns/op	 269.32 MB/s	     256 B/op	       3 allocs/op
 
-BenchmarkPhusluSlog/BenchmarkAttributes-4                	 2671114	       452.3 ns/op	 955.08 MB/s	     240 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkBigGroup-4                  	 1420749	       848.6 ns/op	1521.28 MB/s	      48 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkDisabled-4                  	623445655	         1.938 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPhusluSlog/BenchmarkKeyValues-4                 	 2367277	       496.7 ns/op	 869.70 MB/s	     240 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkLogging-4                   	  131949	      8497 ns/op	1035.94 MB/s	       0 B/op	       0 allocs/op
-BenchmarkPhusluSlog/BenchmarkSimple-4                    	12253988	        97.12 ns/op	 854.64 MB/s	       0 B/op	       0 allocs/op
-BenchmarkPhusluSlog/BenchmarkSimpleSource-4              	 9638575	       124.1 ns/op	2159.20 MB/s	       0 B/op	       0 allocs/op
-BenchmarkPhusluSlog/BenchmarkWithAttrsAttributes-4       	 2443872	       462.6 ns/op	1757.44 MB/s	     240 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkWithAttrsKeyValues-4        	 2427655	       522.5 ns/op	1556.06 MB/s	     240 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkWithAttrsSimple-4           	10547698	       115.1 ns/op	4031.97 MB/s	       0 B/op	       0 allocs/op
-BenchmarkPhusluSlog/BenchmarkWithGroupAttributes-4       	 2201251	       475.5 ns/op	 937.90 MB/s	     240 B/op	       1 allocs/op
-BenchmarkPhusluSlog/BenchmarkWithGroupKeyValues-4        	 2325472	       504.9 ns/op	 883.33 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkAttributes-4                	 1224932	       925.7 ns/op	 467.73 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkBigGroup-4                  	   73568	     16224 ns/op	 979.99 MB/s	      48 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkDisabled-4                  	363444417	         3.287 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkKeyValues-4                 	 1000000	      1007 ns/op	 429.84 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkLogging-4                   	   90266	     13506 ns/op	 651.70 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkSimple-4                    	 8443231	       143.7 ns/op	 577.65 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkSimpleSource-4              	 5979291	       201.1 ns/op	1332.91 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsAttributes-4       	 1276758	       956.9 ns/op	 851.70 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsKeyValues-4        	 1000000	      1004 ns/op	 812.06 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithAttrsSimple-4           	 8165066	       148.9 ns/op	3123.47 MB/s	       0 B/op	       0 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithGroupAttributes-4       	 1283709	       931.9 ns/op	 479.66 MB/s	     240 B/op	       1 allocs/op
+BenchmarkPhusluSlog/BenchmarkWithGroupKeyValues-4        	 1209993	       971.6 ns/op	 460.05 MB/s	     240 B/op	       1 allocs/op
 
 PASS
-ok  	bench	37.442s
+ok  	bench	36.713s
 ```
 
 In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
