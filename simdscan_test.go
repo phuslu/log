@@ -19,19 +19,20 @@ func stringReference(e *Entry, s string) {
 	e.buf = append(e.buf, s...)
 }
 
-// TestStringDifferential checks Entry.string against its scalar reference over
-// a corpus that covers every byte, every length class around the vector width
-// and random data, because the vector kernel has its own predicate that must
-// not drift from the escapes table.
+// TestStringDifferential checks string and byte fields against the original
+// scalar implementation. It covers every byte, both sides of the dispatch
+// threshold and vector boundaries, and random data.
 func TestStringDifferential(t *testing.T) {
 	interesting := []byte("\"\\<'\b\f\n\r\t\x00\x0babc")
 	corpus := []string{"", strings.Repeat("x", 15), strings.Repeat("x", 16), strings.Repeat("x", 17)}
 	for i := 0; i < 256; i++ {
-		corpus = append(corpus, strings.Repeat(string(rune(byte(i))), 16))
+		for _, n := range []int{16, 32, 64} {
+			corpus = append(corpus, strings.Repeat(string([]byte{byte(i)}), n))
+		}
 	}
 
 	random := rand.New(rand.NewSource(20260913))
-	for _, n := range []int{0, 1, 2, 15, 16, 17, 31, 32, 33, 63, 64, 65, 127, 128, 1000} {
+	for _, n := range []int{0, 1, 2, 15, 16, 17, 23, 24, escapeSIMDThreshold - 1, escapeSIMDThreshold, escapeSIMDThreshold + 1, 33, 63, 64, 65, 127, 128, 1000} {
 		for k := 0; k < 200; k++ {
 			b := make([]byte, n)
 			for i := range b {
@@ -56,10 +57,17 @@ func TestStringDifferential(t *testing.T) {
 	for _, s := range corpus {
 		got.buf = got.buf[:0]
 		want.buf = want.buf[:0]
-		got.string(s)
+		want.buf = append(want.buf, `,"value":"`...)
 		stringReference(want, s)
+		want.buf = append(want.buf, '"')
+		got.Str("value", s)
 		if string(got.buf) != string(want.buf) {
-			t.Fatalf("Entry.string(%q) = %q, want %q", s, got.buf, want.buf)
+			t.Fatalf("Entry.Str(%q) = %q, want %q", s, got.buf, want.buf)
+		}
+		got.buf = got.buf[:0]
+		got.Bytes("value", []byte(s))
+		if string(got.buf) != string(want.buf) {
+			t.Fatalf("Entry.Bytes(%q) = %q, want %q", s, got.buf, want.buf)
 		}
 	}
 }
@@ -100,6 +108,38 @@ func BenchmarkStringEscaped(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		e.buf = e.buf[:0]
-		e.string(s)
+		e.string2(s)
+	}
+}
+
+// BenchmarkEscapeFields tracks the actual callers around the scalar/SIMD
+// crossover; benchmarking a function value would hide scalar inlining.
+func BenchmarkEscapeFields(b *testing.B) {
+	for _, c := range []struct {
+		name string
+		n    int
+	}{
+		{"3", 3}, {"16", 16}, {"31", 31}, {"32", 32}, {"200", 200},
+	} {
+		s := strings.Repeat("x", c.n)
+		data := []byte(s)
+		b.Run(c.name+"/Str", func(b *testing.B) {
+			e := &Entry{buf: make([]byte, 0, len(s)+16)}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				e.buf = e.buf[:0]
+				e.Str("value", s)
+			}
+		})
+		b.Run(c.name+"/Bytes", func(b *testing.B) {
+			e := &Entry{buf: make([]byte, 0, len(data)+16)}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				e.buf = e.buf[:0]
+				e.Bytes("value", data)
+			}
+		})
 	}
 }

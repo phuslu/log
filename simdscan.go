@@ -2,17 +2,17 @@
 
 package log
 
-// needEscapeBlocks reports whether the first len(b) bytes contain a byte that
-// Entry.escapes rewrites. len(b) must be a positive multiple of 16; the caller
-// handles the tail. It is implemented in assembly per architecture, and the
-// vector predicate is 0x08..0x0d plus '"', '\”, '<' and '\\', a superset of
-// the escapes table that only adds 0x0b, which escapes copies verbatim.
+const useSIMDEscape = true
+
+// needEscapeBlocks reports whether b contains a byte set in the escapes table.
+// len(b) must be a positive multiple of 16; the caller handles the tail.
+// The vector predicate matches the table exactly, including the exclusion of
+// 0x00 and 0x0b.
 //
 //go:noescape
 func needEscapeBlocks(b string) bool
 
-// needEscapeSIMD reports whether s contains a byte that Entry.escapes
-// rewrites.
+// needEscapeSIMD reports whether s contains a byte set in the escapes table.
 func needEscapeSIMD(s string) bool {
 	if n := len(s) &^ 15; n > 0 && needEscapeBlocks(s[:n]) {
 		return true

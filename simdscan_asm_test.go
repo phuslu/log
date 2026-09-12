@@ -32,7 +32,7 @@ func BenchmarkNeedEscapeBlocks(b *testing.B) {
 		name string
 		n    int
 	}{
-		{"200", 200},
+		{"192", 192},
 		{"1024", 1024},
 		{"4096", 4096},
 	} {
