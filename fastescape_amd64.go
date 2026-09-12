@@ -2,7 +2,7 @@
 
 package log
 
-const useSIMDEscape = true
+const hasSIMDEscape = true
 
 //go:noescape
 func needEscapeBlocks(b string) bool

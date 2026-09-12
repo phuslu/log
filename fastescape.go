@@ -2,8 +2,8 @@ package log
 
 import "unsafe"
 
-// escapeSIMDThreshold keeps values shorter than two vectors on the scalar path.
-const escapeSIMDThreshold = 31
+// simdEscapeThreshold keeps values shorter than two vectors on the scalar path.
+const simdEscapeThreshold = 31
 
 var escapes = [256]bool{
 	'"':  true,

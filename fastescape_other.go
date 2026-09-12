@@ -2,7 +2,7 @@
 
 package log
 
-const useSIMDEscape = false
+const hasSIMDEscape = false
 
 // needEscapeSIMD is the scalar fallback for platforms without a vector
 // implementation. It keeps the exact escapes table predicate.

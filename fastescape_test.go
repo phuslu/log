@@ -31,7 +31,7 @@ func TestStringDifferential(t *testing.T) {
 	}
 
 	random := rand.New(rand.NewSource(20260913))
-	for _, n := range []int{0, 1, 2, 15, 16, 17, 23, 24, escapeSIMDThreshold - 1, escapeSIMDThreshold, escapeSIMDThreshold + 1, 33, 63, 64, 65, 127, 128, 1000} {
+	for _, n := range []int{0, 1, 2, 15, 16, 17, 23, 24, simdEscapeThreshold - 1, simdEscapeThreshold, simdEscapeThreshold + 1, 33, 63, 64, 65, 127, 128, 1000} {
 		for k := 0; k < 200; k++ {
 			b := make([]byte, n)
 			for i := range b {
