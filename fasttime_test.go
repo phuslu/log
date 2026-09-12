@@ -178,3 +178,30 @@ func TestFastClockCallUnavailable(t *testing.T) {
 		t.Fatalf("vdsoCallG0 changed timespec on failure: got %+v, want %+v", got, want)
 	}
 }
+
+// walltimeSecSink, walltimeNsecSink and unixSecSink keep the compiler from
+// discarding the clock reads the benchmark is measuring.
+var (
+	walltimeSecSink  int64
+	walltimeNsecSink int32
+	unixSecSink      int64
+)
+
+// BenchmarkWalltime compares walltime(), the single CLOCK_REALTIME read the
+// built-in header uses, with a plain time.Now().Unix(), which reads
+// CLOCK_REALTIME and CLOCK_MONOTONIC and then unpacks a time.Time. Platforms
+// taking fasttime_zzz.go instead have no vDSO fast path to benchmark, and the
+// header there falls back to now().
+func BenchmarkWalltime(b *testing.B) {
+	b.Run("walltime", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			walltimeSecSink, walltimeNsecSink = walltime()
+		}
+	})
+
+	b.Run("time.Now().Unix", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			unixSecSink = time.Now().Unix()
+		}
+	})
+}
