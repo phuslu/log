@@ -1100,6 +1100,18 @@ func appendFloat(b []byte, f float64, bits int) []byte {
 		return append(b, `"-Inf"`...)
 	}
 	abs := math.Abs(f)
+	// Fast path for integral values: sizes, counters, ids and nanosecond
+	// durations are usually whole numbers and strconv.AppendInt is about four
+	// times faster than strconv.AppendFloat. Restrict it to exactly
+	// representable float64 integers: for float32 strconv prints the shortest
+	// decimal that round trips, which is not the exact integer for values like
+	// float32(1e15). Keep negative zero on the slow path because it must
+	// render as "-0".
+	if bits == 64 && abs <= 1<<53 && (f != 0 || !math.Signbit(f)) {
+		if i := int64(f); float64(i) == f {
+			return strconv.AppendInt(b, i, 10)
+		}
+	}
 	fmt := byte('f')
 	// Note: Must use float32 comparisons for underlying float32 value to get precise cutoffs right.
 	if abs != 0 {
