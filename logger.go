@@ -2250,11 +2250,9 @@ func (e *Entry) escapes(s string) {
 }
 
 func (e *Entry) string(s string) {
-	for _, c := range []byte(s) {
-		if escapes[c] {
-			e.escapes(s)
-			return
-		}
+	if needEscapeSIMD(s) {
+		e.escapes(s)
+		return
 	}
 	e.buf = append(e.buf, s...)
 }
