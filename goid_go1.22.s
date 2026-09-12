@@ -1,5 +1,5 @@
-//go:build gc && go1.18 && !go1.23
-// +build gc,go1.18,!go1.23
+//go:build gc && go1.22 && !go1.23
+// +build gc,go1.22,!go1.23
 
 #include "textflag.h"
 

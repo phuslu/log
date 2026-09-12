@@ -1,3 +1,3 @@
 module github.com/phuslu/log
 
-go 1.18
+go 1.22
