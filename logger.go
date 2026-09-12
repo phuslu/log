@@ -1058,7 +1058,12 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 		}
 	} else {
 		e.buf = append(e.buf, '"')
-		e.string(err.Error())
+		s := err.Error()
+		if !useSIMDEscape || len(s) <= escapeSIMDThreshold {
+			e.string(s)
+		} else {
+			e.string2(s)
+		}
 		e.buf = append(e.buf, '"')
 	}
 	return e
@@ -1081,7 +1086,12 @@ func (e *Entry) Errs(key string, errs []error) *Entry {
 			e.buf = append(e.buf, "null"...)
 		} else {
 			e.buf = append(e.buf, '"')
-			e.string(err.Error())
+			s := err.Error()
+			if !useSIMDEscape || len(s) <= escapeSIMDThreshold {
+				e.string(s)
+			} else {
+				e.string2(s)
+			}
 			e.buf = append(e.buf, '"')
 		}
 	}
@@ -1550,7 +1560,11 @@ func (e *Entry) Str(key string, val string) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
-	e.string(val)
+	if !useSIMDEscape || len(val) <= escapeSIMDThreshold {
+		e.string(val)
+	} else {
+		e.string2(val)
+	}
 	e.buf = append(e.buf, '"')
 	return e
 }
@@ -1580,7 +1594,12 @@ func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 	e.buf = append(e.buf, '"', ':')
 	if val != nil {
 		e.buf = append(e.buf, '"')
-		e.string(val.String())
+		s := val.String()
+		if !useSIMDEscape || len(s) <= escapeSIMDThreshold {
+			e.string(s)
+		} else {
+			e.string2(s)
+		}
 		e.buf = append(e.buf, '"')
 	} else {
 		e.buf = append(e.buf, "null"...)
@@ -1599,7 +1618,12 @@ func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 	e.buf = append(e.buf, '"', ':')
 	if val != nil {
 		e.buf = append(e.buf, '"')
-		e.string(val.GoString())
+		s := val.GoString()
+		if !useSIMDEscape || len(s) <= escapeSIMDThreshold {
+			e.string(s)
+		} else {
+			e.string2(s)
+		}
 		e.buf = append(e.buf, '"')
 	} else {
 		e.buf = append(e.buf, "null"...)
@@ -1621,7 +1645,11 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 			e.buf = append(e.buf, ',')
 		}
 		e.buf = append(e.buf, '"')
-		e.string(val)
+		if !useSIMDEscape || len(val) <= escapeSIMDThreshold {
+			e.string(val)
+		} else {
+			e.string2(val)
+		}
 		e.buf = append(e.buf, '"')
 	}
 	e.buf = append(e.buf, ']')
@@ -1673,7 +1701,11 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '"')
-	e.bytes(val)
+	if !useSIMDEscape || len(val) <= escapeSIMDThreshold {
+		e.bytes(val)
+	} else {
+		e.bytes2(val)
+	}
 	e.buf = append(e.buf, '"')
 	return e
 }
@@ -1691,7 +1723,11 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 		e.buf = append(e.buf, "null"...)
 	} else {
 		e.buf = append(e.buf, '"')
-		e.bytes(val)
+		if !useSIMDEscape || len(val) <= escapeSIMDThreshold {
+			e.bytes(val)
+		} else {
+			e.bytes2(val)
+		}
 		e.buf = append(e.buf, '"')
 	}
 	return e
@@ -1954,7 +1990,12 @@ func (e *Entry) Stack() *Entry {
 	e.buf = append(e.buf, ",\""...)
 	e.buf = append(e.buf, StackKey...)
 	e.buf = append(e.buf, "\":\""...)
-	e.bytes(stacks(false))
+	b := stacks(false)
+	if !useSIMDEscape || len(b) <= escapeSIMDThreshold {
+		e.bytes(b)
+	} else {
+		e.bytes2(b)
+	}
 	e.buf = append(e.buf, '"')
 	return e
 }
@@ -2009,7 +2050,11 @@ func (e *Entry) Msg(msg string) {
 		e.buf = append(e.buf, ",\""...)
 		e.buf = append(e.buf, MessageKey...)
 		e.buf = append(e.buf, "\":\""...)
-		e.string(msg)
+		if !useSIMDEscape || len(msg) <= escapeSIMDThreshold {
+			e.string(msg)
+		} else {
+			e.string2(msg)
+		}
 		e.buf = append(e.buf, "\"}\n"...)
 	} else {
 		e.buf = append(e.buf, '}', '\n')
@@ -2053,7 +2098,11 @@ func (e *Entry) Msgf(format string, v ...any) {
 	e.buf = append(e.buf, MessageKey...)
 	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprintf(b, format, v...)
-	e.bytes(b.B)
+	if !useSIMDEscape || len(b.B) <= escapeSIMDThreshold {
+		e.bytes(b.B)
+	} else {
+		e.bytes2(b.B)
+	}
 	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
@@ -2073,7 +2122,11 @@ func (e *Entry) Msgs(args ...any) {
 	e.buf = append(e.buf, MessageKey...)
 	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprint(b, args...)
-	e.bytes(b.B)
+	if !useSIMDEscape || len(b.B) <= escapeSIMDThreshold {
+		e.bytes(b.B)
+	} else {
+		e.bytes2(b.B)
+	}
 	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
 		bbpool.Put(b)
@@ -2128,6 +2181,9 @@ func (e *Entry) caller(n int, pc uintptr, fullpath bool) {
 	e.buf = append(e.buf, "\":"...)
 	e.buf = strconv.AppendInt(e.buf, int64(goid()), 10)
 }
+
+// escapeSIMDThreshold keeps values shorter than two vectors on the scalar path.
+const escapeSIMDThreshold = 31
 
 var escapes = [256]bool{
 	'"':  true,
@@ -2249,10 +2305,13 @@ func (e *Entry) escapes(s string) {
 	e.buf = append(e.buf, s[j:]...)
 }
 
+// Keep string and bytes small so callers can inline the scalar path.
 func (e *Entry) string(s string) {
-	if needEscapeSIMD(s) {
-		e.escapes(s)
-		return
+	for _, c := range []byte(s) {
+		if escapes[c] {
+			e.escapes(s)
+			return
+		}
 	}
 	e.buf = append(e.buf, s...)
 }
@@ -2263,6 +2322,22 @@ func (e *Entry) bytes(b []byte) {
 			e.escapeb(b)
 			return
 		}
+	}
+	e.buf = append(e.buf, b...)
+}
+
+func (e *Entry) string2(s string) {
+	if needEscapeSIMD(s) {
+		e.escapes(s)
+		return
+	}
+	e.buf = append(e.buf, s...)
+}
+
+func (e *Entry) bytes2(b []byte) {
+	if needEscapeSIMD(b2s(b)) {
+		e.escapeb(b)
+		return
 	}
 	e.buf = append(e.buf, b...)
 }
@@ -2289,7 +2364,11 @@ func (e *Entry) Interface(key string, i any) *Entry {
 		b.B = b.B[:0]
 		fmt.Fprintf(b, `marshaling error: %+v`, err)
 		e.buf = append(e.buf, '"')
-		e.bytes(b.B)
+		if !useSIMDEscape || len(b.B) <= escapeSIMDThreshold {
+			e.bytes(b.B)
+		} else {
+			e.bytes2(b.B)
+		}
 		e.buf = append(e.buf, '"')
 	} else {
 		b.B = b.B[:len(b.B)-1]
@@ -2479,7 +2558,11 @@ func (e *Entry) Any(key string, value any) *Entry {
 			b.B = b.B[:0]
 			fmt.Fprintf(b, `%+v`, value)
 			e.buf = append(e.buf, '"')
-			e.bytes(b.B)
+			if !useSIMDEscape || len(b.B) <= escapeSIMDThreshold {
+				e.bytes(b.B)
+			} else {
+				e.bytes2(b.B)
+			}
 			e.buf = append(e.buf, '"')
 		} else {
 			b.B = b.B[:len(b.B)-1]
