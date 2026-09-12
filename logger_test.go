@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
+	"math/rand"
 	"net"
 	"net/netip"
 	"os"
@@ -14,6 +16,83 @@ import (
 	"testing"
 	"time"
 )
+
+// TestAppendFloat checks that appendFloat writes the same bytes as
+// encoding/json, which is the contract it was copied from. The integral fast
+// path relies on this test to stay byte for byte compatible.
+func TestAppendFloat(t *testing.T) {
+	values := []float64{
+		0, math.Copysign(0, -1), 1, -1, 1.5, -1.5, 123.2, 1500, -1500, 1e6, 1e-6,
+		1e-7, 1e15, 1e18, 1 << 53, -(1 << 53), 1<<53 + 2, 1e21, 1e22,
+		math.MaxFloat64, math.SmallestNonzeroFloat64, 5e-324, 0.1, 1.0 / 3.0,
+		123456789.123456789,
+	}
+
+	// Random bit patterns cover denormals, huge and tiny exponents. NaN and
+	// infinities are skipped because encoding/json rejects them while
+	// appendFloat writes them as strings.
+	random := rand.New(rand.NewSource(20260913))
+	for i := 0; i < 10000; i++ {
+		if f := math.Float64frombits(random.Uint64()); !math.IsNaN(f) && !math.IsInf(f, 0) {
+			values = append(values, f)
+		}
+	}
+
+	for _, f := range values {
+		want, err := json.Marshal(f)
+		if err != nil {
+			t.Fatalf("json.Marshal(%v): %v", f, err)
+		}
+		if got := appendFloat(nil, f, 64); string(got) != string(want) {
+			t.Fatalf("appendFloat(%v, 64) = %s, want %s", f, got, want)
+		}
+
+		f32 := float32(f)
+		if math.IsNaN(float64(f32)) || math.IsInf(float64(f32), 0) {
+			continue
+		}
+		want32, err := json.Marshal(f32)
+		if err != nil {
+			t.Fatalf("json.Marshal(float32(%v)): %v", f, err)
+		}
+		// Entry.Float32 and Any(float32) both hand an exact float32 value to
+		// appendFloat, so the test does the same.
+		if got := appendFloat(nil, float64(f32), 32); string(got) != string(want32) {
+			t.Fatalf("appendFloat(%v, 32) = %s, want %s", f, got, want32)
+		}
+	}
+
+	for _, c := range []struct {
+		f    float64
+		want string
+	}{
+		{math.NaN(), `"NaN"`},
+		{math.Inf(1), `"+Inf"`},
+		{math.Inf(-1), `"-Inf"`},
+	} {
+		if got := appendFloat(nil, c.f, 64); string(got) != c.want {
+			t.Fatalf("appendFloat(%v, 64) = %s, want %s", c.f, got, c.want)
+		}
+	}
+}
+
+func BenchmarkAppendFloat(b *testing.B) {
+	for _, c := range []struct {
+		name string
+		f    float64
+	}{
+		{"integral", 1500},
+		{"fraction", 123.2},
+	} {
+		b.Run(c.name, func(b *testing.B) {
+			buf := make([]byte, 0, 64)
+			for i := 0; i < b.N; i++ {
+				buf = appendFloat(buf[:0], c.f, 64)
+			}
+			_ = buf
+		})
+	}
+}
 
 func TestLoggerDefault(t *testing.T) {
 	notTest = false
