@@ -2,12 +2,12 @@
 
 #include "textflag.h"
 
-// The two nibble tables below encode the nine bytes Entry.escapes rewrites:
+// The two nibble tables below encode the nine bytes appendEscapedString rewrites:
 // 0x08, 0x09, 0x0a, 0x0c, 0x0d, '"', '\'', '<', '\\'. Bit i of a table entry
 // marks a byte, and a byte b is one of them exactly when
 // loTable[b&0xf] & hiTable[b>>4] != 0. 0x0c, 0x3c and 0x5c share bit 3 because
 // their cross combinations are themselves in the set, so there are no false
-// positives, and 0x0b stays out because Entry.escapes copies it verbatim
+// positives, and 0x0b stays out because appendEscapedString copies it verbatim
 // while it does rewrite the 0x00 such a superset test would let through.
 DATA	·escapeLoTable+0(SB)/8, $0x4000000000200000
 DATA	·escapeLoTable+8(SB)/8, $0x0000100800040201

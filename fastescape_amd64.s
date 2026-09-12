@@ -7,9 +7,9 @@
 //   BX: b.len, a positive multiple of 16
 //
 // Scans 16 bytes per iteration with SSE2 and reports whether any byte is one
-// of the nine bytes Entry.escapes rewrites: 0x08, 0x09, 0x0a, 0x0c, 0x0d,
+// of the nine bytes appendEscapedString rewrites: 0x08, 0x09, 0x0a, 0x0c, 0x0d,
 // '"', '\'', '<', '\\'. The range test is min(b-8, 5) == b-8, an exact
-// unsigned 8 <= b <= 13 test, with 0x0b removed because Entry.escapes copies
+// unsigned 8 <= b <= 13 test, with 0x0b removed because appendEscapedString copies
 // it verbatim while it does rewrite a 0x00 that a superset test would let
 // through.
 TEXT ·needEscapeBlocks(SB), NOSPLIT, $0-17

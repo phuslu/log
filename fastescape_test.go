@@ -6,17 +6,16 @@ import (
 	"testing"
 )
 
-// stringReference is the original scalar implementation of Entry.string, used
-// as the reference for the vectorized scan: the two must produce identical
-// bytes for every input.
-func stringReference(e *Entry, s string) {
+// stringReference is the original scalar implementation, used as the
+// reference for the vectorized scan: the two must produce identical bytes for
+// every input.
+func stringReference(dst []byte, s string) []byte {
 	for _, c := range []byte(s) {
 		if escapes[c] {
-			e.escapes(s)
-			return
+			return appendEscapedString(dst, s)
 		}
 	}
-	e.buf = append(e.buf, s...)
+	return append(dst, s...)
 }
 
 // TestStringDifferential checks string and byte fields against the original
@@ -58,7 +57,7 @@ func TestStringDifferential(t *testing.T) {
 		got.buf = got.buf[:0]
 		want.buf = want.buf[:0]
 		want.buf = append(want.buf, `,"value":"`...)
-		stringReference(want, s)
+		want.buf = stringReference(want.buf, s)
 		want.buf = append(want.buf, '"')
 		got.Str("value", s)
 		if string(got.buf) != string(want.buf) {
@@ -108,7 +107,7 @@ func BenchmarkStringEscaped(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		e.buf = e.buf[:0]
-		e.string2(s)
+		e.buf = appendString2(e.buf, s)
 	}
 }
 
