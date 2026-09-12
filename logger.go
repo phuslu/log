@@ -2119,6 +2119,24 @@ var bbpool = sync.Pool{
 	},
 }
 
+// jsonenc pairs a json.Encoder with the bb it writes to. encoding/json is
+// implemented on top of encoding/json/v2 since go1.27, where SetEscapeHTML
+// joins options into a freshly allocated jsonopts.Struct, so the option is
+// applied once at construction and the encoder is recycled through the pool.
+type jsonenc struct {
+	enc *json.Encoder
+	b   *bb
+}
+
+var jsonencpool = sync.Pool{
+	New: func() any {
+		b := &bb{B: make([]byte, 0, 512)}
+		enc := json.NewEncoder(b)
+		enc.SetEscapeHTML(false)
+		return &jsonenc{enc: enc, b: b}
+	},
+}
+
 // Msgf sends the entry with formatted msg added as the message field if not empty.
 func (e *Entry) Msgf(format string, v ...any) {
 	if e == nil {
@@ -2228,12 +2246,12 @@ func (e *Entry) Interface(key string, i any) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
-	b := bbpool.Get().(*bb)
+	je := jsonencpool.Get().(*jsonenc)
+	b := je.b
 	b.B = b.B[:0]
-	enc := json.NewEncoder(b)
-	enc.SetEscapeHTML(false)
-	err := enc.Encode(i)
+	err := je.enc.Encode(i)
 	if err != nil {
+		je = nil // the encoder keeps a sticky error, so do not reuse it
 		b.B = b.B[:0]
 		fmt.Fprintf(b, `marshaling error: %+v`, err)
 		e.buf = append(e.buf, '"')
@@ -2247,8 +2265,8 @@ func (e *Entry) Interface(key string, i any) *Entry {
 		b.B = b.B[:len(b.B)-1]
 		e.buf = append(e.buf, b.B...)
 	}
-	if cap(b.B) <= bbcap {
-		bbpool.Put(b)
+	if je != nil && cap(b.B) <= bbcap {
+		jsonencpool.Put(je)
 	}
 
 	return e
@@ -2422,12 +2440,12 @@ func (e *Entry) Any(key string, value any) *Entry {
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, key...)
 		e.buf = append(e.buf, '"', ':')
-		b := bbpool.Get().(*bb)
+		je := jsonencpool.Get().(*jsonenc)
+		b := je.b
 		b.B = b.B[:0]
-		enc := json.NewEncoder(b)
-		enc.SetEscapeHTML(false)
-		err := enc.Encode(value)
+		err := je.enc.Encode(value)
 		if err != nil {
+			je = nil // the encoder keeps a sticky error, so do not reuse it
 			b.B = b.B[:0]
 			fmt.Fprintf(b, `%+v`, value)
 			e.buf = append(e.buf, '"')
@@ -2441,8 +2459,8 @@ func (e *Entry) Any(key string, value any) *Entry {
 			b.B = b.B[:len(b.B)-1]
 			e.buf = append(e.buf, b.B...)
 		}
-		if cap(b.B) <= bbcap {
-			bbpool.Put(b)
+		if je != nil && cap(b.B) <= bbcap {
+			jsonencpool.Put(je)
 		}
 	}
 	return e
