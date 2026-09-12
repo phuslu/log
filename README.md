@@ -1129,7 +1129,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/phsym/zeroslog"
 	phuslog "github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	seankhliao "go.seankhliao.com/svcrunner/v3/jsonlog"
@@ -1190,14 +1189,14 @@ func BenchmarkSlogGroupsZap(b *testing.B) {
 }
 
 func BenchmarkSlogSimpleZerolog(b *testing.B) {
-	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo}))
+	logger := slog.New(zerolog.NewSlogHandler(zerolog.New(io.Discard).Level(zerolog.InfoLevel)))
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
 func BenchmarkSlogGroupsZerolog(b *testing.B) {
-	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo})).With("a", 1).WithGroup("g").With("b", 2)
+	logger := slog.New(zerolog.NewSlogHandler(zerolog.New(io.Discard).Level(zerolog.InfoLevel))).With("a", 1).WithGroup("g").With("b", 2)
 	for i := 0; i < b.N; i++ {
 		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
