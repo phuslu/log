@@ -26,6 +26,9 @@ type AsyncWriter struct {
 	ch      chan *Entry
 	chClose chan error
 	file    *FileWriter
+
+	errOnce  sync.Once
+	firstErr error
 }
 
 func (w *AsyncWriter) init() {
@@ -40,16 +43,40 @@ func (w *AsyncWriter) init() {
 }
 
 // Close implements io.Closer, and closes the underlying Writer.
+//
+// Close must be called after all producers stopped calling Write or
+// WriteEntry.  It waits until every accepted entry has been processed and
+// returns the first background write error, if any.  A later successful write
+// or a close error of the underlying Writer must not hide that first error.
 func (w *AsyncWriter) Close() (err error) {
 	w.once.Do(w.init)
 	close(w.ch)
 	err = <-w.chClose
 	if closer, ok := w.Writer.(io.Closer); ok {
-		if err1 := closer.Close(); err1 != nil {
+		if err1 := closer.Close(); err1 != nil && err == nil {
 			err = err1
 		}
 	}
 	return
+}
+
+// latchErr records the first background write error.  Later successes and
+// later errors never replace it.
+func (w *AsyncWriter) latchErr(err error) {
+	if err == nil {
+		return
+	}
+	w.errOnce.Do(func() {
+		w.firstErr = err
+	})
+}
+
+// recycle returns an entry to the pool, unless its buffer grew too large to
+// keep around.
+func (w *AsyncWriter) recycle(e *Entry) {
+	if cap(e.buf) <= bbcap {
+		epool.Put(e)
+	}
 }
 
 var ErrAsyncWriterFull = errors.New("async writer is full")
@@ -63,12 +90,23 @@ var eepool = sync.Pool{
 }
 
 // Write implements io.Writer.
+//
+// The payload is copied, so the caller may reuse p as soon as Write returns,
+// as required by io.Writer; holding on to p would race with the background
+// writer and silently corrupt the log.
 func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 	e := eepool.Get().(*Entry)
-	e.buf = p
+	if cap(e.buf) < len(p) {
+		e.buf = make([]byte, len(p))
+	} else {
+		e.buf = e.buf[:len(p)]
+	}
+	copy(e.buf, p)
 	n, err = w.WriteEntry(e)
-	e.buf = nil
-	eepool.Put(e)
+	if cap(e.buf) <= bbcap {
+		e.buf = e.buf[:0]
+		eepool.Put(e)
+	}
 	return
 }
 
@@ -101,15 +139,18 @@ func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 }
 
 func (w *AsyncWriter) writer() {
-	var err error
 	for entry := range w.ch {
 		if entry == nil {
 			break
 		}
-		_, err = w.Writer.WriteEntry(entry)
-		epool.Put(entry)
+		if w.firstErr == nil {
+			if _, err := w.Writer.WriteEntry(entry); err != nil {
+				w.latchErr(err)
+			}
+		}
+		w.recycle(entry)
 	}
-	w.chClose <- err
+	w.chClose <- w.firstErr
 }
 
 var _ Writer = (*AsyncWriter)(nil)
