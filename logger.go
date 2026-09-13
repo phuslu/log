@@ -1060,9 +1060,9 @@ func (e *Entry) AnErr(key string, err error) *Entry {
 		e.buf = append(e.buf, '"')
 		s := err.Error()
 		if !hasSIMDEscape || len(s) <= simdEscapeThreshold {
-			e.buf = appendString(e.buf, s)
+			e.buf = appendLoggerString(e.buf, s)
 		} else {
-			e.buf = appendString2(e.buf, s)
+			e.buf = appendLoggerString2(e.buf, s)
 		}
 		e.buf = append(e.buf, '"')
 	}
@@ -1088,9 +1088,9 @@ func (e *Entry) Errs(key string, errs []error) *Entry {
 			e.buf = append(e.buf, '"')
 			s := err.Error()
 			if !hasSIMDEscape || len(s) <= simdEscapeThreshold {
-				e.buf = appendString(e.buf, s)
+				e.buf = appendLoggerString(e.buf, s)
 			} else {
-				e.buf = appendString2(e.buf, s)
+				e.buf = appendLoggerString2(e.buf, s)
 			}
 			e.buf = append(e.buf, '"')
 		}
@@ -1562,9 +1562,9 @@ func (e *Entry) Str(key string, val string) *Entry {
 	buf = append(buf, key...)
 	buf = append(buf, '"', ':', '"')
 	if !hasSIMDEscape || len(val) <= simdEscapeThreshold {
-		buf = appendString(buf, val)
+		buf = appendLoggerString(buf, val)
 	} else {
-		buf = appendString2(buf, val)
+		buf = appendLoggerString2(buf, val)
 	}
 	buf = append(buf, '"')
 	e.buf = buf
@@ -1598,9 +1598,9 @@ func (e *Entry) Stringer(key string, val fmt.Stringer) *Entry {
 		e.buf = append(e.buf, '"')
 		s := val.String()
 		if !hasSIMDEscape || len(s) <= simdEscapeThreshold {
-			e.buf = appendString(e.buf, s)
+			e.buf = appendLoggerString(e.buf, s)
 		} else {
-			e.buf = appendString2(e.buf, s)
+			e.buf = appendLoggerString2(e.buf, s)
 		}
 		e.buf = append(e.buf, '"')
 	} else {
@@ -1622,9 +1622,9 @@ func (e *Entry) GoStringer(key string, val fmt.GoStringer) *Entry {
 		e.buf = append(e.buf, '"')
 		s := val.GoString()
 		if !hasSIMDEscape || len(s) <= simdEscapeThreshold {
-			e.buf = appendString(e.buf, s)
+			e.buf = appendLoggerString(e.buf, s)
 		} else {
-			e.buf = appendString2(e.buf, s)
+			e.buf = appendLoggerString2(e.buf, s)
 		}
 		e.buf = append(e.buf, '"')
 	} else {
@@ -1648,9 +1648,9 @@ func (e *Entry) Strs(key string, vals []string) *Entry {
 		}
 		e.buf = append(e.buf, '"')
 		if !hasSIMDEscape || len(val) <= simdEscapeThreshold {
-			e.buf = appendString(e.buf, val)
+			e.buf = appendLoggerString(e.buf, val)
 		} else {
-			e.buf = appendString2(e.buf, val)
+			e.buf = appendLoggerString2(e.buf, val)
 		}
 		e.buf = append(e.buf, '"')
 	}
@@ -1705,9 +1705,9 @@ func (e *Entry) Bytes(key string, val []byte) *Entry {
 	buf = append(buf, key...)
 	buf = append(buf, '"', ':', '"')
 	if !hasSIMDEscape || len(val) <= simdEscapeThreshold {
-		buf = appendBytes(buf, val)
+		buf = appendLoggerBytes(buf, val)
 	} else {
-		buf = appendBytes2(buf, val)
+		buf = appendLoggerBytes2(buf, val)
 	}
 	buf = append(buf, '"')
 	e.buf = buf
@@ -1728,9 +1728,9 @@ func (e *Entry) BytesOrNil(key string, val []byte) *Entry {
 	} else {
 		e.buf = append(e.buf, '"')
 		if !hasSIMDEscape || len(val) <= simdEscapeThreshold {
-			e.buf = appendBytes(e.buf, val)
+			e.buf = appendLoggerBytes(e.buf, val)
 		} else {
-			e.buf = appendBytes2(e.buf, val)
+			e.buf = appendLoggerBytes2(e.buf, val)
 		}
 		e.buf = append(e.buf, '"')
 	}
@@ -1996,9 +1996,9 @@ func (e *Entry) Stack() *Entry {
 	e.buf = append(e.buf, "\":\""...)
 	b := stacks(false)
 	if !hasSIMDEscape || len(b) <= simdEscapeThreshold {
-		e.buf = appendBytes(e.buf, b)
+		e.buf = appendLoggerBytes(e.buf, b)
 	} else {
-		e.buf = appendBytes2(e.buf, b)
+		e.buf = appendLoggerBytes2(e.buf, b)
 	}
 	e.buf = append(e.buf, '"')
 	return e
@@ -2055,9 +2055,9 @@ func (e *Entry) Msg(msg string) {
 		e.buf = append(e.buf, MessageKey...)
 		e.buf = append(e.buf, "\":\""...)
 		if !hasSIMDEscape || len(msg) <= simdEscapeThreshold {
-			e.buf = appendString(e.buf, msg)
+			e.buf = appendLoggerString(e.buf, msg)
 		} else {
-			e.buf = appendString2(e.buf, msg)
+			e.buf = appendLoggerString2(e.buf, msg)
 		}
 		e.buf = append(e.buf, "\"}\n"...)
 	} else {
@@ -2121,9 +2121,9 @@ func (e *Entry) Msgf(format string, v ...any) {
 	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprintf(b, format, v...)
 	if !hasSIMDEscape || len(b.B) <= simdEscapeThreshold {
-		e.buf = appendBytes(e.buf, b.B)
+		e.buf = appendLoggerBytes(e.buf, b.B)
 	} else {
-		e.buf = appendBytes2(e.buf, b.B)
+		e.buf = appendLoggerBytes2(e.buf, b.B)
 	}
 	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
@@ -2145,9 +2145,9 @@ func (e *Entry) Msgs(args ...any) {
 	e.buf = append(e.buf, "\":\""...)
 	fmt.Fprint(b, args...)
 	if !hasSIMDEscape || len(b.B) <= simdEscapeThreshold {
-		e.buf = appendBytes(e.buf, b.B)
+		e.buf = appendLoggerBytes(e.buf, b.B)
 	} else {
-		e.buf = appendBytes2(e.buf, b.B)
+		e.buf = appendLoggerBytes2(e.buf, b.B)
 	}
 	e.buf = append(e.buf, '"')
 	if cap(b.B) <= bbcap {
@@ -2227,9 +2227,9 @@ func (e *Entry) Interface(key string, i any) *Entry {
 		fmt.Fprintf(b, `marshaling error: %+v`, err)
 		e.buf = append(e.buf, '"')
 		if !hasSIMDEscape || len(b.B) <= simdEscapeThreshold {
-			e.buf = appendBytes(e.buf, b.B)
+			e.buf = appendLoggerBytes(e.buf, b.B)
 		} else {
-			e.buf = appendBytes2(e.buf, b.B)
+			e.buf = appendLoggerBytes2(e.buf, b.B)
 		}
 		e.buf = append(e.buf, '"')
 	} else {
@@ -2421,9 +2421,9 @@ func (e *Entry) Any(key string, value any) *Entry {
 			fmt.Fprintf(b, `%+v`, value)
 			e.buf = append(e.buf, '"')
 			if !hasSIMDEscape || len(b.B) <= simdEscapeThreshold {
-				e.buf = appendBytes(e.buf, b.B)
+				e.buf = appendLoggerBytes(e.buf, b.B)
 			} else {
-				e.buf = appendBytes2(e.buf, b.B)
+				e.buf = appendLoggerBytes2(e.buf, b.B)
 			}
 			e.buf = append(e.buf, '"')
 		} else {
@@ -2581,3 +2581,5 @@ func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 //go:noescape
 //go:linkname now time.now
 func now() (sec int64, nsec int32, mono int64)
+
+func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

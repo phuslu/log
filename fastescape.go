@@ -1,7 +1,5 @@
 package log
 
-import "unsafe"
-
 // simdEscapeThreshold keeps values shorter than two vectors on the scalar path.
 const simdEscapeThreshold = 31
 
@@ -125,8 +123,8 @@ func appendEscapedString(dst []byte, s string) []byte {
 	return append(dst, s[j:]...)
 }
 
-// appendString appends a string using the scalar escape scan.
-func appendString(dst []byte, s string) []byte {
+// appendLoggerString appends a string using the scalar escape scan.
+func appendLoggerString(dst []byte, s string) []byte {
 	for _, c := range []byte(s) {
 		if escapes[c] {
 			return appendEscapedString(dst, s)
@@ -135,8 +133,8 @@ func appendString(dst []byte, s string) []byte {
 	return append(dst, s...)
 }
 
-// appendBytes appends bytes using the scalar escape scan.
-func appendBytes(dst, b []byte) []byte {
+// appendLoggerBytes appends bytes using the scalar escape scan.
+func appendLoggerBytes(dst, b []byte) []byte {
 	for _, c := range b {
 		if escapes[c] {
 			return appendEscapedBytes(dst, b)
@@ -145,20 +143,18 @@ func appendBytes(dst, b []byte) []byte {
 	return append(dst, b...)
 }
 
-// appendString2 appends a string after the SIMD escape scan.
-func appendString2(dst []byte, s string) []byte {
+// appendLoggerString2 appends a string after the SIMD escape scan.
+func appendLoggerString2(dst []byte, s string) []byte {
 	if needEscapeSIMD(s) {
 		return appendEscapedString(dst, s)
 	}
 	return append(dst, s...)
 }
 
-// appendBytes2 appends bytes after the SIMD escape scan.
-func appendBytes2(dst, b []byte) []byte {
+// appendLoggerBytes2 appends bytes after the SIMD escape scan.
+func appendLoggerBytes2(dst, b []byte) []byte {
 	if needEscapeSIMD(b2s(b)) {
 		return appendEscapedBytes(dst, b)
 	}
 	return append(dst, b...)
 }
-
-func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }
