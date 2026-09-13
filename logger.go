@@ -1,7 +1,6 @@
 package log
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1752,34 +1751,6 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	for _, v := range val {
 		e.buf = append(e.buf, hex[v>>4], hex[v&0x0f])
 	}
-	e.buf = append(e.buf, '"')
-	return e
-}
-
-// Base64 adds base64 encoding of the value to the entry.
-func (e *Entry) Base64(key string, value []byte) *Entry {
-	if e == nil {
-		return nil
-	}
-
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
-	e.buf = base64.StdEncoding.AppendEncode(e.buf, value)
-	e.buf = append(e.buf, '"')
-	return e
-}
-
-// Base64URL adds base64 url encoding of the value to the entry.
-func (e *Entry) Base64URL(key string, value []byte) *Entry {
-	if e == nil {
-		return nil
-	}
-
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
-	e.buf = base64.URLEncoding.AppendEncode(e.buf, value)
 	e.buf = append(e.buf, '"')
 	return e
 }

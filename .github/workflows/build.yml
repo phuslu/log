@@ -35,6 +35,24 @@ jobs:
         run: go test -v
       - name: Bench
         run: go test -v -run=none -bench=.
+  gccgo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@master
+        with:
+          # gccgo's libgo is based on go1.18, while go1.26+ generates a test main
+          # that libgo's testing/internal/testdeps cannot compile.
+          go-version: '1.25'
+      - name: Setup gccgo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gccgo
+      - name: Build
+        run: go build -v -compiler=gccgo
+      - name: Test
+        run: go test -v -compiler=gccgo
   lint:
     runs-on: ubuntu-latest
     steps:
