@@ -7,6 +7,12 @@ import (
 	_ "unsafe"
 )
 
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(n uint32) uint32
+
 //go:noescape
 //go:linkname absDate time.absDate
 func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday int)
