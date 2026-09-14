@@ -23,6 +23,7 @@
     - `SlogNewJSONHandler`, *drop-in replacement of slog.NewJSONHandler*
 * Utility Functions
     - `Goid()`, *the goroutine id matches stack trace*
+    - `Now()`, *fast time.Now() implementation without monotonic seconds*
     - `NewXID()`, *create a tracing id*
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*

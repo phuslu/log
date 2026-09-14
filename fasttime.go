@@ -2,7 +2,10 @@
 
 package log
 
-import _ "unsafe"
+import (
+	"time"
+	"unsafe"
+)
 
 // The g/m offsets vdsoCallG0 hardcodes come from the runtime of Go 1.25 through
 // 1.27: m.curg and m.gsignal moved from 192/80 to 184/72 in Go 1.25. Every
@@ -89,4 +92,43 @@ func walltime() (sec int64, nsec int32) {
 		return ts.sec, int32(ts.nsec)
 	}
 	return 0, 0
+}
+
+// unixToInternal is the number of seconds from Jan 1 year 1 to the Unix epoch,
+// the offset package time adds to a Unix second before storing it in the ext
+// field of a Time that carries no monotonic reading (time.unixToInternal).
+const unixToInternal int64 = (1969*365 + 1969/4 - 1969/100 + 1969/400) * 86400
+
+// Now returns the current local time. On the platforms taking this file it is a
+// drop-in replacement for time.Now that pays for one CLOCK_REALTIME vDSO read
+// instead of the wall clock read, the monotonic clock read, the runtime stack
+// switch and the time.Time construction time.Now goes through.
+//
+// The result is the Time time.Now returns on a system where the monotonic clock
+// is unavailable: the nanoseconds in wall, the seconds since Jan 1 year 1 in
+// ext, Local in loc, and no monotonic reading, so a comparison or a subtraction
+// against a Time that does carry one falls back to the wall clock. walltime
+// returning zero, because the vDSO is missing, the g/m offsets no longer match
+// this toolchain, or the vDSO call failed, falls back to time.Now instead, as
+// does the whole package on the platforms taking fasttime_zzz.go.
+//
+// The writes assume the field layout package time documents for Time, which has
+// been stable since Go 1.9; the build tag on this file holds it to the Go
+// releases those offsets were checked against.
+func Now() time.Time {
+	sec, nsec := walltime()
+	if sec == 0 {
+		return time.Now()
+	}
+	// Fill time.Time in place: wall holds the nanoseconds alone, since the
+	// 33-bit seconds field has to stay clear while the monotonic flag is not
+	// set, ext holds the seconds since Jan 1 year 1, and loc has to point at
+	// Local, because the nil loc of a zero Time means UTC to package time and
+	// is not the location time.Now returns.
+	var t time.Time
+	p := unsafe.Pointer(&t)
+	*(*uint64)(p) = uint64(nsec)                                       // t.wall
+	*(*int64)(unsafe.Add(p, 8)) = sec + unixToInternal                 // t.ext
+	*(*unsafe.Pointer)(unsafe.Add(p, 16)) = unsafe.Pointer(time.Local) // t.loc
+	return t
 }

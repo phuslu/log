@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func TestFastClockValue(t *testing.T) {
@@ -202,6 +203,94 @@ func BenchmarkWalltime(b *testing.B) {
 	b.Run("time.Now().Unix", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			unixSecSink = time.Now().Unix()
+		}
+	})
+}
+
+// checkFastClockNowCurrent checks that Now returns the current local time, which
+// is all a caller can rely on when Now is not on its fast path.
+func checkFastClockNowCurrent(t *testing.T) {
+	t.Helper()
+	real := time.Now()
+	got := Now()
+	if d := real.Sub(got); d < -time.Second || d > time.Second {
+		t.Fatalf("Now returned %v, %v off from %v", got, d, real)
+	}
+	if loc := got.Location(); loc != time.Local {
+		t.Fatalf("Now returned a Time in %v, want %v", loc, time.Local)
+	}
+}
+
+// checkFastClockNow checks the Time Now wrote by hand: the same instant as
+// time.Now, the fields of a Time that carries no monotonic reading, and a value
+// the rest of package time can format, parse and compare.
+func checkFastClockNow(t *testing.T) {
+	t.Helper()
+	checkFastClockNowCurrent(t)
+	got := Now()
+	p := (*[3]uintptr)(unsafe.Pointer(&got))
+	if p[0]>>30 != 0 {
+		t.Fatalf("Now set bits above the nanoseconds field of wall: %#x", p[0])
+	}
+	if ext := int64(p[1]); ext != got.Unix()+unixToInternal {
+		t.Fatalf("Now stored %d in ext, want %d", ext, got.Unix()+unixToInternal)
+	}
+	if p[2] != uintptr(unsafe.Pointer(time.Local)) {
+		t.Fatalf("Now stored %#x in loc, want %#x", p[2], uintptr(unsafe.Pointer(time.Local)))
+	}
+	// Formatting and parsing go through wall, ext and loc, so a Time that
+	// survives a round trip is one the rest of package time can work with.
+	s := got.Format(time.RFC3339Nano)
+	parsed, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		t.Fatalf("Now returned %v, which formats to the unparseable %q: %v", got, s, err)
+	}
+	if d := parsed.Sub(got); d != 0 {
+		t.Fatalf("Now returned %v, which round-trips to %v, %v off", got, parsed, d)
+	}
+}
+
+// TestFastClockNow checks Now on its fast path. TestFastClockG0Layout already
+// covers the machine where walltime falls back, so this skips rather than
+// checking the fallback a second time.
+func TestFastClockNow(t *testing.T) {
+	if !vdsoReady {
+		t.Skip("vDSO fast path disabled")
+	}
+	checkFastClockNow(t)
+}
+
+// TestFastClockNowFallback checks that Now is time.Now whenever walltime has no
+// fast path, which is all the platforms taking fasttime_zzz.go ever see. The
+// monotonic reading time.Now adds is the proof the call went through time.Now
+// instead of through the hand-written fields.
+func TestFastClockNowFallback(t *testing.T) {
+	ready := vdsoReady
+	vdsoReady = false
+	t.Cleanup(func() { vdsoReady = ready })
+	checkFastClockNowCurrent(t)
+	fallback := Now()
+	if p := (*[3]uintptr)(unsafe.Pointer(&fallback)); p[0]&(1<<63) == 0 {
+		t.Fatal("Now did not fall back to time.Now with the fast path disabled")
+	}
+}
+
+// nowTimeSink keeps the compiler from discarding the clock reads the benchmark
+// measures.
+var nowTimeSink time.Time
+
+// BenchmarkNow compares Now, the hand-written Time without a monotonic reading,
+// with a plain time.Now.
+func BenchmarkNow(b *testing.B) {
+	b.Run("Now", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			nowTimeSink = Now()
+		}
+	})
+
+	b.Run("time.Now", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			nowTimeSink = time.Now()
 		}
 	})
 }
