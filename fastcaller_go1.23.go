@@ -7,7 +7,6 @@ package log
 
 import (
 	"runtime"
-	"strings"
 	"unsafe"
 )
 
@@ -47,48 +46,39 @@ func pcFileLineName(pc uintptr) (file string, line int, name string) {
 	}
 
 	file, line = (*runtime.Func)(unsafe.Pointer(f._func)).FileLine(pc)
-	str := &f.datap.funcnametab[f.nameOff]
-	ss := stringStruct{str: unsafe.Pointer(str), len: findnull(str)}
-	name = *(*string)(unsafe.Pointer(&ss))
+
+	// It's important that interpret pc non-strictly as cgoTraceback may
+	// have added bogus PCs with a valid funcInfo but invalid PCDATA.
+	u, uf := newInlineUnwinder(f, pc)
+	var sf srcFunc
+	if uf.index < 0 {
+		sf = srcFunc{f.datap, f._func.nameOff, f._func.startLine, f._func.funcID}
+	} else {
+		t := &u.inlTree[uf.index]
+		sf = srcFunc{u.f.datap, t.nameOff, t.startLine, t.funcID}
+	}
+	name = srcFunc_name(sf)
 
 	return
 }
 
-type stringStruct struct {
-	str unsafe.Pointer
-	len int
+// inlinedCall is the encoding of entries in the FUNCDATA_InlTree table.
+type inlinedCall struct {
+	funcID    uint8 // type of the called function
+	_         [3]byte
+	nameOff   int32 // offset into pclntab for name of called function
+	parentPc  int32 // position of an instruction whose source position is the call site (offset from entry)
+	startLine int32 // line number of start of function (func keyword/TEXT directive)
 }
 
-//go:nosplit
-func findnull(s *byte) int {
-	if s == nil {
-		return 0
-	}
+type inlineUnwinder struct {
+	f       funcInfo
+	inlTree *[1 << 20]inlinedCall
+}
 
-	// pageSize is the unit we scan at a time looking for NULL.
-	// It must be the minimum page size for any architecture Go
-	// runs on. It's okay (just a minor performance loss) if the
-	// actual system page size is larger than this value.
-	const pageSize = 4096
-
-	offset := 0
-	ptr := unsafe.Pointer(s)
-	// IndexByteString uses wide reads, so we need to be careful
-	// with page boundaries. Call IndexByteString on
-	// [ptr, endOfPage) interval.
-	safeLen := int(pageSize - uintptr(ptr)%pageSize)
-
-	for {
-		t := *(*string)(unsafe.Pointer(&stringStruct{ptr, safeLen}))
-		// Check one page at a time.
-		if i := strings.IndexByte(t, 0); i != -1 {
-			return offset + i
-		}
-		// Move to next page
-		ptr = unsafe.Pointer(uintptr(ptr) + uintptr(safeLen))
-		offset += safeLen
-		safeLen = pageSize
-	}
+type inlineFrame struct {
+	pc    uintptr
+	index int32
 }
 
 type funcInfo struct {
@@ -138,3 +128,9 @@ func findfunc(pc uintptr) funcInfo
 
 //go:linkname funcInfoEntry runtime.funcInfo.entry
 func funcInfoEntry(f funcInfo) uintptr
+
+//go:linkname newInlineUnwinder runtime.newInlineUnwinder
+func newInlineUnwinder(f funcInfo, pc uintptr) (inlineUnwinder, inlineFrame)
+
+//go:linkname srcFunc_name runtime.srcFunc.name
+func srcFunc_name(srcFunc) string
