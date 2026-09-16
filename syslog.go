@@ -127,9 +127,9 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 		// Compared to the network form below, the changes are:
 		//	1. Use time.Stamp instead of time.RFC3339.
 		//	2. Drop the hostname field.
-		e1.buf = timeNow().AppendFormat(e1.buf, time.Stamp)
+		e1.buf = Now().AppendFormat(e1.buf, time.Stamp)
 	} else {
-		e1.buf = timeNow().AppendFormat(e1.buf, time.RFC3339)
+		e1.buf = Now().AppendFormat(e1.buf, time.RFC3339)
 		e1.buf = append(e1.buf, ' ')
 		e1.buf = append(e1.buf, w.Hostname...)
 	}
