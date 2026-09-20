@@ -9,8 +9,8 @@ import (
 )
 
 func TestFileWriter(t *testing.T) {
-	const filename string = "file-output.log"
 	const text string = "hello file writer!\n"
+	filename := filepath.Join(t.TempDir(), "file-output.log")
 
 	w := &FileWriter{
 		Filename: filename,
@@ -23,7 +23,7 @@ func TestFileWriter(t *testing.T) {
 	// _ = w.Rotate()
 	w.Close()
 
-	matches, err := filepath.Glob("file-output.*.log")
+	matches, err := filepath.Glob(filepath.Join(filepath.Dir(filename), "file-output.*.log"))
 	if err != nil {
 		t.Fatalf("filepath glob error: %+v", err)
 	}
@@ -39,13 +39,6 @@ func TestFileWriter(t *testing.T) {
 	if string(data) != text {
 		t.Fatalf("read file content mismath: data=[%s], text=[%s]", data, text)
 	}
-
-	err = os.Remove(matches[0])
-	if err != nil {
-		t.Fatalf("os remove %s error: %+v", matches[0], err)
-	}
-
-	os.Remove(filename)
 }
 
 func TestFileWriterStderr(t *testing.T) {
