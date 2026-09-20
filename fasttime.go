@@ -99,6 +99,13 @@ func walltime() (sec int64, nsec int32) {
 // field of a Time that carries no monotonic reading (time.unixToInternal).
 const unixToInternal int64 = (1969*365 + 1969/4 - 1969/100 + 1969/400) * 86400
 
+// timeTime mirrors struct time.Time.
+type timeTime struct {
+	wall uint64
+	ext  int64
+	loc  *time.Location
+}
+
 // Now returns the current local time. On the platforms taking this file it is a
 // drop-in replacement for time.Now that pays for one CLOCK_REALTIME vDSO read
 // instead of the wall clock read, the monotonic clock read, the runtime stack
@@ -115,7 +122,7 @@ const unixToInternal int64 = (1969*365 + 1969/4 - 1969/100 + 1969/400) * 86400
 // The writes assume the field layout package time documents for Time, which has
 // been stable since Go 1.9; the build tag on this file holds it to the Go
 // releases those offsets were checked against.
-func Now() time.Time {
+func Now() (now time.Time) {
 	sec, nsec := walltime()
 	if sec == 0 {
 		return time.Now()
@@ -125,10 +132,9 @@ func Now() time.Time {
 	// set, ext holds the seconds since Jan 1 year 1, and loc has to point at
 	// Local, because the nil loc of a zero Time means UTC to package time and
 	// is not the location time.Now returns.
-	var t time.Time
-	p := unsafe.Pointer(&t)
-	*(*uint64)(p) = uint64(nsec)                                       // t.wall
-	*(*int64)(unsafe.Add(p, 8)) = sec + unixToInternal                 // t.ext
-	*(*unsafe.Pointer)(unsafe.Add(p, 16)) = unsafe.Pointer(time.Local) // t.loc
-	return t
+	tt := (*timeTime)(unsafe.Pointer(&now))
+	tt.wall = uint64(nsec)
+	tt.ext = sec + unixToInternal
+	tt.loc = time.Local
+	return
 }
