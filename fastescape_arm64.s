@@ -2,18 +2,18 @@
 
 #include "textflag.h"
 
-// The two nibble tables below encode the nine bytes appendEscapedString rewrites:
-// 0x08, 0x09, 0x0a, 0x0c, 0x0d, '"', '\'', '<', '\\'. Bit i of a table entry
-// marks a byte, and a byte b is one of them exactly when
-// loTable[b&0xf] & hiTable[b>>4] != 0. 0x0c, 0x3c and 0x5c share bit 3 because
+// The two nibble tables below encode the bytes appendEscapedString rewrites:
+// the C0 controls 0x00-0x1f plus '"', '\'', '<' and '\\'. Bit i of a table
+// entry marks a byte, and a byte b is one of them exactly when
+// loTable[b&0xf] & hiTable[b>>4] != 0. The whole 0x00-0x1f range shares bit 0
+// because both high-nibble rows set it, and '<' and '\\' share bit 3 because
 // their cross combinations are themselves in the set, so there are no false
-// positives, and 0x0b stays out because appendEscapedString copies it verbatim
-// while it does rewrite the 0x00 such a superset test would let through.
-DATA	·escapeLoTable+0(SB)/8, $0x4000000000200000
-DATA	·escapeLoTable+8(SB)/8, $0x0000100800040201
+// positives.
+DATA	·escapeLoTable+0(SB)/8, $0x0501010101030101
+DATA	·escapeLoTable+8(SB)/8, $0x0101011901010101
 GLOBL	·escapeLoTable(SB), RODATA|NOPTR, $16
 
-DATA	·escapeHiTable+0(SB)/8, $0x000008000860001f
+DATA	·escapeHiTable+0(SB)/8, $0x0000100008060101
 DATA	·escapeHiTable+8(SB)/8, $0x0000000000000000
 GLOBL	·escapeHiTable(SB), RODATA|NOPTR, $16
 

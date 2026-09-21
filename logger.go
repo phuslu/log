@@ -1686,10 +1686,13 @@ func (e *Entry) Byte(key string, val byte) *Entry {
 		e.buf = append(e.buf, "\"\\u003c\""...)
 	case '\'':
 		e.buf = append(e.buf, "\"\\u0027\""...)
-	case 0:
-		e.buf = append(e.buf, "\"\\u0000\""...)
 	default:
-		e.buf = append(e.buf, '"', val, '"')
+		// JSON requires every C0 control byte to be escaped.
+		if val < 0x20 {
+			e.buf = append(e.buf, '"', '\\', 'u', '0', '0', hex[val>>4], hex[val&0xf], '"')
+		} else {
+			e.buf = append(e.buf, '"', val, '"')
+		}
 	}
 	return e
 }

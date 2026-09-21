@@ -3,16 +3,25 @@ package log
 // simdEscapeThreshold keeps values shorter than two vectors on the scalar path.
 const simdEscapeThreshold = 31
 
+// escapes marks every byte that appendEscapedBytes and appendEscapedString
+// rewrite: the C0 control bytes, which JSON requires to be escaped, plus the
+// characters escaped for HTML safety. It must stay in sync with those two
+// functions and with the vector kernels in fastescape_amd64.s and
+// fastescape_arm64.s.
 var escapes = [256]bool{
+	0x00: true, 0x01: true, 0x02: true, 0x03: true,
+	0x04: true, 0x05: true, 0x06: true, 0x07: true,
+	0x08: true, 0x09: true, 0x0a: true, 0x0b: true,
+	0x0c: true, 0x0d: true, 0x0e: true, 0x0f: true,
+	0x10: true, 0x11: true, 0x12: true, 0x13: true,
+	0x14: true, 0x15: true, 0x16: true, 0x17: true,
+	0x18: true, 0x19: true, 0x1a: true, 0x1b: true,
+	0x1c: true, 0x1d: true, 0x1e: true, 0x1f: true,
+
 	'"':  true,
-	'<':  true,
 	'\'': true,
+	'<':  true,
 	'\\': true,
-	'\b': true,
-	'\f': true,
-	'\n': true,
-	'\r': true,
-	'\t': true,
 }
 
 func appendEscapedBytes(dst, b []byte) []byte {
@@ -23,48 +32,29 @@ func appendEscapedBytes(dst, b []byte) []byte {
 		_ = b[n-1]
 	}
 	for i := 0; i < n; i++ {
-		switch b[i] {
-		case '"':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', '"')
-			j = i + 1
-		case '\\':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', '\\')
-			j = i + 1
-		case '\n':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'n')
-			j = i + 1
-		case '\r':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'r')
-			j = i + 1
-		case '\t':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 't')
-			j = i + 1
-		case '\f':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', 'c')
-			j = i + 1
-		case '\b':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', '8')
-			j = i + 1
-		case '<':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '3', 'c')
-			j = i + 1
-		case '\'':
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '2', '7')
-			j = i + 1
-		case 0:
-			dst = append(dst, b[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', '0')
-			j = i + 1
+		c := b[i]
+		// Skip ordinary bytes without walking the escape dispatch below.
+		if !escapes[c] {
+			continue
 		}
+		// Adjacent escapes have no ordinary bytes to copy.
+		if j < i {
+			dst = append(dst, b[j:i]...)
+		}
+		switch c {
+		case '"', '\\':
+			dst = append(dst, '\\', c)
+		case '\n':
+			dst = append(dst, '\\', 'n')
+		case '\r':
+			dst = append(dst, '\\', 'r')
+		case '\t':
+			dst = append(dst, '\\', 't')
+		default:
+			// The remaining control bytes and HTML-sensitive characters.
+			dst = append(dst, '\\', 'u', '0', '0', hex[c>>4], hex[c&0xf])
+		}
+		j = i + 1
 	}
 	return append(dst, b[j:]...)
 }
@@ -77,48 +67,29 @@ func appendEscapedString(dst []byte, s string) []byte {
 		_ = s[n-1]
 	}
 	for i := 0; i < n; i++ {
-		switch s[i] {
-		case '"':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', '"')
-			j = i + 1
-		case '\\':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', '\\')
-			j = i + 1
-		case '\n':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'n')
-			j = i + 1
-		case '\r':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'r')
-			j = i + 1
-		case '\t':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 't')
-			j = i + 1
-		case '\f':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', 'c')
-			j = i + 1
-		case '\b':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', '8')
-			j = i + 1
-		case '<':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '3', 'c')
-			j = i + 1
-		case '\'':
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '2', '7')
-			j = i + 1
-		case 0:
-			dst = append(dst, s[j:i]...)
-			dst = append(dst, '\\', 'u', '0', '0', '0', '0')
-			j = i + 1
+		c := s[i]
+		// Skip ordinary bytes without walking the escape dispatch below.
+		if !escapes[c] {
+			continue
 		}
+		// Adjacent escapes have no ordinary bytes to copy.
+		if j < i {
+			dst = append(dst, s[j:i]...)
+		}
+		switch c {
+		case '"', '\\':
+			dst = append(dst, '\\', c)
+		case '\n':
+			dst = append(dst, '\\', 'n')
+		case '\r':
+			dst = append(dst, '\\', 'r')
+		case '\t':
+			dst = append(dst, '\\', 't')
+		default:
+			// The remaining control bytes and HTML-sensitive characters.
+			dst = append(dst, '\\', 'u', '0', '0', hex[c>>4], hex[c&0xf])
+		}
+		j = i + 1
 	}
 	return append(dst, s[j:]...)
 }
