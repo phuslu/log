@@ -5,6 +5,8 @@ package log
 import (
 	"net"
 	"os"
+	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -62,32 +64,38 @@ func TestSyslogWriterTCPError(t *testing.T) {
 }
 
 func TestSyslogWriterUnix(t *testing.T) {
-	const sockname = "/tmp/go-tmp-null.sock"
+	sockname := filepath.Join(t.TempDir(), "null.sock")
 
 	conn, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sockname, Net: "unixgram"})
 	if err != nil {
 		t.Errorf("listen error: %+v", err)
 		return
 	}
-	defer os.Remove(sockname)
 
+	// Drain the socket while the writers below run. The goroutine must not call
+	// t.Logf and must be gone before the test returns: logging from a goroutine
+	// after its test has completed panics the whole test binary.
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		var data [512]byte
 		for {
 			buf := data[:]
-			n, uaddr, err := conn.ReadFromUnix(buf)
-			if err != nil {
-				t.Logf("listen: error: %v\n", err)
-			} else {
-				t.Logf("listen: received %v bytes from %+v\n", n, uaddr)
+			if _, _, err := conn.ReadFromUnix(buf); err != nil {
+				return
 			}
 			time.Sleep(10 * time.Millisecond)
 		}
 	}()
+	defer func() {
+		conn.Close() // unblocks ReadFromUnix
+		wg.Wait()
+	}()
 
 	w := &SyslogWriter{
 		Network: "unixgram",
-		Address: "/tmp/go-tmp-null.sock",
+		Address: sockname,
 	}
 
 	for _, level := range []string{"trace", "debug", "info", "warning", "error", "fatal", "panic", "hahaha"} {
