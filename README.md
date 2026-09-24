@@ -219,16 +219,15 @@ func main() {
 //    {"ts":1257894000000,"foo":"bar"}
 ```
 
-### Cache loggers timestamps with EnableTimeCache
+### Use timestamp cache for loggers
 
 To format times from a cached timestamp instead of reading the clock for every
 entry, call `EnableTimeCache` once at startup. It caches the timestamp for every
-logger whose `TimeLocation` is empty, `time.Local` or `time.UTC`, refreshing the
-cache about every interval. The interval is a target refresh period, not a bound
-on the timestamp error: the refresh runs on a goroutine, so when the scheduler
-delays it, logged times go stale for longer than the interval, and every entry
-formatted from the same refresh carries the same timestamp. Pick an interval that
-fits the precision you need.
+logger, refreshing the cache about every interval. The interval is a target
+refresh period, not a bound on the timestamp error: the refresh runs on a
+goroutine, so when the scheduler delays it, logged times go stale for longer than
+the interval, and every entry formatted from the same refresh carries the same
+timestamp. Pick an interval that fits the precision you need.
 
 ```go
 package main
