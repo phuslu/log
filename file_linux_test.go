@@ -300,26 +300,6 @@ func setFileSizeLimit(t *testing.T, limit uint64) {
 	})
 }
 
-// tempLogDir returns a temporary directory whose removal tolerates the
-// background goroutine that FileWriter.rotate spawns to refresh the symlink.
-func tempLogDir(t *testing.T) string {
-	t.Helper()
-	dir, err := os.MkdirTemp("", "log-writev-*")
-	if err != nil {
-		t.Fatalf("mkdirtemp: %v", err)
-	}
-	t.Cleanup(func() {
-		for i := 0; i < 20; i++ {
-			if err := os.RemoveAll(dir); err == nil {
-				return
-			}
-			time.Sleep(10 * time.Millisecond)
-		}
-		t.Logf("giving up removing %s", dir)
-	})
-	return dir
-}
-
 // largestLog returns the content of the biggest rotated log file, since a
 // rotation may leave an empty sibling behind if the timestamp ticks over.
 func largestLog(t *testing.T, dir, base string) []byte {

@@ -10,7 +10,7 @@ import (
 
 func TestFileWriter(t *testing.T) {
 	const text string = "hello file writer!\n"
-	filename := filepath.Join(t.TempDir(), "file-output.log")
+	filename := filepath.Join(tempLogDir(t), "file-output.log")
 
 	w := &FileWriter{
 		Filename: filename,
@@ -39,6 +39,59 @@ func TestFileWriter(t *testing.T) {
 	if string(data) != text {
 		t.Fatalf("read file content mismath: data=[%s], text=[%s]", data, text)
 	}
+}
+
+// TestFileWriterRemoveAfterClose removes the log directory right after Close,
+// like the cleanup of tempLogDir does. The rotation a write starts runs in the
+// background, so the removal has to retry while it refreshes the log symlink.
+func TestFileWriterRemoveAfterClose(t *testing.T) {
+	const text string = "hello file writer!\n"
+
+	for i := 0; i < 50; i++ {
+		dir := tempLogDir(t)
+		filename := filepath.Join(dir, "file-output.log")
+
+		w := &FileWriter{
+			Filename: filename,
+		}
+		if _, err := wlprintf(w, InfoLevel, text); err != nil {
+			t.Fatalf("iteration %d: file writer error: %+v", i, err)
+		}
+		if err := w.Close(); err != nil {
+			t.Fatalf("iteration %d: close file writer error: %+v", i, err)
+		}
+		if err := removeLogDir(dir); err != nil {
+			t.Fatalf("iteration %d: remove %s error: %+v", i, dir, err)
+		}
+	}
+}
+
+// removeLogDir removes a log directory, retrying while the background goroutine
+// that FileWriter.rotate spawns refreshes the log symlink.
+func removeLogDir(dir string) (err error) {
+	for i := 0; i < 20; i++ {
+		if err = os.RemoveAll(dir); err == nil {
+			return nil
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return err
+}
+
+// tempLogDir returns a temporary directory whose removal tolerates the
+// background goroutine that FileWriter.rotate spawns to refresh the symlink.
+func tempLogDir(t *testing.T) string {
+	t.Helper()
+	dir, err := os.MkdirTemp("", "log-*")
+	if err != nil {
+		t.Fatalf("mkdirtemp: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := removeLogDir(dir); err != nil {
+			t.Logf("giving up removing %s: %v", dir, err)
+		}
+	})
+	return dir
 }
 
 func TestFileWriterStderr(t *testing.T) {
@@ -374,7 +427,7 @@ func TestFileWriterFileargs(t *testing.T) {
 }
 
 func TestFileWriter_MaxSizeRotation_SingleVsMultiInstance(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := tempLogDir(t)
 	baseFilename := filepath.Join(tempDir, "rotation-test.log")
 
 	type testCase struct {
