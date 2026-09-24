@@ -477,6 +477,61 @@ var timeHeaderPointers struct {
 	local unsafe.Pointer
 }
 
+type timeCache struct {
+	sec  int64
+	nsec int32
+}
+
+var timeCachePointer unsafe.Pointer // *timeCache
+var timeCacheMu sync.Mutex
+var timeCacheStop, timeCacheDone chan struct{}
+
+// EnableTimeCache caches timestamps for every logger whose TimeLocation is nil,
+// time.Local or time.UTC, refreshing the cache about every interval. The interval
+// is a target refresh period, not a bound on the timestamp error: a delayed
+// refresh leaves logged times stale for longer than one interval. It trades
+// timestamp precision for fewer clock reads. An interval of zero disables caching
+// and restores live timestamps.
+func EnableTimeCache(interval time.Duration) {
+	timeCacheMu.Lock()
+	defer timeCacheMu.Unlock()
+	if timeCacheStop != nil {
+		close(timeCacheStop)
+		<-timeCacheDone
+		timeCacheStop = nil
+	}
+	if interval <= 0 {
+		return
+	}
+	stop, done := make(chan struct{}), make(chan struct{})
+	timeCacheStop, timeCacheDone = stop, done
+	ticker := time.NewTicker(interval)
+	var tc timeCache
+	tc.sec, tc.nsec = walltime()
+	if tc.sec == 0 {
+		tc.sec, tc.nsec, _ = now()
+	}
+	atomic.StorePointer(&timeCachePointer, unsafe.Pointer(&tc))
+	go func() {
+		defer close(done)
+		defer atomic.StorePointer(&timeCachePointer, nil)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-ticker.C:
+				var tc timeCache
+				tc.sec, tc.nsec = walltime()
+				if tc.sec == 0 {
+					tc.sec, tc.nsec, _ = now()
+				}
+				atomic.StorePointer(&timeCachePointer, unsafe.Pointer(&tc))
+			}
+		}
+	}()
+}
+
 func (l *Logger) header(level Level) *Entry {
 	e := epool.Get().(*Entry)
 	e.buf = e.buf[:0]
@@ -515,7 +570,15 @@ func (l *Logger) header(level Level) *Entry {
 	}
 	switch l.TimeFormat {
 	case "", time.RFC3339, time.RFC3339Nano:
-		sec, nsec := walltime()
+		var sec int64
+		var nsec int32
+		if p := atomic.LoadPointer(&timeCachePointer); p != nil {
+			tt := (*timeCache)(p)
+			sec, nsec = tt.sec, tt.nsec
+		}
+		if sec == 0 {
+			sec, nsec = walltime()
+		}
 		if sec == 0 {
 			sec, nsec, _ = now()
 		}
@@ -631,7 +694,13 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:i]...)
 	case TimeFormatUnix:
-		sec, _ := walltime()
+		var sec int64
+		if p := atomic.LoadPointer(&timeCachePointer); p != nil {
+			sec = (*timeCache)(p).sec
+		}
+		if sec == 0 {
+			sec, _ = walltime()
+		}
 		if sec == 0 {
 			sec, _, _ = now()
 		}
@@ -660,7 +729,15 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixMs:
-		sec, nsec := walltime()
+		var sec int64
+		var nsec int32
+		if p := atomic.LoadPointer(&timeCachePointer); p != nil {
+			tt := (*timeCache)(p)
+			sec, nsec = tt.sec, tt.nsec
+		}
+		if sec == 0 {
+			sec, nsec = walltime()
+		}
 		if sec == 0 {
 			sec, nsec, _ = now()
 		}
@@ -695,7 +772,15 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	case TimeFormatUnixWithMs:
-		sec, nsec := walltime()
+		var sec int64
+		var nsec int32
+		if p := atomic.LoadPointer(&timeCachePointer); p != nil {
+			tt := (*timeCache)(p)
+			sec, nsec = tt.sec, tt.nsec
+		}
+		if sec == 0 {
+			sec, nsec = walltime()
+		}
 		if sec == 0 {
 			sec, nsec, _ = now()
 		}
@@ -731,11 +816,18 @@ func (l *Logger) header(level Level) *Entry {
 		// append to e.buf
 		e.buf = append(e.buf, tmp[:]...)
 	default:
+		var now time.Time
+		if p := atomic.LoadPointer(&timeCachePointer); p != nil {
+			tt := (*timeCache)(p)
+			now = time.Unix(tt.sec, int64(tt.nsec))
+		} else {
+			now = timeNow()
+		}
 		e.buf = append(e.buf, '"')
 		if l.TimeLocation == time.UTC {
-			e.buf = timeNow().UTC().AppendFormat(e.buf, l.TimeFormat)
+			e.buf = now.UTC().AppendFormat(e.buf, l.TimeFormat)
 		} else {
-			e.buf = timeNow().AppendFormat(e.buf, l.TimeFormat)
+			e.buf = now.AppendFormat(e.buf, l.TimeFormat)
 		}
 		e.buf = append(e.buf, '"')
 	}

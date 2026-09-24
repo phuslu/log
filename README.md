@@ -28,6 +28,7 @@
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
     - `Printf(fmt string, a ...any)`, *printf logging*
+    - `EnableTimeCache(interval time.Duration)`, *cache timestamps for loggers*
 * Extreme Performance
     - [Significantly faster][high-performance] than all other json loggers.
 
@@ -217,6 +218,44 @@ func main() {
 //    {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
 //    {"ts":1257894000000,"foo":"bar"}
 ```
+
+### Cache loggers timestamps with EnableTimeCache
+
+To format times from a cached timestamp instead of reading the clock for every
+entry, call `EnableTimeCache` once at startup. It caches the timestamp for every
+logger whose `TimeLocation` is empty, `time.Local` or `time.UTC`, refreshing the
+cache about every interval. The interval is a target refresh period, not a bound
+on the timestamp error: the refresh runs on a goroutine, so when the scheduler
+delays it, logged times go stale for longer than the interval, and every entry
+formatted from the same refresh carries the same timestamp. Pick an interval that
+fits the precision you need.
+
+```go
+package main
+
+import (
+	"os"
+	"time"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	log.EnableTimeCache(10*time.Millisecond)
+
+	logger := log.Logger{Level: log.InfoLevel, Writer: &log.IOWriter{os.Stdout}}
+	logger.Info().Str("foo", "bar").Msg("hi, phuslog")
+	logger.Warn().Msgf("foo=%s number=%d", "bar", 42)
+
+	// Output:
+	//   {"time":"2020-03-22T09:58:41.828Z","level":"info","foo":"bar","message":"hi, phuslog"}
+	//   {"time":"2020-03-22T09:58:41.828Z","level":"warn","message":"foo=bar number=42"}
+}
+```
+> Note: `EnableTimeCache` is global, calling it again replaces the previous interval,
+> and `EnableTimeCache(0)` disables caching and restores live timestamps. The cache is
+> only as fresh as its last refresh: under CPU contention the observed lag can exceed
+> the interval.
 
 ### Customize the log writer
 
