@@ -1,5 +1,3 @@
-//go:build gc
-
 #include "textflag.h"
 
 // func needEscapeBlocks(b string) bool

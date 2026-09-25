@@ -1,4 +1,4 @@
-//go:build gc && linux && (amd64 || arm64) && go1.25 && !go1.28
+//go:build linux && (amd64 || arm64) && go1.25 && !go1.28
 
 package log
 

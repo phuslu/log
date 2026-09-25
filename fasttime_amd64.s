@@ -1,4 +1,4 @@
-//go:build gc && linux && go1.25 && !go1.28
+//go:build linux && go1.25 && !go1.28
 
 #include "textflag.h"
 

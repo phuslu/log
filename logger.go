@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1858,6 +1859,34 @@ func (e *Entry) Hex(key string, val []byte) *Entry {
 	return e
 }
 
+// Base64 adds base64 encoding of the value to the entry.
+func (e *Entry) Base64(key string, value []byte) *Entry {
+	if e == nil {
+		return nil
+	}
+
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = base64.StdEncoding.AppendEncode(e.buf, value)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// Base64URL adds base64 url encoding of the value to the entry.
+func (e *Entry) Base64URL(key string, value []byte) *Entry {
+	if e == nil {
+		return nil
+	}
+
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = base64.URLEncoding.AppendEncode(e.buf, value)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // Encode encodes bytes using enc.AppendEncode to the entry.
 func (e *Entry) Encode(key string, val []byte, enc interface {
 	AppendEncode(dst, src []byte) []byte
@@ -2748,5 +2777,19 @@ func absDateTime(abs uint64) (year int, month time.Month, day, hour, min, sec in
 	day = day - begin + 1
 	return
 }
+
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(n uint32) uint32
+
+//go:noescape
+//go:linkname now time.now
+func now() (sec int64, nsec int32, mono int64)
+
+//go:noescape
+//go:linkname caller1 runtime.callers
+func caller1(skip int, pc *uintptr, len, cap int) int
 
 func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

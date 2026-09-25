@@ -1,5 +1,3 @@
-//go:build gc
-
 #include "textflag.h"
 
 // The two nibble tables below encode the bytes appendEscapedString rewrites:

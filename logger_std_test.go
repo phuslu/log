@@ -1,6 +1,3 @@
-// gccgo's libgo is based on Go 1.18, which has no log/slog package.
-//go:build go1.21 && !gccgo
-
 package log
 
 import (

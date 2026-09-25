@@ -1,4 +1,4 @@
-//go:build gc && go1.22
+//go:build go1.22
 
 //nolint:unused
 package log
