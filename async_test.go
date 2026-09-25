@@ -11,7 +11,7 @@ func TestAsyncWriterZero(t *testing.T) {
 		ChannelSize: 0,
 		Writer:      IOWriter{os.Stderr},
 	}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		_, _ = wlprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
@@ -24,7 +24,7 @@ func TestAsyncWriterSmall(t *testing.T) {
 		ChannelSize: 5,
 		Writer:      IOWriter{os.Stderr},
 	}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		_, _ = wlprintf(w, InfoLevel, "%s, %d during async writer 1k buff size\n", timeNow(), i)
 	}
 	if err := w.Close(); err != nil {
@@ -53,7 +53,7 @@ func TestAsyncWriterSize(t *testing.T) {
 		},
 	}
 
-	for i := 0; i < 100000; i++ {
+	for range 100000 {
 		logger.Info().Msg("hello file writer")
 	}
 

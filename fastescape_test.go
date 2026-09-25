@@ -24,7 +24,7 @@ func stringReference(dst []byte, s string) []byte {
 func TestStringDifferential(t *testing.T) {
 	interesting := []byte("\"\\<'\b\f\n\r\t\x00\x0babc")
 	corpus := []string{"", strings.Repeat("x", 15), strings.Repeat("x", 16), strings.Repeat("x", 17)}
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		for _, n := range []int{16, 32, 64} {
 			corpus = append(corpus, strings.Repeat(string([]byte{byte(i)}), n))
 		}
@@ -32,7 +32,7 @@ func TestStringDifferential(t *testing.T) {
 
 	random := rand.New(rand.NewSource(20260913))
 	for _, n := range []int{0, 1, 2, 15, 16, 17, 23, 24, simdEscapeThreshold - 1, simdEscapeThreshold, simdEscapeThreshold + 1, 33, 63, 64, 65, 127, 128, 1000} {
-		for k := 0; k < 200; k++ {
+		for k := range 200 {
 			b := make([]byte, n)
 			for i := range b {
 				switch k % 4 {

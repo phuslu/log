@@ -11,7 +11,7 @@ import (
 // by byte: for every byte value it feeds a full vector of that byte, which
 // covers the range test, every equality test and the table lookups.
 func TestNeedEscapeBlocks(t *testing.T) {
-	for b := 0; b < 256; b++ {
+	for b := range 256 {
 		s := strings.Repeat(string([]byte{byte(b)}), 16)
 		if got, want := needEscapeBlocks(s), escapes[byte(b)]; got != want {
 			t.Errorf("needEscapeBlocks(%#02x x16) = %v, want %v", b, got, want)
@@ -19,7 +19,7 @@ func TestNeedEscapeBlocks(t *testing.T) {
 	}
 
 	// A byte in the last byte of an otherwise clean vector must still be seen.
-	for b := 0; b < 256; b++ {
+	for b := range 256 {
 		s := strings.Repeat("x", 15) + string([]byte{byte(b)})
 		if got, want := needEscapeBlocks(s), escapes[byte(b)]; got != want {
 			t.Errorf("needEscapeBlocks(x..x,%#02x) = %v, want %v", b, got, want)

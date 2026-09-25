@@ -47,7 +47,7 @@ func TestFileWriter(t *testing.T) {
 func TestFileWriterRemoveAfterClose(t *testing.T) {
 	const text string = "hello file writer!\n"
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		dir := tempLogDir(t)
 		filename := filepath.Join(dir, "file-output.log")
 
@@ -69,7 +69,7 @@ func TestFileWriterRemoveAfterClose(t *testing.T) {
 // removeLogDir removes a log directory, retrying while the background goroutine
 // that FileWriter.rotate spawns refreshes the log symlink.
 func removeLogDir(dir string) (err error) {
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		if err = os.RemoveAll(dir); err == nil {
 			return nil
 		}
@@ -486,7 +486,7 @@ func TestFileWriter_MaxSizeRotation_SingleVsMultiInstance(t *testing.T) {
 					HostName:   tc.hostName,
 					ProcessID:  tc.processID,
 				}
-				for i := 0; i < iterations; i++ {
+				for i := range iterations {
 					_, err := w.Write(dataChunk)
 					if err != nil {
 						t.Fatalf("iteration %d: file write error: %+v", i, err)
@@ -497,7 +497,7 @@ func TestFileWriter_MaxSizeRotation_SingleVsMultiInstance(t *testing.T) {
 					t.Fatalf("error closing writer: %+v", err)
 				}
 			} else {
-				for i := 0; i < iterations; i++ {
+				for i := range iterations {
 					w := &FileWriter{
 						Filename:   baseFilename,
 						MaxSize:    maxSize,

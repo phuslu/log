@@ -18,7 +18,7 @@ func TestXIDParse(t *testing.T) {
 		t.Errorf("ParseXID should error")
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		x := NewXID()
 		got, _ := ParseXID(x.String())
 		want := x

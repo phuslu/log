@@ -121,7 +121,7 @@ func TestSlogHandlerDerivedConcurrent(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			for j := 0; j < 100; j++ {
+			for j := range 100 {
 				base.With("worker", i).WithGroup("g").Info("hello from derived slog", "j", j)
 			}
 		}(i)

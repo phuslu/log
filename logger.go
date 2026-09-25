@@ -2418,7 +2418,7 @@ func (e *Entry) Objects(key string, objects any) *Entry {
 			e.buf = append(e.buf, ',')
 		}
 		value := values.Index(i)
-		if value.Kind() == reflect.Ptr && value.IsNil() {
+		if value.Kind() == reflect.Pointer && value.IsNil() {
 			e.buf = append(e.buf, "null"...)
 		} else if obj, ok := value.Interface().(ObjectMarshaler); ok {
 			i := len(e.buf)

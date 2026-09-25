@@ -32,7 +32,7 @@ func TestAppendFloat(t *testing.T) {
 	// infinities are skipped because encoding/json rejects them while
 	// appendFloat writes them as strings.
 	random := rand.New(rand.NewSource(20260913))
-	for i := 0; i < 10000; i++ {
+	for range 10000 {
 		if f := math.Float64frombits(random.Uint64()); !math.IsNaN(f) && !math.IsInf(f, 0) {
 			values = append(values, f)
 		}
@@ -564,7 +564,7 @@ func TestAbsDateTime(t *testing.T) {
 	}
 
 	r := rand.New(rand.NewSource(0))
-	for i := 0; i < 200000; i++ {
+	for range 200000 {
 		check(r.Int63n(yearRange) + year1)
 	}
 }
@@ -829,7 +829,7 @@ func TestLoggerTimeFormatHeader(t *testing.T) {
 			var buf bytes.Buffer
 			logger := Logger{TimeFormat: c.format, TimeLocation: loc, Writer: IOWriter{&buf}}
 			trimmed := false
-			for i := 0; i < 20000; i++ {
+			for range 20000 {
 				buf.Reset()
 				logger.Info().Msg("x")
 				var m map[string]string
@@ -866,7 +866,7 @@ func TestLoggerTimeFormatHeader(t *testing.T) {
 func TestLoggerTimeFormatHeaderDigits(t *testing.T) {
 	defer timestampCachePointer.Store(nil)
 	nsecs := []int32{0, 1, 9, 10, 99, 100, 999999, 1000000, 99999, 100000, 100001, 120000000, 123456789, 500000000, 999999999}
-	for i := 0; i < 20000; i++ {
+	for range 20000 {
 		nsecs = append(nsecs, rand.Int31n(1e9))
 	}
 	const sec = 1595759807
@@ -939,11 +939,11 @@ func TestLoggerCategorizedLogLevels(t *testing.T) {
 // fractionDigits returns the number of fractional-second digits in a header
 // time field, or -1 when it carries no fraction.
 func fractionDigits(s string) int {
-	i := strings.IndexByte(s, '.')
-	if i < 0 {
+	_, after, ok := strings.Cut(s, ".")
+	if !ok {
 		return -1
 	}
-	rest := s[i+1:]
+	rest := after
 	if j := strings.IndexAny(rest, "Z+-"); j >= 0 {
 		rest = rest[:j]
 	}

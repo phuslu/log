@@ -31,7 +31,7 @@ func appendEscapedBytes(dst, b []byte) []byte {
 		// Hint the compiler to remove bounds checks in the loop below.
 		_ = b[n-1]
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		c := b[i]
 		// Skip ordinary bytes without walking the escape dispatch below.
 		if !escapes[c] {
@@ -66,7 +66,7 @@ func appendEscapedString(dst []byte, s string) []byte {
 		// Hint the compiler to remove bounds checks in the loop below.
 		_ = s[n-1]
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		c := s[i]
 		// Skip ordinary bytes without walking the escape dispatch below.
 		if !escapes[c] {
