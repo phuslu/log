@@ -13,8 +13,10 @@ import (
 	"net/netip"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 // TestAppendFloat checks that appendFloat writes the same bytes as
@@ -855,6 +857,38 @@ func TestLoggerTimeFormatHeader(t *testing.T) {
 			}
 			if c.trim && !trimmed {
 				t.Fatalf("TimeFormat=%q TimeLocation=%v: trailing-zero trimming was not exercised", c.format, loc)
+			}
+		}
+	}
+}
+
+// TestLoggerTimeFormatHeaderDigits pins the clock through the timestamp cache
+// to check the fractional digits of every cached format against time.Format,
+// including the boundary values a live clock rarely hits.
+func TestLoggerTimeFormatHeaderDigits(t *testing.T) {
+	defer atomic.StorePointer(&timestampCachePointer, nil)
+	nsecs := []int32{0, 1, 9, 10, 99, 100, 999999, 1000000, 99999, 100000, 100001, 120000000, 123456789, 500000000, 999999999}
+	for i := 0; i < 20000; i++ {
+		nsecs = append(nsecs, rand.Int31n(1e9))
+	}
+	const sec = 1595759807
+	for _, c := range []struct {
+		format string
+		layout string
+	}{
+		{"", "2006-01-02T15:04:05.000Z07:00"},
+		{time.RFC3339, time.RFC3339},
+		{time.RFC3339Nano, time.RFC3339Nano},
+	} {
+		var buf bytes.Buffer
+		logger := Logger{TimeFormat: c.format, TimeLocation: time.UTC, Writer: IOWriter{&buf}}
+		for _, nsec := range nsecs {
+			atomic.StorePointer(&timestampCachePointer, unsafe.Pointer(&timestampCache{sec: sec, nsec: nsec}))
+			buf.Reset()
+			logger.Info().Msg("")
+			want := `{"` + TimeKey + `":"` + time.Unix(sec, int64(nsec)).UTC().Format(c.layout) + `"`
+			if !strings.HasPrefix(buf.String(), want) {
+				t.Fatalf("TimeFormat=%q nsec=%d: got %q, want prefix %q", c.format, nsec, buf.String(), want)
 			}
 		}
 	}

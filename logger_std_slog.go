@@ -221,7 +221,7 @@ func (h *stdSlogHandler) header(now time.Time) *Entry {
 			atomic.StorePointer(tp, unsafe.Pointer(nc))
 		}
 		// milli seconds
-		ms := int(nsec) / 1000000
+		ms := uint32(nsec) / 1000000
 		mb := ms % 100 * 2
 		tmp[21] = byte('0' + ms/100)
 		tmp[22] = smallsString[mb]

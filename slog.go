@@ -202,23 +202,26 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 				atomic.StorePointer(tp, unsafe.Pointer(nc))
 			}
 			// nano seconds
-			a := int(nsec)
-			b := a % 100 * 2
-			a /= 100
+			// unsigned, so the divisions by constants need no sign fixups
+			// and the table indexes no bounds checks, and split into two
+			// independent chains of 4 and 5 digits
+			hi, lo := uint32(nsec)/100000, uint32(nsec)%100000
+			b := hi % 100 * 2
+			hi /= 100
+			tmp[23] = smallsString[b+1]
+			tmp[22] = smallsString[b]
+			b = hi * 2
+			tmp[21] = smallsString[b+1]
+			tmp[20] = smallsString[b]
+			b = lo % 100 * 2
+			lo /= 100
 			tmp[28] = smallsString[b+1]
 			tmp[27] = smallsString[b]
-			b = a % 100 * 2
-			a /= 100
+			b = lo % 100 * 2
+			lo /= 100
 			tmp[26] = smallsString[b+1]
 			tmp[25] = smallsString[b]
-			b = a % 100 * 2
-			a /= 100
-			tmp[24] = smallsString[b+1]
-			tmp[23] = smallsString[b]
-			b = a % 100 * 2
-			tmp[22] = smallsString[b+1]
-			tmp[21] = smallsString[b]
-			tmp[20] = byte('0' + a/100)
+			tmp[24] = byte('0' + lo)
 			// append to e.buf
 			e.buf = append(e.buf, buf...)
 		} else {

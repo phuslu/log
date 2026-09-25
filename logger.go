@@ -646,24 +646,27 @@ func (l *Logger) header(level Level) *Entry {
 			// "2006-01-02T15:04:05Z07:00", no fractional seconds
 		case time.RFC3339Nano:
 			// "2006-01-02T15:04:05.999999999Z07:00", trailing zeros dropped
+			// unsigned, so the divisions by constants need no sign fixups
+			// and the table indexes no bounds checks, and split into two
+			// independent chains of 4 and 5 digits
 			var fd [9]byte
-			a := int(nsec)
-			b := a % 100 * 2
-			a /= 100
+			hi, lo := uint32(nsec)/100000, uint32(nsec)%100000
+			b := hi % 100 * 2
+			hi /= 100
+			fd[3] = smallsString[b+1]
+			fd[2] = smallsString[b]
+			b = hi * 2
+			fd[1] = smallsString[b+1]
+			fd[0] = smallsString[b]
+			b = lo % 100 * 2
+			lo /= 100
 			fd[8] = smallsString[b+1]
 			fd[7] = smallsString[b]
-			b = a % 100 * 2
-			a /= 100
+			b = lo % 100 * 2
+			lo /= 100
 			fd[6] = smallsString[b+1]
 			fd[5] = smallsString[b]
-			b = a % 100 * 2
-			a /= 100
-			fd[4] = smallsString[b+1]
-			fd[3] = smallsString[b]
-			b = a % 100 * 2
-			fd[2] = smallsString[b+1]
-			fd[1] = smallsString[b]
-			fd[0] = byte('0' + a/100)
+			fd[4] = byte('0' + lo)
 			n := 9
 			for n > 0 && fd[n-1] == '0' {
 				n--
@@ -674,7 +677,7 @@ func (l *Logger) header(level Level) *Entry {
 				i += n + 1
 			}
 		default: // "", "2006-01-02T15:04:05.000Z07:00", always 3 digits
-			f := int(nsec) / 1000000
+			f := uint32(nsec) / 1000000
 			mb := f % 100 * 2
 			tmp[i] = '.'
 			tmp[i+1] = byte('0' + f/100)
