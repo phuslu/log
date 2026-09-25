@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/binary"
 	"sync/atomic"
 	"time"
 )
@@ -20,22 +21,12 @@ func NewXID() XID {
 
 // NewXIDWithTime generates a globally unique XID with unix timestamp
 func NewXIDWithTime(timestamp int64) (x XID) {
-	// timestamp
-	x[0] = byte(timestamp >> 24)
-	x[1] = byte(timestamp >> 16)
-	x[2] = byte(timestamp >> 8)
-	x[3] = byte(timestamp)
-	// machine
-	x[4] = machine[0]
-	x[5] = machine[1]
-	x[6] = machine[2]
-	// pid
-	x[7] = byte(pid >> 8)
-	x[8] = byte(pid)
-	// counter
+	binary.BigEndian.PutUint32(x[0:4], uint32(timestamp)) // timestamp
+	copy(x[4:7], machine[:])                              // machine
+	// The pid takes x[7:9] and the low 24 bits of the counter take x[9:12],
+	// so the first four of those bytes go out in a single store.
 	i := atomic.AddUint32(&counter, 1)
-	x[9] = byte(i >> 16)
-	x[10] = byte(i >> 8)
+	binary.BigEndian.PutUint32(x[7:11], uint32(pid)<<16|i>>8)
 	x[11] = byte(i)
 	return
 }

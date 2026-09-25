@@ -2701,7 +2701,7 @@ func entrybuf(e *Entry) *[]byte { return &e.buf }
 func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 	return w.WriteEntry(&Entry{
 		Level: level,
-		buf:   []byte(fmt.Sprintf(format, args...)),
+		buf:   fmt.Appendf(nil, format, args...),
 	})
 }
 

@@ -82,7 +82,7 @@ func (w *JournalWriter) WriteEntry(e *Entry) (n int, err error) {
 		}
 		if strings.ContainsRune(value, '\n') {
 			b.B = append(b.B, '\n')
-			_ = binary.Write(b, binary.LittleEndian, uint64(len(value)))
+			b.B = binary.LittleEndian.AppendUint64(b.B, uint64(len(value)))
 			b.B = append(b.B, value...)
 			b.B = append(b.B, '\n')
 		} else {

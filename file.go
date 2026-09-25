@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -222,8 +222,8 @@ func (w *FileWriter) rotate() (err error) {
 				matches = append(matches, info)
 			}
 		}
-		sort.Slice(matches, func(i, j int) bool {
-			return matches[i].ModTime().Unix() < matches[j].ModTime().Unix()
+		slices.SortFunc(matches, func(a, b os.FileInfo) int {
+			return a.ModTime().Compare(b.ModTime())
 		})
 
 		if w.Cleaner != nil {
