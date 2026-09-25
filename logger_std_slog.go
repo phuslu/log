@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 func stdSlogAttrEval(e *Entry, a slog.Attr) *Entry {
@@ -74,8 +73,8 @@ type stdSlogTimeHeader struct {
 }
 
 var stdSlogTimeHeaderPointers struct {
-	utc   unsafe.Pointer
-	local unsafe.Pointer
+	utc   atomic.Pointer[stdSlogTimeHeader]
+	local atomic.Pointer[stdSlogTimeHeader]
 }
 
 func (h stdSlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
@@ -151,7 +150,7 @@ func (h *stdSlogHandler) header(now time.Time) *Entry {
 	switch h.logger.TimeFormat {
 	case "":
 		sec, nsec := now.Unix(), now.Nanosecond()
-		var tp *unsafe.Pointer
+		var tp *atomic.Pointer[stdSlogTimeHeader]
 		var tmp [32]byte
 		var buf []byte
 		if timeOffset == 0 {
@@ -173,7 +172,7 @@ func (h *stdSlogHandler) header(now time.Time) *Entry {
 			buf = tmp[:31]
 		}
 		tmp[0] = '"'
-		if c := (*stdSlogTimeHeader)(atomic.LoadPointer(tp)); c != nil && c.sec == sec {
+		if c := tp.Load(); c != nil && c.sec == sec {
 			copy(tmp[1:21], c.b[:])
 		} else {
 			// date time
@@ -215,7 +214,7 @@ func (h *stdSlogHandler) header(now time.Time) *Entry {
 			nc.b[19] = '.'
 			// publish for the next line
 			copy(tmp[1:21], nc.b[:])
-			atomic.StorePointer(tp, unsafe.Pointer(nc))
+			tp.Store(nc)
 		}
 		// milli seconds
 		ms := uint32(nsec) / 1000000

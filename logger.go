@@ -474,8 +474,8 @@ type timeHeader struct {
 }
 
 var timeHeaderPointers struct {
-	utc   unsafe.Pointer
-	local unsafe.Pointer
+	utc   atomic.Pointer[timeHeader]
+	local atomic.Pointer[timeHeader]
 }
 
 type timestampCache struct {
@@ -483,7 +483,7 @@ type timestampCache struct {
 	nsec int32
 }
 
-var timestampCachePointer unsafe.Pointer // *timestampCache
+var timestampCachePointer atomic.Pointer[timestampCache]
 var timestampCacheMu sync.Mutex
 var timestampCacheStop, timestampCacheDone chan struct{}
 
@@ -511,10 +511,10 @@ func EnableTimeCache(interval time.Duration) {
 	if tc.sec == 0 {
 		tc.sec, tc.nsec, _ = now()
 	}
-	atomic.StorePointer(&timestampCachePointer, unsafe.Pointer(&tc))
+	timestampCachePointer.Store(&tc)
 	go func() {
 		defer close(done)
-		defer atomic.StorePointer(&timestampCachePointer, nil)
+		defer timestampCachePointer.Store(nil)
 		defer ticker.Stop()
 		for {
 			select {
@@ -526,7 +526,7 @@ func EnableTimeCache(interval time.Duration) {
 				if tc.sec == 0 {
 					tc.sec, tc.nsec, _ = now()
 				}
-				atomic.StorePointer(&timestampCachePointer, unsafe.Pointer(&tc))
+				timestampCachePointer.Store(&tc)
 			}
 		}
 	}()
@@ -563,8 +563,7 @@ func (l *Logger) header(level Level) *Entry {
 				format = "2006-01-02T15:04:05.000Z07:00"
 			}
 			var now time.Time
-			if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-				tt := (*timestampCache)(p)
+			if tt := timestampCachePointer.Load(); tt != nil {
 				now = time.Unix(tt.sec, int64(tt.nsec))
 			} else {
 				now = Now()
@@ -579,8 +578,7 @@ func (l *Logger) header(level Level) *Entry {
 	case "", time.RFC3339, time.RFC3339Nano:
 		var sec int64
 		var nsec int32
-		if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-			tt := (*timestampCache)(p)
+		if tt := timestampCachePointer.Load(); tt != nil {
 			sec, nsec = tt.sec, tt.nsec
 		}
 		if sec == 0 {
@@ -589,7 +587,7 @@ func (l *Logger) header(level Level) *Entry {
 		if sec == 0 {
 			sec, nsec, _ = now()
 		}
-		var tp *unsafe.Pointer
+		var tp *atomic.Pointer[timeHeader]
 		if offset == 0 {
 			tp = &timeHeaderPointers.utc
 		} else {
@@ -597,7 +595,7 @@ func (l *Logger) header(level Level) *Entry {
 		}
 		var tmp [40]byte // up to 37 bytes, e.g. "2006-01-02T15:04:05.999999999Z07:00"
 		tmp[0] = '"'
-		if c := (*timeHeader)(atomic.LoadPointer(tp)); c != nil && c.sec == sec {
+		if c := tp.Load(); c != nil && c.sec == sec {
 			copy(tmp[1:20], c.b[:])
 		} else {
 			// date time
@@ -638,7 +636,7 @@ func (l *Logger) header(level Level) *Entry {
 			nc.b[18] = smallsString[second+1]
 			// publish for the next line
 			copy(tmp[1:20], nc.b[:])
-			atomic.StorePointer(tp, unsafe.Pointer(nc))
+			tp.Store(nc)
 		}
 		// fractional seconds and timezone, which differ between formats
 		i := 20
@@ -704,8 +702,8 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:i]...)
 	case TimeFormatUnix:
 		var sec int64
-		if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-			sec = (*timestampCache)(p).sec
+		if tt := timestampCachePointer.Load(); tt != nil {
+			sec = tt.sec
 		}
 		if sec == 0 {
 			sec, _ = walltime()
@@ -740,8 +738,7 @@ func (l *Logger) header(level Level) *Entry {
 	case TimeFormatUnixMs:
 		var sec int64
 		var nsec int32
-		if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-			tt := (*timestampCache)(p)
+		if tt := timestampCachePointer.Load(); tt != nil {
 			sec, nsec = tt.sec, tt.nsec
 		}
 		if sec == 0 {
@@ -783,8 +780,7 @@ func (l *Logger) header(level Level) *Entry {
 	case TimeFormatUnixWithMs:
 		var sec int64
 		var nsec int32
-		if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-			tt := (*timestampCache)(p)
+		if tt := timestampCachePointer.Load(); tt != nil {
 			sec, nsec = tt.sec, tt.nsec
 		}
 		if sec == 0 {
@@ -826,8 +822,7 @@ func (l *Logger) header(level Level) *Entry {
 		e.buf = append(e.buf, tmp[:]...)
 	default:
 		var now time.Time
-		if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-			tt := (*timestampCache)(p)
+		if tt := timestampCachePointer.Load(); tt != nil {
 			now = time.Unix(tt.sec, int64(tt.nsec))
 		} else {
 			now = Now()

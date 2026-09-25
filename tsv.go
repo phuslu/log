@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"sync"
-	"sync/atomic"
 )
 
 // TSVLogger represents an active logging object that generates lines of TSV output to an io.Writer.
@@ -49,8 +48,8 @@ func (l *TSVLogger) New() (e *TSVEntry) {
 func (e *TSVEntry) Timestamp() *TSVEntry {
 	var tmp [11]byte
 	var sec int64
-	if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-		sec = (*timestampCache)(p).sec
+	if tt := timestampCachePointer.Load(); tt != nil {
+		sec = tt.sec
 	}
 	if sec == 0 {
 		sec, _ = walltime()
@@ -90,8 +89,7 @@ func (e *TSVEntry) TimestampMS() *TSVEntry {
 	var tmp [14]byte
 	var sec int64
 	var nsec int32
-	if p := atomic.LoadPointer(&timestampCachePointer); p != nil {
-		tt := (*timestampCache)(p)
+	if tt := timestampCachePointer.Load(); tt != nil {
 		sec, nsec = tt.sec, tt.nsec
 	}
 	if sec == 0 {

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 func slogJSONAttrEval(e *Entry, a slog.Attr) *Entry {
@@ -118,8 +117,8 @@ type slogTimeHeader struct {
 }
 
 var slogTimeHeaderPointers struct {
-	utc   unsafe.Pointer
-	local unsafe.Pointer
+	utc   atomic.Pointer[slogTimeHeader]
+	local atomic.Pointer[slogTimeHeader]
 }
 
 func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
@@ -135,7 +134,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 		e.buf = append(e.buf, `":"`...)
 		if timeOffset == 0 || r.Time.Location() == time.Local {
 			sec, nsec := r.Time.Unix(), r.Time.Nanosecond()
-			var tp *unsafe.Pointer
+			var tp *atomic.Pointer[slogTimeHeader]
 			var tmp [35]byte
 			var buf []byte
 			if timeOffset == 0 {
@@ -154,7 +153,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 				tmp[29] = timeZone[0]
 				buf = tmp[:35]
 			}
-			if c := (*slogTimeHeader)(atomic.LoadPointer(tp)); c != nil && c.sec == sec {
+			if c := tp.Load(); c != nil && c.sec == sec {
 				copy(tmp[:20], c.b[:])
 			} else {
 				// date time
@@ -196,7 +195,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 				// publish for the next line
 				nc := &slogTimeHeader{sec: sec}
 				copy(nc.b[:], tmp[:20])
-				atomic.StorePointer(tp, unsafe.Pointer(nc))
+				tp.Store(nc)
 			}
 			// nano seconds
 			// unsigned, so the divisions by constants need no sign fixups
