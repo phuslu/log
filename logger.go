@@ -2413,7 +2413,7 @@ func (e *Entry) Objects(key string, objects any) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':', '[')
-	for i := 0; i < values.Len(); i++ {
+	for i := range values.Len() {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
@@ -2679,7 +2679,7 @@ func stacks(all bool) (trace []byte) {
 	if all {
 		n = 100000
 	}
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		trace = make([]byte, n)
 		nbytes := runtime.Stack(trace, all)
 		if nbytes < len(trace) {

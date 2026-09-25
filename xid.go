@@ -150,7 +150,7 @@ func ParseXID(s string) (x XID, err error) {
 		return
 	}
 	_ = s[19]
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		if base32r[s[i]] == 0xff {
 			err = ErrInvalidXID
 			return

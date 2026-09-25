@@ -29,7 +29,7 @@ func (w *AsyncWriter) writever() {
 	for {
 		// once aborted, discard the leftover and every following entry
 		if aborted {
-			for i := 0; i < pending; i++ {
+			for i := range pending {
 				w.recycle(es[i])
 				es[i] = nil
 				iovs[i].Base = nil
@@ -77,7 +77,7 @@ func (w *AsyncWriter) writever() {
 		// reclaimed exactly when its bytes were handed to the kernel
 		_, remaining, err := w.file.writevAll(iovs[:pending])
 		completed := pending - len(remaining)
-		for i := 0; i < completed; i++ {
+		for i := range completed {
 			w.recycle(es[i])
 			es[i] = nil
 			iovs[i].Base = nil

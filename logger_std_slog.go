@@ -425,7 +425,7 @@ func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 	case 4:
 		e.buf = append(e.buf, '}', '}', '}', '}')
 	default:
-		for i := 0; i < h.groups; i++ {
+		for range h.groups {
 			e.buf = append(e.buf, '}')
 		}
 	}
