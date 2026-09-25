@@ -1116,6 +1116,38 @@ func BenchmarkPhusLogAny(b *testing.B) {
 		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
 	}
 }
+
+func BenchmarkPhusLogTimeCacheSimple(b *testing.B) {
+	phuslog.EnableTimeCache(10*time.Millisecond)
+	logger := phuslog.Logger{TimeFormat: time.RFC3339Nano, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogTimeCachePrintf(b *testing.B) {
+	phuslog.EnableTimeCache(10*time.Millisecond)
+	logger := phuslog.Logger{TimeFormat: time.RFC3339Nano, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkPhusLogTimeCacheCaller(b *testing.B) {
+	phuslog.EnableTimeCache(10*time.Millisecond)
+	logger := phuslog.Logger{Caller: 1, TimeFormat: time.RFC3339Nano, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogTimeCacheAny(b *testing.B) {
+	phuslog.EnableTimeCache(10*time.Millisecond)
+	logger := phuslog.Logger{TimeFormat: time.RFC3339Nano, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
+	}
+}
 ```
 
 </details>
