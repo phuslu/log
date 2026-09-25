@@ -526,6 +526,49 @@ func TestLoggerTimeOffset(t *testing.T) {
 	logger.Info().Msg("this is -7:00 timezone time log entry")
 }
 
+// TestAbsDateTime checks the in-package calendar math against the time package
+// for every month boundary of a leap year, a common year, the century leap
+// rules, and a spread of sampled and random seconds across the supported range.
+func TestAbsDateTime(t *testing.T) {
+	check := func(sec int64) {
+		t.Helper()
+		year, month, day, hour, min, s := absDateTime(uint64(sec + 9223372028715321600))
+		tm := time.Unix(sec, 0).UTC()
+		if year != tm.Year() || month != tm.Month() || day != tm.Day() || hour != tm.Hour() || min != tm.Minute() || s != tm.Second() {
+			t.Fatalf("absDateTime(%d) = %04d-%02d-%02dT%02d:%02d:%02d, time.Unix says %s",
+				sec, year, month, day, hour, min, s, tm.Format("2006-01-02T15:04:05"))
+		}
+	}
+
+	const (
+		year1     = -62135596800 // 0001-01-01T00:00:00Z
+		year9999  = 253402300799 // 9999-12-31T23:59:59Z
+		yearRange = 253402300800 - year1
+	)
+
+	// month boundaries of a leap year, a non-leap year and the century rules
+	for _, year := range []int{1900, 2000, 2024, 2025, 2100} {
+		for month := time.January; month <= time.December; month++ {
+			for _, day := range []int{1, 28, 29} {
+				tm := time.Date(year, month, day, 23, 59, 59, 0, time.UTC)
+				if tm.Month() != month || tm.Day() != day {
+					continue // 29 February of a common year
+				}
+				check(tm.Unix())
+			}
+		}
+	}
+
+	for sec := int64(year1); sec <= year9999; sec += 86400*97 + 13 {
+		check(sec)
+	}
+
+	r := rand.New(rand.NewSource(0))
+	for i := 0; i < 200000; i++ {
+		check(r.Int63n(yearRange) + year1)
+	}
+}
+
 func TestLoggerContext(t *testing.T) {
 	ctx := NewContext(nil).Bool("ctx_bool", true).Str("ctx_str", "ctx str").Value()
 

@@ -463,7 +463,7 @@ var timeOffset, timeZone = func() (int64, string) {
 
 // timeHeader holds the "YYYY-MM-DDTHH:MM:SS" rendering of a single absolute
 // second. Consecutive log lines almost always share the same second, so
-// caching the date-time prefix lets the time formatting skip absDate/absClock
+// caching the date-time prefix lets the time formatting skip absDateTime
 // and the 19 digit writes, and lets several TimeFormat values (the empty
 // default, time.RFC3339 and time.RFC3339Nano) share the same cache slot since
 // only the fractional part and the timezone differ between them.
@@ -601,8 +601,7 @@ func (l *Logger) header(level Level) *Entry {
 		} else {
 			// date time
 			abs := uint64(sec + 9223372028715321600 + offset) // unixToInternal + internalToAbsolute + timeOffset
-			year, month, day, _ := absDate(abs, true)
-			hour, minute, second := absClock(abs)
+			year, month, day, hour, minute, second := absDateTime(abs)
 			nc := &timeHeader{sec: sec}
 			// year
 			a := year / 100 * 2
@@ -2679,8 +2678,72 @@ func wlprintf(w Writer, level Level, format string, args ...any) (int, error) {
 	})
 }
 
-//go:noescape
-//go:linkname now time.now
-func now() (sec int64, nsec int32, mono int64)
+// Calendar math for turning an absolute second into a date and a clock time.
+// The days-per-cycle constants and the algorithm are the ones Go's time
+// package uses in time.absDate and time.absClock; they are spelled out here
+// instead of pulled in with //go:linkname so the header formatting does not
+// depend on time package internals.
+//
+// absDateTime returns the same year/month/day/time.absDate(abs, true) and
+// time.absClock(abs) do, in a single call so that the day and the second of
+// the day share one division.
+
+const (
+	secondsPerMinute = 60
+	secondsPerHour   = 60 * secondsPerMinute
+	secondsPerDay    = 24 * secondsPerHour
+	daysPer400Years  = 365*400 + 97
+	daysPer100Years  = 365*100 + 24
+	daysPer4Years    = 365*4 + 1
+	absoluteZeroYear = -292277022399
+)
+
+var absDateTimeDaysBefore = [...]int32{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}
+
+// BSD-3-Clause, copied from Go's time.absDate
+func absDateTime(abs uint64) (year int, month time.Month, day, hour, min, sec int) {
+	d := abs / secondsPerDay
+	s := abs - d*secondsPerDay
+	n := d / daysPer400Years
+	y := 400 * n
+	d -= daysPer400Years * n
+	n = d / daysPer100Years
+	n -= n >> 2
+	y += 100 * n
+	d -= daysPer100Years * n
+	n = d / daysPer4Years
+	y += 4 * n
+	d -= daysPer4Years * n
+	n = d / 365
+	n -= n >> 2
+	y += n
+	d -= 365 * n
+	year = int(int64(y) + absoluteZeroYear)
+
+	hour = int(s / secondsPerHour)
+	s -= uint64(hour) * secondsPerHour
+	min = int(s / secondsPerMinute)
+	sec = int(s - uint64(min)*secondsPerMinute)
+
+	day = int(d)
+	if year%4 == 0 && (year%100 != 0 || year%400 == 0) {
+		switch {
+		case day > 31+29-1:
+			day--
+		case day == 31+29-1:
+			return year, time.February, 29, hour, min, sec
+		}
+	}
+
+	month = time.Month(day / 31)
+	begin := int(absDateTimeDaysBefore[month])
+	if end := int(absDateTimeDaysBefore[month+1]); day >= end {
+		month++
+		begin = end
+	}
+	month++
+	day = day - begin + 1
+	return
+}
 
 func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

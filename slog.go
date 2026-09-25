@@ -114,7 +114,7 @@ func (h slogJSONHandler) WithGroup(name string) slog.Handler {
 
 // slogTimeHeader holds the "YYYY-MM-DDTHH:MM:SS." rendering of a single
 // absolute second. Consecutive log lines almost always share the same second,
-// so caching lets header skip absDate/absClock and the 19 digit writes.
+// so caching lets header skip absDateTime and the 19 digit writes.
 type slogTimeHeader struct {
 	sec int64
 	b   [20]byte // "2006-01-02T15:04:05."
@@ -162,8 +162,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 			} else {
 				// date time
 				abs := uint64(sec + 9223372028715321600 + timeOffset) // unixToInternal + internalToAbsolute + timeOffset
-				year, month, day, _ := absDate(abs, true)
-				hour, minute, second := absClock(abs)
+				year, month, day, hour, minute, second := absDateTime(abs)
 				// year
 				a := year / 100 * 2
 				b := year % 100 * 2

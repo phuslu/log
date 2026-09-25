@@ -5,21 +5,8 @@ package log
 import (
 	"strings"
 	"sync"
-	"time"
 	"unsafe"
 )
-
-const (
-	secondsPerMinute = 60
-	secondsPerHour   = 60 * secondsPerMinute
-	secondsPerDay    = 24 * secondsPerHour
-	daysPer400Years  = 365*400 + 97
-	daysPer100Years  = 365*100 + 24
-	daysPer4Years    = 365*4 + 1
-	absoluteZeroYear = -292277022399
-)
-
-var gccgoDaysBefore = [...]int32{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}
 
 // gccgoG matches libgo's runtime.g through the goid field.
 type gccgoG struct {
@@ -47,59 +34,6 @@ func Goid() int64 {
 	return int64(goid())
 }
 
-// BSD-3-Clause, copied from Go's time.absDate.
-func absDate(abs uint64, full bool) (year int, month time.Month, day int, yday int) {
-	d := abs / secondsPerDay
-	n := d / daysPer400Years
-	y := 400 * n
-	d -= daysPer400Years * n
-	n = d / daysPer100Years
-	n -= n >> 2
-	y += 100 * n
-	d -= daysPer100Years * n
-	n = d / daysPer4Years
-	y += 4 * n
-	d -= daysPer4Years * n
-	n = d / 365
-	n -= n >> 2
-	y += n
-	d -= 365 * n
-	year = int(int64(y) + absoluteZeroYear)
-	yday = int(d)
-	if !full {
-		return
-	}
-
-	day = yday
-	if year%4 == 0 && (year%100 != 0 || year%400 == 0) {
-		switch {
-		case day > 31+29-1:
-			day--
-		case day == 31+29-1:
-			return year, time.February, 29, yday
-		}
-	}
-
-	month = time.Month(day / 31)
-	begin := int(gccgoDaysBefore[month])
-	if end := int(gccgoDaysBefore[month+1]); day >= end {
-		month++
-		begin = end
-	}
-	month++
-	day = day - begin + 1
-	return
-}
-
-func absClock(abs uint64) (hour, min, sec int) {
-	sec = int(abs % secondsPerDay)
-	hour = sec / secondsPerHour
-	sec -= hour * secondsPerHour
-	min = sec / secondsPerMinute
-	sec -= min * secondsPerMinute
-	return
-}
-
 // gccgoLocation must match runtime.location.
 type gccgoLocation struct {
 	pc       uintptr
@@ -119,6 +53,10 @@ func gccgoFuncFileLine(pc uintptr, index int32, more bool) (name, file string, l
 //go:noescape
 //go:linkname gccgoDecodeIdentifier runtime.decodeIdentifier
 func gccgoDecodeIdentifier([]byte) int
+
+//go:noescape
+//go:linkname now time.now
+func now() (sec int64, nsec int32, mono int64)
 
 //go:noinline
 func caller1(skip int, pc *uintptr, length, capacity int) int {
