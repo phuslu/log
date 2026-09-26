@@ -180,7 +180,7 @@ func (w *FileWriter) rotate() (err error) {
 			n, err := w.file.Write(b)
 			w.size += int64(n)
 			if err != nil {
-				return nil
+				return err
 			}
 		}
 	}
