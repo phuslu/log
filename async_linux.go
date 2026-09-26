@@ -23,7 +23,6 @@ func (w *AsyncWriter) writever() {
 		pending int
 		retries int
 		aborted bool
-		closed  bool
 	)
 
 	for {
@@ -37,28 +36,11 @@ func (w *AsyncWriter) writever() {
 			pending = 0
 		}
 
-		// collect a batch, blocking for the first entry and draining the
-		// channel for the rest
-	gather:
-		for pending < IOV_MAX {
-			var (
-				e  *Entry
-				ok bool
-			)
-			if pending == 0 && !closed {
-				e, ok = <-w.ch
-			} else {
-				select {
-				case e, ok = <-w.ch:
-				default:
-					// nothing queued right now, write what we have
-					break gather
-				}
-			}
-			if !ok {
-				closed = true
-				break gather
-			}
+		// top up the batch with everything queued, blocking only when there
+		// is nothing left to write
+		n, done := w.queue.get(es[pending:], pending == 0)
+		end := pending + n
+		for _, e := range es[pending:end] {
 			if aborted || len(e.buf) == 0 {
 				w.recycle(e)
 				continue
@@ -68,9 +50,14 @@ func (w *AsyncWriter) writever() {
 			es[pending] = e
 			pending++
 		}
+		// drop the slots left behind by skipped entries
+		clear(es[pending:end])
 
 		if pending == 0 {
-			break
+			if done {
+				break
+			}
+			continue
 		}
 
 		// write the batch; the iovecs are advanced in place so each Entry is
@@ -106,7 +93,7 @@ func (w *AsyncWriter) writever() {
 		aborted = true
 	}
 
-	w.chClose <- w.firstErr
+	close(w.done)
 }
 
 // isRetryableWritevError reports whether err is a transient writev failure

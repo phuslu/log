@@ -671,14 +671,24 @@ func TestAsyncWriterWritevIntegrity(t *testing.T) {
 	}
 }
 
+// A tiny queue keeps producers blocked on a full queue most of the time, which
+// exercises the wakeup paths; a larger one exercises batching.
 func TestAsyncWriterConcurrentProducers(t *testing.T) {
+	for _, size := range []uint{1, 128} {
+		t.Run(fmt.Sprintf("ChannelSize=%d", size), func(t *testing.T) {
+			testAsyncWriterConcurrentProducers(t, size)
+		})
+	}
+}
+
+func testAsyncWriterConcurrentProducers(t *testing.T, size uint) {
 	const (
 		producers = 4
 		per       = 500
 	)
 	dir := tempLogDir(t)
 	w := &AsyncWriter{
-		ChannelSize: 128,
+		ChannelSize: size,
 		Writer:      &FileWriter{Filename: filepath.Join(dir, "out.log")},
 	}
 
@@ -701,21 +711,24 @@ func TestAsyncWriterConcurrentProducers(t *testing.T) {
 		t.Fatalf("close: %v", err)
 	}
 
-	seen := make(map[string]bool, producers*per)
+	// every line must arrive exactly once, and in order per producer
+	next := make([]int, producers)
+	lines := 0
 	for _, line := range strings.Split(strings.TrimSuffix(string(largestLog(t, dir, "out")), "\n"), "\n") {
 		if line == "" {
 			continue
 		}
 		var p, i int
-		if _, err := fmt.Sscanf(line, "p%d-%06d", &p, &i); err != nil {
+		if _, err := fmt.Sscanf(line, "p%d-%06d", &p, &i); err != nil || p < 0 || p >= producers {
 			t.Fatalf("corrupt line %q", line)
 		}
-		if seen[line] {
-			t.Fatalf("duplicate line %q", line)
+		if i != next[p] {
+			t.Fatalf("producer %d: got line %d, want %d", p, i, next[p])
 		}
-		seen[line] = true
+		next[p]++
+		lines++
 	}
-	if len(seen) != producers*per {
-		t.Fatalf("got %d lines, want %d", len(seen), producers*per)
+	if lines != producers*per {
+		t.Fatalf("got %d lines, want %d", lines, producers*per)
 	}
 }
