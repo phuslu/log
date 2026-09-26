@@ -23,10 +23,12 @@ func NewXID() XID {
 func NewXIDWithTime(timestamp int64) (x XID) {
 	binary.BigEndian.PutUint32(x[0:4], uint32(timestamp)) // timestamp
 	copy(x[4:7], machine[:])                              // machine
-	// The pid takes x[7:9] and the low 24 bits of the counter take x[9:12],
-	// so the first four of those bytes go out in a single store.
 	i := atomic.AddUint32(&counter, 1)
-	binary.BigEndian.PutUint32(x[7:11], uint32(pid)<<16|i>>8)
+	// The pid takes x[7:9] and the low 24 bits of the counter take x[9:12], so
+	// the first four of those bytes go out in a single store. Only the low 24
+	// bits of i are kept, so the high bits must be masked off, otherwise they
+	// would bleed into the pid field.
+	binary.BigEndian.PutUint32(x[7:11], uint32(pid)<<16|(i>>8)&0xffff)
 	x[11] = byte(i)
 	return
 }

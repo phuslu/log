@@ -3,6 +3,7 @@ package log
 import (
 	"encoding"
 	"encoding/json"
+	"os"
 	"testing"
 	"time"
 )
@@ -41,12 +42,31 @@ func TestXIDTime(t *testing.T) {
 		t.Errorf("XID.Machine not correct")
 	}
 
-	if x.Pid() != y.Pid() {
-		t.Errorf("XID.Pid not correct")
+	if want := uint16(os.Getpid()); x.Pid() != want || y.Pid() != want {
+		t.Errorf("XID.Pid want=%d got=%d,%d", want, x.Pid(), y.Pid())
 	}
 
 	if y.Counter()-x.Counter() != 1 {
 		t.Errorf("XID.Counter not correct")
+	}
+}
+
+// TestXIDPidCounter guards the packing of the pid and counter fields: the high
+// bits of the 32-bit counter must not leak into the pid bytes.
+func TestXIDPidCounter(t *testing.T) {
+	saved := counter
+	t.Cleanup(func() { counter = saved })
+
+	counters := []uint32{0, 1, 0x00ffffff, 0x01000000, 0x00fedcba, 0xffffffff, 0xdeadbeef}
+	for _, i := range counters {
+		counter = i - 1 // NewXIDWithTime bumps counter to i; 0xffffffff+1 wraps to 0.
+		x := NewXIDWithTime(0)
+		if got, want := x.Pid(), uint16(pid); got != want {
+			t.Errorf("counter=%#x: XID.Pid() = %#x, want %#x", i, got, want)
+		}
+		if got, want := x.Counter(), i&0xffffff; got != want {
+			t.Errorf("counter=%#x: XID.Counter() = %#x, want %#x", i, got, want)
+		}
 	}
 }
 
