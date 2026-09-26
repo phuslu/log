@@ -233,18 +233,28 @@ func TestAsyncWriterBlocksWhenFull(t *testing.T) {
 }
 
 func TestAsyncWriterDiscardOnFull(t *testing.T) {
-	// ChannelSize 0 means the documented default of 1
-	for _, size := range []uint{0, 1, 3} {
-		t.Run(fmt.Sprintf("ChannelSize=%d", size), func(t *testing.T) {
+	for _, tt := range []struct {
+		size     uint
+		capacity int
+	}{
+		{0, 256},
+		{1, 1},
+		{3, 3},
+	} {
+		t.Run(fmt.Sprintf("ChannelSize=%d", tt.size), func(t *testing.T) {
 			hw := newHoldingWriter()
-			w := &AsyncWriter{ChannelSize: size, DiscardOnFull: true, DisableWritev: true, Writer: hw}
-			want := fillAsyncWriter(t, w, hw, max(int(size), 1))
+			w := &AsyncWriter{ChannelSize: tt.size, DiscardOnFull: true, DisableWritev: true, Writer: hw}
+			want := fillAsyncWriter(t, w, hw, tt.capacity)
 
 			if n, err := w.Write([]byte("full")); n != 0 || err != ErrAsyncWriterFull {
 				t.Fatalf("Write on a full queue = (%d, %v), want (0, %v)", n, err, ErrAsyncWriterFull)
 			}
 
 			close(hw.release)
+			// Drain notifications so batches larger than started's buffer can finish.
+			for range tt.capacity {
+				<-hw.started
+			}
 			if err := w.Close(); err != nil {
 				t.Fatalf("close: %v", err)
 			}

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"cmp"
 	"errors"
 	"io"
 	"runtime"
@@ -13,8 +14,8 @@ type AsyncWriter struct {
 	// Writer specifies the writer of output.
 	Writer Writer
 
-	// ChannelSize is the capacity of the queue of pending entries, the default
-	// size is 1.
+	// ChannelSize is the capacity of the queue of pending entries.
+	// If zero, the default size is 256
 	ChannelSize uint
 
 	// DiscardOnFull determines whether to discard new entry when the queue is full.
@@ -40,7 +41,7 @@ type AsyncWriter struct {
 const asyncBatch = 1024
 
 func (w *AsyncWriter) init() {
-	w.queue.init(max(int(w.ChannelSize), 1))
+	w.queue.init(cmp.Or(int(w.ChannelSize), 256))
 	w.done = make(chan struct{})
 	w.file, _ = w.Writer.(*FileWriter)
 	if w.file != nil && runtime.GOOS == "linux" && unsafe.Sizeof(uintptr(0)) == 8 && !w.DisableWritev {
