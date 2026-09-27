@@ -84,7 +84,7 @@ func (w *EventlogWriter) connect() (err error) {
 
 // WriteEntry implements Writer.
 func (w *EventlogWriter) WriteEntry(e *Entry) (n int, err error) {
-	if w.handle.Load() != 0 {
+	if w.handle.Load() == 0 {
 		w.mu.Lock()
 		if w.handle.Load() == 0 {
 			err = w.connect()
