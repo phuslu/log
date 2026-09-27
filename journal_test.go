@@ -3,6 +3,7 @@
 package log
 
 import (
+	"errors"
 	"net"
 	"path/filepath"
 	"sync"
@@ -21,6 +22,53 @@ func TestJournalWriter(t *testing.T) {
 	_, _ = wlprintf(w, InfoLevel, `{"time":"2019-07-10T05:35:54.277Z","level":"error","msg":"a test message\n"}`+"\n")
 	_, _ = wlprintf(w, InfoLevel, "a long long long long message.\n")
 	w.Close()
+}
+
+// TestJournalWriterConnectRetry checks that a bind failure is reported and
+// the write after it retries the bind, instead of crashing on the missing
+// socket or disabling the writer forever.
+func TestJournalWriterConnectRetry(t *testing.T) {
+	sockname := filepath.Join(t.TempDir(), "journal.sock")
+
+	conn, err := net.ListenUnixgram("unixgram", &net.UnixAddr{Name: sockname, Net: "unixgram"})
+	if err != nil {
+		t.Fatalf("listen error: %+v", err)
+	}
+	defer conn.Close()
+
+	listen := listenUnixgram
+	defer func() { listenUnixgram = listen }()
+
+	w := &JournalWriter{JournalSocket: sockname}
+	msg := `{"time":"2019-07-10T05:35:54.277Z","level":"info","message":"hello journal writer"}` + "\n"
+
+	listenUnixgram = func(network string, laddr *net.UnixAddr) (*net.UnixConn, error) {
+		return nil, errors.New("bind failed")
+	}
+
+	// A failed bind must be reported, and the write after it must not
+	// dereference the missing socket.
+	for i := 0; i < 2; i++ {
+		if _, err := wlprintf(w, InfoLevel, "%s", msg); err == nil {
+			t.Fatalf("write %d with a failing bind = nil error, want an error", i)
+		}
+	}
+
+	listenUnixgram = listen
+	if _, err := wlprintf(w, InfoLevel, "%s", msg); err != nil {
+		t.Fatalf("write after the bind recovered = %v, want nil", err)
+	}
+
+	if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := conn.ReadFromUnix(make([]byte, 4096)); err != nil {
+		t.Fatalf("read the retried entry: %v", err)
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
 }
 
 func TestJournalWriterError(t *testing.T) {
