@@ -397,7 +397,7 @@ func appendJSONFloat(b []byte, f float64, bits int) []byte {
 func appendJSONString(b *[]byte, s string) {
 	*b = append(*b, '"')
 	start := 0
-	for i := 0; i < len(s); i++ {
+	for i := range len(s) {
 		c := s[i]
 		if c >= 0x20 && c != '"' && c != '\\' {
 			continue

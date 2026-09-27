@@ -319,7 +319,7 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 	case 4:
 		e.buf = append(e.buf, '}', '}', '}', '}', '}', '\n')
 	default:
-		for i := 0; i <= h.groups; i++ {
+		for range h.groups + 1 {
 			e.buf = append(e.buf, '}')
 		}
 		e.buf = append(e.buf, '\n')
