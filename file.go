@@ -226,9 +226,10 @@ func (w *FileWriter) rotate() (err error) {
 			return a.ModTime().Compare(b.ModTime())
 		})
 
-		if w.Cleaner != nil {
+		switch {
+		case w.Cleaner != nil:
 			w.Cleaner(w.Filename, w.MaxBackups, matches)
-		} else {
+		case w.MaxBackups > 0:
 			for i := range len(matches) - w.MaxBackups - 1 {
 				os.Remove(filepath.Join(dir, matches[i].Name()))
 			}
