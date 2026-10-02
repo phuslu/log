@@ -128,3 +128,148 @@ func TestSlogHandlerDerivedConcurrent(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+// TestSlogHandlerEmptyGroups checks that groups whose members are all empty
+// (or themselves empty groups) are dropped instead of panicking or emitting an
+// empty object, matching slog.NewJSONHandler.
+func TestSlogHandlerEmptyGroups(t *testing.T) {
+	handlers := []struct {
+		name string
+		new  func(w io.Writer) *slog.Logger
+	}{
+		{"SlogNewJSONHandler", func(w io.Writer) *slog.Logger {
+			return slog.New(SlogNewJSONHandler(w, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		}},
+		{"LoggerSlog", func(w io.Writer) *slog.Logger {
+			return (&Logger{Level: InfoLevel, Writer: IOWriter{w}}).Slog()
+		}},
+	}
+
+	attr := func(t *testing.T, m map[string]any, path ...string) (any, bool) {
+		t.Helper()
+		var v any = m
+		for _, key := range path {
+			obj, ok := v.(map[string]any)
+			if !ok {
+				return nil, false
+			}
+			if v, ok = obj[key]; !ok {
+				return nil, false
+			}
+		}
+		return v, true
+	}
+	check := func(want any, path ...string) func(*testing.T, map[string]any) {
+		return func(t *testing.T, m map[string]any) {
+			t.Helper()
+			got, ok := attr(t, m, path...)
+			if !ok {
+				t.Fatalf("%v not found in %v", path, m)
+			}
+			if got != want {
+				t.Fatalf("%v = %v, want %v in %v", path, got, want, m)
+			}
+		}
+	}
+	absent := func(path ...string) func(*testing.T, map[string]any) {
+		return func(t *testing.T, m map[string]any) {
+			t.Helper()
+			if v, ok := attr(t, m, path...); ok {
+				t.Fatalf("%v = %v, want it to be absent in %v", path, v, m)
+			}
+		}
+	}
+
+	cases := []struct {
+		name  string
+		log   func(l *slog.Logger)
+		check func(*testing.T, map[string]any)
+	}{
+		{
+			name: "record empty group",
+			log: func(l *slog.Logger) {
+				l.LogAttrs(context.Background(), slog.LevelInfo, "test", slog.Group("g", slog.Attr{}))
+			},
+			check: absent("g"),
+		},
+		{
+			name: "record nested empty group",
+			log: func(l *slog.Logger) {
+				l.LogAttrs(context.Background(), slog.LevelInfo, "test", slog.Group("g", slog.Group("h")))
+			},
+			check: absent("g"),
+		},
+		{
+			name: "record empty group then value",
+			log: func(l *slog.Logger) {
+				l.LogAttrs(context.Background(), slog.LevelInfo, "test", slog.Group("g", slog.Attr{}), slog.String("k", "v"))
+			},
+			check: func(t *testing.T, m map[string]any) {
+				absent("g")(t, m)
+				check("v", "k")(t, m)
+			},
+		},
+		{
+			name: "record group with empty and non-empty members",
+			log: func(l *slog.Logger) {
+				l.LogAttrs(context.Background(), slog.LevelInfo, "test", slog.Group("g", slog.Attr{}, slog.Int("a", 1)))
+			},
+			check: check(float64(1), "g", "a"),
+		},
+		{
+			name: "record empty group inside derived group",
+			log: func(l *slog.Logger) {
+				l.WithGroup("outer").LogAttrs(context.Background(), slog.LevelInfo, "test", slog.Group("g", slog.Attr{}))
+			},
+			check: absent("outer"),
+		},
+		{
+			name: "With empty attr then record value",
+			log: func(l *slog.Logger) {
+				l.WithGroup("g").With(slog.Attr{}).Info("test", "k", "v")
+			},
+			check: check("v", "g", "k"),
+		},
+		{
+			name: "With empty attr and no attrs",
+			log: func(l *slog.Logger) {
+				l.WithGroup("g").With(slog.Attr{}).Info("test")
+			},
+			check: absent("g"),
+		},
+		{
+			name: "With empty attr then nested group",
+			log: func(l *slog.Logger) {
+				l.WithGroup("g").With(slog.Attr{}).WithGroup("h").Info("test", "k", "v")
+			},
+			check: check("v", "g", "h", "k"),
+		},
+		{
+			name: "With empty attr then With attr",
+			log: func(l *slog.Logger) {
+				l.WithGroup("g").With(slog.Attr{}).With("b", 2).Info("test", "a", 1)
+			},
+			check: func(t *testing.T, m map[string]any) {
+				check(float64(2), "g", "b")(t, m)
+				check(float64(1), "g", "a")(t, m)
+			},
+		},
+	}
+
+	for _, h := range handlers {
+		t.Run(h.name, func(t *testing.T) {
+			for _, c := range cases {
+				t.Run(c.name, func(t *testing.T) {
+					var buf bytes.Buffer
+					c.log(h.new(&buf))
+
+					var m map[string]any
+					if err := json.Unmarshal(bytes.TrimSpace(buf.Bytes()), &m); err != nil {
+						t.Fatalf("invalid json: %v, got %q", err, buf.Bytes())
+					}
+					c.check(t, m)
+				})
+			}
+		})
+	}
+}

@@ -40,12 +40,19 @@ func stdSlogAttrEval(e *Entry, a slog.Attr) *Entry {
 			}
 			return e
 		}
+		start := len(e.buf)
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, a.Key...)
 		e.buf = append(e.buf, '"', ':')
 		i := len(e.buf)
 		for _, attr := range attrs {
 			e = stdSlogAttrEval(e, attr)
+		}
+		if len(e.buf) == i {
+			// Every member was empty, so drop the group instead of writing
+			// past the end of the buffer.
+			e.buf = e.buf[:start]
+			return e
 		}
 		e.buf[i] = '{'
 		e.buf = append(e.buf, '}')
@@ -89,9 +96,14 @@ func (h stdSlogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		h.entry = *stdSlogAttrEval(&h.entry, attr)
 	}
 	if h.grouping {
+		if len(h.entry.buf) == i {
+			// Nothing was written, so keep the group pending: it is opened by
+			// a later With or Handle, or dropped while it stays empty.
+			return &h
+		}
 		h.entry.buf[i] = '{'
+		h.grouping = false
 	}
-	h.grouping = false
 	return &h
 }
 
@@ -397,7 +409,7 @@ func (h *stdSlogHandler) Handle(_ context.Context, r slog.Record) error {
 
 	// group attrs
 	if h.grouping {
-		if r.NumAttrs() > 0 {
+		if len(e.buf) > i {
 			e.buf[i] = '{'
 		} else if i = lastindex(e.buf); i > 0 {
 			e.buf = e.buf[:i-1]
