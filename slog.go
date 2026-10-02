@@ -308,10 +308,11 @@ func (h *slogJSONHandler) Handle(_ context.Context, r slog.Record) error {
 			e.buf = e.buf[:i-1]
 			h.groups--
 			for e.buf[len(e.buf)-1] == ':' {
-				if i = lastindex(e.buf); i > 0 {
-					e.buf = e.buf[:i-1]
-					h.groups--
+				if i = lastindex(e.buf); i <= 0 {
+					break
 				}
+				e.buf = e.buf[:i-1]
+				h.groups--
 			}
 		} else {
 			e.buf = append(e.buf, '{')
