@@ -119,7 +119,9 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 		e.buf = e.buf[:len(p)]
 	}
 	copy(e.buf, p)
+	e.w = w
 	n, err = w.WriteEntry(e)
+	e.w = nil
 	if cap(e.buf) <= bbcap {
 		e.buf = e.buf[:0]
 		eepool.Put(e)
@@ -131,10 +133,16 @@ func (w *AsyncWriter) Write(p []byte) (n int, err error) {
 func (w *AsyncWriter) WriteEntry(e *Entry) (int, error) {
 	w.once.Do(w.init)
 
-	// cheating to logger pool
 	entry := epool.Get().(*Entry)
 	entry.Level = e.Level
-	entry.buf, e.buf = e.buf, entry.buf
+	entry.w = nil
+	if e.w == w {
+		// A direct logger write transfers its buffer to this writer.
+		entry.buf, e.buf = e.buf, entry.buf
+	} else {
+		// Dispatchers and wrappers may pass the same entry to other writers.
+		entry.buf = append(entry.buf[:0], e.buf...)
+	}
 
 	// snapshot length before queueing, entry is owned by the writer goroutine afterwards
 	n := len(entry.buf)
